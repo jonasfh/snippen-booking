@@ -25,6 +25,8 @@ This repository uses a VS Code devcontainer to run WordPress with SQLite locally
 - The devcontainer symlinks this folder into WordPress at `wp-content/plugins/snippen-booking`
 - Use the container terminal to run commands like `wp plugin list`, `wp plugin activate snippen-booking`, and other WP-CLI commands
 - The devcontainer setup automates WordPress installation so you should not need to complete the web install wizard manually
+- Database file location: `/wordpress/wp-content/database/dev.db`
+- To reset the entire WordPress installation (including database), run: `bash /entrypoint.sh reset`
 
 ### Notes
 

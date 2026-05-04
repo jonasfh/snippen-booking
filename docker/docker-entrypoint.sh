@@ -96,6 +96,17 @@ if [ -d "wp-content/plugins/$PLUGIN_SLUG" ]; then
   wp plugin activate "$PLUGIN_SLUG" --allow-root || true
 fi
 
+# If argument is "reset", clean everything and exit
+if [ "$1" == "reset" ]; then
+  echo "Resetting WordPress installation..."
+  rm -f wp-config.php
+  rm -rf wp-content/database
+  rm -f wp-content/db.php
+  rm -rf wp-content/plugins/sqlite-database-integration
+  echo "Reset complete. Run 'setup' to reinstall."
+  exit 0
+fi
+
 # If argument is "setup", exit here
 if [ "$1" == "setup" ]; then
   echo "Setup complete. Exiting."
