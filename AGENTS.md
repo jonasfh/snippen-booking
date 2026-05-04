@@ -4,7 +4,7 @@
 Guide AI agents working in this repository.
 
 ## Tech Stack
-- PHP 8.2
+- PHP
 - WordPress
 - Composer
 - PHPUnit

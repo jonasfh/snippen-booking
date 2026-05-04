@@ -1,53 +1,46 @@
-FROM wordpress:6.4-php8.2-apache
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
-# System tools
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies and default PHP (8.3 on Ubuntu 24.04)
 RUN apt-get update && apt-get install -y \
-    git \
     curl \
+    git \
     unzip \
-    less \
-    vim \
-    gnupg \
-    ca-certificates \
-    lsb-release \
-    && rm -rf /var/lib/apt/lists/*
+    sqlite3 \
+    php \
+    php-cli \
+    php-curl \
+    php-json \
+    php-mbstring \
+    php-xml \
+    php-zip \
+    php-sqlite3 \
+    php-xdebug \
+    php-intl \
+    php-gd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# PHP extensions (ofte nødvendig)
-RUN docker-php-ext-install \
-    mysqli \
-    pdo \
-    pdo_mysql
+# Configure Xdebug
+RUN echo "xdebug.mode=debug" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
+    && echo "xdebug.start_with_request=yes" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
+    && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
+    && echo "xdebug.client_port=9003" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini
 
-# Install Xdebug
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
+ENV XDEBUG_MODE=debug
 
-# Xdebug config
-RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/xdebug.ini
-
-# Install Composer (fra offisiell image)
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- \
+    --install-dir=/usr/local/bin --filename=composer
 
 # Install WP-CLI
-RUN curl -o /usr/local/bin/wp \
-    https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-    && chmod +x /usr/local/bin/wp
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
 
-# Install GitHub CLI
-RUN mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) \
-    signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] \
-    https://cli.github.com/packages stable main" \
-    > /etc/apt/sources.list.d/github-cli.list \
-    && apt-get update \
-    && apt-get install -y gh \
-    && rm -rf /var/lib/apt/lists/*
+# Copy entrypoint script
+COPY docker/docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# (valgfritt) global PHPUnit
-RUN composer global require phpunit/phpunit:^10 \
-    && ln -s /root/.composer/vendor/bin/phpunit /usr/local/bin/phpunit
+EXPOSE 8080
+EXPOSE 9003

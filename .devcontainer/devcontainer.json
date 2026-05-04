@@ -1,8 +1,15 @@
 {
-  "name": "wordpress-dev",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "wordpress",
-  "workspaceFolder": "/var/www/html",
+  "name": "wp-dev-xdebug",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind",
+  "forwardPorts": [
+    8080,
+    9003
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -10,5 +17,10 @@
         "xdebug.php-debug"
       ]
     }
-  }
+  },
+  "postCreateCommand": "bash /entrypoint.sh setup",
+  "postStartCommand": "nohup bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,readonly"
+  ]
 }
