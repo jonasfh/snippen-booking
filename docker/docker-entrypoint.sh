@@ -12,7 +12,7 @@ cd "$WP_DIR"
 # Download WordPress if not exists
 if [ ! -f wp-load.php ]; then
   echo "Installing WordPress..."
-  wp core download --allow-root
+  wp core download --locale=en_US --allow-root
 fi
 
 # SQLite plugin (required for WP with SQLite)
@@ -67,6 +67,7 @@ fi
 # Install WP if not done
 if ! wp core is-installed --allow-root; then
   echo "Installing site..."
+  wp core language install en_US --allow-root || true
   wp core install \
     --url=http://localhost:8080 \
     --title="Dev Site" \
@@ -74,6 +75,7 @@ if ! wp core is-installed --allow-root; then
     --admin_password=admin \
     --admin_email=admin@example.com \
     --skip-email \
+    --locale=en_US \
     --allow-root
 fi
 
