@@ -17,14 +17,15 @@ fi
 
 # SQLite plugin (required for WP with SQLite)
 PLUGIN_DIR="wp-content/plugins/sqlite-database-integration"
-if [ ! -d "$PLUGIN_DIR/database" ]; then
+if [ ! -f "$PLUGIN_DIR/db.copy" ]; then
   echo "Installing SQLite plugin..."
   rm -rf "$PLUGIN_DIR"
-  git clone --depth 1 --branch main https://github.com/WordPress/sqlite-database-integration "$PLUGIN_DIR"
-  if [ -d "$PLUGIN_DIR/packages/plugin-sqlite-database-integration" ]; then
-    mv "$PLUGIN_DIR/packages/plugin-sqlite-database-integration"/* "$PLUGIN_DIR"/
-    rm -rf "$PLUGIN_DIR/packages"
-  fi
+  mkdir -p "$(dirname "$PLUGIN_DIR")"
+  curl -L -o /tmp/sqlite-database-integration.zip \
+    https://downloads.wordpress.org/plugin/sqlite-database-integration.latest-stable.zip
+  unzip -q /tmp/sqlite-database-integration.zip -d /tmp
+  mv /tmp/sqlite-database-integration "$PLUGIN_DIR"
+  rm -f /tmp/sqlite-database-integration.zip
 fi
 
 # Activate plugin manually (drop-in)
