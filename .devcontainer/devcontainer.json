@@ -14,13 +14,21 @@
     "vscode": {
       "extensions": [
         "bmewburn.vscode-intelephense-client",
-        "xdebug.php-debug"
+        "xdebug.php-debug",
+        "ms-azuretools.vscode-containers"
       ]
     }
+  },
+  "containerEnv": {
+    "DB_ENGINE": "sqlite",
+    "DB_DIR": "/wordpress/wp-content/database",
+    "DB_FILE": "dev.db"
   },
   "postCreateCommand": "bash /entrypoint.sh setup",
   "postStartCommand": "nohup bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
   "mounts": [
     "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,readonly"
-  ]
+  ],
+  
+  "remoteUser": "root"
 }
