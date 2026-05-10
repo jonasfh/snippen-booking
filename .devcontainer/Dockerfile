@@ -7,15 +7,16 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     unzip \
-    sqlite3 \
+    mariadb-server \
+    mariadb-client \
     php \
     php-cli \
     php-curl \
     php-json \
     php-mbstring \
+    php-mysql \
     php-xml \
     php-zip \
-    php-sqlite3 \
     php-xdebug \
     php-intl \
     php-gd \

@@ -20,9 +20,7 @@
     }
   },
   "containerEnv": {
-    "DB_ENGINE": "sqlite",
-    "DB_DIR": "/wordpress/wp-content/database",
-    "DB_FILE": "dev.db"
+    "WP_DEBUG": "1"
   },
   "postCreateCommand": "bash /entrypoint.sh setup",
   "postStartCommand": "nohup bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
