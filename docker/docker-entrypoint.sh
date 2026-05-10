@@ -73,14 +73,14 @@ if [ -d "wp-content/plugins/$PLUGIN_SLUG" ]; then
   wp plugin activate "$PLUGIN_SLUG" --allow-root || true
 fi
 
-# If argument is "setup", exit here
-if [ "$1" == "setup" ]; then
+# if has argument, and if argument is "setup", exit here
+if [ $# -gt 0 ] && [ "$1" == "setup" ]; then
   echo "Setup complete. Exiting."
   exit 0
 fi
 
 # If argument is "reset", clean everything and exit
-if [ "$1" == "reset" ]; then
+if [ $# -gt 0 ] && [ "$1" == "reset" ]; then
   echo "Resetting WordPress installation..."
   rm -f wp-config.php
   mysql -u root -e "DROP DATABASE IF EXISTS wordpress;" || true
