@@ -55,6 +55,7 @@ if ! wp core is-installed --allow-root; then
     --admin_email=admin@example.com \
     --skip-email \
     --allow-root
+  wp rewrite structure '/%postname%/' --allow-root
 fi
 
 # Symlink the plugin
@@ -93,20 +94,15 @@ echo "Starting PHP server on port ${PORT}..."
 
 cat > router.php <<'EOF'
 <?php
-
 if (php_sapi_name() === 'cli-server') {
-    $path = parse_url(
-        $_SERVER['REQUEST_URI'],
-        PHP_URL_PATH
-    );
-
-    $file = __DIR__ . $path;
-
-    if (is_file($file)) {
+    $url = parse_url($_SERVER['REQUEST_URI']);
+    $path = $url['path'];
+    if (is_file(__DIR__ . $path)) {
         return false;
     }
+    $_SERVER['SCRIPT_NAME'] = '/index.php';
+    $_SERVER['PHP_SELF'] = '/index.php' . $path;
 }
-
 require __DIR__ . '/index.php';
 EOF
 
