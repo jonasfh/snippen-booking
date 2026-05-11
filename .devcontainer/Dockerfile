@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 
 # Configure Xdebug
 RUN echo "xdebug.mode=debug" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
-    && echo "xdebug.start_with_request=yes" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
+    && echo "xdebug.start_with_request=trigger" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.client_port=9003" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini
 
