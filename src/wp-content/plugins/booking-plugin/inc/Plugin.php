@@ -1,0 +1,50 @@
+<?php
+
+namespace SnippenBooking;
+
+use SnippenBooking\Assets\AssetLoader;
+use SnippenBooking\Database\Install;
+use SnippenBooking\Shortcode\BookingShortcode;
+use SnippenBooking\Api\AvailabilityApi;
+use SnippenBooking\Api\BookingApi;
+
+/**
+ * Main plugin class - bootstrapper
+ */
+class Plugin {
+
+    /**
+     * Initialize the plugin
+     */
+    public static function init() {
+        // Register activation hook
+        register_activation_hook( dirname( dirname( __FILE__ ) ) . '/booking-plugin.php', array( __CLASS__, 'activate' ) );
+
+        // Hook into WordPress init
+        add_action( 'init', array( __CLASS__, 'register_hooks' ) );
+        add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
+    }
+
+    /**
+     * Handle plugin activation
+     */
+    public static function activate() {
+        Install::activate();
+    }
+
+    /**
+     * Register all hooks
+     */
+    public static function register_hooks() {
+        BookingShortcode::register();
+        AvailabilityApi::register();
+        BookingApi::register();
+    }
+
+    /**
+     * Enqueue assets
+     */
+    public static function enqueue_assets() {
+        AssetLoader::enqueue();
+    }
+}
