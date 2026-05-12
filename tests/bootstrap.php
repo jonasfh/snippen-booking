@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * Bootstrap tests for Snippen Booking Plugin
+ */
+
+// Define WordPress constants for testing
+if ( ! defined( 'ABSPATH' ) ) {
+    define( 'ABSPATH', __DIR__ . '/../../src/wordpress/' );
+}
+
+// Load WordPress test utilities if available (for integration tests)
+if ( file_exists( ABSPATH . 'wp-load.php' ) ) {
+    require_once ABSPATH . 'wp-load.php';
+}
+
+// Load the plugin's autoloader
+require_once __DIR__ . '/../src/wp-content/plugins/booking-plugin/autoloader.php';
+
+// Define test fixtures directory
+define( 'SNIPPEN_BOOKING_TESTS_DIR', __DIR__ );
