@@ -2,8 +2,6 @@
 
 namespace SnippenBooking\Tests;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Base test case class for all tests
  */

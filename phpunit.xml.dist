@@ -4,7 +4,6 @@
          bootstrap="tests/bootstrap.php"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutTestsThatDoNotTestAnything="false"
-         beStrictAboutTodoTestedCode="false"
          failOnRisky="true"
          failOnWarning="true"
          verbose="true">
