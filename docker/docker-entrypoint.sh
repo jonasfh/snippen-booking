@@ -96,12 +96,13 @@ cat > router.php <<'EOF'
 <?php
 if (php_sapi_name() === 'cli-server') {
     $url = parse_url($_SERVER['REQUEST_URI']);
-    $path = $url['path'];
-    if (is_file(__DIR__ . $path)) {
+    $file = __DIR__ . $url['path'];
+    if (is_file($file)) {
         return false;
     }
     $_SERVER['SCRIPT_NAME'] = '/index.php';
-    $_SERVER['PHP_SELF'] = '/index.php' . $path;
+    $_SERVER['SCRIPT_FILENAME'] = __DIR__ . '/index.php';
+    $_SERVER['PHP_SELF'] = '/index.php';
 }
 require __DIR__ . '/index.php';
 EOF
