@@ -35,5 +35,11 @@
         "test:integration": "phpunit --testsuite=Integration",
         "lint": "phpcs --standard=WordPress src/wp-content/plugins/booking-plugin/inc/",
         "lint:fix": "phpcbf --standard=WordPress src/wp-content/plugins/booking-plugin/inc/"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
     }
 }
