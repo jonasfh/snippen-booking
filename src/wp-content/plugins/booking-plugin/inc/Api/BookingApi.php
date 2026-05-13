@@ -26,6 +26,10 @@ class BookingApi {
             wp_send_json_error( array( 'message' => 'Security check failed' ) );
         }
 
+        if ( ! is_user_logged_in() ) {
+            wp_send_json_error( array( 'message' => 'Du må være innlogget for å booke.' ) );
+        }
+
         $booking_object_id = intval( $_POST['booking_object_id'] ?? 0 );
         $booking_date = sanitize_text_field( $_POST['event_date'] ?? '' );
         $slot_id = intval( $_POST['slot_id'] ?? 0 );

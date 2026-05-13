@@ -545,3 +545,49 @@
         font-size: 24px;
     }
 }
+
+/* Login Prompt & Readonly Mode */
+.snippen-login-prompt {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.snippen-login-prompt p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.vipps-login-btn {
+    background-color: #ff5b24; /* Vipps orange */
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.vipps-login-btn:hover {
+    background-color: #e04815;
+}
+
+.snippen-calendar-view.readonly-mode .slot-item.available {
+    cursor: not-allowed;
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+}
+
+.snippen-calendar-view.readonly-mode .slot-item.available:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: #e5e7eb;
+}
