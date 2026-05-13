@@ -33,6 +33,8 @@
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
         "test:integration": "phpunit --testsuite=Integration",
+        "demo:generate": "php bin/demo-data.php generate",
+        "demo:clear": "php bin/demo-data.php clear",
         "lint": "phpcs --standard=WordPress src/wp-content/plugins/booking-plugin/inc/",
         "lint:fix": "phpcbf --standard=WordPress src/wp-content/plugins/booking-plugin/inc/"
     },
