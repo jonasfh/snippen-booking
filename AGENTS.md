@@ -19,6 +19,7 @@ Guide AI agents working in this repository.
 - **Always create tests for new functionality**
 - **Update existing tests when changing functionality**
 - **Run tests to verify all changes before completion**
+- **DO NOT commit or push changes** (the USER handles version control)
 
 ## Plugin Structure
 
