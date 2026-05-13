@@ -15,9 +15,9 @@ class ShortcodeTest extends TestCase {
         
         $output = do_shortcode( '[snippen_booking]' );
 
-        $this->assertStringContainsString( 'class="snippen-booking-form"', $output );
+        $this->assertStringContainsString( 'class="snippen-booking-container"', $output );
         $this->assertStringContainsString( 'id="booking-form"', $output );
-        $this->assertStringContainsString( 'name="facility"', $output );
+        $this->assertStringContainsString( 'id="facility"', $output );
     }
 
     /**
@@ -29,7 +29,7 @@ class ShortcodeTest extends TestCase {
         
         $output = do_shortcode( '[snippen_booking type="calendar"]' );
 
-        $this->assertStringContainsString( 'class="snippen-booking-calendar"', $output );
+        $this->assertStringContainsString( 'class="snippen-calendar-view"', $output );
         $this->assertStringContainsString( 'id="calendar-container"', $output );
     }
 
