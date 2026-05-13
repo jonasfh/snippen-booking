@@ -17,6 +17,7 @@ jQuery(document).ready(function($) {
     var selectedDate = null;
     var selectedSlotId = null;
     var selectedSlotName = null;
+    var selectedSlotDescription = null;
     var facility = $('#facility').val() || 'spisestuen';
 
     /**
@@ -39,6 +40,25 @@ jQuery(document).ready(function($) {
             renderCalendar();
             hideForm();
         });
+
+        // Toggle Week Picker
+        $(document).on('click', '.current-week-range', function(e) {
+            e.stopPropagation();
+            $('.week-picker-dropdown').fadeToggle(200);
+        });
+
+        // Select Week from Picker
+        $(document).on('click', '.week-picker-dropdown li', function() {
+            var startStr = $(this).data('start');
+            currentStartDate = new Date(startStr);
+            renderCalendar();
+            hideForm();
+        });
+
+        // Close dropdown when clicking outside
+        $(document).click(function() {
+            $('.week-picker-dropdown').fadeOut(200);
+        });
         
         // Handle day click (for mobile expansion)
         $(document).on('click', '.day-header', function() {
@@ -55,6 +75,7 @@ jQuery(document).ready(function($) {
             selectedDate = $slot.data('date');
             selectedSlotId = $slot.data('slot-id');
             selectedSlotName = $slot.data('slot-name');
+            selectedSlotDescription = $slot.data('slot-description');
             
             // UI Feedback
             $('.slot-item').removeClass('selected');
@@ -123,7 +144,8 @@ jQuery(document).ready(function($) {
 
         var weekHtml = '<div class="calendar-header">';
         weekHtml += '<button class="week-nav-btn week-nav-prev" title="Forrige uke">&larr;</button>';
-        weekHtml += '<span class="current-week-range">' + formatDateRange(currentStartDate) + '</span>';
+        weekHtml += '<div class="current-week-range">' + formatDateRange(currentStartDate) + '</div>';
+        weekHtml += generateWeekPicker();
         weekHtml += '<button class="week-nav-btn week-nav-next" title="Neste uke">&rarr;</button>';
         weekHtml += '</div>';
 
@@ -167,6 +189,7 @@ jQuery(document).ready(function($) {
                     weekHtml += '<div class="slot-item ' + statusClass + '" ';
                     weekHtml += 'data-date="' + dateStr + '" ';
                     weekHtml += 'data-slot-id="' + slot.id + '" ';
+                    weekHtml += 'data-slot-description="' + (slot.description || '') + '" ';
                     weekHtml += 'data-slot-name="' + slot.name + '">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
                     weekHtml += '</div>';
@@ -185,6 +208,47 @@ jQuery(document).ready(function($) {
     }
 
     /**
+     * Generate the week picker dropdown HTML
+     */
+    function generateWeekPicker() {
+        var html = '<div class="week-picker-dropdown"><ul>';
+        var tempDate = new Date();
+        // Adjust to Monday
+        var day = tempDate.getDay();
+        var diff = tempDate.getDate() - day + (day === 0 ? -6 : 1);
+        tempDate.setDate(diff);
+        tempDate.setHours(0,0,0,0);
+
+        for (var i = 0; i < 52; i++) {
+            var weekStart = new Date(tempDate);
+            
+            var isActive = formatDateISO(weekStart) === formatDateISO(currentStartDate);
+            var weekNr = getWeekNumber(weekStart);
+            
+            html += '<li class="' + (isActive ? 'active' : '') + '" data-start="' + formatDateISO(weekStart) + '">';
+            html += '<span>' + formatDateRange(weekStart) + '</span>';
+            html += '<span class="week-nr-badge">Uke ' + weekNr + '</span>';
+            html += '</li>';
+            
+            tempDate.setDate(tempDate.getDate() + 7);
+        }
+        
+        html += '</ul></div>';
+        return html;
+    }
+
+    /**
+     * Get ISO week number
+     */
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        return weekNo;
+    }
+
+    /**
      * Show booking form
      */
     function showForm() {
@@ -194,6 +258,7 @@ jQuery(document).ready(function($) {
         var dateObj = new Date(selectedDate);
         var formattedDate = dateObj.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
         $('#selected-info-display').text(formattedDate + ' - ' + selectedSlotName);
+        $('#selected-slot-description').text(selectedSlotDescription || '');
         
         $('#booking-form-container').slideDown(400);
         
