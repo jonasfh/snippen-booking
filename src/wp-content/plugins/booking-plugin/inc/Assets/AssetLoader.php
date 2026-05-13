@@ -13,7 +13,7 @@ class AssetLoader {
      * @return string
      */
     private static function get_plugin_dir_url() {
-        return plugin_dir_url( dirname( dirname( __FILE__ ) ) . '/booking-plugin.php' );
+        return plugin_dir_url( dirname( dirname( dirname( __FILE__ ) ) ) . '/booking-plugin.php' );
     }
 
     /**
