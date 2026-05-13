@@ -125,6 +125,9 @@ class AvailabilityService {
             $end->modify('+' . (int)$cleanup_hours . ' hours');
         }
         
+        // Trekk fra 1 sekund for å unngå at tidsluker som går "kant i kant" overlapper
+        $end->modify('-1 second');
+
         return array('start' => $start, 'end' => $end);
     }
 
