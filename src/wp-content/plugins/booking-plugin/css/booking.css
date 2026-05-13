@@ -312,11 +312,33 @@
 }
 
 .slot-item.booked {
-    background: #fff1f2;
-    color: #9f1239;
-    border-color: #ffe4e6;
+    background: #fef2f2;
+    border-color: #fee2e2;
     cursor: default;
-    padding: 12px 8px;
+}
+
+.slot-item.unavailable {
+    background: #f9fafb;
+    border-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slot-item.unavailable .status-tag {
+    font-size: 0.65rem;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.slot-item.booked .slot-name {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 4px;
 }
 
 .slot-name {

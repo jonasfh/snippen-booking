@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Api;
 
+use SnippenBooking\Service\AvailabilityService;
+
 /**
  * Handles AJAX availability requests
  */
@@ -28,7 +30,7 @@ class AvailabilityApi {
             wp_send_json_error( array( 'message' => 'Manglende påkrevde parametere' ) );
         }
 
-        // Lead time (N days) - hardcoded for now, could be an option
+        // Lead time (N days)
         $offset_days = 0;
 
         // Calculate end date (7 days)
@@ -45,7 +47,7 @@ class AvailabilityApi {
             $object_id
         ) );
 
-        // Get all bookings for the range with slot details
+        // Get all bookings for the range with slot details (for UI display)
         $bookings = $wpdb->get_results( $wpdb->prepare(
             "SELECT b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
@@ -68,9 +70,14 @@ class AvailabilityApi {
             );
         }
 
+        // Get advanced availability (blocked by cleanup)
+        $availability_service = new AvailabilityService();
+        $unavailable_slots = $availability_service->getUnavailableSlots($object_id, $start_date, $end_date);
+
         wp_send_json_success( array(
             'slots' => $slots,
             'booked' => $booked_details,
+            'unavailable' => $unavailable_slots,
             'offset_days' => $offset_days
         ) );
     }

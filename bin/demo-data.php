@@ -55,6 +55,8 @@ if ($action === 'generate') {
         $date_str = $date->format('Y-m-d');
         
         // Randomly pick a booking object for this day's demo bookings
+        $service = new \SnippenBooking\Service\AvailabilityService();
+
         foreach ($objects as $obj) {
             // 40% chance of bookings for this object on this day
             if (rand(1, 10) <= 4) {
@@ -70,6 +72,10 @@ if ($action === 'generate') {
                 $selected_slots = array_slice($slots, 0, $num_bookings);
                 
                 foreach ($selected_slots as $slot) {
+                    if (!$service->isSlotAvailable($obj->id, $date_str, $slot->id)) {
+                        continue;
+                    }
+
                     $wpdb->insert($table_bookings, array(
                         'booking_object_id' => (int) $obj->id,
                         'slot_id' => (int) $slot->id,
