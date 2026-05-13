@@ -65,5 +65,28 @@ class Install {
                 'cleanup_hours' => 12
             ) );
         }
+
+        self::create_demo_page();
+    }
+
+    /**
+     * Create a demo page with the booking shortcode if it doesn't exist
+     */
+    public static function create_demo_page() {
+        $page_title = 'Booking Demo';
+        $page_content = '[snippen_booking]';
+
+        $page_check = get_page_by_title( $page_title );
+
+        if ( ! isset( $page_check->ID ) ) {
+            $new_page = array(
+                'post_type'    => 'page',
+                'post_title'   => $page_title,
+                'post_content' => $page_content,
+                'post_status'  => 'publish',
+                'post_author'  => 1,
+            );
+            wp_insert_post( $new_page );
+        }
     }
 }
