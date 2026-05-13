@@ -32,4 +32,17 @@ class ShortcodeTest extends TestCase {
         $this->assertStringContainsString( 'class="snippen-booking-calendar"', $output );
         $this->assertStringContainsString( 'id="calendar-container"', $output );
     }
+
+    /**
+     * Test if the demo page is created correctly
+     */
+    public function test_demo_page_created() {
+        // Trigger page creation
+        \SnippenBooking\Database\Install::create_demo_page();
+        
+        $page = get_page_by_title( 'Booking Demo' );
+        
+        $this->assertNotNull( $page, 'Demo page was not created' );
+        $this->assertStringContainsString( '[snippen_booking]', $page->post_content );
+    }
 }
