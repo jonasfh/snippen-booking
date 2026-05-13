@@ -22,6 +22,9 @@ class ShortcodeTest extends TestCase {
      * Test if the [snippen_booking] shortcode renders HTML
      */
     public function test_shortcode_renders() {
+        // Simulate a logged in user to see the form
+        wp_set_current_user( 1 ); // Standard admin user usually exists
+
         $output = do_shortcode( '[snippen_booking object_id="1"]' );
 
         $this->assertStringContainsString( 'class="snippen-booking-container"', $output );
@@ -29,6 +32,9 @@ class ShortcodeTest extends TestCase {
         $this->assertStringContainsString( 'data-object-id="1"', $output );
         // Facility dropdown should be gone
         $this->assertStringNotContainsString( 'id="facility"', $output );
+        
+        // Logout for other tests
+        wp_set_current_user( 0 );
     }
 
     /**
@@ -37,7 +43,7 @@ class ShortcodeTest extends TestCase {
     public function test_calendar_renders() {
         $output = do_shortcode( '[snippen_booking object_id="1"]' );
 
-        $this->assertStringContainsString( 'class="snippen-calendar-view"', $output );
+        $this->assertStringContainsString( 'snippen-calendar-view', $output );
         $this->assertStringContainsString( 'id="calendar-container"', $output );
     }
 

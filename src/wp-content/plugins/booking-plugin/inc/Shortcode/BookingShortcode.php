@@ -33,9 +33,14 @@ class BookingShortcode {
             return '<div class="snippen-booking-error">Booking-objekt (ID: ' . esc_html( $atts['object_id'] ) . ') ikke funnet.</div>';
         }
 
+        $is_logged_in = is_user_logged_in();
+        $current_user = wp_get_current_user();
+        $user_name = $is_logged_in ? esc_attr( $current_user->display_name ) : '';
+        $user_email = $is_logged_in ? esc_attr( $current_user->user_email ) : '';
+
         ob_start();
         ?>
-        <div class="snippen-booking-container" data-object-id="<?php echo esc_attr( $atts['object_id'] ); ?>">
+        <div class="snippen-booking-container" data-object-id="<?php echo esc_attr( $atts['object_id'] ); ?>" data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>">
             <div class="booking-header-section">
                 <div class="header-main">
                     <h3><?php echo esc_html( $object->name ); ?></h3>
@@ -48,10 +53,18 @@ class BookingShortcode {
                 <?php endif; ?>
             </div>
 
-            <div id="calendar-container" class="snippen-calendar-view">
+            <?php if ( ! $is_logged_in ) : ?>
+                <div class="snippen-login-prompt">
+                    <p>Du må være beboer og innlogget for å kunne booke. Kalenderen under viser kun tilgjengelighet.</p>
+                    <a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="vipps-login-btn">Logg inn med Vipps</a>
+                </div>
+            <?php endif; ?>
+
+            <div id="calendar-container" class="snippen-calendar-view <?php echo ! $is_logged_in ? 'readonly-mode' : ''; ?>">
                 <div class="calendar-loader">Laster kalender...</div>
             </div>
 
+            <?php if ( $is_logged_in ) : ?>
             <div id="booking-form-container" class="snippen-booking-form-wrapper" style="display: none;">
                 <div class="form-header">
                     <div class="header-content">
@@ -69,12 +82,12 @@ class BookingShortcode {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="name">Ditt navn</label>
-                            <input type="text" name="name" id="name" required placeholder="Fullt navn">
+                            <input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" readonly>
                         </div>
                         
                         <div class="form-group">
                             <label for="email">E-post</label>
-                            <input type="email" name="email" id="email" required placeholder="navn@eksempel.no">
+                            <input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" readonly>
                         </div>
                         
                         <div class="form-group">
@@ -92,6 +105,7 @@ class BookingShortcode {
                 </form>
                 <div id="booking-response" style="display: none;"></div>
             </div>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();

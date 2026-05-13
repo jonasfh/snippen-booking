@@ -64,6 +64,8 @@ jQuery(document).ready(function ($) {
             $('.week-picker-dropdown').fadeOut(200);
         });
 
+        var isLoggedIn = $container.data('logged-in') === true;
+
         // Handle day click (for mobile expansion)
         $(document).on('click', '.day-header', function () {
             var $column = $(this).closest('.day-column');
@@ -75,6 +77,12 @@ jQuery(document).ready(function ($) {
 
         // Handle slot click
         $(document).on('click', '.slot-item.available', function () {
+            if (!isLoggedIn) {
+                // Highlight login prompt if trying to click while logged out
+                $('.snippen-login-prompt').fadeOut(150).fadeIn(150);
+                return;
+            }
+
             var $slot = $(this);
             selectedDate = $slot.data('date');
             selectedSlotId = $slot.data('slot-id');
