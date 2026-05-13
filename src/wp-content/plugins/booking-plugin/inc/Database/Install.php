@@ -61,9 +61,24 @@ class Install {
                 'name' => 'Hele dagen',
                 'description' => 'Du booker rommet for hele dagen, og har til kl 12 neste dag til å vaske deg ut.',
                 'start_time' => '00:00:00',
-                'end_time' => '23:59:59',
-                'cleanup_hours' => 12
+                'end_time' => '23:00:00',
+                'cleanup_hours' => 13
             ) );
+            $wpdb->insert( $table_slots, array(
+                'name' => 'Formiddag',
+                'description' => 'Fra kl 08:00 til 16:00. Du ha vasket og ryddet lokalet når du forlater det.',
+                'start_time' => '08:00:00',
+                'end_time' => '16:00:00',
+                'cleanup_hours' => 0
+            ) );
+            $wpdb->insert( $table_slots, array(
+                'name' => 'Ettermiddag',
+                'description' => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
+                'start_time' => '16:00:00',
+                'end_time' => '23:00:00',
+                'cleanup_hours' => 9
+            ) );
+
         }
 
         self::create_demo_page();
