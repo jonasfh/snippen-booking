@@ -38,26 +38,34 @@ class AvailabilityApi {
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
 
         // Get all active slots
-        $slots = $wpdb->get_results( "SELECT id, name, description, start_time, end_time FROM $table_slots WHERE deleted_at IS NULL" );
+        $slots = $wpdb->get_results( "SELECT id, name, description, start_time, end_time, cleanup_hours FROM $table_slots WHERE deleted_at IS NULL" );
 
-        // Get all bookings for the range
+        // Get all bookings for the range with slot details
         $bookings = $wpdb->get_results( $wpdb->prepare(
-            "SELECT booking_date, slot_id FROM $table_bookings 
-             WHERE facility = %s 
-             AND booking_date BETWEEN %s AND %s 
-             AND deleted_at IS NULL",
+            "SELECT b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours 
+             FROM $table_bookings b
+             JOIN $table_slots s ON b.slot_id = s.id
+             WHERE b.facility = %s 
+             AND b.booking_date BETWEEN %s AND %s 
+             AND b.deleted_at IS NULL",
             $facility, $start_date, $end_date
         ) );
 
-        // Organize bookings by date and slot
-        $booked_slots = array();
+        // Organize bookings by date
+        $booked_details = array();
         foreach ( $bookings as $booking ) {
-            $booked_slots[ $booking->booking_date ][] = (int) $booking->slot_id;
+            $booked_details[ $booking->booking_date ][] = array(
+                'slot_id' => (int) $booking->slot_id,
+                'slot_name' => $booking->slot_name,
+                'start_time' => $booking->start_time,
+                'end_time' => $booking->end_time,
+                'cleanup_hours' => (int) $booking->cleanup_hours
+            );
         }
 
         wp_send_json_success( array(
             'slots' => $slots,
-            'booked' => $booked_slots,
+            'booked' => $booked_details,
             'offset_days' => $offset_days
         ) );
     }
