@@ -2,13 +2,13 @@
  * Snippen Booking Plugin JavaScript
  */
 
-jQuery(document).ready(function($) {
+jQuery(document).ready(function ($) {
     'use strict';
 
     var currentStartDate = new Date();
     // Round to start of day
     currentStartDate.setHours(0, 0, 0, 0);
-    
+
     // Adjust to Monday
     var day = currentStartDate.getDay();
     var diff = currentStartDate.getDate() - day + (day === 0 ? -6 : 1);
@@ -18,6 +18,8 @@ jQuery(document).ready(function($) {
     var selectedSlotId = null;
     var selectedSlotName = null;
     var selectedSlotDescription = null;
+    var selectedSlotStartTime = null;
+    var selectedSlotEndTime = null;
     var facility = $('#facility').val() || 'spisestuen';
 
     /**
@@ -25,30 +27,30 @@ jQuery(document).ready(function($) {
      */
     function init() {
         if (!$('#calendar-container').length) return;
-        
+
         renderCalendar();
-        
+
         // Handle next/prev week
-        $(document).on('click', '.week-nav-next', function() {
+        $(document).on('click', '.week-nav-next', function () {
             currentStartDate.setDate(currentStartDate.getDate() + 7);
             renderCalendar();
             hideForm();
         });
-        
-        $(document).on('click', '.week-nav-prev', function() {
+
+        $(document).on('click', '.week-nav-prev', function () {
             currentStartDate.setDate(currentStartDate.getDate() - 7);
             renderCalendar();
             hideForm();
         });
 
         // Toggle Week Picker
-        $(document).on('click', '.current-week-range', function(e) {
+        $(document).on('click', '.current-week-range', function (e) {
             e.stopPropagation();
             $('.week-picker-dropdown').fadeToggle(200);
         });
 
         // Select Week from Picker
-        $(document).on('click', '.week-picker-dropdown li', function() {
+        $(document).on('click', '.week-picker-dropdown li', function () {
             var startStr = $(this).data('start');
             currentStartDate = new Date(startStr);
             renderCalendar();
@@ -56,41 +58,43 @@ jQuery(document).ready(function($) {
         });
 
         // Close dropdown when clicking outside
-        $(document).click(function() {
+        $(document).click(function () {
             $('.week-picker-dropdown').fadeOut(200);
         });
-        
+
         // Handle day click (for mobile expansion)
-        $(document).on('click', '.day-header', function() {
+        $(document).on('click', '.day-header', function () {
             var $column = $(this).closest('.day-column');
             if ($column.hasClass('past')) return;
-            
+
             $('.day-column').not($column).removeClass('expanded selected-day');
             $column.toggleClass('expanded selected-day');
         });
-        
+
         // Handle slot click
-        $(document).on('click', '.slot-item.available', function() {
+        $(document).on('click', '.slot-item.available', function () {
             var $slot = $(this);
             selectedDate = $slot.data('date');
             selectedSlotId = $slot.data('slot-id');
             selectedSlotName = $slot.data('slot-name');
             selectedSlotDescription = $slot.data('slot-description');
-            
+            selectedSlotStartTime = $slot.data('start-time');
+            selectedSlotEndTime = $slot.data('end-time');
+
             // UI Feedback
             $('.slot-item').removeClass('selected');
             $slot.addClass('selected');
-            
+
             showForm();
         });
 
         // Close form
-        $(document).on('click', '.close-form', function() {
+        $(document).on('click', '.close-form', function () {
             hideForm();
         });
 
         // Facility change
-        $('#facility').on('change', function() {
+        $('#facility').on('change', function () {
             facility = $(this).val();
             renderCalendar();
             hideForm();
@@ -108,7 +112,7 @@ jQuery(document).ready(function($) {
         $container.html('<div class="calendar-loader">Oppdaterer tilgjengelighet...</div>');
 
         var startDateStr = formatDateISO(currentStartDate);
-        
+
         $.ajax({
             url: snippenBookingAjax.ajaxurl,
             type: 'GET',
@@ -117,7 +121,7 @@ jQuery(document).ready(function($) {
                 facility: facility,
                 start_date: startDateStr
             },
-            success: function(response) {
+            success: function (response) {
                 if (response.success) {
                     drawWeek(response.data);
                 } else {
@@ -135,10 +139,10 @@ jQuery(document).ready(function($) {
         var slots = data.slots;
         var booked = data.booked;
         var offsetDays = data.offset_days;
-        
+
         var today = new Date();
-        today.setHours(0,0,0,0);
-        
+        today.setHours(0, 0, 0, 0);
+
         var limitDate = new Date(today);
         limitDate.setDate(limitDate.getDate() + offsetDays);
 
@@ -150,7 +154,7 @@ jQuery(document).ready(function($) {
         weekHtml += '</div>';
 
         weekHtml += '<div class="week-grid">';
-        
+
         var tempDate = new Date(currentStartDate);
         var dayNames = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
 
@@ -158,22 +162,22 @@ jQuery(document).ready(function($) {
             var dateStr = formatDateISO(tempDate);
             var isPast = tempDate < today; // Use today for "past" visual state
             var isSelected = selectedDate === dateStr;
-            
+
             weekHtml += '<div class="day-column ' + (isPast ? 'past' : '') + (isSelected ? ' selected-day' : '') + '">';
             weekHtml += '<div class="day-header">';
             weekHtml += '<span class="day-name">' + dayNames[i] + '</span>';
             weekHtml += '<span class="day-date">' + tempDate.getDate() + '.' + (tempDate.getMonth() + 1) + '</span>';
             weekHtml += '</div>';
-            
+
             weekHtml += '<div class="slots-container">';
-            
+
             var dayBookings = booked[dateStr] || [];
-            
-            slots.forEach(function(slot) {
+
+            slots.forEach(function (slot) {
                 var existing = dayBookings.find(b => b.slot_id === parseInt(slot.id));
                 var isBooked = !!existing;
                 var isCurrentlySelected = isSelected && selectedSlotId === parseInt(slot.id);
-                
+
                 if (isBooked) {
                     weekHtml += '<div class="slot-item booked">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
@@ -185,25 +189,27 @@ jQuery(document).ready(function($) {
                 } else {
                     var statusClass = isPast ? 'disabled' : 'available';
                     if (isCurrentlySelected) statusClass += ' selected';
-                    
+
                     weekHtml += '<div class="slot-item ' + statusClass + '" ';
                     weekHtml += 'data-date="' + dateStr + '" ';
                     weekHtml += 'data-slot-id="' + slot.id + '" ';
                     weekHtml += 'data-slot-description="' + (slot.description || '') + '" ';
+                    weekHtml += 'data-start-time="' + slot.start_time + '" ';
+                    weekHtml += 'data-end-time="' + slot.end_time + '" ';
                     weekHtml += 'data-slot-name="' + slot.name + '">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
                     weekHtml += '</div>';
                 }
             });
-            
+
             weekHtml += '</div>'; // slots-container
             weekHtml += '</div>'; // day-column
-            
+
             tempDate.setDate(tempDate.getDate() + 1);
         }
-        
+
         weekHtml += '</div>'; // week-grid
-        
+
         $container.html(weekHtml);
     }
 
@@ -217,22 +223,22 @@ jQuery(document).ready(function($) {
         var day = tempDate.getDay();
         var diff = tempDate.getDate() - day + (day === 0 ? -6 : 1);
         tempDate.setDate(diff);
-        tempDate.setHours(0,0,0,0);
+        tempDate.setHours(0, 0, 0, 0);
 
         for (var i = 0; i < 52; i++) {
             var weekStart = new Date(tempDate);
-            
+
             var isActive = formatDateISO(weekStart) === formatDateISO(currentStartDate);
             var weekNr = getWeekNumber(weekStart);
-            
+
             html += '<li class="' + (isActive ? 'active' : '') + '" data-start="' + formatDateISO(weekStart) + '">';
             html += '<span>' + formatDateRange(weekStart) + '</span>';
             html += '<span class="week-nr-badge">Uke ' + weekNr + '</span>';
             html += '</li>';
-            
+
             tempDate.setDate(tempDate.getDate() + 7);
         }
-        
+
         html += '</ul></div>';
         return html;
     }
@@ -242,9 +248,9 @@ jQuery(document).ready(function($) {
      */
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-        var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-        var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         return weekNo;
     }
 
@@ -254,14 +260,16 @@ jQuery(document).ready(function($) {
     function showForm() {
         $('#event-date').val(selectedDate);
         $('#slot-id').val(selectedSlotId);
-        
+
         var dateObj = new Date(selectedDate);
         var formattedDate = dateObj.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
-        $('#selected-info-display').text(formattedDate + ' - ' + selectedSlotName);
+
+        var timeStr = selectedSlotStartTime.substring(0, 5) + ' - ' + selectedSlotEndTime.substring(0, 5);
+        $('#selected-info-display').text(formattedDate + ' | ' + selectedSlotName + ' (' + timeStr + ')');
         $('#selected-slot-description').text(selectedSlotDescription || '');
-        
+
         $('#booking-form-container').slideDown(400);
-        
+
         $('html, body').animate({
             scrollTop: $("#booking-form-container").offset().top - 40
         }, 600);
@@ -305,11 +313,11 @@ jQuery(document).ready(function($) {
             url: snippenBookingAjax.ajaxurl,
             type: 'POST',
             data: formData,
-            success: function(response) {
+            success: function (response) {
                 if (response.success) {
                     $response.removeClass('error').addClass('success').html(response.data.message).fadeIn();
                     $form[0].reset();
-                    setTimeout(function() {
+                    setTimeout(function () {
                         hideForm();
                         renderCalendar();
                     }, 3000);
@@ -318,7 +326,7 @@ jQuery(document).ready(function($) {
                     $submitBtn.prop('disabled', false).text('Prøv igjen');
                 }
             },
-            error: function() {
+            error: function () {
                 $response.removeClass('success').addClass('error').html('Tilkoblingsfeil.').fadeIn();
                 $submitBtn.prop('disabled', false).text('Prøv igjen');
             }
@@ -346,10 +354,10 @@ jQuery(document).ready(function($) {
     function formatDateRange(start) {
         var end = new Date(start);
         end.setDate(end.getDate() + 6);
-        
+
         var startOptions = { day: 'numeric', month: 'short' };
         var endOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-        
+
         return start.toLocaleDateString('nb-NO', startOptions) + ' - ' + end.toLocaleDateString('nb-NO', endOptions);
     }
 
