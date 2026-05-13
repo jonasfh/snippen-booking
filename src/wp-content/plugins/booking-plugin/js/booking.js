@@ -133,6 +133,7 @@ jQuery(document).ready(function ($) {
         var $calendar = $('#calendar-container');
         var slots = data.slots;
         var booked = data.booked;
+        var unavailable = data.unavailable || {};
         var offsetDays = data.offset_days;
 
         var today = new Date();
@@ -167,11 +168,14 @@ jQuery(document).ready(function ($) {
             weekHtml += '<div class="slots-container">';
 
             var dayBookings = booked[dateStr] || [];
+            var dayUnavailable = unavailable[dateStr] || [];
 
             slots.forEach(function (slot) {
-                var existing = dayBookings.find(b => b.slot_id === parseInt(slot.id));
+                var slotId = parseInt(slot.id);
+                var existing = dayBookings.find(b => b.slot_id === slotId);
                 var isBooked = !!existing;
-                var isCurrentlySelected = isSelected && selectedSlotId === parseInt(slot.id);
+                var isBlocked = dayUnavailable.includes(slotId);
+                var isCurrentlySelected = isSelected && selectedSlotId === slotId;
 
                 if (isBooked) {
                     weekHtml += '<div class="slot-item booked">';
@@ -180,6 +184,11 @@ jQuery(document).ready(function ($) {
                     if (existing.cleanup_hours > 0) {
                         weekHtml += '<span class="cleanup-tag">+' + existing.cleanup_hours + 't vask</span>';
                     }
+                    weekHtml += '</div>';
+                } else if (isBlocked && !isPast) {
+                    weekHtml += '<div class="slot-item unavailable" title="Blokkert av utvasktid">';
+                    weekHtml += '<span class="slot-name">' + slot.name + '</span>';
+                    weekHtml += '<span class="status-tag">Opptatt</span>';
                     weekHtml += '</div>';
                 } else {
                     var statusClass = isPast ? 'disabled' : 'available';

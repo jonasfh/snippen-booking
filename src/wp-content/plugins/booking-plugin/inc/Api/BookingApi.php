@@ -34,16 +34,10 @@ class BookingApi {
             wp_send_json_error( array( 'message' => 'Mangler nødvendige felt.' ) );
         }
 
-        // Check if already booked
-        $table_bookings = $wpdb->prefix . 'snippen_bookings';
-        $is_booked = $wpdb->get_var( $wpdb->prepare(
-            "SELECT COUNT(*) FROM $table_bookings 
-             WHERE booking_object_id = %d AND booking_date = %s AND slot_id = %d AND deleted_at IS NULL",
-            $booking_object_id, $booking_date, $slot_id
-        ) );
-
-        if ( $is_booked ) {
-            wp_send_json_error( array( 'message' => 'Denne slotten er allerede booket.' ) );
+        // Check if available (using advanced overlap detection)
+        $availability_service = new \SnippenBooking\Service\AvailabilityService();
+        if ( ! $availability_service->isSlotAvailable( $booking_object_id, $booking_date, $slot_id ) ) {
+            wp_send_json_error( array( 'message' => 'Denne tidsluken er ikke lenger tilgjengelig.' ) );
         }
 
         // Process booking data
