@@ -20,7 +20,9 @@ jQuery(document).ready(function ($) {
     var selectedSlotDescription = null;
     var selectedSlotStartTime = null;
     var selectedSlotEndTime = null;
-    var facility = $('#facility').val() || 'spisestuen';
+
+    var $container = $('.snippen-booking-container');
+    var objectId = $container.data('object-id');
 
     /**
      * Initialize the calendar
@@ -93,13 +95,6 @@ jQuery(document).ready(function ($) {
             hideForm();
         });
 
-        // Facility change
-        $('#facility').on('change', function () {
-            facility = $(this).val();
-            renderCalendar();
-            hideForm();
-        });
-
         // Form submission
         $('#booking-form').on('submit', handleFormSubmit);
     }
@@ -108,8 +103,8 @@ jQuery(document).ready(function ($) {
      * Fetch availability and render
      */
     function renderCalendar() {
-        var $container = $('#calendar-container');
-        $container.html('<div class="calendar-loader">Oppdaterer tilgjengelighet...</div>');
+        var $calendar = $('#calendar-container');
+        $calendar.html('<div class="calendar-loader">Oppdaterer tilgjengelighet...</div>');
 
         var startDateStr = formatDateISO(currentStartDate);
 
@@ -118,14 +113,14 @@ jQuery(document).ready(function ($) {
             type: 'GET',
             data: {
                 action: 'snippen_get_availability',
-                facility: facility,
+                object_id: objectId,
                 start_date: startDateStr
             },
             success: function (response) {
                 if (response.success) {
                     drawWeek(response.data);
                 } else {
-                    $container.html('<div class="error">Kunne ikke laste kalender.</div>');
+                    $calendar.html('<div class="error">Kunne ikke laste kalender.</div>');
                 }
             }
         });
@@ -135,7 +130,7 @@ jQuery(document).ready(function ($) {
      * Draw the grid
      */
     function drawWeek(data) {
-        var $container = $('#calendar-container');
+        var $calendar = $('#calendar-container');
         var slots = data.slots;
         var booked = data.booked;
         var offsetDays = data.offset_days;
@@ -210,7 +205,7 @@ jQuery(document).ready(function ($) {
 
         weekHtml += '</div>'; // week-grid
 
-        $container.html(weekHtml);
+        $calendar.html(weekHtml);
     }
 
     /**
@@ -264,7 +259,7 @@ jQuery(document).ready(function ($) {
         var dateObj = new Date(selectedDate);
         var formattedDate = dateObj.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
 
-        var timeStr = selectedSlotStartTime.substring(0, 5) + ' - ' + selectedSlotEndTime.substring(0, 5);
+        var timeStr = (selectedSlotStartTime || '').substring(0, 5) + ' - ' + (selectedSlotEndTime || '').substring(0, 5);
         $('#selected-info-display').text(formattedDate + ' | ' + selectedSlotName + ' (' + timeStr + ')');
         $('#selected-slot-description').text(selectedSlotDescription || '');
 
@@ -300,7 +295,7 @@ jQuery(document).ready(function ($) {
         var formData = {
             action: 'snippen_booking_submit',
             nonce: snippenBookingAjax.nonce,
-            facility: $('#facility').val(),
+            booking_object_id: objectId,
             event_date: $('#event-date').val(),
             slot_id: $('#slot-id').val(),
             name: $('#name').val(),

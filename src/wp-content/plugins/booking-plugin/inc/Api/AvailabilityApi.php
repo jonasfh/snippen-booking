@@ -16,16 +16,16 @@ class AvailabilityApi {
     }
 
     /**
-     * Get availability for a given facility and week
+     * Get availability for a given object and week
      */
     public static function get_availability() {
         global $wpdb;
 
-        $facility = sanitize_text_field( $_GET['facility'] ?? '' );
+        $object_id = (int) ( $_GET['object_id'] ?? 0 );
         $start_date = sanitize_text_field( $_GET['start_date'] ?? '' ); // YYYY-MM-DD
 
-        if ( empty( $facility ) || empty( $start_date ) ) {
-            wp_send_json_error( array( 'message' => 'Missing required parameters' ) );
+        if ( empty( $object_id ) || empty( $start_date ) ) {
+            wp_send_json_error( array( 'message' => 'Manglende påkrevde parametere' ) );
         }
 
         // Lead time (N days) - hardcoded for now, could be an option
@@ -37,18 +37,23 @@ class AvailabilityApi {
         $table_slots = $wpdb->prefix . 'snippen_time_slots';
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
 
-        // Get all active slots
-        $slots = $wpdb->get_results( "SELECT id, name, description, start_time, end_time, cleanup_hours FROM $table_slots WHERE deleted_at IS NULL" );
+        // Get slots for this specific object
+        $slots = $wpdb->get_results( $wpdb->prepare(
+            "SELECT id, name, description, start_time, end_time, cleanup_hours 
+             FROM $table_slots 
+             WHERE booking_object_id = %d AND deleted_at IS NULL",
+            $object_id
+        ) );
 
         // Get all bookings for the range with slot details
         $bookings = $wpdb->get_results( $wpdb->prepare(
             "SELECT b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
              JOIN $table_slots s ON b.slot_id = s.id
-             WHERE b.facility = %s 
+             WHERE b.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
              AND b.deleted_at IS NULL",
-            $facility, $start_date, $end_date
+            $object_id, $start_date, $end_date
         ) );
 
         // Organize bookings by date

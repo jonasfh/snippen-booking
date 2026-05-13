@@ -16,10 +16,25 @@ class Install {
 
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
+        // Booking objects table
+        $table_objects = $wpdb->prefix . 'snippen_booking_objects';
+        $sql_objects = "CREATE TABLE $table_objects (
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            info_link VARCHAR(255),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+        dbDelta( $sql_objects );
+
         // Time slots table
         $table_slots = $wpdb->prefix . 'snippen_time_slots';
         $sql_slots = "CREATE TABLE $table_slots (
             id INT NOT NULL AUTO_INCREMENT,
+            booking_object_id INT NOT NULL,
             name VARCHAR(255) NOT NULL,
             description TEXT,
             start_time TIME DEFAULT '00:00:00',
@@ -28,7 +43,8 @@ class Install {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            INDEX (booking_object_id)
         ) $charset_collate;";
         dbDelta( $sql_slots );
 
@@ -36,7 +52,8 @@ class Install {
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
         $sql_bookings = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
-            facility VARCHAR(50) NOT NULL,
+            booking_object_id INT NOT NULL,
+            facility VARCHAR(50), -- Keeping temporarily for migration safety
             slot_id INT NOT NULL,
             booking_date DATE NOT NULL,
             customer_name VARCHAR(255) NOT NULL,
@@ -49,36 +66,58 @@ class Install {
             deleted_at DATETIME NULL,
             PRIMARY KEY (id),
             INDEX (booking_date),
-            INDEX (facility),
+            INDEX (booking_object_id),
             INDEX (slot_id)
         ) $charset_collate;";
         dbDelta( $sql_bookings );
 
-        // Insert default slot if not exists
-        $exists = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table_slots WHERE name = %s", 'Hele dagen' ) );
-        if ( ! $exists ) {
-            $wpdb->insert( $table_slots, array(
-                'name' => 'Hele dagen',
-                'description' => 'Du booker rommet for hele dagen, og har til kl 12 neste dag til å vaske deg ut.',
-                'start_time' => '00:00:00',
-                'end_time' => '23:00:00',
-                'cleanup_hours' => 13
+        // Seed data if empty
+        $object_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_objects" );
+        if ( $object_count == 0 ) {
+            // 1. Spisestuen
+            $wpdb->insert( $table_objects, array(
+                'name' => 'Spisestuen',
+                'description' => 'Vårt største lokale med plass til mange gjester.'
             ) );
-            $wpdb->insert( $table_slots, array(
-                'name' => 'Formiddag',
-                'description' => 'Fra kl 08:00 til 16:00. Du ha vasket og ryddet lokalet når du forlater det.',
-                'start_time' => '08:00:00',
-                'end_time' => '16:00:00',
-                'cleanup_hours' => 0
-            ) );
-            $wpdb->insert( $table_slots, array(
-                'name' => 'Ettermiddag',
-                'description' => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
-                'start_time' => '16:00:00',
-                'end_time' => '23:00:00',
-                'cleanup_hours' => 9
-            ) );
+            $spisestuen_id = $wpdb->insert_id;
 
+            // 2. Peisestuen
+            $wpdb->insert( $table_objects, array(
+                'name' => 'Peisestuen',
+                'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.'
+            ) );
+            $peisestuen_id = $wpdb->insert_id;
+
+            // Seed slots for Spisestuen
+            $this_slots = array(
+                array(
+                    'name' => 'Hele dagen',
+                    'description' => 'Du booker rommet for hele dagen, og har til kl 12 neste dag til å vaske deg ut.',
+                    'start_time' => '00:00:00',
+                    'end_time' => '23:00:00',
+                    'cleanup_hours' => 13
+                ),
+                array(
+                    'name' => 'Formiddag',
+                    'description' => 'Fra kl 08:00 til 16:00. Du må vaske og ryddet lokalet når du forlater det.',
+                    'start_time' => '08:00:00',
+                    'end_time' => '16:00:00',
+                    'cleanup_hours' => 0
+                ),
+                array(
+                    'name' => 'Ettermiddag',
+                    'description' => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
+                    'start_time' => '16:00:00',
+                    'end_time' => '23:00:00',
+                    'cleanup_hours' => 9
+                )
+            );
+
+            foreach ( array( $spisestuen_id, $peisestuen_id ) as $obj_id ) {
+                foreach ( $this_slots as $slot ) {
+                    $wpdb->insert( $table_slots, array_merge( $slot, array( 'booking_object_id' => $obj_id ) ) );
+                }
+            }
         }
 
         self::create_demo_page();
@@ -89,7 +128,7 @@ class Install {
      */
     public static function create_demo_page() {
         $page_title = 'Booking Demo';
-        $page_content = '[snippen_booking]';
+        $page_content = '[snippen_booking object_id="1"]'; // Default to first object
 
         $page_check = get_page_by_title( $page_title );
 

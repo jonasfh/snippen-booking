@@ -22,23 +22,30 @@ class BookingShortcode {
      */
     public static function render( $atts ) {
         $atts = shortcode_atts( array(
-            'facility' => 'spisestuen',
+            'object_id' => 1,
         ), $atts );
+
+        global $wpdb;
+        $table_objects = $wpdb->prefix . 'snippen_booking_objects';
+        $object = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_objects WHERE id = %d AND deleted_at IS NULL", $atts['object_id'] ) );
+
+        if ( ! $object ) {
+            return '<div class="snippen-booking-error">Booking-objekt (ID: ' . esc_html( $atts['object_id'] ) . ') ikke funnet.</div>';
+        }
 
         ob_start();
         ?>
-        <div class="snippen-booking-container">
+        <div class="snippen-booking-container" data-object-id="<?php echo esc_attr( $atts['object_id'] ); ?>">
             <div class="booking-header-section">
-                <h3>Book lokale på Snippen</h3>
-                <div class="facility-selector">
-                    <label for="facility">Velg lokale:</label>
-                    <div class="select-wrapper">
-                        <select id="facility">
-                            <option value="spisestuen" <?php selected( $atts['facility'], 'spisestuen' ); ?>>Spisestuen</option>
-                            <option value="peisestuen" <?php selected( $atts['facility'], 'peisestuen' ); ?>>Peisestuen</option>
-                        </select>
-                    </div>
+                <div class="header-main">
+                    <h3><?php echo esc_html( $object->name ); ?></h3>
+                    <?php if ( $object->info_link ) : ?>
+                        <a href="<?php echo esc_url( $object->info_link ); ?>" class="info-link" target="_blank">Mer info &rarr;</a>
+                    <?php endif; ?>
                 </div>
+                <?php if ( $object->description ) : ?>
+                    <p class="object-summary"><?php echo esc_html( $object->description ); ?></p>
+                <?php endif; ?>
             </div>
 
             <div id="calendar-container" class="snippen-calendar-view">
@@ -57,6 +64,7 @@ class BookingShortcode {
                 <form id="booking-form" method="post">
                     <input type="hidden" name="event_date" id="event-date">
                     <input type="hidden" name="slot_id" id="slot-id">
+                    <input type="hidden" name="booking_object_id" value="<?php echo esc_attr( $atts['object_id'] ); ?>">
                     
                     <div class="form-grid">
                         <div class="form-group">
