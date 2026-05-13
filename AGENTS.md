@@ -16,6 +16,9 @@ Guide AI agents working in this repository.
 - Keep logic modular and testable
 - Avoid unnecessary dependencies
 - All plugin logic in `inc/` directory (WordPress standard)
+- **Always create tests for new functionality**
+- **Update existing tests when changing functionality**
+- **Run tests to verify all changes before completion**
 
 ## Plugin Structure
 
