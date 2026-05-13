@@ -6,7 +6,7 @@
 
 // Define WordPress constants for testing
 if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', __DIR__ . '/../../src/wordpress/' );
+    define( 'ABSPATH', '/wordpress/' );
 }
 
 // Load WordPress test utilities if available (for integration tests)
