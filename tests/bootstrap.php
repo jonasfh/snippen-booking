@@ -6,7 +6,7 @@
 
 // Define WordPress constants for testing
 if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', '/wordpress/' );
+    define( 'ABSPATH', getenv( 'WP_ABSPATH' ) ?: '/wordpress/' );
 }
 
 // Load WordPress test utilities if available (for integration tests)
