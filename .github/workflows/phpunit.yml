@@ -1,0 +1,49 @@
+name: PHPUnit Tests
+
+on:
+  push:
+    branches: [ main, booking-1 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mariadb:10.5
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mysqli, mbstring, xml
+        tools: composer:v2, wp-cli
+
+    - name: Install dependencies
+      run: composer install --no-progress
+
+    - name: Setup WordPress
+      run: |
+        mkdir -p /tmp/wordpress
+        wp core download --path=/tmp/wordpress
+        wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1
+        wp core install --path=/tmp/wordpress --url=http://localhost --title="Test Site" --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+        
+    - name: Run tests
+      env:
+        WP_ABSPATH: /tmp/wordpress/
+      run: |
+        # Run activation manually to create tables since we're not running a full WP request cycle
+        php -r "require_once '/tmp/wordpress/wp-load.php'; require_once 'src/wp-content/plugins/booking-plugin/autoloader.php'; \SnippenBooking\Plugin::activate();"
+        composer test
