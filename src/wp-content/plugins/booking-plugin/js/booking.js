@@ -188,7 +188,6 @@ jQuery(document).ready(function ($) {
                 } else if (isBlocked && !isPast) {
                     weekHtml += '<div class="slot-item unavailable" title="Blokkert av utvasktid">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
-                    weekHtml += '<span class="status-tag">Opptatt</span>';
                     weekHtml += '</div>';
                 } else {
                     var statusClass = isPast ? 'disabled' : 'available';
