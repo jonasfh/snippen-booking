@@ -47,7 +47,10 @@ class BookingShortcode {
 
             <div id="booking-form-container" class="snippen-booking-form-wrapper" style="display: none;">
                 <div class="form-header">
-                    <h4 id="selected-info-display"></h4>
+                    <div class="header-content">
+                        <h4 id="selected-info-display"></h4>
+                        <p id="selected-slot-description" class="slot-description-text"></p>
+                    </div>
                     <button type="button" class="close-form">&times;</button>
                 </div>
                 
