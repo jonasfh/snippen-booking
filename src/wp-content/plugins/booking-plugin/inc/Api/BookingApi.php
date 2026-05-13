@@ -53,6 +53,7 @@ class BookingApi {
             'created_at' => current_time( 'mysql' )
         );
 
+        $table_bookings = $wpdb->prefix . 'snippen_bookings';
         $result = $wpdb->insert( $table_bookings, $booking_data );
 
         if ( $result ) {
