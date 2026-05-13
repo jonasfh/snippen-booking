@@ -92,10 +92,10 @@ class Install {
             $this_slots = array(
                 array(
                     'name' => 'Hele dagen',
-                    'description' => 'Du booker rommet for hele dagen, og har til kl 12 neste dag til å vaske deg ut.',
-                    'start_time' => '00:00:00',
+                    'description' => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
+                    'start_time' => '11:00:00',
                     'end_time' => '23:00:00',
-                    'cleanup_hours' => 13
+                    'cleanup_hours' => 12
                 ),
                 array(
                     'name' => 'Formiddag',
