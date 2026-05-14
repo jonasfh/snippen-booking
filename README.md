@@ -13,18 +13,16 @@ A WordPress plugin for handling bookings at Snippen community house.
 ## Usage
 
 ### Displaying the Booking Form
-
-You can display the booking form on any page or post by using the following shortcode:
+The booking form is displayed using the following shortcode, where object_id is the ID of the object you want to book:
 
 ```text
-[snippen_booking]
+[snippen_booking object_id="1"]
 ```
 
-### Displaying Specific Objects
-If you want to create a booking form for specific objects (e.g. only "Festsalen" and "Peisestuen"), you can pass a comma-separated list of object IDs to the shortcode:
+Multiple objects can be booked by passing a comma-separated list of object IDs to the shortcode. Only time slots marked as "delt" (shared) will be available in this mode.
 
 ```text
-[snippen_booking objects="1,2"]
+[snippen_booking object_id="1,2"]
 ```
 
 ## Contributing and Development

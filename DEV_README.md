@@ -64,3 +64,8 @@ Upon plugin activation, a "Booking Demo" page is automatically created in WordPr
 - Xdebug warnings about `host.docker.internal:9003` are normal if you don’t have a debugger attached.
 - If you change the plugin or config and the site stops working, rebuild/reopen the devcontainer and/or delete `/wordpress/wp-config.php` to force reconfiguration.
 
+## NB: test site
+
+Use [tastewp.com](https://tastewp.com). This is perhaps the easiest service. You just go to the site, press "Set it up!", and you get a ready-to-use WordPress site that lasts for 48 hours. Here you can go into the admin panel, upload your .zip file under Plugins, and check that everything works and looks good.
+
+
