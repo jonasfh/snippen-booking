@@ -3,6 +3,7 @@
 namespace SnippenBooking\Api;
 
 use SnippenBooking\Service\AvailabilityService;
+use SnippenBooking\Service\PricingService;
 
 /**
  * Handles AJAX availability requests
@@ -144,10 +145,32 @@ class AvailabilityApi {
             }
         }
 
+        // Calculate prices for each slot on each day
+        $pricing_service = new PricingService();
+        $prices_by_date = [];
+        
+        $current = new \DateTime($start_date);
+        $last = new \DateTime($end_date);
+        
+        while ($current <= $last) {
+            $date_str = $current->format('Y-m-d');
+            $prices_by_date[$date_str] = [];
+            
+            foreach ($slots as $slot) {
+                // For grouped slots, we can use the same name/price logic
+                $price = $pricing_service->getPrice($object_ids, $slot->name, $date_str);
+                if ($price !== null) {
+                    $prices_by_date[$date_str][$slot->name] = $price;
+                }
+            }
+            $current->modify('+1 day');
+        }
+
         wp_send_json_success( array(
             'slots' => $slots,
             'booked' => $booked_details,
             'unavailable' => $unavailable_slots,
+            'prices' => $prices_by_date,
             'offset_days' => $offset_days
         ) );
     }
