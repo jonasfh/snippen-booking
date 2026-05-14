@@ -76,7 +76,9 @@ class PricingPage {
         $slot_id = intval( $_POST['slot_id'] );
         $price = floatval( $_POST['price'] );
         $priority = intval( $_POST['priority'] );
-        $day_of_week = isset( $_POST['day_of_week'] ) && $_POST['day_of_week'] !== '' ? intval( $_POST['day_of_week'] ) : null;
+        $day_of_week = isset( $_POST['days_of_week'] ) ? implode(',', array_map('intval', $_POST['days_of_week'])) : null;
+        if ($day_of_week === '') $day_of_week = null;
+        
         $start_date = !empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
         $end_date = !empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
         $is_holiday = isset( $_POST['is_holiday'] ) ? 1 : 0;
@@ -92,7 +94,7 @@ class PricingPage {
             'slot_id' => $slot_id,
             'price' => $price,
             'priority' => $priority,
-            'day_of_week' => $day_of_week,
+            'days_of_week' => $day_of_week,
             'start_date' => $start_date,
             'end_date' => $end_date,
             'is_holiday' => $is_holiday,
@@ -114,8 +116,7 @@ class PricingPage {
         foreach ( $object_ids as $obj_id ) {
             $wpdb->insert( $table_price_objects, array(
                 'price_id' => $id,
-                'booking_object_id' => $obj_id,
-                'created_at' => current_time( 'mysql' )
+                'booking_object_id' => $obj_id
             ) );
         }
 
@@ -193,9 +194,14 @@ class PricingPage {
 
                 $conditions = array();
                 if ( $rule->is_holiday ) $conditions[] = __( 'Helligdag', 'snippen-booking' );
-                if ( $rule->day_of_week !== null ) {
+                if ( $rule->days_of_week !== null && $rule->days_of_week !== '' ) {
                     $days = array( 1 => 'Man', 2 => 'Tir', 3 => 'Ons', 4 => 'Tor', 5 => 'Fre', 6 => 'Lør', 0 => 'Søn' );
-                    $conditions[] = $days[$rule->day_of_week];
+                    $selected_days = explode(',', $rule->days_of_week);
+                    $day_labels = array();
+                    foreach ($selected_days as $d) {
+                        if (isset($days[$d])) $day_labels[] = $days[$d];
+                    }
+                    $conditions[] = implode(',', $day_labels);
                 }
                 if ( $rule->start_date ) $conditions[] = substr($rule->start_date, 5) . ' til ' . substr($rule->end_date, 5);
 
@@ -235,7 +241,13 @@ class PricingPage {
             $selected_objects = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM $table_price_objects WHERE price_id = %d", $id ) );
         }
 
-        $all_slots = $wpdb->get_results( "SELECT id, name FROM $table_slots WHERE deleted_at IS NULL GROUP BY name ORDER BY name ASC" );
+        $all_slots = $wpdb->get_results( "
+            SELECT s.id, s.name, s.start_time, o.name as object_name 
+            FROM $table_slots s 
+            JOIN $table_objects o ON s.booking_object_id = o.id 
+            WHERE s.deleted_at IS NULL 
+            ORDER BY o.name ASC, s.start_time ASC" 
+        );
         $all_objects = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
 
         echo '<div class="snippen-card"><form method="post" action="">';
@@ -259,9 +271,17 @@ class PricingPage {
         echo '<label for="slot_id">' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</label>';
         echo '<select name="slot_id" id="slot_id" required>';
         echo '<option value="">' . esc_html__( 'Velg tidsluke...', 'snippen-booking' ) . '</option>';
+        
+        $current_obj = '';
         foreach ( $all_slots as $s ) {
-            echo '<option value="' . esc_attr( $s->id ) . '" ' . selected( $rule ? $rule->slot_id : 0, $s->id, false ) . '>' . esc_html( $s->name ) . '</option>';
+            if ($current_obj !== $s->object_name) {
+                if ($current_obj !== '') echo '</optgroup>';
+                echo '<optgroup label="' . esc_attr($s->object_name) . '">';
+                $current_obj = $s->object_name;
+            }
+            echo '<option value="' . esc_attr( $s->id ) . '" ' . selected( $rule ? $rule->slot_id : 0, $s->id, false ) . '>' . esc_html( $s->name ) . ' (' . substr($s->start_time, 0, 5) . ')</option>';
         }
+        if ($current_obj !== '') echo '</optgroup>';
         echo '</select>';
         echo '</div>';
 
@@ -276,15 +296,14 @@ class PricingPage {
         echo '<hr><h3 style="margin-top:25px;">' . esc_html__( 'Betingelser (Valgfritt)', 'snippen-booking' ) . '</h3>';
 
         echo '<div class="snippen-form-group">';
-        echo '<label for="day_of_week">' . esc_html__( 'Ukedag', 'snippen-booking' ) . '</label>';
-        echo '<select name="day_of_week" id="day_of_week">';
-        echo '<option value="">' . esc_html__( 'Alle dager', 'snippen-booking' ) . '</option>';
-        $days = array( 1 => 'Mandag', 2 => 'Tirsdag', 3 => 'Onsdag', 4 => 'Torsdag', 5 => 'Fredag', 6 => 'Lørdag', 0 => 'Søndag' );
+        echo '<label>' . esc_html__( 'Ukedager', 'snippen-booking' ) . '</label>';
+        echo '<div style="display:flex; gap:15px; margin-top:5px;">';
+        $days = array( 1 => 'Man', 2 => 'Tir', 3 => 'Ons', 4 => 'Tor', 5 => 'Fre', 6 => 'Lør', 0 => 'Søn' );
+        $selected_days = $rule && $rule->days_of_week !== null ? explode(',', $rule->days_of_week) : array();
         foreach ( $days as $val => $label ) {
-            echo '<option value="' . esc_attr( $val ) . '" ' . ( $rule && $rule->day_of_week !== null && $rule->day_of_week == $val ? 'selected' : '' ) . '>' . esc_html( $label ) . '</option>';
+            echo '<label style="font-weight:normal;"><input type="checkbox" name="days_of_week[]" value="' . esc_attr( $val ) . '" ' . checked( in_array((string)$val, $selected_days), true, false ) . '> ' . esc_html( $label ) . '</label>';
         }
-        echo '</select>';
-        echo '</div>';
+        echo '</div></div>';
 
         echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
         echo '<div><label for="start_date">' . esc_html__( 'Startdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';

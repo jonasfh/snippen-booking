@@ -36,6 +36,17 @@ class PricingService {
         $slot_in_clause = implode(',', array_fill(0, count($slotIds), '%d'));
 
         $params = array_merge([$object_count], $slotIds, $objectIds, [$object_count]);
+        
+        // Find prices that match EXACTLY or by NAME if multi-object
+        // First, get the names of the requested slots
+        $slot_names = $wpdb->get_col("SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode(',', $slotIds) . ")");
+        $slot_name_clause = "";
+        if (!empty($slot_names)) {
+            $name_placeholders = implode(',', array_fill(0, count($slot_names), '%s'));
+            $slot_name_clause = "OR p.slot_id IN (SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE name IN ($name_placeholders))";
+            $params = array_merge([$object_count], $slotIds, $slot_names, $objectIds, [$object_count]);
+        }
+
         $query = $wpdb->prepare(
             "SELECT p.* 
              FROM $table_prices p
@@ -45,7 +56,7 @@ class PricingService {
                 GROUP BY price_id 
                 HAVING COUNT(*) = %d
              ) count_check ON p.id = count_check.price_id
-             WHERE p.slot_id IN ($slot_in_clause)
+             WHERE (p.slot_id IN ($slot_in_clause) $slot_name_clause)
              AND p.id IN (
                 SELECT price_id 
                 FROM $table_price_objects 
