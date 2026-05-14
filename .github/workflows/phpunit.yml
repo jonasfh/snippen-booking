@@ -1,8 +1,6 @@
 name: PHPUnit Tests
 
 on:
-  push:
-    branches: [ main, booking-1 ]
   pull_request:
     branches: [ main ]
 
