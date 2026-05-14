@@ -54,7 +54,7 @@ class AvailabilityApi {
         // Get slots for all specified objects
         $in_clause = implode(',', array_fill(0, count($object_ids), '%d'));
         $all_slots = $wpdb->get_results( $wpdb->prepare(
-            "SELECT id, booking_object_id, name, description, start_time, end_time, cleanup_hours 
+            "SELECT id, booking_object_id, name, description, start_time, end_time, cleanup_hours, allow_multi_object 
              FROM $table_slots 
              WHERE booking_object_id IN ($in_clause) AND deleted_at IS NULL",
             ...$object_ids
@@ -72,19 +72,32 @@ class AvailabilityApi {
                     'start_time' => $slot->start_time,
                     'end_time' => $slot->end_time,
                     'cleanup_hours' => $slot->cleanup_hours,
+                    'allow_multi_object' => (int)$slot->allow_multi_object,
                     'object_count' => 0
                 ];
             }
             $grouped_slots[$key]['id'][] = $slot->id;
+            // For multi-object to be allowed, ALL objects must allow it for this slot type
+            if (!(int)$slot->allow_multi_object) {
+                $grouped_slots[$key]['allow_multi_object'] = 0;
+            }
             $grouped_slots[$key]['object_count']++;
         }
 
         // Only keep slots that exist for ALL requested objects
         $slots = [];
+        $is_multi_object = count($object_ids) > 1;
+        
         foreach ($grouped_slots as $group) {
             if ($group['object_count'] === count($object_ids)) {
+                // RESTRICTION: For multi-object bookings, only allow slots flagged as such
+                if ($is_multi_object && !$group['allow_multi_object']) {
+                    continue;
+                }
+                
                 $group['id'] = implode(',', $group['id']);
                 unset($group['object_count']);
+                unset($group['allow_multi_object']);
                 $slots[] = (object) $group;
             }
         }

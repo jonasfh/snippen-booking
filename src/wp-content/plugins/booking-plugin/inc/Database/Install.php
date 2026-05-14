@@ -40,6 +40,7 @@ class Install {
             start_time TIME DEFAULT '00:00:00',
             end_time TIME DEFAULT '23:59:59',
             cleanup_hours INT DEFAULT 0,
+            allow_multi_object TINYINT(1) DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
@@ -59,6 +60,7 @@ class Install {
             customer_email VARCHAR(255) NOT NULL,
             customer_phone VARCHAR(50) DEFAULT '',
             description TEXT,
+            price DECIMAL(10,2) DEFAULT 0,
             status VARCHAR(20) DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -84,6 +86,34 @@ class Install {
         ) $charset_collate;";
         dbDelta( $sql_booking_objects );
 
+        // Pricing table
+        $table_prices = $wpdb->prefix . 'snippen_prices';
+        $sql_prices = "CREATE TABLE $table_prices (
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(100) NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            slot_name VARCHAR(50) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY slot_name (slot_name)
+        ) $charset_collate;";
+        dbDelta( $sql_prices );
+
+        // Price booking objects junction table
+        $table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+        $sql_price_objects = "CREATE TABLE $table_price_objects (
+            id INT NOT NULL AUTO_INCREMENT,
+            price_id INT NOT NULL,
+            booking_object_id INT NOT NULL,
+            PRIMARY KEY  (id),
+            KEY price_id (price_id),
+            KEY booking_object_id (booking_object_id),
+            UNIQUE KEY unique_price_object (price_id, booking_object_id)
+        ) $charset_collate;";
+        dbDelta( $sql_price_objects );
+
         // Seed data if empty
         $object_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_objects" );
         if ( $object_count == 0 ) {
@@ -108,7 +138,8 @@ class Install {
                     'description' => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
                     'start_time' => '11:00:00',
                     'end_time' => '23:00:00',
-                    'cleanup_hours' => 12
+                    'cleanup_hours' => 12,
+                    'allow_multi_object' => 1
                 ),
                 array(
                     'name' => 'Formiddag',
@@ -130,6 +161,51 @@ class Install {
                 foreach ( $this_slots as $slot ) {
                     $wpdb->insert( $table_slots, array_merge( $slot, array( 'booking_object_id' => $obj_id ) ) );
                 }
+            }
+        }
+        
+        // Seed prices if empty
+        $price_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_prices" );
+        if ( $price_count == 0 ) {
+            $slots = ['Hele dagen', 'Formiddag', 'Ettermiddag'];
+            $base_prices = [
+                'Hele dagen' => 3000,
+                'Formiddag' => 1500,
+                'Ettermiddag' => 1500
+            ];
+
+            // 1. Individual prices for each object
+            $objects = $wpdb->get_results( "SELECT id, name FROM $table_objects" );
+            foreach ( $objects as $obj ) {
+                foreach ( $slots as $slot_name ) {
+                    $price = $base_prices[$slot_name];
+                    if ($obj->name === 'Peisestuen') $price *= 0.8; // Peisestuen is cheaper
+                    
+                    $wpdb->insert( $table_prices, [
+                        'name' => $obj->name . ' - ' . $slot_name,
+                        'price' => $price,
+                        'slot_name' => $slot_name
+                    ] );
+                    $price_id = $wpdb->insert_id;
+                    $wpdb->insert( $table_price_objects, [
+                        'price_id' => $price_id,
+                        'booking_object_id' => $obj->id
+                    ] );
+                }
+            }
+
+            // 2. Combined prices (Hele området) - only for "Hele dagen" as requested for restrictions
+            $wpdb->insert( $table_prices, [
+                'name' => 'Hele området - Hele dagen',
+                'price' => 5000, // Discounted from 3000 + 2400
+                'slot_name' => 'Hele dagen'
+            ] );
+            $combined_price_id = $wpdb->insert_id;
+            foreach ( $objects as $obj ) {
+                $wpdb->insert( $table_price_objects, [
+                    'price_id' => $combined_price_id,
+                    'booking_object_id' => $obj->id
+                ] );
             }
         }
     }

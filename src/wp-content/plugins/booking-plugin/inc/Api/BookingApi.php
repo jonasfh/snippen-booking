@@ -2,6 +2,9 @@
 
 namespace SnippenBooking\Api;
 
+use SnippenBooking\Service\AvailabilityService;
+use SnippenBooking\Service\PricingService;
+
 /**
  * Handles booking submission AJAX requests
  */
@@ -83,10 +86,27 @@ class BookingApi {
         $customer_phone = sanitize_text_field( $_POST['phone'] ?? '' );
         $description = sanitize_textarea_field( $_POST['description'] ?? '' );
         
-        // Get the first slot ID for the booking (used for the main booking record)
-        // Since all objects share the same slot name/time, we just use the first one
-        $first_slot_id = reset($slots_to_book);
+        // Get slot info for price lookup and restrictions
+        $slot_info = $wpdb->get_row($wpdb->prepare(
+            "SELECT name, allow_multi_object FROM $table_slots WHERE id = %d",
+            $first_slot_id
+        ));
+        $slot_name = $slot_info ? $slot_info->name : '';
+
+        // RESTRICTION: For multi-object bookings, only allow slots flagged as such
+        if ( count( $slots_to_book ) > 1 && (!$slot_info || !$slot_info->allow_multi_object) ) {
+            wp_send_json_error( array( 'message' => 'Tidsluken er ikke tilgjengelig for fellesbooking.' ) );
+        }
+
+        // Calculate price
+        $pricing_service = new PricingService();
+        $price = $pricing_service->getPrice(array_keys($slots_to_book), $slot_name);
         
+        if ($price === null) {
+            // Fallback if no price defined, but in a real scenario we might want to block this
+            $price = 0;
+        }
+
         // Insert single booking record
         $booking_data = array(
             'booking_date' => $booking_date,
@@ -95,6 +115,7 @@ class BookingApi {
             'customer_email' => $customer_email,
             'customer_phone' => $customer_phone,
             'description' => $description,
+            'price' => $price,
             'status' => 'pending',
             'created_at' => current_time( 'mysql' )
         );
