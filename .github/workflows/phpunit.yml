@@ -8,6 +8,7 @@ on:
 
 jobs:
   phpunit:
+    environment: prod
     runs-on: ubuntu-latest
 
     services:
