@@ -26,7 +26,7 @@ class Install {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
-            PRIMARY KEY (id)
+            PRIMARY KEY  (id)
         ) $charset_collate;";
         dbDelta( $sql_objects );
 
@@ -43,8 +43,8 @@ class Install {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
-            PRIMARY KEY (id),
-            INDEX (booking_object_id)
+            PRIMARY KEY  (id),
+            KEY booking_object_id (booking_object_id)
         ) $charset_collate;";
         dbDelta( $sql_slots );
 
@@ -53,7 +53,7 @@ class Install {
         $sql_bookings = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
             booking_object_id INT NOT NULL,
-            facility VARCHAR(50), -- Keeping temporarily for migration safety
+            facility VARCHAR(50),
             slot_id INT NOT NULL,
             booking_date DATE NOT NULL,
             customer_name VARCHAR(255) NOT NULL,
@@ -64,10 +64,10 @@ class Install {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
-            PRIMARY KEY (id),
-            INDEX (booking_date),
-            INDEX (booking_object_id),
-            INDEX (slot_id)
+            PRIMARY KEY  (id),
+            KEY booking_date (booking_date),
+            KEY booking_object_id (booking_object_id),
+            KEY slot_id (slot_id)
         ) $charset_collate;";
         dbDelta( $sql_bookings );
 
