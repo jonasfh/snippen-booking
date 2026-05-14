@@ -84,7 +84,7 @@ if ($action === 'generate') {
             
             if ($all_available && !empty($slots_to_book)) {
                 $first_slot_id = reset($slots_to_book);
-                $price = $pricing_service->getPrice(array_keys($slots_to_book), $target_name, $date_str) ?: 0;
+                $price = $pricing_service->getPrice(array_keys($slots_to_book), array_values($slots_to_book), $date_str) ?: 0;
                 
                 // Insert main booking
                 $wpdb->insert($table_bookings, array(
@@ -132,7 +132,7 @@ if ($action === 'generate') {
                         continue;
                     }
 
-                    $price = $pricing_service->getPrice([$obj->id], $slot->name, $date_str) ?: 0;
+                    $price = $pricing_service->getPrice([$obj->id], [$slot->id], $date_str) ?: 0;
 
                     // Insert booking record
                     $wpdb->insert($table_bookings, array(

@@ -8,18 +8,21 @@ namespace SnippenBooking\Service;
 class PricingService {
 
     /**
-     * Get price for a specific combination of objects, slot name and date
+     * Get price for a specific combination of objects, slot IDs and date
      * 
      * @param array $objectIds
-     * @param string $slotName
+     * @param array|int $slotIds One or more slot IDs that represent the time slot for the objects
      * @param string $date YYYY-MM-DD
      * @return float|null Price or null if no price found
      */
-    public function getPrice($objectIds, $slotName, $date = null) {
+    public function getPrice($objectIds, $slotIds, $date = null) {
         global $wpdb;
 
         if (empty($objectIds)) return 0;
         if (!$date) $date = date('Y-m-d');
+
+        if (!is_array($slotIds)) $slotIds = [$slotIds];
+        $slotIds = array_map('intval', $slotIds);
 
         $holiday_service = new HolidayService();
         $is_holiday = $holiday_service->isHoliday($date);
@@ -29,9 +32,10 @@ class PricingService {
         $table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
 
         $object_count = count($objectIds);
-        $in_clause = implode(',', array_fill(0, $object_count, '%d'));
+        $obj_in_clause = implode(',', array_fill(0, $object_count, '%d'));
+        $slot_in_clause = implode(',', array_fill(0, count($slotIds), '%d'));
 
-        // Fetch all potential prices for these objects and slot name
+        $params = array_merge([$object_count], $slotIds, $objectIds, [$object_count]);
         $query = $wpdb->prepare(
             "SELECT p.* 
              FROM $table_prices p
@@ -41,15 +45,15 @@ class PricingService {
                 GROUP BY price_id 
                 HAVING COUNT(*) = %d
              ) count_check ON p.id = count_check.price_id
-             WHERE p.slot_name = %s
+             WHERE p.slot_id IN ($slot_in_clause)
              AND p.id IN (
                 SELECT price_id 
                 FROM $table_price_objects 
-                WHERE booking_object_id IN ($in_clause)
+                WHERE booking_object_id IN ($obj_in_clause)
                 GROUP BY price_id 
                 HAVING COUNT(*) = %d
              )",
-            ...array_merge([$object_count, $slotName], $objectIds, [$object_count])
+            ...$params
         );
 
         $prices = $wpdb->get_results($query);
