@@ -52,7 +52,6 @@ class Install {
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
         $sql_bookings = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
-            booking_object_id INT NOT NULL,
             facility VARCHAR(50),
             slot_id INT NOT NULL,
             booking_date DATE NOT NULL,
@@ -66,10 +65,24 @@ class Install {
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id),
             KEY booking_date (booking_date),
-            KEY booking_object_id (booking_object_id),
             KEY slot_id (slot_id)
         ) $charset_collate;";
         dbDelta( $sql_bookings );
+
+        // Booking objects junction table (many-to-many relationship)
+        $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+        $sql_booking_objects = "CREATE TABLE $table_booking_objects (
+            id INT NOT NULL AUTO_INCREMENT,
+            booking_id BIGINT NOT NULL,
+            booking_object_id INT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY booking_id (booking_id),
+            KEY booking_object_id (booking_object_id),
+            UNIQUE KEY unique_booking_object (booking_id, booking_object_id)
+        ) $charset_collate;";
+        dbDelta( $sql_booking_objects );
 
         // Seed data if empty
         $object_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_objects" );

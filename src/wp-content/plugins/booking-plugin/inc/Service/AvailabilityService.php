@@ -33,11 +33,13 @@ class AvailabilityService {
         $buffer_start = date('Y-m-d', strtotime($date . ' - 2 days'));
         $buffer_end = date('Y-m-d', strtotime($date . ' + 2 days'));
 
+        $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
         $existing_bookings = $wpdb->get_results($wpdb->prepare(
             "SELECT b.booking_date, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
              JOIN $table_slots s ON b.slot_id = s.id
-             WHERE b.booking_object_id = %d 
+             JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
+             WHERE bbo.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
              AND b.deleted_at IS NULL",
             $objectId, $buffer_start, $buffer_end
@@ -77,11 +79,13 @@ class AvailabilityService {
         $buffer_start = date('Y-m-d', strtotime($startDate . ' - 2 days'));
         $buffer_end = date('Y-m-d', strtotime($endDate . ' + 2 days'));
 
+        $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
         $existing_bookings = $wpdb->get_results($wpdb->prepare(
             "SELECT b.booking_date, b.slot_id, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
              JOIN $table_slots s ON b.slot_id = s.id
-             WHERE b.booking_object_id = %d 
+             JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
+             WHERE bbo.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
              AND b.deleted_at IS NULL",
             $objectId, $buffer_start, $buffer_end
