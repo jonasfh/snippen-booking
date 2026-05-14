@@ -30,51 +30,95 @@ class BookingApi {
             wp_send_json_error( array( 'message' => 'Du må være innlogget for å booke.' ) );
         }
 
-        $booking_object_id = intval( $_POST['booking_object_id'] ?? 0 );
-        $booking_date = sanitize_text_field( $_POST['event_date'] ?? '' );
-        $slot_id = intval( $_POST['slot_id'] ?? 0 );
+        $object_ids_raw = isset($_POST['booking_object_id']) ? $_POST['booking_object_id'] : [];
+        if (!is_array($object_ids_raw)) {
+            $decoded = json_decode(stripslashes($object_ids_raw), true);
+            if (is_array($decoded)) {
+                $object_ids_raw = $decoded;
+            } else {
+                $object_ids_raw = explode(',', $object_ids_raw);
+            }
+        }
+        
+        $booking_object_ids = array_map('intval', $object_ids_raw);
+        $booking_object_ids = array_filter($booking_object_ids);
 
-        if ( empty( $booking_object_id ) || empty( $booking_date ) || empty( $slot_id ) ) {
+        $booking_date = sanitize_text_field( $_POST['event_date'] ?? '' );
+        
+        $slot_ids_raw = isset($_POST['slot_id']) ? $_POST['slot_id'] : '';
+        $slot_ids = array_map('intval', explode(',', $slot_ids_raw));
+        $slot_ids = array_filter($slot_ids);
+
+        if ( empty( $booking_object_ids ) || empty( $booking_date ) || empty( $slot_ids ) ) {
             wp_send_json_error( array( 'message' => 'Mangler nødvendige felt.' ) );
         }
 
-        // Check if available (using advanced overlap detection)
+        // Check if available (using advanced overlap detection) for all requested slots
         $availability_service = new \SnippenBooking\Service\AvailabilityService();
-        if ( ! $availability_service->isSlotAvailable( $booking_object_id, $booking_date, $slot_id ) ) {
-            wp_send_json_error( array( 'message' => 'Denne tidsluken er ikke lenger tilgjengelig.' ) );
+        $slots_to_book = [];
+        
+        // Match slot IDs to their respective booking objects
+        foreach ($booking_object_ids as $obj_id) {
+            $matched_slot_id = 0;
+            // Find which of the submitted slot_ids belongs to this object
+            foreach ($slot_ids as $sid) {
+                $slot_check = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE id = %d AND booking_object_id = %d", $sid, $obj_id));
+                if ($slot_check) {
+                    $matched_slot_id = $sid;
+                    break;
+                }
+            }
+            
+            if (!$matched_slot_id || !$availability_service->isSlotAvailable( $obj_id, $booking_date, $matched_slot_id )) {
+                wp_send_json_error( array( 'message' => 'En eller flere tidsluker er ikke lenger tilgjengelig.' ) );
+            }
+            $slots_to_book[$obj_id] = $matched_slot_id;
         }
 
         // Process booking data
-        $booking_data = array(
-            'booking_object_id' => $booking_object_id,
-            'booking_date' => $booking_date,
-            'slot_id' => $slot_id,
-            'customer_name' => sanitize_text_field( $_POST['name'] ?? '' ),
-            'customer_email' => sanitize_email( $_POST['email'] ?? '' ),
-            'customer_phone' => sanitize_text_field( $_POST['phone'] ?? '' ),
-            'description' => sanitize_textarea_field( $_POST['description'] ?? '' ),
-            'status' => 'pending',
-            'created_at' => current_time( 'mysql' )
-        );
-
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
-        $result = $wpdb->insert( $table_bookings, $booking_data );
+        $customer_name = sanitize_text_field( $_POST['name'] ?? '' );
+        $customer_email = sanitize_email( $_POST['email'] ?? '' );
+        $customer_phone = sanitize_text_field( $_POST['phone'] ?? '' );
+        $description = sanitize_textarea_field( $_POST['description'] ?? '' );
+        
+        $success_count = 0;
+        foreach ($slots_to_book as $obj_id => $sid) {
+            $booking_data = array(
+                'booking_object_id' => $obj_id,
+                'booking_date' => $booking_date,
+                'slot_id' => $sid,
+                'customer_name' => $customer_name,
+                'customer_email' => $customer_email,
+                'customer_phone' => $customer_phone,
+                'description' => $description,
+                'status' => 'pending',
+                'created_at' => current_time( 'mysql' )
+            );
 
-        if ( $result ) {
-            // Get object name for notification
+            $result = $wpdb->insert( $table_bookings, $booking_data );
+            if ($result) {
+                $success_count++;
+            }
+        }
+
+        if ( $success_count == count($booking_object_ids) ) {
+            // Get object names for notification
             $table_objects = $wpdb->prefix . 'snippen_booking_objects';
-            $object_name = $wpdb->get_var( $wpdb->prepare( "SELECT name FROM $table_objects WHERE id = %d", $booking_object_id ) );
+            $in_clause = implode(',', array_fill(0, count($booking_object_ids), '%d'));
+            $objects = $wpdb->get_results( $wpdb->prepare( "SELECT name FROM $table_objects WHERE id IN ($in_clause)", ...$booking_object_ids ) );
+            $object_names = implode(' og ', wp_list_pluck($objects, 'name'));
 
             // Send email notification
             $to = get_option( 'admin_email' );
-            $subject = 'Ny Bookingforespørsel - ' . $object_name;
+            $subject = 'Ny Bookingforespørsel - ' . $object_names;
             $message = "Ny bookingforespørsel mottatt:\n\n";
-            $message .= "Lokale: " . $object_name . "\n";
+            $message .= "Lokale: " . $object_names . "\n";
             $message .= "Dato: " . $booking_date . "\n";
-            $message .= "Navn: " . $booking_data['customer_name'] . "\n";
-            $message .= "Email: " . $booking_data['customer_email'] . "\n";
-            $message .= "Telefon: " . $booking_data['customer_phone'] . "\n";
-            $message .= "Beskrivelse: " . $booking_data['description'] . "\n";
+            $message .= "Navn: " . $customer_name . "\n";
+            $message .= "Email: " . $customer_email . "\n";
+            $message .= "Telefon: " . $customer_phone . "\n";
+            $message .= "Beskrivelse: " . $description . "\n";
 
             wp_mail( $to, $subject, $message );
 
@@ -82,7 +126,7 @@ class BookingApi {
                 'message' => 'Bookingforespørsel sendt! Vi kontakter deg snart.'
             ) );
         } else {
-            wp_send_json_error( array( 'message' => 'Kunne ikke lagre bookingen. Vennligst prøv igjen.' ) );
+            wp_send_json_error( array( 'message' => 'Kunne ikke lagre alle bookinger. Vennligst prøv igjen.' ) );
         }
     }
 }

@@ -25,12 +25,39 @@ class BookingShortcode {
             'object_id' => 1,
         ), $atts );
 
+        // Parse comma-separated object IDs
+        $object_ids = array_map('intval', explode(',', $atts['object_id']));
+        $object_ids = array_filter($object_ids);
+        
         global $wpdb;
         $table_objects = $wpdb->prefix . 'snippen_booking_objects';
-        $object = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_objects WHERE id = %d AND deleted_at IS NULL", $atts['object_id'] ) );
+        
+        if (empty($object_ids)) {
+            return '<div class="snippen-booking-error">Ugyldig objekt-ID.</div>';
+        }
 
-        if ( ! $object ) {
-            return '<div class="snippen-booking-error">Booking-objekt (ID: ' . esc_html( $atts['object_id'] ) . ') ikke funnet.</div>';
+        $in_clause = implode(',', array_fill(0, count($object_ids), '%d'));
+        $query = $wpdb->prepare("SELECT * FROM $table_objects WHERE id IN ($in_clause) AND deleted_at IS NULL", ...$object_ids);
+        $objects = $wpdb->get_results($query);
+
+        if ( empty($objects) ) {
+            return '<div class="snippen-booking-error">Booking-objekt(er) ikke funnet.</div>';
+        }
+
+        // Combine names and info
+        $object_names = wp_list_pluck($objects, 'name');
+        $combined_name = implode(' og ', $object_names);
+        
+        $descriptions = wp_list_pluck($objects, 'description');
+        $combined_description = implode(' ', array_filter($descriptions));
+        
+        // Use first object's link if available
+        $info_link = '';
+        foreach ($objects as $obj) {
+            if (!empty($obj->info_link)) {
+                $info_link = $obj->info_link;
+                break;
+            }
         }
 
         $is_logged_in = is_user_logged_in();
@@ -40,16 +67,16 @@ class BookingShortcode {
 
         ob_start();
         ?>
-        <div class="snippen-booking-container" data-object-id="<?php echo esc_attr( $atts['object_id'] ); ?>" data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>">
+        <div class="snippen-booking-container" data-object-id="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>" data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>">
             <div class="booking-header-section">
                 <div class="header-main">
-                    <h3><?php echo esc_html( $object->name ); ?></h3>
-                    <?php if ( $object->info_link ) : ?>
-                        <a href="<?php echo esc_url( $object->info_link ); ?>" class="info-link" target="_blank">Mer info &rarr;</a>
+                    <h3><?php echo esc_html( $combined_name ); ?></h3>
+                    <?php if ( $info_link ) : ?>
+                        <a href="<?php echo esc_url( $info_link ); ?>" class="info-link" target="_blank">Mer info &rarr;</a>
                     <?php endif; ?>
                 </div>
-                <?php if ( $object->description ) : ?>
-                    <p class="object-summary"><?php echo esc_html( $object->description ); ?></p>
+                <?php if ( $combined_description ) : ?>
+                    <p class="object-summary"><?php echo esc_html( $combined_description ); ?></p>
                 <?php endif; ?>
             </div>
 
@@ -77,7 +104,7 @@ class BookingShortcode {
                 <form id="booking-form" method="post">
                     <input type="hidden" name="event_date" id="event-date">
                     <input type="hidden" name="slot_id" id="slot-id">
-                    <input type="hidden" name="booking_object_id" value="<?php echo esc_attr( $atts['object_id'] ); ?>">
+                    <input type="hidden" name="booking_object_id" value="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>">
                     
                     <div class="form-grid">
                         <div class="form-group">

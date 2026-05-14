@@ -179,11 +179,12 @@ jQuery(document).ready(function ($) {
             var dayUnavailable = unavailable[dateStr] || [];
 
             slots.forEach(function (slot) {
-                var slotId = parseInt(slot.id);
-                var existing = dayBookings.find(b => b.slot_id === slotId);
+                var slotIds = String(slot.id).split(',').map(Number);
+                
+                var existing = dayBookings.find(b => slotIds.includes(parseInt(b.slot_id)));
                 var isBooked = !!existing;
-                var isBlocked = dayUnavailable.includes(slotId);
-                var isCurrentlySelected = isSelected && selectedSlotId === slotId;
+                var isBlocked = dayUnavailable.some(id => slotIds.includes(parseInt(id)));
+                var isCurrentlySelected = isSelected && selectedSlotId === slot.id;
 
                 if (isBooked) {
                     weekHtml += '<div class="slot-item booked">';
