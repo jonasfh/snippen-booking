@@ -175,9 +175,9 @@ class Install {
         if ( $price_count == 0 ) {
             $slots = ['Hele dagen', 'Formiddag', 'Ettermiddag'];
             $base_prices = [
-                'Hele dagen' => 2000,
-                'Formiddag' => 1000,
-                'Ettermiddag' => 1000
+                'Hele dagen' => 1000,
+                'Formiddag' => 500,
+                'Ettermiddag' => 500
             ];
 
             // 1. Individual prices for each object
@@ -188,7 +188,7 @@ class Install {
                 foreach ( $obj_slots as $slot_item ) {
                     $slot_name = $slot_item->name;
                     $price = $base_prices[$slot_name] ?? 1000;
-                    if ($obj->name === 'Peisestuen') $price *= 0.8; // Peisestuen is cheaper
+                    # if ($obj->name === 'Peisestuen') $price *= 0.8; // Peisestuen is cheaper
                     
                     // Standard Weekday Price (Mon-Thu)
                     $wpdb->insert( $table_prices, [
@@ -207,7 +207,7 @@ class Install {
                     // Weekend Price (Fri-Sun)
                     $wpdb->insert( $table_prices, [
                         'name' => $obj->name . ' - ' . $slot_name . ' (Helg)',
-                        'price' => $price * 1.5,
+                        'price' => $price * 2,
                         'slot_id' => $slot_item->id,
                         'days_of_week' => '5,6,0',
                         'priority' => 10
@@ -228,7 +228,7 @@ class Install {
             // Standard
             $wpdb->insert( $table_prices, [
                 'name' => 'Hele området - Hele dagen (Hverdag)',
-                'price' => 4000,
+                'price' => 2000,
                 'slot_id' => $hele_dagen_id,
                 'days_of_week' => '1,2,3,4',
                 'priority' => 0
@@ -244,7 +244,7 @@ class Install {
             // Weekend
             $wpdb->insert( $table_prices, [
                 'name' => 'Hele området - Hele dagen (Helg)',
-                'price' => 6000,
+                'price' => 4000,
                 'slot_id' => $hele_dagen_id,
                 'days_of_week' => '5,6,0',
                 'priority' => 10
@@ -258,20 +258,20 @@ class Install {
             }
 
             // 3. Special Holiday Price (General)
-            $wpdb->insert( $table_prices, [
-                'name' => 'Helligdagstillegg (Alle lokaler)',
-                'price' => 8000,
-                'slot_id' => $hele_dagen_id,
-                'is_holiday' => 1,
-                'priority' => 100
-            ] );
-            $holiday_price_id = $wpdb->insert_id;
-            foreach ( $objects as $obj ) {
-                $wpdb->insert( $table_price_objects, [
-                    'price_id' => $holiday_price_id,
-                    'booking_object_id' => $obj->id
-                ] );
-            }
+            // $wpdb->insert( $table_prices, [
+            //     'name' => 'Helligdagstillegg (Alle lokaler)',
+            //     'price' => 8000,
+            //     'slot_id' => $hele_dagen_id,
+            //     'is_holiday' => 1,
+            //     'priority' => 100
+            // ] );
+            // $holiday_price_id = $wpdb->insert_id;
+            // foreach ( $objects as $obj ) {
+            //     $wpdb->insert( $table_price_objects, [
+            //         'price_id' => $holiday_price_id,
+            //         'booking_object_id' => $obj->id
+            //     ] );
+            // }
         }
     }
 }
