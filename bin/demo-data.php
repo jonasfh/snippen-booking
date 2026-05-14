@@ -71,7 +71,7 @@ if ($action === 'generate') {
             
             foreach ($objects as $obj) {
                 $slot = $wpdb->get_row($wpdb->prepare(
-                    "SELECT id FROM $table_slots WHERE booking_object_id = %d AND name = %s AND deleted_at IS NULL",
+                    "SELECT id FROM $table_slots WHERE booking_object_id = %d AND name = %s AND allow_multi_object = 1 AND deleted_at IS NULL",
                     $obj->id, $target_name
                 ));
                 
