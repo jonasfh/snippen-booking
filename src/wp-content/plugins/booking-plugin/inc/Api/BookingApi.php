@@ -100,7 +100,7 @@ class BookingApi {
 
         // Calculate price
         $pricing_service = new PricingService();
-        $price = $pricing_service->getPrice(array_keys($slots_to_book), $slot_name);
+        $price = $pricing_service->getPrice(array_keys($slots_to_book), $slot_name, $booking_date);
         
         if ($price === null) {
             // Fallback if no price defined, but in a real scenario we might want to block this
