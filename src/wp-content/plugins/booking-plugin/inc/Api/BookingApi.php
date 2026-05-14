@@ -87,6 +87,8 @@ class BookingApi {
         $description = sanitize_textarea_field( $_POST['description'] ?? '' );
         
         // Get slot info for price lookup and restrictions
+        $table_slots = $wpdb->prefix . 'snippen_time_slots';
+        $first_slot_id = reset($slots_to_book);
         $slot_info = $wpdb->get_row($wpdb->prepare(
             "SELECT name, allow_multi_object FROM $table_slots WHERE id = %d",
             $first_slot_id
