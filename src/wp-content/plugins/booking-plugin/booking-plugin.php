@@ -20,3 +20,11 @@ require_once __DIR__ . '/autoloader.php';
 // Initialize plugin
 \SnippenBooking\Plugin::init();
 
+// Initialize Plugin Update Checker for automatic updates via GitHub
+require_once __DIR__ . '/lib/plugin-update-checker/plugin-update-checker.php';
+$myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+    'https://github.com/jonasfh/snippen-booking/',
+    __FILE__,
+    'snippen-booking'
+);
+$myUpdateChecker->setBranch('main');
