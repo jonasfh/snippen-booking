@@ -74,12 +74,12 @@ class Install {
         // Seed data if empty
         $object_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_objects" );
         if ( $object_count == 0 ) {
-            // 1. Spisestuen
+            // 1. Festsalen
             $wpdb->insert( $table_objects, array(
-                'name' => 'Spisestuen',
+                'name' => 'Festsalen',
                 'description' => 'Vårt største lokale med plass til mange gjester.'
             ) );
-            $spisestuen_id = $wpdb->insert_id;
+            $festsalen_id = $wpdb->insert_id;
 
             // 2. Peisestuen
             $wpdb->insert( $table_objects, array(
@@ -88,7 +88,7 @@ class Install {
             ) );
             $peisestuen_id = $wpdb->insert_id;
 
-            // Seed slots for Spisestuen
+            // Seed slots for Festsalen
             $this_slots = array(
                 array(
                     'name' => 'Hele dagen',
@@ -113,7 +113,7 @@ class Install {
                 )
             );
 
-            foreach ( array( $spisestuen_id, $peisestuen_id ) as $obj_id ) {
+            foreach ( array( $festsalen_id, $peisestuen_id ) as $obj_id ) {
                 foreach ( $this_slots as $slot ) {
                     $wpdb->insert( $table_slots, array_merge( $slot, array( 'booking_object_id' => $obj_id ) ) );
                 }
