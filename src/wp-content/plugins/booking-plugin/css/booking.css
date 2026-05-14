@@ -346,7 +346,18 @@
 .slot-name {
     display: block;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+}
+
+.slot-price {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.slot-item.selected .slot-price {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .booking-info {

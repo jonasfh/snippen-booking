@@ -142,6 +142,7 @@ jQuery(document).ready(function ($) {
         var slots = data.slots;
         var booked = data.booked;
         var unavailable = data.unavailable || {};
+        var prices = data.prices || {};
         var offsetDays = data.offset_days;
 
         var today = new Date();
@@ -190,6 +191,8 @@ jQuery(document).ready(function ($) {
                 var isBlocked = dayUnavailable.some(id => slotIds.includes(parseInt(id)));
                 var isCurrentlySelected = isSelected && selectedSlotId === slot.id;
 
+                var price = (prices[dateStr] && prices[dateStr][slot.name]) ? prices[dateStr][slot.name] : null;
+
                 if (isBooked) {
                     weekHtml += '<div class="slot-item booked">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
@@ -212,8 +215,12 @@ jQuery(document).ready(function ($) {
                     weekHtml += 'data-slot-description="' + (slot.description || '') + '" ';
                     weekHtml += 'data-start-time="' + slot.start_time + '" ';
                     weekHtml += 'data-end-time="' + slot.end_time + '" ';
+                    weekHtml += 'data-price="' + (price || '') + '" ';
                     weekHtml += 'data-slot-name="' + slot.name + '">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
+                    if (price && !isPast) {
+                        weekHtml += '<span class="slot-price">kr. ' + Math.round(price) + ',-</span>';
+                    }
                     weekHtml += '</div>';
                 }
             });
@@ -280,8 +287,17 @@ jQuery(document).ready(function ($) {
         var dateObj = new Date(selectedDate);
         var formattedDate = dateObj.toLocaleDateString('nb-NO', { weekday: 'long', day: 'numeric', month: 'long' });
 
+        var $selectedSlot = $('.slot-item.selected');
+        var price = $selectedSlot.data('price');
+
         var timeStr = (selectedSlotStartTime || '').substring(0, 5) + ' - ' + (selectedSlotEndTime || '').substring(0, 5);
-        $('#selected-info-display').text(formattedDate + ' | ' + selectedSlotName + ' (' + timeStr + ')');
+        var infoText = formattedDate + ' | ' + selectedSlotName + ' (' + timeStr + ')';
+        
+        if (price) {
+            infoText += ' - Pris: kr. ' + Math.round(price) + ',-';
+        }
+
+        $('#selected-info-display').text(infoText);
         $('#selected-slot-description').text(selectedSlotDescription || '');
 
         $('#booking-form-container').slideDown(400);
