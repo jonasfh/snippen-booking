@@ -77,26 +77,45 @@ class BookingApi {
 
         // Process booking data
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
+        $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
         $customer_name = sanitize_text_field( $_POST['name'] ?? '' );
         $customer_email = sanitize_email( $_POST['email'] ?? '' );
         $customer_phone = sanitize_text_field( $_POST['phone'] ?? '' );
         $description = sanitize_textarea_field( $_POST['description'] ?? '' );
         
+        // Get the first slot ID for the booking (used for the main booking record)
+        $first_slot_id = reset($slots_to_book);
+        
+        // Insert single booking record
+        $booking_data = array(
+            'booking_date' => $booking_date,
+            'slot_id' => $first_slot_id,
+            'customer_name' => $customer_name,
+            'customer_email' => $customer_email,
+            'customer_phone' => $customer_phone,
+            'description' => $description,
+            'status' => 'pending',
+            'created_at' => current_time( 'mysql' )
+        );
+
+        $booking_inserted = $wpdb->insert( $table_bookings, $booking_data );
+        
+        if ( ! $booking_inserted ) {
+            wp_send_json_error( array( 'message' => 'Kunne ikke lagre booking. Vennligst prøv igjen.' ) );
+        }
+
+        $booking_id = $wpdb->insert_id;
         $success_count = 0;
+
+        // Insert relationships in junction table
         foreach ($slots_to_book as $obj_id => $sid) {
-            $booking_data = array(
+            $junction_data = array(
+                'booking_id' => $booking_id,
                 'booking_object_id' => $obj_id,
-                'booking_date' => $booking_date,
-                'slot_id' => $sid,
-                'customer_name' => $customer_name,
-                'customer_email' => $customer_email,
-                'customer_phone' => $customer_phone,
-                'description' => $description,
-                'status' => 'pending',
                 'created_at' => current_time( 'mysql' )
             );
-
-            $result = $wpdb->insert( $table_bookings, $booking_data );
+            
+            $result = $wpdb->insert( $table_booking_objects, $junction_data );
             if ($result) {
                 $success_count++;
             }
@@ -126,6 +145,8 @@ class BookingApi {
                 'message' => 'Bookingforespørsel sendt! Vi kontakter deg snart.'
             ) );
         } else {
+            // Clean up the booking if junction inserts failed
+            $wpdb->delete( $table_bookings, array( 'id' => $booking_id ) );
             wp_send_json_error( array( 'message' => 'Kunne ikke lagre alle bookinger. Vennligst prøv igjen.' ) );
         }
     }

@@ -91,11 +91,14 @@ class AvailabilityApi {
 
         // Get all bookings for the range with slot details (for UI display)
         $query_args = array_merge($object_ids, [$start_date, $end_date]);
+        $in_clause = implode(',', array_fill(0, count($object_ids), '%d'));
+        $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
         $bookings = $wpdb->get_results( $wpdb->prepare(
             "SELECT b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
              JOIN $table_slots s ON b.slot_id = s.id
-             WHERE b.booking_object_id IN ($in_clause) 
+             JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
+             WHERE bbo.booking_object_id IN ($in_clause) 
              AND b.booking_date BETWEEN %s AND %s 
              AND b.deleted_at IS NULL",
             ...$query_args

@@ -25,11 +25,13 @@ global $wpdb;
 $table_objects = $wpdb->prefix . 'snippen_booking_objects';
 $table_slots = $wpdb->prefix . 'snippen_time_slots';
 $table_bookings = $wpdb->prefix . 'snippen_bookings';
+$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
 
 $action = $argv[1] ?? 'generate';
 
 if ($action === 'clear') {
     echo "Clearing all bookings...\n";
+    $wpdb->query("DELETE FROM $table_booking_objects");
     $wpdb->query("DELETE FROM $table_bookings");
     echo "Success: All bookings cleared.\n";
     exit(0);
@@ -76,8 +78,8 @@ if ($action === 'generate') {
                         continue;
                     }
 
+                    // Insert booking record
                     $wpdb->insert($table_bookings, array(
-                        'booking_object_id' => (int) $obj->id,
                         'slot_id' => (int) $slot->id,
                         'booking_date' => $date_str,
                         'customer_name' => 'Demo Bruker ' . rand(100, 999),
@@ -85,6 +87,15 @@ if ($action === 'generate') {
                         'customer_phone' => '12345678',
                         'description' => 'Automatisk generert demo-booking for ' . $date_str
                     ));
+                    
+                    $booking_id = $wpdb->insert_id;
+                    
+                    // Insert junction table entry
+                    $wpdb->insert($table_booking_objects, array(
+                        'booking_id' => $booking_id,
+                        'booking_object_id' => (int) $obj->id
+                    ));
+                    
                     $count++;
                 }
             }
