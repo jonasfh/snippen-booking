@@ -157,8 +157,9 @@ class AvailabilityApi {
             $prices_by_date[$date_str] = [];
             
             foreach ($slots as $slot) {
-                // For grouped slots, we can use the same name/price logic
-                $price = $pricing_service->getPrice($object_ids, $slot->name, $date_str);
+                // For grouped slots, we can use the slot IDs (comma separated string in $slot->id)
+                $slot_ids = explode(',', $slot->id);
+                $price = $pricing_service->getPrice($object_ids, $slot_ids, $date_str);
                 if ($price !== null) {
                     $prices_by_date[$date_str][$slot->name] = $price;
                 }
