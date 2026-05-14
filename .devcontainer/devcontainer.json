@@ -23,7 +23,8 @@
     "WP_DEBUG": "1",
     "MYSQL_HOST": "localhost",
     "MYSQL_USER": "wpuser",
-    "MYSQL_PWD": "wppass"
+    "MYSQL_PWD": "wppass",
+    "HTTP_HOST": "localhost"
   },
   "postCreateCommand": "bash /entrypoint.sh setup",
   "postStartCommand": "nohup bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
