@@ -96,8 +96,10 @@ class BookingApi {
         $slot_name = $slot_info ? $slot_info->name : '';
 
         // RESTRICTION: For multi-object bookings, only allow slots flagged as such
-        if ( count( $slots_to_book ) > 1 && (!$slot_info || !$slot_info->allow_multi_object) ) {
-            wp_send_json_error( array( 'message' => 'Tidsluken er ikke tilgjengelig for fellesbooking.' ) );
+        if ( count( $slots_to_book ) > 1 ) {
+            if ( ! $slot_info || ! $slot_info->allow_multi_object ) {
+                wp_send_json_error( array( 'message' => 'Denne tidsluken tillater ikke booking av flere lokaler samtidig.' ) );
+            }
         }
 
         // Calculate price

@@ -41,6 +41,7 @@ class Plugin {
         AvailabilityApi::register();
         BookingApi::register();
         AdminLoader::register();
+        \SnippenBooking\Api\BookingActionsApi::register();
     }
 
     /**

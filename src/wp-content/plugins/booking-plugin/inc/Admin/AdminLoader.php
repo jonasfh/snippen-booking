@@ -24,13 +24,22 @@ class AdminLoader {
      */
     public static function add_admin_menu() {
         add_menu_page(
-            __( 'Snippen Booking', 'snippen-booking' ),
-            __( 'Snippen Booking', 'snippen-booking' ),
+            __( 'Bookinger', 'snippen-booking' ),
+            __( 'Bookinger', 'snippen-booking' ),
             'manage_options',
             'snippen-booking',
-            array( __CLASS__, 'render_dashboard' ),
+            array( self::class, 'render_bookings_page' ),
             'dashicons-calendar-alt',
-            30
+            25
+        );
+
+        add_submenu_page(
+            'snippen-booking',
+            __( 'Oversikt', 'snippen-booking' ),
+            __( 'Oversikt', 'snippen-booking' ),
+            'manage_options',
+            'snippen-booking',
+            array( self::class, 'render_bookings_page' )
         );
 
         add_submenu_page(
@@ -39,7 +48,7 @@ class AdminLoader {
             __( 'Lokaler', 'snippen-booking' ),
             'manage_options',
             'snippen-booking-objects',
-            array( __CLASS__, 'render_objects_page' )
+            array( self::class, 'render_objects_page' )
         );
 
         add_submenu_page(
@@ -48,49 +57,51 @@ class AdminLoader {
             __( 'Tidsluker', 'snippen-booking' ),
             'manage_options',
             'snippen-booking-slots',
-            array( __CLASS__, 'render_slots_page' )
+            array( self::class, 'render_slots_page' )
         );
 
         add_submenu_page(
             'snippen-booking',
-            __( 'Prising', 'snippen-booking' ),
-            __( 'Prising', 'snippen-booking' ),
+            __( 'Prisregler', 'snippen-booking' ),
+            __( 'Prisregler', 'snippen-booking' ),
             'manage_options',
             'snippen-booking-pricing',
-            array( __CLASS__, 'render_pricing_page' )
-        );
-        
-        // Remove the default duplicate menu item
-        remove_submenu_page( 'snippen-booking', 'snippen-booking' );
-        
-        // Re-add dashboard as the first submenu item if desired, or just use the first one
-        add_submenu_page(
-            'snippen-booking',
-            __( 'Oversikt', 'snippen-booking' ),
-            __( 'Oversikt', 'snippen-booking' ),
-            'manage_options',
-            'snippen-booking',
-            array( __CLASS__, 'render_dashboard' )
+            array( self::class, 'render_pricing_page' )
         );
     }
 
     /**
-     * Enqueue admin assets
+     * Enqueue Admin Assets
      */
     public static function enqueue_admin_assets( $hook ) {
         if ( strpos( $hook, 'snippen-booking' ) === false ) {
             return;
         }
 
-        wp_enqueue_style( 'snippen-booking-admin', plugins_url( 'css/admin.css', dirname( dirname( __FILE__ ) ) ), array(), '0.1.0' );
-        wp_enqueue_script( 'snippen-booking-admin', plugins_url( 'js/admin.js', dirname( dirname( __FILE__ ) ) ), array( 'jquery' ), '0.1.0', true );
+        wp_enqueue_style( 'snippen-booking-admin', plugins_url( 'css/admin.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );
+        wp_enqueue_script( 'snippen-booking-admin', plugins_url( 'js/admin.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), '1.1.0', true );
+
+        wp_localize_script( 'snippen-booking-admin', 'snippenAdmin', array(
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'snippen_admin_nonce' ),
+            'strings' => array(
+                'confirmDelete' => __( 'Er du sikker på at du vil slette dette?', 'snippen-booking' ),
+                'confirmCancel' => __( 'Vil du virkelig avbryte denne bookingen?', 'snippen-booking' ),
+                'error'         => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' )
+            )
+        ) );
     }
 
     /**
-     * Render Dashboard
+     * Render Bookings Page
      */
-    public static function render_dashboard() {
-        echo '<div class="wrap"><h1>' . esc_html__( 'Snippen Booking Oversikt', 'snippen-booking' ) . '</h1></div>';
+    public static function render_bookings_page() {
+        if ( class_exists( 'SnippenBooking\Admin\Pages\BookingsPage' ) ) {
+            $page = new \SnippenBooking\Admin\Pages\BookingsPage();
+            $page->render();
+        } else {
+            echo '<div class="wrap"><h1>' . esc_html__( 'Bookinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+        }
     }
 
     /**
