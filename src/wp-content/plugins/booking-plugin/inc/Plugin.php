@@ -7,6 +7,7 @@ use SnippenBooking\Database\Install;
 use SnippenBooking\Shortcode\BookingShortcode;
 use SnippenBooking\Api\AvailabilityApi;
 use SnippenBooking\Api\BookingApi;
+use SnippenBooking\Admin\AdminLoader;
 
 /**
  * Main plugin class - bootstrapper
@@ -39,6 +40,7 @@ class Plugin {
         BookingShortcode::register();
         AvailabilityApi::register();
         BookingApi::register();
+        AdminLoader::register();
     }
 
     /**
