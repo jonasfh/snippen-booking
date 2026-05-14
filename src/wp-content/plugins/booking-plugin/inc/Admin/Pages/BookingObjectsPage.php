@@ -1,0 +1,185 @@
+<?php
+
+namespace SnippenBooking\Admin\Pages;
+
+/**
+ * Admin page for managing Booking Objects
+ */
+class BookingObjectsPage {
+
+    /**
+     * Render the page
+     */
+    public function render() {
+        $action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : 'list';
+        $id = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
+
+        // Handle POST submissions
+        $this->handle_request();
+
+        echo '<div class="snippen-booking-admin-wrap">';
+        
+        $this->render_header($action);
+
+        switch ( $action ) {
+            case 'add':
+            case 'edit':
+                $this->render_form( $id );
+                break;
+            default:
+                $this->render_list();
+                break;
+        }
+
+        echo '</div>';
+    }
+
+    /**
+     * Render header
+     */
+    private function render_header($action) {
+        $title = __( 'Lokaler', 'snippen-booking' );
+        if ($action === 'add') $title = __( 'Legg til nytt lokale', 'snippen-booking' );
+        if ($action === 'edit') $title = __( 'Rediger lokale', 'snippen-booking' );
+
+        echo '<div class="snippen-admin-header">';
+        echo '<h1>' . esc_html( $title ) . '</h1>';
+        
+        if ( $action === 'list' ) {
+            echo '<a href="' . esc_url( admin_url( 'admin.php?page=snippen-booking-objects&action=add' ) ) . '" class="snippen-btn snippen-btn-primary">' . esc_html__( 'Legg til ny', 'snippen-booking' ) . '</a>';
+        } else {
+            echo '<a href="' . esc_url( admin_url( 'admin.php?page=snippen-booking-objects' ) ) . '" class="snippen-btn snippen-btn-outline">' . esc_html__( 'Tilbake til oversikt', 'snippen-booking' ) . '</a>';
+        }
+        
+        echo '</div>';
+    }
+
+    /**
+     * Handle POST requests (Save/Delete)
+     */
+    private function handle_request() {
+        if ( ! isset( $_POST['snippen_object_nonce'] ) || ! wp_verify_nonce( $_POST['snippen_object_nonce'], 'snippen_save_object' ) ) {
+            
+            // Check for delete action (GET)
+            if ( isset( $_GET['action'] ) && $_GET['action'] === 'delete' && isset( $_GET['id'] ) ) {
+                if ( isset( $_GET['_wpnonce'] ) && wp_verify_nonce( $_GET['_wpnonce'], 'delete_object_' . $_GET['id'] ) ) {
+                    $this->delete_object( intval( $_GET['id'] ) );
+                }
+            }
+            return;
+        }
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'snippen_booking_objects';
+        
+        $id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+        $name = sanitize_text_field( $_POST['name'] );
+        $description = sanitize_textarea_field( $_POST['description'] );
+
+        $data = array(
+            'name' => $name,
+            'description' => $description,
+            'modified_at' => current_time( 'mysql' )
+        );
+
+        if ( $id > 0 ) {
+            $wpdb->update( $table, $data, array( 'id' => $id ) );
+            $this->show_message( __( 'Lokale oppdatert.', 'snippen-booking' ) );
+        } else {
+            $data['created_at'] = current_time( 'mysql' );
+            $wpdb->insert( $table, $data );
+            $this->show_message( __( 'Lokale lagret.', 'snippen-booking' ) );
+            // Redirect to list
+            wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects' ) );
+            exit;
+        }
+    }
+
+    /**
+     * Delete object (soft delete)
+     */
+    private function delete_object( $id ) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'snippen_booking_objects';
+        $wpdb->update( $table, array( 'deleted_at' => current_time( 'mysql' ) ), array( 'id' => $id ) );
+        $this->show_message( __( 'Lokale slettet.', 'snippen-booking' ) );
+    }
+
+    /**
+     * Show admin message
+     */
+    private function show_message( $message ) {
+        echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
+    }
+
+    /**
+     * Render list table
+     */
+    private function render_list() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'snippen_booking_objects';
+        $objects = $wpdb->get_results( "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY name ASC" );
+
+        echo '<div class="snippen-card">';
+        echo '<table class="snippen-list-table">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
+        echo '<th>' . esc_html__( 'Beskrivelse', 'snippen-booking' ) . '</th>';
+        echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
+        echo '</tr></thead>';
+        echo '<tbody>';
+
+        if ( empty( $objects ) ) {
+            echo '<tr><td colspan="3">' . esc_html__( 'Ingen lokaler funnet.', 'snippen-booking' ) . '</td></tr>';
+        } else {
+            foreach ( $objects as $obj ) {
+                $edit_url = admin_url( 'admin.php?page=snippen-booking-objects&action=edit&id=' . $obj->id );
+                $delete_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-objects&action=delete&id=' . $obj->id ), 'delete_object_' . $obj->id );
+                
+                echo '<tr>';
+                echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $obj->name ) . '</a></strong></td>';
+                echo '<td>' . esc_html( wp_trim_words( $obj->description, 10 ) ) . '</td>';
+                echo '<td style="text-align:right;">';
+                echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
+                echo '<a href="' . esc_url( $delete_url ) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Slett', 'snippen-booking' ) . '</a>';
+                echo '</td>';
+                echo '</tr>';
+            }
+        }
+
+        echo '</tbody></table></div>';
+    }
+
+    /**
+     * Render Add/Edit Form
+     */
+    private function render_form( $id = 0 ) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'snippen_booking_objects';
+        $object = null;
+
+        if ( $id > 0 ) {
+            $object = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id ) );
+        }
+
+        echo '<div class="snippen-card"><form method="post" action="">';
+        wp_nonce_field( 'snippen_save_object', 'snippen_object_nonce' );
+        echo '<input type="hidden" name="id" value="' . esc_attr( $id ) . '">';
+
+        echo '<div class="snippen-form-group">';
+        echo '<label for="name">' . esc_html__( 'Navn på lokale', 'snippen-booking' ) . '</label>';
+        echo '<input type="text" name="name" id="name" value="' . esc_attr( $object ? $object->name : '' ) . '" required class="regular-text">';
+        echo '</div>';
+
+        echo '<div class="snippen-form-group">';
+        echo '<label for="description">' . esc_html__( 'Beskrivelse', 'snippen-booking' ) . '</label>';
+        echo '<textarea name="description" id="description" rows="5" class="large-text">' . esc_textarea( $object ? $object->description : '' ) . '</textarea>';
+        echo '</div>';
+
+        echo '<div class="snippen-form-actions">';
+        echo '<button type="submit" class="snippen-btn snippen-btn-primary">' . esc_html__( 'Lagre lokale', 'snippen-booking' ) . '</button>';
+        echo '</div>';
+
+        echo '</form></div>';
+    }
+}
