@@ -1,0 +1,34 @@
+name: PR Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for tags
+
+      - name: Extract plugin version
+        id: version
+        run: |
+          # Extract version from booking-plugin.php
+          VERSION=$(grep -i "^ \* Version:" src/wp-content/plugins/booking-plugin/booking-plugin.php | awk '{print $3}' | tr -d '\r')
+          echo "Found version in file: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG already exists in the repository! Please bump the version in src/wp-content/plugins/booking-plugin/booking-plugin.php before merging."
+            exit 1
+          else
+            echo "Tag $TAG does not exist. Version bump looks good!"
+          fi

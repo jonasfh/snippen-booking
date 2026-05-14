@@ -1,0 +1,67 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to create tags and releases
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract plugin version
+        id: version
+        run: |
+          VERSION=$(grep -i "^ \* Version:" src/wp-content/plugins/booking-plugin/booking-plugin.php | awk '{print $3}' | tr -d '\r')
+          echo "Found version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists. Skipping release creation."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag $TAG does not exist. Proceeding with release."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Package Plugin
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          # Create a temporary directory for packaging
+          mkdir -p build/snippen-booking
+          # Copy only the necessary files
+          cp -r src/wp-content/plugins/booking-plugin/* build/snippen-booking/
+          # Create the zip file
+          cd build
+          zip -r ../snippen-booking.zip snippen-booking/
+          cd ..
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          files: snippen-booking.zip
+          generate_release_notes: true
