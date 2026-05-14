@@ -35,6 +35,7 @@ class BugReproductionTest extends TestCase {
 
         // Legg inn booking for torsdag
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
+            'slot_id' => 1, 
             'booking_date' => $day1,
             'customer_name' => 'Torsdag Booking',
             'customer_email' => 'torsdag@example.com'
@@ -42,8 +43,7 @@ class BugReproductionTest extends TestCase {
         $booking_id = $wpdb->insert_id;
         $wpdb->insert($wpdb->prefix . "snippen_bookings_booking_objects", [
             'booking_id' => $booking_id,
-            'booking_object_id' => $this->objectId,
-            'slot_id' => 1
+            'booking_object_id' => $this->objectId
         ]);
 
         // Sjekk at Hele dagen (starter 11:00) er tilgjengelig fredag
