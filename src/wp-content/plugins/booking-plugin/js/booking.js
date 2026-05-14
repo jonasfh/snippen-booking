@@ -181,7 +181,11 @@ jQuery(document).ready(function ($) {
             slots.forEach(function (slot) {
                 var slotIds = String(slot.id).split(',').map(Number);
                 
-                var existing = dayBookings.find(b => slotIds.includes(parseInt(b.slot_id)));
+                var existing = dayBookings.find(b => 
+                    b.slot_name === slot.name && 
+                    b.start_time === slot.start_time && 
+                    b.end_time === slot.end_time
+                );
                 var isBooked = !!existing;
                 var isBlocked = dayUnavailable.some(id => slotIds.includes(parseInt(id)));
                 var isCurrentlySelected = isSelected && selectedSlotId === slot.id;
