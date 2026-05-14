@@ -59,9 +59,61 @@ if ($action === 'generate') {
         // Randomly pick a booking object for this day's demo bookings
         $service = new \SnippenBooking\Service\AvailabilityService();
 
+        // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele dagen")
+        if (rand(1, 10) <= 2) {
+            // Pick a random slot name (e.g. "Hele dagen")
+            $slot_names = ['Hele dagen', 'Formiddag', 'Ettermiddag'];
+            $target_name = $slot_names[array_rand($slot_names)];
+            
+            // Find corresponding slot IDs for each object
+            $slots_to_book = [];
+            $all_available = true;
+            
+            foreach ($objects as $obj) {
+                $slot = $wpdb->get_row($wpdb->prepare(
+                    "SELECT id FROM $table_slots WHERE booking_object_id = %d AND name = %s AND deleted_at IS NULL",
+                    $obj->id, $target_name
+                ));
+                
+                if (!$slot || !$service->isSlotAvailable($obj->id, $date_str, $slot->id)) {
+                    $all_available = false;
+                    break;
+                }
+                $slots_to_book[$obj->id] = $slot->id;
+            }
+            
+            if ($all_available && !empty($slots_to_book)) {
+                $first_slot_id = reset($slots_to_book);
+                
+                // Insert main booking
+                $wpdb->insert($table_bookings, array(
+                    'slot_id' => (int) $first_slot_id,
+                    'booking_date' => $date_str,
+                    'customer_name' => 'Multi-Object Demo ' . rand(100, 999),
+                    'customer_email' => 'multi' . rand(1, 100) . '@example.com',
+                    'customer_phone' => '99887766',
+                    'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
+                ));
+                
+                $booking_id = $wpdb->insert_id;
+                
+                // Link all objects
+                foreach ($slots_to_book as $obj_id => $sid) {
+                    $wpdb->insert($table_booking_objects, array(
+                        'booking_id' => $booking_id,
+                        'booking_object_id' => (int) $obj_id
+                    ));
+                }
+                
+                $count++;
+                continue; // Skip individual bookings for this day to keep it simple
+            }
+        }
+
+        // Individual object bookings
         foreach ($objects as $obj) {
-            // 40% chance of bookings for this object on this day
-            if (rand(1, 10) <= 4) {
+            // 30% chance of bookings for this object on this day
+            if (rand(1, 10) <= 3) {
                 $slots = $wpdb->get_results($wpdb->prepare(
                     "SELECT id FROM $table_slots WHERE booking_object_id = %d AND deleted_at IS NULL",
                     $obj->id
