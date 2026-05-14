@@ -53,7 +53,6 @@ class Install {
         $sql_bookings = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
             facility VARCHAR(50),
-            slot_id INT NOT NULL,
             booking_date DATE NOT NULL,
             customer_name VARCHAR(255) NOT NULL,
             customer_email VARCHAR(255) NOT NULL,
@@ -64,8 +63,7 @@ class Install {
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id),
-            KEY booking_date (booking_date),
-            KEY slot_id (slot_id)
+            KEY booking_date (booking_date)
         ) $charset_collate;";
         dbDelta( $sql_bookings );
 
@@ -75,11 +73,13 @@ class Install {
             id INT NOT NULL AUTO_INCREMENT,
             booking_id BIGINT NOT NULL,
             booking_object_id INT NOT NULL,
+            slot_id INT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY booking_id (booking_id),
             KEY booking_object_id (booking_object_id),
+            KEY slot_id (slot_id),
             UNIQUE KEY unique_booking_object (booking_id, booking_object_id)
         ) $charset_collate;";
         dbDelta( $sql_booking_objects );

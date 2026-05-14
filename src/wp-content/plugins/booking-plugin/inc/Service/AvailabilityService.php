@@ -37,8 +37,8 @@ class AvailabilityService {
         $existing_bookings = $wpdb->get_results($wpdb->prepare(
             "SELECT b.booking_date, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
-             JOIN $table_slots s ON b.slot_id = s.id
              JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
+             JOIN $table_slots s ON bbo.slot_id = s.id
              WHERE bbo.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
              AND b.deleted_at IS NULL",
@@ -81,10 +81,10 @@ class AvailabilityService {
 
         $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
         $existing_bookings = $wpdb->get_results($wpdb->prepare(
-            "SELECT b.booking_date, b.slot_id, s.start_time, s.end_time, s.cleanup_hours 
+            "SELECT b.booking_date, bbo.slot_id, s.start_time, s.end_time, s.cleanup_hours 
              FROM $table_bookings b
-             JOIN $table_slots s ON b.slot_id = s.id
              JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
+             JOIN $table_slots s ON bbo.slot_id = s.id
              WHERE bbo.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
              AND b.deleted_at IS NULL",
