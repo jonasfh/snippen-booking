@@ -5,6 +5,8 @@
  * Version: 0.1.0
  * Author: Snippen
  * Text Domain: snippen-booking
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 // Prevent direct access
