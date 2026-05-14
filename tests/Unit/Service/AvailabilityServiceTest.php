@@ -40,11 +40,15 @@ class AvailabilityServiceTest extends TestCase {
         
         // Book "Formiddag" (Slot 2)
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'booking_object_id' => $this->objectId,
-            'slot_id' => 2, 
             'booking_date' => $date,
             'customer_name' => 'John Doe',
             'customer_email' => 'john@example.com'
+        ]);
+        $booking_id = $wpdb->insert_id;
+        $wpdb->insert($wpdb->prefix . "snippen_bookings_booking_objects", [
+            'booking_id' => $booking_id,
+            'booking_object_id' => $this->objectId,
+            'slot_id' => 2
         ]);
 
         // 1. Same slot should be unavailable
@@ -68,11 +72,15 @@ class AvailabilityServiceTest extends TestCase {
         // Book "Hele dagen" (Slot 1) on Day 1
         // Window: 00:00 - 23:00 + 13h cleanup = Occupied until Day 2 12:00
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'booking_object_id' => $this->objectId,
-            'slot_id' => 1, 
             'booking_date' => $day1,
             'customer_name' => 'Occupant',
             'customer_email' => 'occ@example.com'
+        ]);
+        $booking_id = $wpdb->insert_id;
+        $wpdb->insert($wpdb->prefix . "snippen_bookings_booking_objects", [
+            'booking_id' => $booking_id,
+            'booking_object_id' => $this->objectId,
+            'slot_id' => 1
         ]);
 
         // 1. "Formiddag" (Slot 2, starts 08:00) on Day 2 should be unavailable
@@ -93,11 +101,15 @@ class AvailabilityServiceTest extends TestCase {
         // Book "Ettermiddag" (Slot 3, 16:00-23:00) on Day 1
         // 9h cleanup = Occupied until Day 2 08:00
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'booking_object_id' => $this->objectId,
-            'slot_id' => 3, 
             'booking_date' => $day1,
             'customer_name' => 'Late Night',
             'customer_email' => 'late@example.com'
+        ]);
+        $booking_id = $wpdb->insert_id;
+        $wpdb->insert($wpdb->prefix . "snippen_bookings_booking_objects", [
+            'booking_id' => $booking_id,
+            'booking_object_id' => $this->objectId,
+            'slot_id' => 3
         ]);
 
         // "Formiddag" (Slot 2, starts 08:00) on Day 2 should be available (exact edge case)
@@ -114,11 +126,15 @@ class AvailabilityServiceTest extends TestCase {
         
         // Book "Formiddag" on Object 1
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'booking_object_id' => 1,
-            'slot_id' => 2, 
             'booking_date' => $date,
             'customer_name' => 'Obj1 User',
             'customer_email' => 'obj1@example.com'
+        ]);
+        $booking_id = $wpdb->insert_id;
+        $wpdb->insert($wpdb->prefix . "snippen_bookings_booking_objects", [
+            'booking_id' => $booking_id,
+            'booking_object_id' => 1,
+            'slot_id' => 2
         ]);
 
         // Slot 5 is "Formiddag" for Object 2 (based on seed logic)

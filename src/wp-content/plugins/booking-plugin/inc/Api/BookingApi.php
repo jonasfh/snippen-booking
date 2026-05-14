@@ -83,13 +83,9 @@ class BookingApi {
         $customer_phone = sanitize_text_field( $_POST['phone'] ?? '' );
         $description = sanitize_textarea_field( $_POST['description'] ?? '' );
         
-        // Get the first slot ID for the booking (used for the main booking record)
-        $first_slot_id = reset($slots_to_book);
-        
         // Insert single booking record
         $booking_data = array(
             'booking_date' => $booking_date,
-            'slot_id' => $first_slot_id,
             'customer_name' => $customer_name,
             'customer_email' => $customer_email,
             'customer_phone' => $customer_phone,
@@ -112,6 +108,7 @@ class BookingApi {
             $junction_data = array(
                 'booking_id' => $booking_id,
                 'booking_object_id' => $obj_id,
+                'slot_id' => $sid,
                 'created_at' => current_time( 'mysql' )
             );
             

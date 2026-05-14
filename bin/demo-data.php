@@ -80,7 +80,6 @@ if ($action === 'generate') {
 
                     // Insert booking record
                     $wpdb->insert($table_bookings, array(
-                        'slot_id' => (int) $slot->id,
                         'booking_date' => $date_str,
                         'customer_name' => 'Demo Bruker ' . rand(100, 999),
                         'customer_email' => 'demo' . rand(1, 100) . '@example.com',
@@ -93,7 +92,8 @@ if ($action === 'generate') {
                     // Insert junction table entry
                     $wpdb->insert($table_booking_objects, array(
                         'booking_id' => $booking_id,
-                        'booking_object_id' => (int) $obj->id
+                        'booking_object_id' => (int) $obj->id,
+                        'slot_id' => (int) $slot->id
                     ));
                     
                     $count++;
