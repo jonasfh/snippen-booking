@@ -56,8 +56,8 @@ if ($action === 'generate') {
         $date->modify("+$i days");
         $date_str = $date->format('Y-m-d');
         
-        // Randomly pick a booking object for this day's demo bookings
         $service = new \SnippenBooking\Service\AvailabilityService();
+        $pricing_service = new \SnippenBooking\Service\PricingService();
 
         // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele dagen")
         if (rand(1, 10) <= 2) {
@@ -84,6 +84,7 @@ if ($action === 'generate') {
             
             if ($all_available && !empty($slots_to_book)) {
                 $first_slot_id = reset($slots_to_book);
+                $price = $pricing_service->getPrice(array_keys($slots_to_book), $target_name) ?: 0;
                 
                 // Insert main booking
                 $wpdb->insert($table_bookings, array(
@@ -92,6 +93,7 @@ if ($action === 'generate') {
                     'customer_name' => 'Multi-Object Demo ' . rand(100, 999),
                     'customer_email' => 'multi' . rand(1, 100) . '@example.com',
                     'customer_phone' => '99887766',
+                    'price' => $price,
                     'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
                 ));
                 
@@ -115,7 +117,7 @@ if ($action === 'generate') {
             // 30% chance of bookings for this object on this day
             if (rand(1, 10) <= 3) {
                 $slots = $wpdb->get_results($wpdb->prepare(
-                    "SELECT id FROM $table_slots WHERE booking_object_id = %d AND deleted_at IS NULL",
+                    "SELECT id, name FROM $table_slots WHERE booking_object_id = %d AND deleted_at IS NULL",
                     $obj->id
                 ));
                 
@@ -130,6 +132,8 @@ if ($action === 'generate') {
                         continue;
                     }
 
+                    $price = $pricing_service->getPrice([$obj->id], $slot->name) ?: 0;
+
                     // Insert booking record
                     $wpdb->insert($table_bookings, array(
                         'slot_id' => (int) $slot->id,
@@ -137,6 +141,7 @@ if ($action === 'generate') {
                         'customer_name' => 'Demo Bruker ' . rand(100, 999),
                         'customer_email' => 'demo' . rand(1, 100) . '@example.com',
                         'customer_phone' => '12345678',
+                        'price' => $price,
                         'description' => 'Automatisk generert demo-booking for ' . $date_str
                     ));
                     
