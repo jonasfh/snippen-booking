@@ -107,8 +107,15 @@ class AvailabilityApi {
         $query_args = array_merge($object_ids, [$start_date, $end_date]);
         $in_clause = implode(',', array_fill(0, count($object_ids), '%d'));
         $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+        
+        $is_admin = current_user_can( 'manage_options' );
+        $select_fields = "b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours";
+        if ( $is_admin ) {
+            $select_fields .= ", b.customer_name, b.customer_email, b.customer_phone, b.description as booking_description";
+        }
+
         $bookings = $wpdb->get_results( $wpdb->prepare(
-            "SELECT b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours 
+            "SELECT $select_fields
              FROM $table_bookings b
              JOIN $table_slots s ON b.slot_id = s.id
              JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
@@ -121,13 +128,22 @@ class AvailabilityApi {
         // Organize bookings by date
         $booked_details = array();
         foreach ( $bookings as $booking ) {
-            $booked_details[ $booking->booking_date ][] = array(
+            $details = array(
                 'slot_id' => (int) $booking->slot_id,
                 'slot_name' => $booking->slot_name,
                 'start_time' => $booking->start_time,
                 'end_time' => $booking->end_time,
                 'cleanup_hours' => (int) $booking->cleanup_hours
             );
+
+            if ( $is_admin ) {
+                $details['customer_name'] = $booking->customer_name;
+                $details['customer_email'] = $booking->customer_email;
+                $details['customer_phone'] = $booking->customer_phone;
+                $details['description'] = $booking->booking_description;
+            }
+
+            $booked_details[ $booking->booking_date ][] = $details;
         }
 
         // Get advanced availability (blocked by cleanup)

@@ -157,6 +157,6 @@ wp plugin list --allow-root
 - Keep AJAX handlers (in Api classes) thin - delegate to other classes
 
 ## Versioning & Changelog
-- **Version Bump**: When making functional changes, you MUST bump the version number in `src/wp-content/plugins/booking-plugin/booking-plugin.php`.
+- **Version Bump**: When making functional changes, you must bump the version number in `src/wp-content/plugins/booking-plugin/booking-plugin.php`, UNLESS this is already done in the current branch.
 - **CHANGELOG.md**: Every version bump must be accompanied by an entry in `CHANGELOG.md` under a header like `## [X.Y.Z] - YYYY-MM-DD`.
 - **PR Check**: Pull Requests will fail if the version in the plugin file already exists as a Git tag or if the `CHANGELOG.md` is not updated.

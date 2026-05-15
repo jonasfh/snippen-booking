@@ -148,6 +148,19 @@ class BookingShortcode {
                 <div id="booking-response" style="display: none;"></div>
             </div>
             <?php endif; ?>
+
+            <?php if ( current_user_can( 'manage_options' ) ) : ?>
+            <div id="booking-info-modal" class="snippen-modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4>Bookingdetaljer</h4>
+                        <button type="button" class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body" id="booking-info-content"></div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();

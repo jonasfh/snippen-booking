@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-05-15
+### Added
+- **Admin Calendar Info**: Display customer names directly in the calendar for administrators.
+- **Booking Detail Modal**: View complete booking information by clicking booked slots in the calendar (admin only).
+- **Improved Bookings List**: Default sorting by date (ASC) and automatic 14-day history filtering.
+- **History Toggle**: Easily show/hide older bookings in the admin dashboard.
+
 ## [1.0.0] - 2026-05-15
 ### Added
 - **Admin Booking**: Admins can now create bookings on behalf of other residents directly from the calendar.
