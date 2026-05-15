@@ -22,7 +22,7 @@ Guide AI agents working in this repository.
 - **Always include created_at and modified_at timestamps on database tables**
 - **Check for latest versions**: Always ensure that the latest available versions of frameworks, libraries, and GitHub Actions are used, unless there is a specific reason not to. If old versions are discovered, notify the developer.
 - **DO NOT commit or push changes** (the USER handles version control)
-- Suggest a commit message focused on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without quotes.
+- Always suggest a commit message focused on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without quotes.
 
 ## Plugin Structure
 
