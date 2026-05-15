@@ -20,7 +20,7 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -43,6 +43,12 @@ jobs:
       env:
         WP_ABSPATH: /tmp/wordpress/
       run: |
+        echo "### PHPUnit Test Results 🧪" >> $GITHUB_STEP_SUMMARY
         # Run activation manually to create tables since we're not running a full WP request cycle
         php -r "require_once '/tmp/wordpress/wp-load.php'; require_once 'src/wp-content/plugins/booking-plugin/autoloader.php'; \SnippenBooking\Plugin::activate();"
-        composer test
+        if composer test; then
+          echo "✅ Alle tester passerte!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Noen tester feilet. Se detaljer i loggen over." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi

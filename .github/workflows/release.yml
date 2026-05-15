@@ -12,7 +12,7 @@ jobs:
       contents: write # Needed to create tags and releases
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -20,7 +20,8 @@ jobs:
         id: version
         run: |
           VERSION=$(grep -i "^ \* Version:" src/wp-content/plugins/booking-plugin/booking-plugin.php | awk '{print $3}' | tr -d '\r')
-          echo "Found version: $VERSION"
+          echo "### Deployment Oppsummering 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "- **Versjon:** $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if tag already exists
@@ -57,11 +58,39 @@ jobs:
           zip -r ../snippen-booking.zip snippen-booking/
           cd ..
 
+      - name: Extract Changelog Entry
+        if: steps.check_tag.outputs.exists == 'false'
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Extract the section for this version from CHANGELOG.md
+          # It looks for the header for this version and takes everything until the next header (or end of file)
+          sed -n "/## \[$VERSION\]/,/## /p" CHANGELOG.md | sed '1d;$d' > release_notes.md
+          
+          # Add link to full changelog
+          echo -e "\n\n[Se hele CHANGELOG.md her](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)" >> release_notes.md
+          
+          echo "#### Release Notes for $VERSION:" >> $GITHUB_STEP_SUMMARY
+          cat release_notes.md >> $GITHUB_STEP_SUMMARY
+          
+          echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: Release v${{ steps.version.outputs.version }}
+          body_path: release_notes.md
           files: snippen-booking.zip
-          generate_release_notes: true
+          generate_release_notes: false
+
+      - name: Add Release Link to Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+          if [[ "${{ steps.check_tag.outputs.exists }}" == "true" ]]; then
+            echo "- **Status:** ℹ️ Versjonen eksisterer allerede. [Se eksisterende release her]($RELEASE_URL)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status:** ✅ Ny release opprettet! [Se den her]($RELEASE_URL)" >> $GITHUB_STEP_SUMMARY
+          fi

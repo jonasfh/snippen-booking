@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Fetch all history for tags
 
@@ -20,7 +20,8 @@ jobs:
         run: |
           # Extract version from booking-plugin.php
           VERSION=$(grep -i "^ \* Version:" src/wp-content/plugins/booking-plugin/booking-plugin.php | awk '{print $3}' | tr -d '\r')
-          echo "Found version in file: $VERSION"
+          echo "### PR Versjonskontroll 🔍" >> $GITHUB_STEP_SUMMARY
+          echo "- **Versjon i fil:** $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
@@ -28,8 +29,19 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           TAG="v$VERSION"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "- **Tag sjekk:** ❌ Tag $TAG eksisterer allerede!" >> $GITHUB_STEP_SUMMARY
             echo "::error::Tag $TAG already exists in the repository! Please bump the version in src/wp-content/plugins/booking-plugin/booking-plugin.php before merging."
             exit 1
           else
-            echo "Tag $TAG does not exist. Version bump looks good!"
+            echo "- **Tag sjekk:** ✅ Tag $TAG er ledig." >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Verify CHANGELOG is updated
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            echo "- **CHANGELOG sjekk:** ❌ Mangler oppføring for $VERSION" >> $GITHUB_STEP_SUMMARY
+            echo "::error::CHANGELOG.md is not updated for version $VERSION! Please add an entry for this version."
+            exit 1
+          fi
+          echo "- **CHANGELOG sjekk:** ✅ Oppdatert for $VERSION." >> $GITHUB_STEP_SUMMARY
