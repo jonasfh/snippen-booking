@@ -95,8 +95,8 @@ class PricingPage {
             'price' => $price,
             'priority' => $priority,
             'days_of_week' => $day_of_week,
-            'start_date' => $start_date,
-            'end_date' => $end_date,
+            'date_start' => $start_date,
+            'date_end' => $end_date,
             'is_holiday' => $is_holiday,
             'modified_at' => current_time( 'mysql' )
         );
@@ -203,7 +203,7 @@ class PricingPage {
                     }
                     $conditions[] = implode(',', $day_labels);
                 }
-                if ( $rule->start_date ) $conditions[] = substr($rule->start_date, 5) . ' til ' . substr($rule->end_date, 5);
+                if ( $rule->date_start ) $conditions[] = substr($rule->date_start, 5) . ' til ' . substr($rule->date_end, 5);
 
                 echo '<tr>';
                 echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
@@ -307,9 +307,9 @@ class PricingPage {
 
         echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
         echo '<div><label for="start_date">' . esc_html__( 'Startdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';
-        echo '<input type="date" name="start_date" id="start_date" value="' . esc_attr( $rule ? $rule->start_date : '' ) . '"></div>';
+        echo '<input type="date" name="start_date" id="start_date" value="' . esc_attr( $rule ? $rule->date_start : '' ) . '"></div>';
         echo '<div><label for="end_date">' . esc_html__( 'Sluttdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';
-        echo '<input type="date" name="end_date" id="end_date" value="' . esc_attr( $rule ? $rule->end_date : '' ) . '"></div>';
+        echo '<input type="date" name="end_date" id="end_date" value="' . esc_attr( $rule ? $rule->date_end : '' ) . '"></div>';
         echo '</div>';
 
         echo '<div class="snippen-form-group">';
