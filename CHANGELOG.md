@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **AJAX Performance**: Optimized availability API to avoid duplicate booking rows and fetch object names efficiently.
 
+## [1.1.5] - 2026-05-15
+### Fixed
+- **Pricing Admin**: Fixed a bug in the price list view where date-based conditions caused an "Undefined property" warning due to mismatched database column names.
+
 ## [1.1.4] - 2026-05-15
 ### Changed
 - **Release Assets**: Updated GitHub Release workflow to name ZIP files with version numbers (e.g., `snippen-booking-v1.1.4.zip`).
