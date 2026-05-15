@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2026-05-15
+### Added
+- **Admin Calendar Info**: Display associated locales/objects in the booking details modal.
+### Fixed
+- **AJAX Performance**: Optimized availability API to avoid duplicate booking rows and fetch object names efficiently.
+
 ## [1.1.2] - 2026-05-15
 ### Fixed
 - **Auto-Update Fix**: Removed `setBranch('main')` configuration. This ensures the update checker uses the correctly packaged GitHub Release ZIP assets instead of downloading the raw repository source, which was causing installation failures.
