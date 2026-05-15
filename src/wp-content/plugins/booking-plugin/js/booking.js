@@ -206,8 +206,8 @@ jQuery(document).ready(function ($) {
                 var price = (prices[dateStr] && prices[dateStr][slot.name]) ? prices[dateStr][slot.name] : null;
 
                 if (isBooked) {
-                    var bookingInfoStr = isAdmin ? JSON.stringify(existing) : '';
-                    weekHtml += '<div class="slot-item booked" ' + (isAdmin ? 'data-booking-info=\'' + bookingInfoStr + '\'' : '') + '>';
+                    var bookingInfoStr = isAdmin ? JSON.stringify(existing).replace(/"/g, '&quot;') : '';
+                    weekHtml += '<div class="slot-item booked" ' + (isAdmin ? 'data-booking-info="' + bookingInfoStr + '"' : '') + '>';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
                     
                     if (isAdmin && existing.customer_name) {

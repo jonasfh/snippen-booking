@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-05-15
+### Fixed
+- **Asset Caching**: Fixed an issue where old JS/CSS files remained cached in browsers after updates.
+- **JS Attribute Safety**: Improved handling of special characters in customer names to prevent breaking calendar interactions.
+
 ## [1.1.0] - 2026-05-15
 ### Added
 - **Admin Calendar Info**: Display customer names directly in the calendar for administrators.

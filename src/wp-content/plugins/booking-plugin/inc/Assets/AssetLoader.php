@@ -24,14 +24,14 @@ class AssetLoader {
             'snippen-booking-style',
             self::get_plugin_dir_url() . 'css/booking.css',
             array(),
-            '0.1.0'
+            SNIPPEN_BOOKING_VERSION
         );
 
         wp_enqueue_script(
             'snippen-booking-script',
             self::get_plugin_dir_url() . 'js/booking.js',
             array( 'jquery' ),
-            '0.1.0',
+            SNIPPEN_BOOKING_VERSION,
             true
         );
 
