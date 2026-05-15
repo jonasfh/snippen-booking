@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Snippen Booking
  * Description: Booking plugin for Snippen community house.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Snippen
  * Text Domain: snippen-booking
  * License: GPLv2 or later
@@ -28,3 +28,11 @@ $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateCh
     'snippen-booking'
 );
 $myUpdateChecker->setBranch('main');
+
+// Force update check in development mode for easier testing
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG && isset( $_GET['check_booking_updates'] ) ) {
+    add_action( 'admin_init', function () use ( $myUpdateChecker ) {
+        $myUpdateChecker->getScheduler()->checkForUpdates();
+    } );
+}
+
