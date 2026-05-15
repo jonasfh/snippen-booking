@@ -19,11 +19,7 @@ class BookingsPage {
         $orderby = isset( $_GET['orderby'] ) ? sanitize_sql_orderby( $_GET['orderby'] ) : 'booking_date';
         $order = isset( $_GET['order'] ) && strtoupper($_GET['order']) === 'ASC' ? 'ASC' : 'DESC';
 
-        // Handle Clear Demo action
-        if (isset($_GET['action']) && $_GET['action'] === 'clear_demo' && check_admin_referer('snippen_clear_demo')) {
-            $this->clear_demo_data();
-            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Alle demo-bookinger er slettet.', 'snippen-booking' ) . '</p></div>';
-        }
+
 
         echo '<div class="snippen-booking-admin-wrap">';
         
@@ -40,28 +36,10 @@ class BookingsPage {
     private function render_header() {
         echo '<div class="snippen-admin-header">';
         echo '<h1>' . esc_html__( 'Booking Oversikt', 'snippen-booking' ) . '</h1>';
-        
-        $clear_url = wp_nonce_url(admin_url('admin.php?page=snippen-booking&action=clear_demo'), 'snippen_clear_demo');
-        echo '<a href="' . esc_url($clear_url) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Tøm demo-data', 'snippen-booking' ) . '</a>';
         echo '</div>';
     }
 
-    /**
-     * Clear demo data
-     */
-    private function clear_demo_data() {
-        global $wpdb;
-        $table_bookings = $wpdb->prefix . 'snippen_bookings';
-        $table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
-        
-        // Only clear bookings that look like demo data (customer name starts with 'Demo' or 'Multi-Object Demo')
-        $demo_ids = $wpdb->get_col("SELECT id FROM $table_bookings WHERE customer_name LIKE 'Demo %' OR customer_name LIKE 'Multi-Object Demo %'");
-        if (!empty($demo_ids)) {
-            $ids_str = implode(',', array_map('intval', $demo_ids));
-            $wpdb->query("DELETE FROM $table_junction WHERE booking_id IN ($ids_str)");
-            $wpdb->query("DELETE FROM $table_bookings WHERE id IN ($ids_str)");
-        }
-    }
+
 
     /**
      * Render filters
