@@ -22,6 +22,7 @@ Guide AI agents working in this repository.
 - **Always include created_at and modified_at timestamps on database tables**
 - **Check for latest versions**: Always ensure that the latest available versions of frameworks, libraries, and GitHub Actions are used, unless there is a specific reason not to. If old versions are discovered, notify the developer.
 - **DO NOT commit or push changes** (the USER handles version control)
+- Suggest a commit message focused on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without quotes.
 
 ## Plugin Structure
 
@@ -64,6 +65,8 @@ tests/
 ```
 
 ### Running Tests
+Composer is available and configured with correct paths in the devcontainer, so `composer` can be used to run tests.
+
 ```bash
 # Install dependencies first
 composer install
@@ -106,7 +109,8 @@ class AvailabilityApiTest extends TestCase {
 
 ## Development Workflow
 - Code runs inside Docker container via devcontainer
-- Plugin is symlinked into WordPress at `wp-content/plugins/snippen-booking`
+- WordPress installation is located at `/wordpress`
+- Plugin is symlinked into WordPress at `/wordpress/wp-content/plugins/snippen-booking`
 - Use `wp-cli` for WordPress operations
 - Use `composer` for dependencies and test commands
 - Always run tests before committing
