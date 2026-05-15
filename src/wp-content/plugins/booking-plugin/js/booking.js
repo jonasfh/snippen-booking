@@ -102,6 +102,20 @@ jQuery(document).ready(function ($) {
 
         if (isAdmin) {
             initUserSearch();
+
+            // Handle booked slot click for admins
+            $(document).on('click', '.slot-item.booked', function() {
+                var $slot = $(this);
+                var bookingData = $slot.data('booking-info');
+                if (bookingData) {
+                    showBookingDetails(bookingData);
+                }
+            });
+
+            // Close modal
+            $(document).on('click', '.close-modal, .modal-overlay', function() {
+                $('#booking-info-modal').fadeOut(200);
+            });
         }
     }
 
@@ -192,8 +206,14 @@ jQuery(document).ready(function ($) {
                 var price = (prices[dateStr] && prices[dateStr][slot.name]) ? prices[dateStr][slot.name] : null;
 
                 if (isBooked) {
-                    weekHtml += '<div class="slot-item booked">';
+                    var bookingInfoStr = isAdmin ? JSON.stringify(existing) : '';
+                    weekHtml += '<div class="slot-item booked" ' + (isAdmin ? 'data-booking-info=\'' + bookingInfoStr + '\'' : '') + '>';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
+                    
+                    if (isAdmin && existing.customer_name) {
+                        weekHtml += '<span class="customer-name-label">' + existing.customer_name + '</span>';
+                    }
+
                     weekHtml += '<span class="booking-info">' + existing.start_time.substring(0, 5) + ' - ' + existing.end_time.substring(0, 5) + '</span>';
                     if (existing.cleanup_hours > 0) {
                         weekHtml += '<span class="cleanup-tag">+' + existing.cleanup_hours + 't vask</span>';
@@ -422,6 +442,28 @@ jQuery(document).ready(function ($) {
                 $results.hide();
             }
         });
+    }
+
+    /**
+     * Admin: Show booking details in modal
+     */
+    function showBookingDetails(data) {
+        var html = '<div class="booking-details-grid">';
+        
+        html += '<div class="detail-item"><strong>Kunde:</strong><br>' + (data.customer_name || '-') + '</div>';
+        html += '<div class="detail-item"><strong>E-post:</strong><br>' + (data.customer_email || '-') + '</div>';
+        html += '<div class="detail-item"><strong>Telefon:</strong><br>' + (data.customer_phone || '-') + '</div>';
+        html += '<div class="detail-item"><strong>Lokale/Slot:</strong><br>' + data.slot_name + '</div>';
+        html += '<div class="detail-item"><strong>Tid:</strong><br>' + data.start_time.substring(0, 5) + ' - ' + data.end_time.substring(0, 5) + '</div>';
+        
+        if (data.description) {
+            html += '<div class="detail-item full-width"><strong>Beskrivelse:</strong><br>' + data.description + '</div>';
+        }
+        
+        html += '</div>';
+
+        $('#booking-info-content').html(html);
+        $('#booking-info-modal').fadeIn(200);
     }
 
     /**

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Snippen Booking
  * Description: Booking plugin for Snippen community house.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Snippen
  * Text Domain: snippen-booking
  * License: GPLv2 or later

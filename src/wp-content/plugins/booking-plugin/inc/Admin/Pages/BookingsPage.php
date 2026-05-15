@@ -17,15 +17,14 @@ class BookingsPage {
         $object_filter = isset( $_GET['object_id'] ) ? intval( $_GET['object_id'] ) : 0;
         $search = isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : '';
         $orderby = isset( $_GET['orderby'] ) ? sanitize_sql_orderby( $_GET['orderby'] ) : 'booking_date';
-        $order = isset( $_GET['order'] ) && strtoupper($_GET['order']) === 'ASC' ? 'ASC' : 'DESC';
-
-
+        $order = isset( $_GET['order'] ) ? (strtoupper($_GET['order']) === 'DESC' ? 'DESC' : 'ASC') : 'ASC';
+        $show_all = isset( $_GET['show_all'] ) && $_GET['show_all'] === '1';
 
         echo '<div class="snippen-booking-admin-wrap">';
         
         $this->render_header();
-        $this->render_filters($status_filter, $object_filter, $search);
-        $this->render_list($status_filter, $object_filter, $search, $orderby, $order);
+        $this->render_filters($status_filter, $object_filter, $search, $show_all);
+        $this->render_list($status_filter, $object_filter, $search, $orderby, $order, $show_all);
 
         echo '</div>';
     }
@@ -44,7 +43,7 @@ class BookingsPage {
     /**
      * Render filters
      */
-    private function render_filters($status, $obj_id, $s) {
+    private function render_filters($status, $obj_id, $s, $show_all) {
         global $wpdb;
         $table_objects = $wpdb->prefix . 'snippen_booking_objects';
         $objects = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
@@ -74,13 +73,17 @@ class BookingsPage {
         echo ' <button type="submit" class="button">' . esc_html__( 'Søk', 'snippen-booking' ) . '</button>';
         echo '</div>';
 
+        echo '<div class="snippen-filter-group">';
+        echo '<label><input type="checkbox" name="show_all" value="1" ' . checked($show_all, true, false) . ' onchange="this.form.submit()"> ' . esc_html__( 'Vis historikk / eldre bookinger', 'snippen-booking' ) . '</label>';
+        echo '</div>';
+
         echo '</form></div>';
     }
 
     /**
      * Render bookings list
      */
-    private function render_list($status, $obj_id, $s, $orderby, $order) {
+    private function render_list($status, $obj_id, $s, $orderby, $order, $show_all) {
         global $wpdb;
         $table_bookings = $wpdb->prefix . 'snippen_bookings';
         $table_slots = $wpdb->prefix . 'snippen_time_slots';
@@ -101,6 +104,10 @@ class BookingsPage {
 
         if ($s) {
             $query .= $wpdb->prepare(" AND (b.customer_name LIKE %s OR b.customer_email LIKE %s)", '%' . $s . '%', '%' . $s . '%');
+        }
+
+        if (!$show_all && !$s) {
+            $query .= " AND b.booking_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)";
         }
 
         // Validate orderby to prevent SQL injection (even if sanitized above)
