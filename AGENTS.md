@@ -20,6 +20,7 @@ Guide AI agents working in this repository.
 - **Update existing tests when changing functionality**
 - **Run tests to verify all changes before completion**
 - **Always include created_at and modified_at timestamps on database tables**
+- **Check for latest versions**: Always ensure that the latest available versions of frameworks, libraries, and GitHub Actions are used, unless there is a specific reason not to. If old versions are discovered, notify the developer.
 - **DO NOT commit or push changes** (the USER handles version control)
 
 ## Plugin Structure
@@ -150,3 +151,8 @@ wp plugin list --allow-root
 - All logic should be testable (avoid direct WordPress actions when possible)
 - Use dependency injection patterns where practical
 - Keep AJAX handlers (in Api classes) thin - delegate to other classes
+
+## Versioning & Changelog
+- **Version Bump**: When making functional changes, you MUST bump the version number in `src/wp-content/plugins/booking-plugin/booking-plugin.php`.
+- **CHANGELOG.md**: Every version bump must be accompanied by an entry in `CHANGELOG.md` under a header like `## [X.Y.Z] - YYYY-MM-DD`.
+- **PR Check**: Pull Requests will fail if the version in the plugin file already exists as a Git tag or if the `CHANGELOG.md` is not updated.
