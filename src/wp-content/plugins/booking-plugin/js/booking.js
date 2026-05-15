@@ -66,14 +66,7 @@ jQuery(document).ready(function ($) {
 
         var isLoggedIn = $container.data('logged-in') === true;
 
-        // Handle day click (for mobile expansion)
-        $(document).on('click', '.day-header', function () {
-            var $column = $(this).closest('.day-column');
-            if ($column.hasClass('past')) return;
 
-            $('.day-column').not($column).removeClass('expanded selected-day');
-            $column.toggleClass('expanded selected-day');
-        });
 
         // Handle slot click
         $(document).on('click', '.slot-item.available', function () {

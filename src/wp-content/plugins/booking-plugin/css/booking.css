@@ -265,23 +265,13 @@
     cursor: not-allowed;
 }
 
-/* Slots Section */
 .slots-container {
     padding: 15px;
     flex-grow: 1;
-    display: none; /* Hidden until day clicked on mobile, or managed by class */
-}
-
-.day-column.expanded .slots-container {
     display: block;
 }
 
-/* If always showing slots on desktop */
-@media (min-width: 601px) {
-    .slots-container {
-        display: block;
-    }
-}
+
 
 .slot-item {
     padding: 14px 10px;
@@ -531,14 +521,16 @@
     
     .day-header {
         padding: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        text-align: center;
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border-color);
+        cursor: default;
     }
     
     .day-date {
         font-size: 20px;
-        margin-top: 0;
+        margin-top: 4px;
+        display: block;
     }
     
     .form-grid {
