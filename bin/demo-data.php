@@ -27,7 +27,11 @@ $table_slots = $wpdb->prefix . 'snippen_time_slots';
 $table_bookings = $wpdb->prefix . 'snippen_bookings';
 $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
 
-$action = $argv[1] ?? 'generate';
+$action = $argv[1] ?? 'bookings';
+
+if ($action === 'generate' || $action === 'bookings') {
+    $action = 'generate'; // Keep internal logic using 'generate'
+}
 
 if ($action === 'clear') {
     echo "Clearing all bookings...\n";

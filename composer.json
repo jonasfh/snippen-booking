@@ -33,7 +33,7 @@
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
         "test:integration": "phpunit --testsuite=Integration",
-        "demo:generate": "php bin/demo-data.php generate",
+        "demo:bookings": "php bin/demo-data.php generate",
         "demo:clear": "php bin/demo-data.php clear",
         "demo:pages": "php bin/demo-pages.php",
         "demo:users": "php bin/demo-data.php users",

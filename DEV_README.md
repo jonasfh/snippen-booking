@@ -58,6 +58,24 @@ Upon plugin activation, a "Booking Demo" page is automatically created in WordPr
 - **Reset environment**: `bash /entrypoint.sh reset` (wipes DB)
 - **Setup environment**: `bash /entrypoint.sh setup` (installs WP and activates plugin)
 
+#### Demo Data
+The plugin includes tools to populate the environment with demo data for development and testing.
+
+```bash
+# Generate demo subscriber users (residents)
+composer demo:users
+
+# Generate random bookings for the next 30 days
+# (Links bookings to existing subscriber users)
+composer demo:bookings
+
+# Create demo pages with booking shortcodes
+composer demo:pages
+
+# Clear all booking objects and bookings
+composer demo:clear
+```
+
 ### Notes
 
 - Port `8080` is forwarded from the container to your host.
