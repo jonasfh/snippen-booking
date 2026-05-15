@@ -200,8 +200,9 @@ class BookingsPage {
         // Details Row (Hidden)
         echo '<tr class="snippen-details-row" id="details-' . $booking->id . '" style="display:none; background:#f8fafc;">';
         echo '<td colspan="7" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
-        echo '<div class="details-content" style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:30px;">';
+        echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:30px;">';
         echo '<div><strong>' . esc_html__('Kontaktinfo:', 'snippen-booking') . '</strong><br>' . esc_html($booking->customer_phone ?: '-') . '</div>';
+        echo '<div><strong>' . esc_html__('Lokale(r):', 'snippen-booking') . '</strong><br>' . esc_html(implode(', ', $objs)) . '</div>';
         echo '<div><strong>' . esc_html__('Beskrivelse/Notater:', 'snippen-booking') . '</strong><br>' . esc_html($booking->description ?: '-') . '</div>';
         echo '<div><strong>' . esc_html__('Booket den:', 'snippen-booking') . '</strong><br>' . esc_html($booking->created_at) . '</div>';
         echo '</div></td></tr>';

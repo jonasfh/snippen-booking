@@ -453,7 +453,8 @@ jQuery(document).ready(function ($) {
         html += '<div class="detail-item"><strong>Kunde:</strong><br>' + (data.customer_name || '-') + '</div>';
         html += '<div class="detail-item"><strong>E-post:</strong><br>' + (data.customer_email || '-') + '</div>';
         html += '<div class="detail-item"><strong>Telefon:</strong><br>' + (data.customer_phone || '-') + '</div>';
-        html += '<div class="detail-item"><strong>Lokale/Slot:</strong><br>' + data.slot_name + '</div>';
+        html += '<div class="detail-item"><strong>Lokale(r):</strong><br>' + (data.object_names || '-') + '</div>';
+        html += '<div class="detail-item"><strong>Slot:</strong><br>' + data.slot_name + '</div>';
         html += '<div class="detail-item"><strong>Tid:</strong><br>' + data.start_time.substring(0, 5) + ' - ' + data.end_time.substring(0, 5) + '</div>';
         
         if (data.description) {
