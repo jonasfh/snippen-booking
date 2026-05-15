@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-05-15
+### Fixed
+- **Auto-Update Fix**: Removed `setBranch('main')` configuration. This ensures the update checker uses the correctly packaged GitHub Release ZIP assets instead of downloading the raw repository source, which was causing installation failures.
+
 ## [1.1.1] - 2026-05-15
 ### Fixed
 - **Asset Caching**: Fixed an issue where old JS/CSS files remained cached in browsers after updates.
