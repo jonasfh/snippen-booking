@@ -23,6 +23,7 @@ class Plugin {
 
         // Hook into WordPress init
         add_action( 'init', array( __CLASS__, 'register_hooks' ) );
+        add_action( 'admin_init', array( __CLASS__, 'check_for_updates' ) );
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
     }
 
@@ -42,6 +43,7 @@ class Plugin {
         BookingApi::register();
         AdminLoader::register();
         \SnippenBooking\Api\BookingActionsApi::register();
+        \SnippenBooking\Api\UserApi::register();
     }
 
     /**
@@ -49,5 +51,12 @@ class Plugin {
      */
     public static function enqueue_assets() {
         AssetLoader::enqueue();
+    }
+
+    /**
+     * Check for database updates
+     */
+    public static function check_for_updates() {
+        \SnippenBooking\Database\MigrationManager::run();
     }
 }

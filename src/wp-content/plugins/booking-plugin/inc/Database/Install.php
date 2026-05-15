@@ -54,6 +54,7 @@ class Install {
         $sql_bookings = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
             facility VARCHAR(50),
+            user_id BIGINT UNSIGNED NOT NULL,
             slot_id INT NOT NULL,
             booking_date DATE NOT NULL,
             customer_name VARCHAR(255) NOT NULL,
@@ -67,7 +68,8 @@ class Install {
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id),
             KEY booking_date (booking_date),
-            KEY slot_id (slot_id)
+            KEY slot_id (slot_id),
+            KEY user_id (user_id)
         ) $charset_collate;";
         dbDelta( $sql_bookings );
 
@@ -273,6 +275,9 @@ class Install {
             //     ] );
             // }
         }
+
+        // Run migrations
+        MigrationManager::run();
     }
 }
 

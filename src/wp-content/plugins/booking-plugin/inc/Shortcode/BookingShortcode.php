@@ -67,7 +67,10 @@ class BookingShortcode {
 
         ob_start();
         ?>
-        <div class="snippen-booking-container" data-object-id="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>" data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>">
+        <div class="snippen-booking-container" 
+             data-object-id="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>" 
+             data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>"
+             data-is-admin="<?php echo current_user_can( 'manage_options' ) ? 'true' : 'false'; ?>">
             <div class="booking-header-section">
                 <div class="header-main">
                     <h3><?php echo esc_html( $combined_name ); ?></h3>
@@ -105,16 +108,28 @@ class BookingShortcode {
                     <input type="hidden" name="event_date" id="event-date">
                     <input type="hidden" name="slot_id" id="slot-id">
                     <input type="hidden" name="booking_object_id" value="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>">
+                    <input type="hidden" name="user_id" id="selected-user-id" value="<?php echo get_current_user_id(); ?>">
                     
                     <div class="form-grid">
+                        <?php if ( current_user_can( 'manage_options' ) ) : ?>
+                        <div class="form-group full-width admin-only-field">
+                            <label for="user-search">Søk etter beboer (Admin)</label>
+                            <div class="user-search-wrapper">
+                                <input type="text" id="user-search" placeholder="Begynn å skrive navn eller e-post..." autocomplete="off" value="<?php echo $user_name; ?>">
+                                <div id="user-search-results" class="search-results-dropdown" style="display: none;"></div>
+                            </div>
+                            <p class="description">La feltet være tomt for å booke i ditt eget navn.</p>
+                        </div>
+                        <?php endif; ?>
+
                         <div class="form-group">
-                            <label for="name">Ditt navn</label>
-                            <input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" readonly>
+                            <label for="name">Navn på beboer</label>
+                            <input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" <?php echo current_user_can('manage_options') ? '' : 'readonly'; ?>>
                         </div>
                         
                         <div class="form-group">
                             <label for="email">E-post</label>
-                            <input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" readonly>
+                            <input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" <?php echo current_user_can('manage_options') ? '' : 'readonly'; ?>>
                         </div>
                         
                         <div class="form-group">

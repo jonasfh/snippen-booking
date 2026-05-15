@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-05-15
+### Added
+- **Admin Booking**: Admins can now create bookings on behalf of other residents directly from the calendar.
+- **User Search**: Integrated a premium user search box in the booking form for admins.
+- **Migration System**: New robust database migration system to handle schema and data updates.
+- **Mandatory User ID**: All bookings are now linked to a registered WordPress user for better tracking.
+- **Demo User Generation**: Added `php bin/demo-data.php users` command to generate subscriber users.
+- **Enhanced Demo Data**: Generated bookings are now randomly assigned to subscriber users.
+
 ## [0.2.2] - 2026-05-15
 ### Fixed
 - Fatal error `Class "Parsedown" not found` in `plugin-update-checker` by restoring missing dependency files.

@@ -111,9 +111,22 @@ class BookingApi {
             $price = 0;
         }
 
+        // Get current user or admin override
+        $current_user_id = get_current_user_id();
+        $booking_user_id = $current_user_id;
+
+        if ( current_user_can( 'manage_options' ) && ! empty( $_POST['user_id'] ) ) {
+            $booking_user_id = intval( $_POST['user_id'] );
+        }
+
+        if ( ! $booking_user_id ) {
+             wp_send_json_error( array( 'message' => 'Ugyldig bruker.' ) );
+        }
+
         // Insert single booking record
         $booking_data = array(
             'booking_date' => $booking_date,
+            'user_id' => $booking_user_id,
             'slot_id' => $first_slot_id,
             'customer_name' => $customer_name,
             'customer_email' => $customer_email,

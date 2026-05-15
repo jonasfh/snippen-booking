@@ -37,6 +37,35 @@ if ($action === 'clear') {
     exit(0);
 }
 
+if ($action === 'users') {
+    echo "Generating demo subscriber users...\n";
+    $count = 0;
+    $first_names = ['Lars', 'Erik', 'Morten', 'Kari', 'Ingrid', 'Solveig', 'Anders', 'Stian', 'Mette', 'Heidi'];
+    $last_names = ['Hansen', 'Johansen', 'Olsen', 'Larsen', 'Andersen', 'Nilsen', 'Pedersen', 'Kristiansen', 'Jensen', 'Karlsen'];
+
+    for ($i = 0; $i < 50; $i++) {
+        $first = $first_names[array_rand($first_names)];
+        $last = $last_names[array_rand($last_names)];
+        $username = strtolower($first . '.' . $last . rand(10, 99));
+        $email = $username . '@example.no';
+
+        if (!username_exists($username) && !email_exists($email)) {
+            $user_id = wp_insert_user([
+                'user_login' => $username,
+                'user_pass'  => wp_generate_password(),
+                'user_email' => $email,
+                'display_name' => $first . ' ' . $last,
+                'role'       => 'subscriber'
+            ]);
+            if (!is_wp_error($user_id)) {
+                $count++;
+            }
+        }
+    }
+    echo "Success: Generated $count demo subscriber users.\n";
+    exit(0);
+}
+
 if ($action === 'generate') {
     echo "Generating demo bookings...\n";
 
@@ -58,6 +87,10 @@ if ($action === 'generate') {
         
         $service = new \SnippenBooking\Service\AvailabilityService();
         $pricing_service = new \SnippenBooking\Service\PricingService();
+        
+        // Fetch subscriber users to link bookings
+        $subscriber_users = get_users(['role' => 'subscriber', 'fields' => ['ID', 'display_name', 'user_email']]);
+        $default_admin = get_users(['role' => 'administrator', 'number' => 1, 'fields' => ['ID', 'display_name', 'user_email']])[0];
 
         // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele dagen")
         if (rand(1, 10) <= 2) {
@@ -86,12 +119,15 @@ if ($action === 'generate') {
                 $first_slot_id = reset($slots_to_book);
                 $price = $pricing_service->getPrice(array_keys($slots_to_book), array_values($slots_to_book), $date_str) ?: 0;
                 
+                $user = !empty($subscriber_users) ? $subscriber_users[array_rand($subscriber_users)] : $default_admin;
+
                 // Insert main booking
                 $wpdb->insert($table_bookings, array(
+                    'user_id' => $user->ID,
                     'slot_id' => (int) $first_slot_id,
                     'booking_date' => $date_str,
-                    'customer_name' => 'Multi-Object Demo ' . rand(100, 999),
-                    'customer_email' => 'multi' . rand(1, 100) . '@example.com',
+                    'customer_name' => $user->display_name,
+                    'customer_email' => $user->user_email,
                     'customer_phone' => '99887766',
                     'price' => $price,
                     'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
@@ -133,13 +169,15 @@ if ($action === 'generate') {
                     }
 
                     $price = $pricing_service->getPrice([$obj->id], [$slot->id], $date_str) ?: 0;
+                    $user = !empty($subscriber_users) ? $subscriber_users[array_rand($subscriber_users)] : $default_admin;
 
                     // Insert booking record
                     $wpdb->insert($table_bookings, array(
+                        'user_id' => $user->ID,
                         'slot_id' => (int) $slot->id,
                         'booking_date' => $date_str,
-                        'customer_name' => 'Demo Bruker ' . rand(100, 999),
-                        'customer_email' => 'demo' . rand(1, 100) . '@example.com',
+                        'customer_name' => $user->display_name,
+                        'customer_email' => $user->user_email,
                         'customer_phone' => '12345678',
                         'price' => $price,
                         'description' => 'Automatisk generert demo-booking for ' . $date_str
