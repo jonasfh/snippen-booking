@@ -36,6 +36,7 @@
         "demo:generate": "php bin/demo-data.php generate",
         "demo:clear": "php bin/demo-data.php clear",
         "demo:pages": "php bin/demo-pages.php",
+        "demo:users": "php bin/demo-data.php users",
         "demo:clean": "@demo:clear",
         "demo:reset": "@demo:clear",
         "lint": "phpcs --standard=WordPress src/wp-content/plugins/booking-plugin/inc/",

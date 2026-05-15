@@ -23,6 +23,7 @@ jQuery(document).ready(function ($) {
 
     var $container = $('.snippen-booking-container');
     var objectId = $container.data('object-id');
+    var isAdmin = $container.data('is-admin') === true;
 
     /**
      * Initialize the calendar
@@ -98,6 +99,10 @@ jQuery(document).ready(function ($) {
 
         // Form submission
         $('#booking-form').on('submit', handleFormSubmit);
+
+        if (isAdmin) {
+            initUserSearch();
+        }
     }
 
     /**
@@ -331,7 +336,8 @@ jQuery(document).ready(function ($) {
             name: $('#name').val(),
             email: $('#email').val(),
             phone: $('#phone').val(),
-            description: $('#description').val()
+            description: $('#description').val(),
+            user_id: $('#selected-user-id').val()
         };
 
         $.ajax({
@@ -354,6 +360,66 @@ jQuery(document).ready(function ($) {
             error: function () {
                 $response.removeClass('success').addClass('error').html('Tilkoblingsfeil.').fadeIn();
                 $submitBtn.prop('disabled', false).text('Prøv igjen');
+            }
+        });
+    }
+
+    /**
+     * Admin: Initialize user search
+     */
+    function initUserSearch() {
+        var $search = $('#user-search');
+        var $results = $('#user-search-results');
+        var $userId = $('#selected-user-id');
+        var $name = $('#name');
+        var $email = $('#email');
+        var searchTimer;
+
+        $search.on('input', function() {
+            clearTimeout(searchTimer);
+            var term = $(this).val();
+
+            if (term.length < 2) {
+                $results.hide();
+                return;
+            }
+
+            searchTimer = setTimeout(function() {
+                $.ajax({
+                    url: snippenBookingAjax.ajaxurl,
+                    data: {
+                        action: 'snippen_search_users',
+                        term: term
+                    },
+                    success: function(response) {
+                        if (response.success && response.data.length > 0) {
+                            var html = '';
+                            response.data.forEach(function(user) {
+                                html += '<div class="user-result-item" data-id="' + user.id + '" data-name="' + user.name + '" data-email="' + user.email + '">';
+                                html += '<strong>' + user.name + '</strong><br><small>' + user.email + '</small>';
+                                html += '</div>';
+                            });
+                            $results.html(html).show();
+                        } else {
+                            $results.html('<div class="no-results">Ingen beboere funnet.</div>').show();
+                        }
+                    }
+                });
+            }, 300);
+        });
+
+        $(document).on('click', '.user-result-item', function() {
+            var $item = $(this);
+            $userId.val($item.data('id'));
+            $name.val($item.data('name'));
+            $email.val($item.data('email'));
+            $search.val($item.data('name'));
+            $results.hide();
+        });
+
+        $(document).click(function(e) {
+            if (!$(e.target).closest('.user-search-wrapper').length) {
+                $results.hide();
             }
         });
     }

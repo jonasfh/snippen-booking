@@ -591,6 +591,69 @@
     border-color: #e5e7eb;
 }
 
+/* User Search Admin Styles */
+.user-search-wrapper {
+    position: relative;
+}
+
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    margin-top: 5px;
+    box-shadow: var(--shadow-lg);
+    z-index: 10;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.user-result-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-result-item:last-child {
+    border-bottom: none;
+}
+
+.user-result-item:hover {
+    background: #eff6ff;
+}
+
+.user-result-item strong {
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+.user-result-item small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.no-results {
+    padding: 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+.admin-only-field {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px dashed var(--primary-color);
+}
+
+.admin-only-field label {
+    color: var(--primary-color) !important;
+}
+
 .snippen-calendar-view.readonly-mode .slot-item.available:hover {
     transform: none;
     box-shadow: none;
