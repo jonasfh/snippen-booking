@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **AJAX Performance**: Optimized availability API to avoid duplicate booking rows and fetch object names efficiently.
 
+## [1.1.4] - 2026-05-15
+### Changed
+- **Release Assets**: Updated GitHub Release workflow to name ZIP files with version numbers (e.g., `snippen-booking-v1.1.4.zip`).
+- **Update Checker**: Configured PUC to use a regular expression (`/^snippen-booking-.*\.zip$/i`) to identify release assets, making it more robust against future naming changes.
+
+## [1.1.3] - 2026-05-15
+### Changed
+- **Auto-Update**: Explicitly enabled GitHub Release assets in Plugin Update Checker configuration.
+
 ## [1.1.2] - 2026-05-15
 ### Fixed
 - **Auto-Update Fix**: Removed `setBranch('main')` configuration. This ensures the update checker uses the correctly packaged GitHub Release ZIP assets instead of downloading the raw repository source, which was causing installation failures.

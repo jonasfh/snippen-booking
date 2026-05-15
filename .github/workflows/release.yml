@@ -49,13 +49,14 @@ jobs:
       - name: Package Plugin
         if: steps.check_tag.outputs.exists == 'false'
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
           # Create a temporary directory for packaging
           mkdir -p build/snippen-booking
           # Copy only the necessary files
           cp -r src/wp-content/plugins/booking-plugin/* build/snippen-booking/
-          # Create the zip file
+          # Create the zip file with version in name
           cd build
-          zip -r ../snippen-booking.zip snippen-booking/
+          zip -r ../snippen-booking-v$VERSION.zip snippen-booking/
           cd ..
 
       - name: Extract Changelog Entry
@@ -82,7 +83,7 @@ jobs:
           tag_name: v${{ steps.version.outputs.version }}
           name: Release v${{ steps.version.outputs.version }}
           body_path: release_notes.md
-          files: snippen-booking.zip
+          files: snippen-booking-v${{ steps.version.outputs.version }}.zip
           generate_release_notes: false
 
       - name: Add Release Link to Summary

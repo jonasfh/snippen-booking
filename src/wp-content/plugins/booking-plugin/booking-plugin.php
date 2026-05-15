@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Snippen Booking
  * Description: Booking plugin for Snippen community house.
- * Version: 1.1.3
+ * Version: 1.1.4
  * Author: Snippen
  * Text Domain: snippen-booking
  * License: GPLv2 or later
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define version constant
-define( 'SNIPPEN_BOOKING_VERSION', '1.1.3' );
+define( 'SNIPPEN_BOOKING_VERSION', '1.1.4' );
 
 // Load autoloader
 require_once __DIR__ . '/autoloader.php';
@@ -30,7 +30,9 @@ $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateCh
     __FILE__,
     'snippen-booking'
 );
-// $myUpdateChecker->setBranch('main'); // Removed: Using GitHub Releases for packaged zip updates instead of repo source.
+
+// get the release from an asset using regex to match versioned zip files
+$myUpdateChecker->getVcsApi()->enableReleaseAssets('/^snippen-booking-.*\.zip$/i');
 
 // Force update check in development mode for easier testing
 if ( defined( 'WP_DEBUG' ) && WP_DEBUG && isset( $_GET['check_booking_updates'] ) ) {
