@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y \
     php-intl \
     php-gd \
     gh \
+    apache2 \
+    libapache2-mod-php \
+    && a2enmod rewrite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Configure Xdebug
@@ -28,6 +31,10 @@ RUN echo "xdebug.mode=debug" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.start_with_request=trigger" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.client_port=9003" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini
+
+# Configure Apache to listen on port 8080
+RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
+    && sed -i 's/:80/:8080/' /etc/apache2/sites-available/000-default.conf
 
 ENV XDEBUG_MODE=debug
 
