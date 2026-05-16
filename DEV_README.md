@@ -76,6 +76,20 @@ composer demo:pages
 composer demo:clear
 ```
 
+### GitHub Integration
+
+The development environment includes the [GitHub CLI (`gh`)](https://cli.github.com/). This tool is used by both developers and AI agents to manage issues and pull requests directly from the terminal.
+
+#### Authentication
+To use GitHub features, you must be logged in:
+```bash
+gh auth login
+```
+Follow the prompts to authenticate via your browser or with a Personal Access Token (PAT).
+
+#### Solving Issues
+For information on how AI agents (and developers) should workflow GitHub issues, see [AGENTS.md](AGENTS.md).
+
 ### Notes
 
 - Port `8080` is forwarded from the container to your host.

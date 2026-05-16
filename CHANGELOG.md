@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.8] - 2026-05-16
+### Added
+- Enable AI agents to solve GitHub issues directly.
+- Added GitHub CLI (`gh`) to devcontainer.
+- Updated `AGENTS.md` and `DEV_README.md` with GitHub issue workflow.
 All notable changes to this project will be documented in this file.
 
 ## [1.1.7] - 2026-05-16
