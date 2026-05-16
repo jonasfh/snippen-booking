@@ -75,5 +75,19 @@ if (count($objects) > 1) {
     echo "Created: $page_title\n";
 }
 
+// 3. Create Account Confirmation page
+$page_title = 'Booking Demo - Aktivering av konto';
+$page_content = '[snippen_account_confirmation]';
+
+$new_page = array(
+    'post_type'    => 'page',
+    'post_title'   => $page_title,
+    'post_content' => $page_content,
+    'post_status'  => 'publish',
+    'post_author'  => 1,
+);
+wp_insert_post( $new_page );
+echo "Created: $page_title\n";
+
 echo "Success: Demo pages generated.\n";
 exit(0);

@@ -62,9 +62,7 @@ class KeySmsService implements SmsServiceInterface {
 			return false;
 		}
 
-		if ( 'yes' !== get_option( 'snippen_sms_enabled' ) ) {
-			return false;
-		}
+		// Caller should check if SMS is enabled for the specific context
 
 		// KeySMS often prefers numbers without the '+' prefix (e.g., 47XXXXXXXX instead of +47XXXXXXXX)
 		$to = ltrim( $to, '+' );

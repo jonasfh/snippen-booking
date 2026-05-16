@@ -20,7 +20,7 @@ class KeySmsServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		update_option( 'snippen_sms_enabled', 'yes' );
+		update_option( 'snippen_sms_booking_confirmation_enabled', 'yes' );
 		update_option( 'snippen_keysms_username', 'test_user' );
 		update_option( 'snippen_keysms_api_key', 'test_api_key' );
 		update_option( 'snippen_sms_sender', 'Snippen' );
@@ -59,17 +59,6 @@ class KeySmsServiceTest extends TestCase {
 		remove_all_filters( 'pre_http_request' );
 	}
 
-	/**
-	 * Test sending when disabled
-	 */
-	public function test_send_disabled() {
-		update_option( 'snippen_sms_enabled', 'no' );
-
-		$service = new KeySmsService();
-		$result  = $service->send( '+4799887766', 'Test message' );
-
-		$this->assertFalse( $result );
-	}
 
 	/**
 	 * Test sending with missing credentials

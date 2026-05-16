@@ -39,12 +39,13 @@
         "demo:users": "php bin/demo-data.php users",
         "demo:sms": "php bin/demo-sms.php",
         "demo:me": "php bin/demo-me.php",
-        "demo:env": [
+        "demo:env": "@demo:sms",
+        "demo": [
             "@demo:users",
             "@demo:bookings",
             "@demo:pages",
             "@demo:me",
-            "@demo:sms"
+            "@demo:env"
         ],
         "demo:clean": "@demo:clear",
         "demo:reset": "@demo:clear",

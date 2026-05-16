@@ -44,6 +44,7 @@ class Plugin {
         AdminLoader::register();
         \SnippenBooking\Api\BookingActionsApi::register();
         \SnippenBooking\Api\UserApi::register();
+        \SnippenBooking\Shortcode\AccountConfirmationShortcode::register();
     }
 
     /**

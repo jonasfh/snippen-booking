@@ -41,12 +41,14 @@ class SettingsPage {
 			return;
 		}
 
-		$sms_enabled = isset( $_POST['snippen_sms_enabled'] ) ? 'yes' : 'no';
+		$sms_booking_confirmation_enabled = isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no';
+		$sms_account_confirmation_enabled = isset( $_POST['snippen_sms_account_confirmation_enabled'] ) ? 'yes' : 'no';
 		$username    = sanitize_text_field( $_POST['snippen_keysms_username'] ?? '' );
 		$api_key     = sanitize_text_field( $_POST['snippen_keysms_api_key'] ?? '' );
 		$sender      = sanitize_text_field( $_POST['snippen_sms_sender'] ?? '' );
 
-		update_option( 'snippen_sms_enabled', $sms_enabled );
+		update_option( 'snippen_sms_booking_confirmation_enabled', $sms_booking_confirmation_enabled );
+		update_option( 'snippen_sms_account_confirmation_enabled', $sms_account_confirmation_enabled );
 		update_option( 'snippen_keysms_username', $username );
 		update_option( 'snippen_keysms_api_key', $api_key );
 		update_option( 'snippen_sms_sender', $sender );
@@ -58,7 +60,8 @@ class SettingsPage {
 	 * Render the form
 	 */
 	private function render_form() {
-		$sms_enabled = get_option( 'snippen_sms_enabled', 'no' );
+		$sms_booking_confirmation_enabled = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		$sms_account_confirmation_enabled = get_option( 'snippen_sms_account_confirmation_enabled', 'no' );
 		$username    = get_option( 'snippen_keysms_username', '' );
 		$api_key     = get_option( 'snippen_keysms_api_key', '' );
 		$sender      = get_option( 'snippen_sms_sender', 'Snippen' );
@@ -69,7 +72,8 @@ class SettingsPage {
 		echo '<h3>' . esc_html__( 'SMS Innstillinger (KeySMS)', 'snippen-booking' ) . '</h3>';
 
 		echo '<div class="snippen-form-group">';
-		echo '<label style="font-weight:normal;"><input type="checkbox" name="snippen_sms_enabled" value="yes" ' . checked( $sms_enabled, 'yes', false ) . '> ' . esc_html__( 'Aktiver SMS-varsling', 'snippen-booking' ) . '</label>';
+		echo '<label style="font-weight:normal; display: block; margin-bottom: 5px;"><input type="checkbox" name="snippen_sms_booking_confirmation_enabled" value="yes" ' . checked( $sms_booking_confirmation_enabled, 'yes', false ) . '> ' . esc_html__( 'Aktiver SMS-varsling ved booking', 'snippen-booking' ) . '</label>';
+		echo '<label style="font-weight:normal; display: block;"><input type="checkbox" name="snippen_sms_account_confirmation_enabled" value="yes" ' . checked( $sms_account_confirmation_enabled, 'yes', false ) . '> ' . esc_html__( 'Aktiver SMS-varsling for kontobekreftelse', 'snippen-booking' ) . '</label>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
