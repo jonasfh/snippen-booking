@@ -3,6 +3,11 @@ name: PHPUnit Tests
 on:
   pull_request:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'composer.json'
+      - 'composer.lock'
 
 jobs:
   phpunit:
