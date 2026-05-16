@@ -71,6 +71,10 @@ class BookingShortcode {
         <div class="snippen-booking-container" 
              data-object-id="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>" 
              data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>"
+             data-user-id="<?php echo get_current_user_id(); ?>"
+             data-user-name="<?php echo $user_name; ?>"
+             data-user-email="<?php echo $user_email; ?>"
+             data-user-phone="<?php echo $user_phone; ?>"
              data-is-admin="<?php echo current_user_can( 'manage_options' ) ? 'true' : 'false'; ?>">
             <div class="booking-header-section">
                 <div class="header-main">
