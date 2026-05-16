@@ -56,7 +56,7 @@ if ($action === 'users') {
         if (!username_exists($username) && !email_exists($email)) {
             $user_id = wp_insert_user([
                 'user_login' => $username,
-                'user_pass'  => wp_generate_password(),
+                'user_pass'  => 'demo',
                 'user_email' => $email,
                 'display_name' => $first . ' ' . $last,
                 'role'       => 'subscriber'

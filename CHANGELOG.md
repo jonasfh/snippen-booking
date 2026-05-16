@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.7] - 2026-05-16
+### Added
+- **My Bookings Page**: New admin page for users to view their own bookings and details.
+- **Self-Cancellation**: Enabled users to cancel their own bookings directly from the "Mine Bookinger" page.
+- **Security**: Implemented ownership verification for AJAX booking actions to prevent unauthorized cancellations.
+
 ## [1.1.6] - 2026-05-16
 ### Added
 - **User Phone Numbers**: Integrated secure phone number handling linked to user profiles.

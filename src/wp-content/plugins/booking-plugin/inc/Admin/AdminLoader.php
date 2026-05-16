@@ -36,6 +36,16 @@ class AdminLoader {
             25
         );
 
+        add_menu_page(
+            __( 'Mine Bookinger', 'snippen-booking' ),
+            __( 'Mine Bookinger', 'snippen-booking' ),
+            'read',
+            'snippen-my-bookings',
+            array( self::class, 'render_user_bookings_page' ),
+            'dashicons-tickets-alt',
+            26
+        );
+
         add_submenu_page(
             'snippen-booking',
             __( 'Oversikt', 'snippen-booking' ),
@@ -77,7 +87,7 @@ class AdminLoader {
      * Enqueue Admin Assets
      */
     public static function enqueue_admin_assets( $hook ) {
-        if ( strpos( $hook, 'snippen-booking' ) === false ) {
+        if ( strpos( $hook, 'snippen-booking' ) === false && strpos( $hook, 'snippen-my-bookings' ) === false ) {
             return;
         }
 
@@ -140,6 +150,18 @@ class AdminLoader {
             $page->render();
         } else {
             echo '<div class="wrap"><h1>' . esc_html__( 'Prisregler', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+        }
+    }
+
+    /**
+     * Render User Bookings Page
+     */
+    public static function render_user_bookings_page() {
+        if ( class_exists( 'SnippenBooking\Admin\Pages\UserBookingsPage' ) ) {
+            $page = new \SnippenBooking\Admin\Pages\UserBookingsPage();
+            $page->render();
+        } else {
+            echo '<div class="wrap"><h1>' . esc_html__( 'Mine Bookinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
         }
     }
 }
