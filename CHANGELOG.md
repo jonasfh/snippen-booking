@@ -2,6 +2,10 @@
 
 
 
+## [1.2.1] - 2026-05-17
+### Fixed
+- **SMS Service**: Trim + form phone numbers before sending. SMS messages are now sent reliably.
+
 ## [1.2.0] - 2026-05-16
 ### Added
 - **SMS Service**: Now working with KeySMS.

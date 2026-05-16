@@ -40,7 +40,8 @@ class KeySmsServiceTest extends TestCase {
 				
 				if ( $body['username'] === 'test_user' && 
 					 $body['signature'] === $expected_signature &&
-					 $payload['message'] === 'Test message' ) {
+					 $payload['message'] === 'Test message' &&
+					 $payload['receivers'][0] === '4799887766' ) { // '+' should be stripped
 					return array(
 						'response' => array( 'code' => 200 ),
 						'body'     => '{"ok":true}',
