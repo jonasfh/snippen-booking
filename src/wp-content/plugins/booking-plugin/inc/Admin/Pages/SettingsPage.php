@@ -42,10 +42,12 @@ class SettingsPage {
 		}
 
 		$sms_enabled = isset( $_POST['snippen_sms_enabled'] ) ? 'yes' : 'no';
+		$username    = sanitize_text_field( $_POST['snippen_keysms_username'] ?? '' );
 		$api_key     = sanitize_text_field( $_POST['snippen_keysms_api_key'] ?? '' );
 		$sender      = sanitize_text_field( $_POST['snippen_sms_sender'] ?? '' );
 
 		update_option( 'snippen_sms_enabled', $sms_enabled );
+		update_option( 'snippen_keysms_username', $username );
 		update_option( 'snippen_keysms_api_key', $api_key );
 		update_option( 'snippen_sms_sender', $sender );
 
@@ -57,6 +59,7 @@ class SettingsPage {
 	 */
 	private function render_form() {
 		$sms_enabled = get_option( 'snippen_sms_enabled', 'no' );
+		$username    = get_option( 'snippen_keysms_username', '' );
 		$api_key     = get_option( 'snippen_keysms_api_key', '' );
 		$sender      = get_option( 'snippen_sms_sender', 'Snippen' );
 
@@ -70,7 +73,12 @@ class SettingsPage {
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
-		echo '<label for="snippen_keysms_api_key">' . esc_html__( 'KeySMS API-nøkkel', 'snippen-booking' ) . '</label>';
+		echo '<label for="snippen_keysms_username">' . esc_html__( 'KeySMS Brukernavn', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_keysms_username" id="snippen_keysms_username" value="' . esc_attr( $username ) . '" class="regular-text">';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group">';
+		echo '<label for="snippen_keysms_api_key">' . esc_html__( 'KeySMS API-nøkkel (Secret)', 'snippen-booking' ) . '</label>';
 		echo '<input type="password" name="snippen_keysms_api_key" id="snippen_keysms_api_key" value="' . esc_attr( $api_key ) . '" class="regular-text">';
 		echo '<p class="description">' . esc_html__( 'Finn din API-nøkkel i kontrollpanelet hos keysms.no.', 'snippen-booking' ) . '</p>';
 		echo '</div>';

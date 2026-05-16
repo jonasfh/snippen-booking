@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for KeySmsService
+ * Unit tests for KeySmsService (Signed Payload)
  *
  * @package SnippenBooking\Tests\Unit\Service
  */
@@ -21,6 +21,7 @@ class KeySmsServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		update_option( 'snippen_sms_enabled', 'yes' );
+		update_option( 'snippen_keysms_username', 'test_user' );
 		update_option( 'snippen_keysms_api_key', 'test_api_key' );
 		update_option( 'snippen_sms_sender', 'Snippen' );
 	}
@@ -30,13 +31,19 @@ class KeySmsServiceTest extends TestCase {
 	 */
 	public function test_send_success() {
 		add_filter( 'pre_http_request', function( $pre, $args, $url ) {
-			if ( strpos( $url, 'api.keysms.no' ) !== false ) {
-				// Verify request args
+			if ( strpos( $url, 'app.keysms.no' ) !== false ) {
 				$body = json_decode( $args['body'], true );
-				if ( $body['message'] === 'Test message' && $body['receivers'][0] === '+4799887766' ) {
+				$payload = json_decode( $body['payload'], true );
+				
+				// Verify signature
+				$expected_signature = md5( $body['payload'] . 'test_api_key' );
+				
+				if ( $body['username'] === 'test_user' && 
+					 $body['signature'] === $expected_signature &&
+					 $payload['message'] === 'Test message' ) {
 					return array(
 						'response' => array( 'code' => 200 ),
-						'body'     => '{"status":"ok"}',
+						'body'     => '{"ok":true}',
 					);
 				}
 			}
@@ -48,7 +55,6 @@ class KeySmsServiceTest extends TestCase {
 
 		$this->assertTrue( $result );
 		
-		// Clean up filter
 		remove_all_filters( 'pre_http_request' );
 	}
 
@@ -65,10 +71,10 @@ class KeySmsServiceTest extends TestCase {
 	}
 
 	/**
-	 * Test sending with missing API key
+	 * Test sending with missing credentials
 	 */
-	public function test_send_missing_api_key() {
-		update_option( 'snippen_keysms_api_key', '' );
+	public function test_send_missing_credentials() {
+		update_option( 'snippen_keysms_username', '' );
 
 		$service = new KeySmsService();
 		$result  = $service->send( '+4799887766', 'Test message' );
@@ -77,13 +83,13 @@ class KeySmsServiceTest extends TestCase {
 	}
 
 	/**
-	 * Test HTTP error handling
+	 * Test API error response
 	 */
-	public function test_send_http_error() {
+	public function test_send_api_error() {
 		add_filter( 'pre_http_request', function( $pre, $args, $url ) {
 			return array(
-				'response' => array( 'code' => 401 ),
-				'body'     => '{"error":"Unauthorized"}',
+				'response' => array( 'code' => 200 ),
+				'body'     => '{"ok":false, "error":"invalid_receiver"}',
 			);
 		}, 10, 3 );
 
