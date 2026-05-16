@@ -318,6 +318,14 @@ jQuery(document).ready(function ($) {
         $('#selected-info-display').text(infoText);
         $('#selected-slot-description').text(selectedSlotDescription || '');
 
+        // Reset form state for new slot selection
+        clearErrorMessages();
+        $('#description').val('');
+        
+        if (isAdmin) {
+            resetToCurrentUser();
+        }
+
         $('#booking-form-container').slideDown(400);
 
         $('html, body').animate({
@@ -333,6 +341,11 @@ jQuery(document).ready(function ($) {
         $('.slot-item').removeClass('selected');
         selectedDate = null;
         selectedSlotId = null;
+        
+        if (isAdmin) {
+            resetToCurrentUser();
+        }
+        clearErrorMessages();
     }
 
     /**
@@ -398,9 +411,15 @@ jQuery(document).ready(function ($) {
         $search.on('input', function() {
             clearTimeout(searchTimer);
             var term = $(this).val();
+            
+            // Clear previous errors when starting new search
+            clearErrorMessages();
 
             if (term.length < 2) {
                 $results.hide();
+                if (term.length === 0) {
+                    resetToCurrentUser();
+                }
                 return;
             }
 
@@ -440,7 +459,7 @@ jQuery(document).ready(function ($) {
             // Handle submit button state and error message
             var $submitBtn = $('.booking-submit');
             var $phoneGroup = $('#phone').closest('.form-group');
-            $phoneGroup.find('.field-error-msg').remove();
+            clearErrorMessages();
             
             if (!phone) {
                 $submitBtn.prop('disabled', true);
@@ -508,6 +527,49 @@ jQuery(document).ready(function ($) {
         var endOptions = { day: 'numeric', month: 'short', year: 'numeric' };
 
         return start.toLocaleDateString('nb-NO', startOptions) + ' - ' + end.toLocaleDateString('nb-NO', endOptions);
+    }
+
+    /**
+     * Admin/General: Reset fields to current logged-in user
+     */
+    function resetToCurrentUser() {
+        var $userId = $('#selected-user-id');
+        var $name = $('#name');
+        var $email = $('#email');
+        var $phone = $('#phone');
+        var $search = $('#user-search');
+        var $submitBtn = $('.booking-submit');
+
+        var defId = $container.data('user-id');
+        var defName = $container.data('user-name');
+        var defEmail = $container.data('user-email');
+        var defPhone = $container.data('user-phone');
+
+        $userId.val(defId);
+        $name.val(defName);
+        $email.val(defEmail);
+        $phone.val(defPhone);
+        if ($search.length) {
+            $search.val(defName);
+        }
+
+        // Clear errors and results
+        clearErrorMessages();
+        $('#user-search-results').hide();
+        
+        if (defPhone || isAdmin) {
+            $submitBtn.prop('disabled', false);
+        } else {
+            $submitBtn.prop('disabled', true);
+        }
+    }
+
+    /**
+     * Clear all form error messages
+     */
+    function clearErrorMessages() {
+        $('.field-error-msg').remove();
+        $('#booking-response').hide();
     }
 
     // Initialize
