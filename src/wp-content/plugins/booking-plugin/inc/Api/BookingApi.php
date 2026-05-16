@@ -83,7 +83,25 @@ class BookingApi {
         $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
         $customer_name = sanitize_text_field( $_POST['name'] ?? '' );
         $customer_email = sanitize_email( $_POST['email'] ?? '' );
-        $customer_phone = sanitize_text_field( $_POST['phone'] ?? '' );
+        
+        // Get current user or admin override
+        $current_user_id = get_current_user_id();
+        $booking_user_id = $current_user_id;
+
+        if ( current_user_can( 'manage_options' ) && ! empty( $_POST['user_id'] ) ) {
+            $booking_user_id = intval( $_POST['user_id'] );
+        }
+
+        if ( ! $booking_user_id ) {
+             wp_send_json_error( array( 'message' => 'Ugyldig bruker.' ) );
+        }
+
+        // Fetch phone from user meta securely (cannot be changed by user in form)
+        $customer_phone = get_user_meta( $booking_user_id, 'snippen_phone', true );
+
+        if ( empty( $customer_phone ) ) {
+            wp_send_json_error( array( 'message' => 'Brukeren mangler telefonnummer på sin profil. Vennligst kontakt administrator.' ) );
+        }
         $description = sanitize_textarea_field( $_POST['description'] ?? '' );
         
         // Get slot info for price lookup and restrictions
@@ -111,17 +129,6 @@ class BookingApi {
             $price = 0;
         }
 
-        // Get current user or admin override
-        $current_user_id = get_current_user_id();
-        $booking_user_id = $current_user_id;
-
-        if ( current_user_can( 'manage_options' ) && ! empty( $_POST['user_id'] ) ) {
-            $booking_user_id = intval( $_POST['user_id'] );
-        }
-
-        if ( ! $booking_user_id ) {
-             wp_send_json_error( array( 'message' => 'Ugyldig bruker.' ) );
-        }
 
         // Insert single booking record
         $booking_data = array(

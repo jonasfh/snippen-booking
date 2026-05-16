@@ -41,6 +41,7 @@ class UserApi {
                 'id'    => $user->ID,
                 'name'  => $user->display_name,
                 'email' => $user->user_email,
+                'phone' => get_user_meta( $user->ID, 'snippen_phone', true ),
             );
         }
 

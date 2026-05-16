@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.3] - 2026-05-15
+## [1.1.6] - 2026-05-16
+### Added
+- **User Phone Numbers**: Integrated secure phone number handling linked to user profiles.
+- **Admin User Editing**: Added a custom field to the WordPress user profile screen so admins can edit phone numbers.
+- **Booking Security**: The phone number field in the booking form is now read-only and fetched securely from user metadata, E.164 standard (+47 prefix) format required.
+- **Validation**: Prevented bookings from being submitted by users without a registered phone number.
+- **Demo Data Enhancement**: Updated `demo:users` to generate random Norwegian phone numbers.
+
+## [1.1.5] - 2026-05-15
 ### Added
 - **Admin Calendar Info**: Display associated locales/objects in the booking details modal.
 ### Fixed
