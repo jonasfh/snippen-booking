@@ -325,6 +325,9 @@ jQuery(document).ready(function ($) {
         if (isAdmin) {
             resetToCurrentUser();
         }
+        
+        // Validate phone on form load
+        validatePhone($('#phone').val());
 
         $('#booking-form-container').slideDown(400);
 
@@ -417,9 +420,6 @@ jQuery(document).ready(function ($) {
 
             if (term.length < 2) {
                 $results.hide();
-                if (term.length === 0) {
-                    resetToCurrentUser();
-                }
                 return;
             }
 
@@ -461,12 +461,7 @@ jQuery(document).ready(function ($) {
             var $phoneGroup = $('#phone').closest('.form-group');
             clearErrorMessages();
             
-            if (!phone) {
-                $submitBtn.prop('disabled', true);
-                $phoneGroup.append('<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Denne brukeren mangler telefonnummer og kan ikke booke.</p>');
-            } else {
-                $submitBtn.prop('disabled', false);
-            }
+            validatePhone(phone);
 
             $results.hide();
         });
@@ -474,6 +469,13 @@ jQuery(document).ready(function ($) {
         $(document).click(function(e) {
             if (!$(e.target).closest('.user-search-wrapper').length) {
                 $results.hide();
+            }
+        });
+
+        // Revert to current user if search field is cleared and loses focus
+        $search.on('blur', function() {
+            if ($(this).val().trim() === '') {
+                resetToCurrentUser();
             }
         });
     }
@@ -553,15 +555,10 @@ jQuery(document).ready(function ($) {
             $search.val(defName);
         }
 
-        // Clear errors and results
         clearErrorMessages();
         $('#user-search-results').hide();
         
-        if (defPhone || isAdmin) {
-            $submitBtn.prop('disabled', false);
-        } else {
-            $submitBtn.prop('disabled', true);
-        }
+        validatePhone(defPhone);
     }
 
     /**
@@ -570,6 +567,23 @@ jQuery(document).ready(function ($) {
     function clearErrorMessages() {
         $('.field-error-msg').remove();
         $('#booking-response').hide();
+    }
+
+    /**
+     * Validate phone number and update UI
+     */
+    function validatePhone(phone) {
+        var $submitBtn = $('.booking-submit');
+        var $phoneGroup = $('#phone').closest('.form-group');
+        
+        clearErrorMessages();
+        
+        if (!phone) {
+            $submitBtn.prop('disabled', true);
+            $phoneGroup.append('<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Denne brukeren mangler telefonnummer og kan ikke booke.</p>');
+        } else {
+            $submitBtn.prop('disabled', false);
+        }
     }
 
     // Initialize
