@@ -37,6 +37,15 @@
         "demo:clear": "php bin/demo-data.php clear",
         "demo:pages": "php bin/demo-pages.php",
         "demo:users": "php bin/demo-data.php users",
+        "demo:sms": "php bin/demo-sms.php",
+        "demo:me": "php bin/demo-me.php",
+        "demo:env": [
+            "@demo:users",
+            "@demo:bookings",
+            "@demo:pages",
+            "@demo:me",
+            "@demo:sms"
+        ],
         "demo:clean": "@demo:clear",
         "demo:reset": "@demo:clear",
         "lint": "phpcs --standard=WordPress src/wp-content/plugins/booking-plugin/inc/",

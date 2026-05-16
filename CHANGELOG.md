@@ -2,6 +2,11 @@
 
 
 
+## [1.2.2] - 2026-05-16
+### Added
+- **Demo Commands**: Added `composer demo:sms`, `composer demo:me`, and `composer demo:env` for easier development setup.
+- **Environment Support**: Added `.env` file support for demo scripts via `.env.example`.
+
 ## [1.2.1] - 2026-05-17
 ### Fixed
 - **SMS Service**: Trim + form phone numbers before sending. SMS messages are now sent reliably.
