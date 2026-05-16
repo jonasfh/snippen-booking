@@ -21,8 +21,9 @@ Guide AI agents working in this repository.
 - **Run tests to verify all changes before completion**
 - **Always include created_at and modified_at timestamps on database tables**
 - **Check for latest versions**: Always ensure that the latest available versions of frameworks, libraries, and GitHub Actions are used, unless there is a specific reason not to. If old versions are discovered, notify the developer.
-- **DO NOT commit or push changes** (the USER handles version control)
+- **DO NOT commit or push changes** (the USER handles version control), **EXCEPT** when following the "GitHub Issue Workflow" below.
 - Always suggest a commit message focused on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without quotes.
+- **GitHub Issue Workflow**: When tasked with solving a specific GitHub issue (e.g., "solve issue #15"), follow the dedicated workflow below.
 
 ## Plugin Structure
 
@@ -137,6 +138,27 @@ wp plugin list --allow-root
 # Reinstall WordPress
 /entrypoint.sh setup
 ```
+
+## GitHub Issue Workflow
+
+When an agent is asked to solve a specific GitHub issue, the following workflow **MUST** be followed:
+
+1.  **Preparation**:
+    - Start in the `main` branch.
+    - Ensure `main` is up to date: `git pull origin main`.
+    - Check if the terminal is logged in to GitHub: `gh auth status`. If not, inform the developer and ask them to run `gh auth login`.
+2.  **Branching**:
+    - Check if a branch already exists for the issue.
+    - If not, create a new branch using the pattern: `gh-issue/<id>` (e.g., `gh-issue/15`).
+3.  **Implementation**:
+    - Solve the issue as requested.
+    - Create tests for new functionality and run all tests to verify.
+4.  **Submission**:
+    - Commit changed files.
+    - **Commit Message**: The message **MUST** start with the issue reference in parentheses, e.g., `(#15) Fixed xxx...`.
+    - Push the branch to origin.
+    - Create a Pull Request using `gh`: `gh pr create --body "Closes #<id>" --title "(#<id>) <Issue Title>"`.
+    - Checkout `main` and return to the starting state.
 
 ## Key Classes Overview
 

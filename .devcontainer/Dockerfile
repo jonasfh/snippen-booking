@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     php-xdebug \
     php-intl \
     php-gd \
+    gh \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Configure Xdebug
