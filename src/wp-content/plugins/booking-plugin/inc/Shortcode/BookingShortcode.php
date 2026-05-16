@@ -64,6 +64,7 @@ class BookingShortcode {
         $current_user = wp_get_current_user();
         $user_name = $is_logged_in ? esc_attr( $current_user->display_name ) : '';
         $user_email = $is_logged_in ? esc_attr( $current_user->user_email ) : '';
+        $user_phone = $is_logged_in ? get_user_meta( $current_user->ID, 'snippen_phone', true ) : '';
 
         ob_start();
         ?>
@@ -134,7 +135,10 @@ class BookingShortcode {
                         
                         <div class="form-group">
                             <label for="phone">Telefon</label>
-                            <input type="tel" name="phone" id="phone" placeholder="8 siffer">
+                            <input type="tel" name="phone" id="phone" placeholder="+47..." value="<?php echo esc_attr( $user_phone ); ?>" readonly required>
+                            <?php if ( $is_logged_in && empty( $user_phone ) && ! current_user_can( 'manage_options' ) ) : ?>
+                                <p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Mangler telefonnummer på din profil. Kontakt administrator.</p>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-group full-width">
@@ -143,7 +147,9 @@ class BookingShortcode {
                         </div>
                     </div>
 
-                    <button type="submit" class="booking-submit">Send bookingforespørsel</button>
+                    <button type="submit" class="booking-submit" <?php echo ( $is_logged_in && empty( $user_phone ) && ! current_user_can( 'manage_options' ) ) ? 'disabled' : ''; ?>>
+                        Send bookingforespørsel
+                    </button>
                 </form>
                 <div id="booking-response" style="display: none;"></div>
             </div>

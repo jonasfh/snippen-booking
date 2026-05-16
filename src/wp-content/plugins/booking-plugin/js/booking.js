@@ -415,8 +415,8 @@ jQuery(document).ready(function ($) {
                         if (response.success && response.data.length > 0) {
                             var html = '';
                             response.data.forEach(function(user) {
-                                html += '<div class="user-result-item" data-id="' + user.id + '" data-name="' + user.name + '" data-email="' + user.email + '">';
-                                html += '<strong>' + user.name + '</strong><br><small>' + user.email + '</small>';
+                                html += '<div class="user-result-item" data-id="' + user.id + '" data-name="' + user.name + '" data-email="' + user.email + '" data-phone="' + (user.phone || '') + '">';
+                                html += '<strong>' + user.name + '</strong><br><small>' + user.email + (user.phone ? ' | ' + user.phone : ' | <span style="color:red">Mangler tlf</span>') + '</small>';
                                 html += '</div>';
                             });
                             $results.html(html).show();
@@ -430,10 +430,25 @@ jQuery(document).ready(function ($) {
 
         $(document).on('click', '.user-result-item', function() {
             var $item = $(this);
+            var phone = $item.data('phone') || '';
             $userId.val($item.data('id'));
             $name.val($item.data('name'));
             $email.val($item.data('email'));
+            $('#phone').val(phone);
             $search.val($item.data('name'));
+            
+            // Handle submit button state and error message
+            var $submitBtn = $('.booking-submit');
+            var $phoneGroup = $('#phone').closest('.form-group');
+            $phoneGroup.find('.field-error-msg').remove();
+            
+            if (!phone) {
+                $submitBtn.prop('disabled', true);
+                $phoneGroup.append('<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Denne brukeren mangler telefonnummer og kan ikke booke.</p>');
+            } else {
+                $submitBtn.prop('disabled', false);
+            }
+
             $results.hide();
         });
 

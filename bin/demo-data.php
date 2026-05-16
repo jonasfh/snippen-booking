@@ -62,6 +62,8 @@ if ($action === 'users') {
                 'role'       => 'subscriber'
             ]);
             if (!is_wp_error($user_id)) {
+                $phone = '+47' . (rand(0, 1) ? '4' : '9') . rand(1000000, 9999999);
+                update_user_meta($user_id, 'snippen_phone', $phone);
                 $count++;
             }
         }
@@ -126,13 +128,14 @@ if ($action === 'generate') {
                 $user = !empty($subscriber_users) ? $subscriber_users[array_rand($subscriber_users)] : $default_admin;
 
                 // Insert main booking
+                $phone = get_user_meta($user->ID, 'snippen_phone', true) ?: '+4799887766';
                 $wpdb->insert($table_bookings, array(
                     'user_id' => $user->ID,
                     'slot_id' => (int) $first_slot_id,
                     'booking_date' => $date_str,
                     'customer_name' => $user->display_name,
                     'customer_email' => $user->user_email,
-                    'customer_phone' => '99887766',
+                    'customer_phone' => $phone,
                     'price' => $price,
                     'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
                 ));
@@ -176,13 +179,14 @@ if ($action === 'generate') {
                     $user = !empty($subscriber_users) ? $subscriber_users[array_rand($subscriber_users)] : $default_admin;
 
                     // Insert booking record
+                    $phone = get_user_meta($user->ID, 'snippen_phone', true) ?: '+4712345678';
                     $wpdb->insert($table_bookings, array(
                         'user_id' => $user->ID,
                         'slot_id' => (int) $slot->id,
                         'booking_date' => $date_str,
                         'customer_name' => $user->display_name,
                         'customer_email' => $user->user_email,
-                        'customer_phone' => '12345678',
+                        'customer_phone' => $phone,
                         'price' => $price,
                         'description' => 'Automatisk generert demo-booking for ' . $date_str
                     ));

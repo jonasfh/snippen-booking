@@ -17,6 +17,9 @@ class AdminLoader {
 
         add_action( 'admin_menu', array( __CLASS__, 'add_admin_menu' ) );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_assets' ) );
+        
+        // Custom user profile fields
+        UserProfile::register();
     }
 
     /**
