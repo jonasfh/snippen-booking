@@ -90,21 +90,23 @@ if [ $# -gt 0 ] && [ "$1" == "reset" ]; then
   exit 0
 fi
 
-echo "Starting PHP server on port ${PORT}..."
+echo "Configuring Apache..."
 
-cat > router.php <<'EOF'
-<?php
-if (php_sapi_name() === 'cli-server') {
-    $url = parse_url($_SERVER['REQUEST_URI']);
-    $file = __DIR__ . $url['path'];
-    if (is_file($file)) {
-        return false;
-    }
-    $_SERVER['SCRIPT_NAME'] = '/index.php';
-    $_SERVER['SCRIPT_FILENAME'] = __DIR__ . '/index.php';
-    $_SERVER['PHP_SELF'] = '/index.php';
-}
-require __DIR__ . '/index.php';
+cat > /etc/apache2/sites-available/000-default.conf <<EOF
+<VirtualHost *:8080>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /wordpress
+
+    <Directory /wordpress>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
 EOF
 
-exec php -S 0.0.0.0:${PORT} router.php
+echo "Starting Apache..."
+exec apachectl -D FOREGROUND
