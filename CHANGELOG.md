@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.9] - 2026-05-16
+### Added
+- **SMS Service**: Integrated KeySMS API for automated SMS notifications.
+- **Admin Settings**: Added a new "Innstillinger" page to manage SMS API keys and sender info.
+- **Booking Notifications**: Automatic SMS confirmation to users upon successful booking.
+
 ## [1.1.8] - 2026-05-16
 ### Added
 - Enable AI agents to solve GitHub issues directly.

@@ -187,6 +187,17 @@ class BookingApi {
 
             wp_mail( $to, $subject, $message );
 
+            // Send SMS notification
+            if ( 'yes' === get_option( 'snippen_sms_enabled' ) ) {
+                $sms_service = new \SnippenBooking\Service\KeySmsService();
+                $sms_message = sprintf(
+                    __( 'Takk for din bookingforespørsel for %s den %s. Vi kontakter deg snart.', 'snippen-booking' ),
+                    $object_names,
+                    $booking_date
+                );
+                $sms_service->send( $customer_phone, $sms_message );
+            }
+
             wp_send_json_success( array(
                 'message' => 'Bookingforespørsel sendt! Vi kontakter deg snart.'
             ) );
