@@ -10,8 +10,9 @@ All notable changes to this project will be documented in this file.
 - **Validation**: Prevented bookings from being submitted by users without a registered phone number.
 - **Demo Data Enhancement**: Updated `demo:users` to generate random Norwegian phone numbers.
 ### Fixed
-- **Form UI**: Fixed issue where the booking form was not reset when switching dates or users.
-- **Error Messages**: Ensured phone number validation errors are cleared when an admin selects a different user or starts a new search.
+- **Form UI**: Improved form resetting and fixed aggressive "snap-back" when clearing the admin user search.
+- **Validation**: Enforced phone number validation immediately upon form loading for all users.
+- **Error Messages**: Ensured phone number validation errors are cleared correctly when an admin selects a different user or starts a new search.
 
 ## [1.1.5] - 2026-05-15
 ### Added
