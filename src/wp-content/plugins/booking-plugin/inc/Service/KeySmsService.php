@@ -66,6 +66,9 @@ class KeySmsService implements SmsServiceInterface {
 			return false;
 		}
 
+		// KeySMS often prefers numbers without the '+' prefix (e.g., 47XXXXXXXX instead of +47XXXXXXXX)
+		$to = ltrim( $to, '+' );
+
 		$payload = array(
 			'message'   => $message,
 			'receivers' => array( $to ),
