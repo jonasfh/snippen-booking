@@ -1,5 +1,11 @@
 # Changelog
 
+
+
+## [1.2.0] - 2026-05-16
+### Added
+- **SMS Service**: Now working with KeySMS.
+
 ## [1.1.9] - 2026-05-16
 ### Added
 - **SMS Service**: Integrated KeySMS API for automated SMS notifications.
