@@ -25,6 +25,16 @@ Multiple objects can be booked by passing a comma-separated list of object IDs t
 [snippen_booking object_id="1,2"]
 ```
 
+### User Account Confirmation
+Users must confirm their account via SMS before they can create bookings. The account confirmation form is displayed using the following shortcode:
+
+```text
+[snippen_account_confirmation]
+```
+
+### SMS Settings
+Granular SMS settings are available in the WordPress admin dashboard under **Settings > SMS Innstillinger**. Here you can configure API credentials and enable or disable specific SMS notification types, such as booking confirmations and account confirmations.
+
 ## Contributing and Development
 
 If you are a developer looking to contribute to the code, set up the dev environment, or run tests, please refer to the developer documentation in [DEV_README.md](DEV_README.md).

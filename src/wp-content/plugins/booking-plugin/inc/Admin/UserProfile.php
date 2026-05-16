@@ -22,6 +22,9 @@ class UserProfile {
         // Save fields
         add_action( 'personal_options_update', array( __CLASS__, 'save_user_fields' ) );
         add_action( 'edit_user_profile_update', array( __CLASS__, 'save_user_fields' ) );
+
+        // Validate fields
+        add_action( 'user_profile_update_errors', array( __CLASS__, 'validate_user_fields' ), 10, 3 );
     }
 
     /**
@@ -47,8 +50,49 @@ class UserProfile {
                     <p class="description"><?php _e( 'Bruk E.164-format (f.eks. +4799887766). Dette nummeret brukes i bookingskjemaet og kan kun endres av administrator.', 'snippen-booking' ); ?></p>
                 </td>
             </tr>
+            <tr>
+                <th><label><?php _e( 'Kontostatus', 'snippen-booking' ); ?></label></th>
+                <td>
+                    <?php 
+                    $confirmed = get_user_meta( $user->ID, 'snippen_account_confirmed', true ) === 'yes';
+                    if ( $confirmed ) : ?>
+                        <span style="color: green; font-weight: bold;"><?php _e( 'Bekreftet', 'snippen-booking' ); ?></span>
+                    <?php else : ?>
+                        <span style="color: red; font-weight: bold;"><?php _e( 'Ikke bekreftet', 'snippen-booking' ); ?></span>
+                        <label style="margin-left: 20px;">
+                            <input type="checkbox" name="snippen_force_confirm" value="yes"> <?php _e( 'Marker som bekreftet manuelt', 'snippen-booking' ); ?>
+                        </label>
+                    <?php endif; ?>
+                </td>
+            </tr>
         </table>
         <?php
+    }
+
+    /**
+     * Validate custom fields
+     *
+     * @param \WP_Error $errors
+     * @param bool $update
+     * @param \WP_User $user
+     */
+    public static function validate_user_fields( $errors, $update, $user ) {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        if ( isset( $_POST['snippen_phone'] ) ) {
+            $raw_phone = sanitize_text_field( $_POST['snippen_phone'] );
+            if ( ! empty( $raw_phone ) ) {
+                $normalized_phone = \SnippenBooking\Helper\PhoneHelper::normalize_phone( $raw_phone );
+                
+                if ( ! $normalized_phone ) {
+                    $errors->add( 'invalid_phone', __( 'Ugyldig telefonnummer. Må være et gyldig norsk nummer.', 'snippen-booking' ) );
+                } else if ( ! \SnippenBooking\Helper\PhoneHelper::is_phone_unique( $normalized_phone, $user->ID ) ) {
+                    $errors->add( 'duplicate_phone', __( 'Dette telefonnummeret er allerede i bruk av en annen bruker.', 'snippen-booking' ) );
+                }
+            }
+        }
     }
 
     /**
@@ -63,7 +107,19 @@ class UserProfile {
         }
 
         if ( isset( $_POST['snippen_phone'] ) ) {
-            update_user_meta( $user_id, 'snippen_phone', sanitize_text_field( $_POST['snippen_phone'] ) );
+            $raw_phone = sanitize_text_field( $_POST['snippen_phone'] );
+            if ( empty( $raw_phone ) ) {
+                update_user_meta( $user_id, 'snippen_phone', '' );
+            } else {
+                $normalized_phone = \SnippenBooking\Helper\PhoneHelper::normalize_phone( $raw_phone );
+                if ( $normalized_phone ) {
+                    update_user_meta( $user_id, 'snippen_phone', $normalized_phone );
+                }
+            }
+        }
+
+        if ( isset( $_POST['snippen_force_confirm'] ) && $_POST['snippen_force_confirm'] === 'yes' ) {
+            update_user_meta( $user_id, 'snippen_account_confirmed', 'yes' );
         }
     }
 }

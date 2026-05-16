@@ -62,18 +62,18 @@ Upon plugin activation, a "Booking Demo" page is automatically created in WordPr
 The plugin includes tools to populate the environment with demo data for development and testing.
 
 ```bash
-# Generate demo subscriber users (residents)
-composer demo:users
+# Run the full demo environment setup (users, bookings, pages, test user, sms settings)
+composer demo
 
-# Generate random bookings for the next 30 days
-# (Links bookings to existing subscriber users)
-composer demo:bookings
+# Clear all demo data (bookings, demo users, demo pages)
+composer demo:clean  # Also available as composer demo:clear or composer demo:reset
 
-# Create demo pages with booking shortcodes
-composer demo:pages
-
-# Clear all booking objects and bookings
-composer demo:clear
+# The full setup command runs these individual scripts in order:
+composer demo:users      # Generate 50 demo subscriber users
+composer demo:bookings   # Generate random bookings for the next 30 days
+composer demo:pages      # Create demo pages (booking forms and account confirmation)
+composer demo:me         # Create/update an admin test user (uses TEST_USER_* in .env)
+composer demo:env        # Update KeySMS settings from local .env
 ```
 
 ### GitHub Integration

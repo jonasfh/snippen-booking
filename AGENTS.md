@@ -24,6 +24,7 @@ Guide AI agents working in this repository.
 - **DO NOT commit or push changes** (the USER handles version control), **EXCEPT** when following the "GitHub Issue Workflow" below.
 - **ALWAYS suggest a commit message** Focus on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without qusotes.
 - **GitHub Issue Workflow**: When tasked with solving a specific GitHub issue (e.g., "solve issue #15"), follow the dedicated workflow below.
+- **ALWAYS update version and changelog when changes to src/ folder is made**
 
 ## Plugin Structure
 
@@ -155,10 +156,11 @@ When an agent is asked to solve a specific GitHub issue, the following workflow 
     - Create tests for new functionality and run all tests to verify.
 4.  **Submission**:
     - Commit changed files.
+    - Update changelog in `CHANGELOG.md` and version in `booking-plugin.php`.
     - **Commit Message**: The message **MUST** start with the issue reference in parentheses, e.g., `(#15) Fixed xxx...`.
     - Push the branch to origin.
     - Create a Pull Request using `gh`: `gh pr create --body "Closes #<id>" --title "(#<id>) <Issue Title>"`.
-    - Checkout `main` and return to the starting state.
+5.  **Update github issues with implementation notes**: Add implementation details and a summary of the changes made to resolve the issue.
 
 ## Key Classes Overview
 

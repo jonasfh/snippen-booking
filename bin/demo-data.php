@@ -38,6 +38,26 @@ if ($action === 'clear') {
     $wpdb->query("DELETE FROM $table_booking_objects");
     $wpdb->query("DELETE FROM $table_bookings");
     echo "Success: All bookings cleared.\n";
+
+    echo "Clearing demo pages...\n";
+    $existing_pages = get_pages();
+    foreach ($existing_pages as $page) {
+        if (strpos($page->post_title, 'Booking Demo') !== false) {
+            wp_delete_post($page->ID, true);
+        }
+    }
+    echo "Success: Demo pages cleared.\n";
+
+    echo "Clearing demo users...\n";
+    require_once(ABSPATH . 'wp-admin/includes/user.php');
+    $subscribers = get_users(['role' => 'subscriber']);
+    foreach ($subscribers as $sub) {
+        if (strpos($sub->user_email, '@example.no') !== false) {
+            wp_delete_user($sub->ID);
+        }
+    }
+    echo "Success: Demo users cleared.\n";
+
     exit(0);
 }
 

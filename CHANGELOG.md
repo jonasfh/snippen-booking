@@ -1,6 +1,10 @@
 # Changelog
 
-
+## [1.3.0] - 2026-05-17
+### Added
+- **User Account Confirmation**: Added functionality for users to confirm their accounts via a shortcode. Confirmed users can then create bookings.
+- **Granular SMS Settings**: Added "SMS Innstillinger" page for enabling/disabling specific SMS notification types.
+- **Booking Confirmation SMS**: Added SMS confirmation to users upon successful booking.
 
 ## [1.2.2] - 2026-05-16
 ### Added
