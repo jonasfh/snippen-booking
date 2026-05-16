@@ -81,6 +81,15 @@ class AdminLoader {
             'snippen-booking-pricing',
             array( self::class, 'render_pricing_page' )
         );
+
+        add_submenu_page(
+            'snippen-booking',
+            __( 'Innstillinger', 'snippen-booking' ),
+            __( 'Innstillinger', 'snippen-booking' ),
+            'manage_options',
+            'snippen-booking-settings',
+            array( self::class, 'render_settings_page' )
+        );
     }
 
     /**
@@ -162,6 +171,18 @@ class AdminLoader {
             $page->render();
         } else {
             echo '<div class="wrap"><h1>' . esc_html__( 'Mine Bookinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+        }
+    }
+
+    /**
+     * Render Settings Page
+     */
+    public static function render_settings_page() {
+        if ( class_exists( 'SnippenBooking\Admin\Pages\SettingsPage' ) ) {
+            $page = new \SnippenBooking\Admin\Pages\SettingsPage();
+            $page->render();
+        } else {
+            echo '<div class="wrap"><h1>' . esc_html__( 'Innstillinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
         }
     }
 }
