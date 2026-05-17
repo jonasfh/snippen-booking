@@ -25,6 +25,10 @@ class UserProfile {
 
 		// Validate fields
 		add_action( 'user_profile_update_errors', array( __CLASS__, 'validate_user_fields' ), 10, 3 );
+
+		// User list view filters (Issue #37)
+		add_filter( 'views_users', array( __CLASS__, 'add_deleted_residents_view' ) );
+		add_action( 'pre_get_users', array( __CLASS__, 'filter_users_by_deleted_status' ) );
 	}
 
 	/**
@@ -136,6 +140,59 @@ class UserProfile {
 			update_user_meta( $user_id, 'snippen_user_deleted', 'yes' );
 		} else {
 			delete_user_meta( $user_id, 'snippen_user_deleted' );
+		}
+	}
+
+	/**
+	 * Add "Slettede beboere" tab/view to the top of users.php list
+	 *
+	 * @param array $views Existing views.
+	 * @return array
+	 */
+	public static function add_deleted_residents_view( $views ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return $views;
+		}
+
+		$count = count( get_users( array(
+			'meta_key'   => 'snippen_user_deleted',
+			'meta_value' => 'yes',
+			'fields'     => 'ID',
+		) ) );
+
+		if ( $count > 0 ) {
+			$class = ( isset( $_GET['deleted_residents'] ) && $_GET['deleted_residents'] === '1' ) ? ' class="current"' : '';
+			$views['deleted_residents'] = sprintf(
+				'<a href="%s"%s>%s <span class="count">(%d)</span></a>',
+				add_query_arg( 'deleted_residents', '1', admin_url( 'users.php' ) ),
+				$class,
+				__( 'Slettede beboere', 'snippen-booking' ),
+				$count
+			);
+		}
+
+		return $views;
+	}
+
+	/**
+	 * Filter users list in wp-admin by deleted status
+	 *
+	 * @param \WP_User_Query $query
+	 */
+	public static function filter_users_by_deleted_status( $query ) {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+		if ( $screen && $screen->id === 'users' && isset( $_GET['deleted_residents'] ) && $_GET['deleted_residents'] === '1' ) {
+			$meta_query = $query->get( 'meta_query' ) ?: array();
+			$meta_query[] = array(
+				'key'     => 'snippen_user_deleted',
+				'value'   => 'yes',
+				'compare' => '=',
+			);
+			$query->set( 'meta_query', $meta_query );
 		}
 	}
 }

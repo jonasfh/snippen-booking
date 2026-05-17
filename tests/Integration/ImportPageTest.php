@@ -243,4 +243,55 @@ ola@nordmann.no
 		$reset_allowed = apply_filters( 'allow_password_reset', true, $user_id );
 		$this->assertFalse( $reset_allowed );
 	}
+
+	/**
+	 * Test that admin user list filters (views and querying) work as expected.
+	 */
+	public function testAdminUserListFilters() {
+		// Set up current user to be administrator so current_user_can('manage_options') returns true
+		$admin_id = wp_create_user( 'adminfiltertest_' . time(), 'password123', 'adminfiltertest@example.com' );
+		$admin_user = new \WP_User( $admin_id );
+		$admin_user->set_role( 'administrator' );
+		wp_set_current_user( $admin_id );
+		$this->created_user_ids[] = $admin_id;
+
+		// 1. Create a deleted resident
+		$username = 'deletedforfilter_' . time();
+		$email    = $username . '@example.com';
+		$user_id  = wp_create_user( $username, 'password123', $email );
+		$user     = new \WP_User( $user_id );
+		$user->set_role( 'holmen_resident' );
+		update_user_meta( $user_id, 'snippen_user_deleted', 'yes' );
+		$this->created_user_ids[] = $user_id;
+
+		// 2. Render views and check that "Slettede beboere" tab is added with correct count
+		$views = array();
+		$views = \SnippenBooking\Admin\UserProfile::add_deleted_residents_view( $views );
+		$this->assertArrayHasKey( 'deleted_residents', $views );
+		$this->assertStringContainsString( 'Slettede beboere', $views['deleted_residents'] );
+		$this->assertStringContainsString( '(1)', $views['deleted_residents'] );
+
+		// 3. Test pre_get_users action filtering when query parameter is active
+		$_GET['deleted_residents'] = '1';
+		
+		// Mock WP_User_Query and current screen
+		set_current_screen( 'users' );
+		
+		$query = new \WP_User_Query( array(
+			'role' => 'holmen_resident',
+		) );
+		
+		// Run action hook handler
+		\SnippenBooking\Admin\UserProfile::filter_users_by_deleted_status( $query );
+		
+		// Fetch queried users and assert that only our deleted resident is returned
+		$users = $query->get_results();
+		$user_ids = wp_list_pluck( $users, 'ID' );
+		
+		$this->assertContains( $user_id, $user_ids );
+		
+		// Clean up $_GET and screen
+		unset( $_GET['deleted_residents'] );
+		set_current_screen( 'null' );
+	}
 }
