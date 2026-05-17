@@ -35,6 +35,25 @@ Users must confirm their account via SMS before they can create bookings. The ac
 ### SMS Settings
 Granular SMS settings are available in the WordPress admin dashboard under **Settings > SMS Innstillinger**. Here you can configure API credentials and enable or disable specific SMS notification types, such as booking confirmations and account confirmations.
 
+### Door Codes
+Booking objects (venues) can be configured with a door code in the WordPress Admin dashboard under **Snippen Booking > Lokaler**.
+
+#### Configurable Active Time-Window
+To ensure security, the door code is not displayed immediately upon booking. Instead, it is only visible within a configurable active time window.
+In the WordPress Admin dashboard under **Snippen Booking > Innstillinger**, administrators can set:
+- **Vis dørkode x timer før booking start**: How many hours before the booking starts the door code should become visible.
+- **Vis dørkode y timer etter booking slutt**: How many hours after the booking ends the door code should remain visible.
+
+#### Where Users Can Find Their Door Code
+When a booking is within its active time window, the door code will automatically be displayed to the user in:
+1. The **expanded details row** under **Mine Bookinger** (My Bookings) in their account page.
+2. The secure front-end **Booking Details popup overlay** accessed via their unique booking link.
+
+Outside of the configured active time window, the system securely hides the door code and displays:
+`<Koden er ikke tilgjengelig før nærmere booking start>` (Code is not available until closer to the booking start).
+
+For bookings containing **multiple rooms**, the system automatically sanitizes, combines, and deduplicates the door codes (displaying only a single code if the venues share the same entrance door code).
+
 ## Contributing and Development
 
 If you are a developer looking to contribute to the code, set up the dev environment, or run tests, please refer to the developer documentation in [DEV_README.md](DEV_README.md).

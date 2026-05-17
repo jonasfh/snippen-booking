@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0] - 2026-05-17
+### Added
+- **Door Code Support for Venues**: Added a `door_code` field to booking objects (rooms/venues) inside the Admin booking objects screen.
+- **Configurable Door Code Time Window**: Introduced Admin configuration options under "Innstillinger" to customize how many hours before booking start (**x**) and how many hours after booking end (**y**) the door code should be active.
+- **Secure Dynamic Synchronizer**: Built a robust `DoorCodeService` that synchronizes room door codes into active upcoming bookings within the active display window, while keeping them hidden and secure outside the window. Handles multiple assigned rooms, sanitizing and automatically deduplicating identical door codes to a single entry.
+- **Front-End & Admin Displays**: Integrated beautiful door code displays within both the public front-end booking details modal overlay and the "Mine Bookinger" expanded row layouts, showing the code inside the active window and `<Koden er ikke tilgjengelig før nærmere booking start>` outside of it.
+- **Unit and Integration Tests**: Implemented comprehensive unit and integration test coverage for settings options, time windows, multi-room code combinations, database migrations, and front-end rendering.
+
 ## [1.3.2] - 2026-05-17
 ### Added
 - **Secure Single Booking Popup**: Implemented a secure read-only single booking popup overlay on the front-end when `booking_uuid` is detected in the URL query parameters.
