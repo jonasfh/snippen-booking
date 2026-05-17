@@ -66,6 +66,15 @@ class UserProfile {
 					<?php endif; ?>
 				</td>
 			</tr>
+			<tr>
+				<th><label for="snippen_user_deleted"><?php _e( 'Slettet beboer', 'snippen-booking' ); ?></label></th>
+				<td>
+					<label>
+						<input type="checkbox" name="snippen_user_deleted" id="snippen_user_deleted" value="yes" <?php checked( get_user_meta( $user->ID, 'snippen_user_deleted', true ), 'yes' ); ?> />
+						<?php _e( 'Marker som slettet (kan ikke logge inn eller booke)', 'snippen-booking' ); ?>
+					</label>
+				</td>
+			</tr>
 		</table>
 		<?php
 	}
@@ -121,6 +130,12 @@ class UserProfile {
 
 		if ( isset( $_POST['snippen_force_confirm'] ) && $_POST['snippen_force_confirm'] === 'yes' ) {
 			update_user_meta( $user_id, 'snippen_account_confirmed', 'yes' );
+		}
+
+		if ( isset( $_POST['snippen_user_deleted'] ) && $_POST['snippen_user_deleted'] === 'yes' ) {
+			update_user_meta( $user_id, 'snippen_user_deleted', 'yes' );
+		} else {
+			delete_user_meta( $user_id, 'snippen_user_deleted' );
 		}
 	}
 }

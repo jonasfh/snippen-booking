@@ -96,6 +96,10 @@ class BookingApi {
 			wp_send_json_error( array( 'message' => 'Ugyldig bruker.' ) );
 		}
 
+		if ( get_user_meta( $booking_user_id, 'snippen_user_deleted', true ) === 'yes' ) {
+			wp_send_json_error( array( 'message' => 'Kontoen din er slettet eller deaktivert. Kontakt administrator.' ) );
+		}
+
 		// Fetch phone from user meta securely (cannot be changed by user in form)
 		$customer_phone = get_user_meta( $booking_user_id, 'snippen_phone', true );
 
