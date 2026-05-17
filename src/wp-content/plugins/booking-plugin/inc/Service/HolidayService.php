@@ -8,9 +8,9 @@ namespace SnippenBooking\Service;
 class HolidayService {
 
 	/**
-	 * Check if a given date is a Norwegian holiday
+	 * Check if a given date is a Norwegian holiday.
 	 *
-	 * @param string $date YYYY-MM-DD
+	 * @param string $date YYYY-MM-DD.
 	 * @return bool
 	 */
 	public function isHoliday( $date ) {
@@ -18,33 +18,35 @@ class HolidayService {
 		$year      = (int) date( 'Y', $timestamp );
 		$md        = date( 'm-d', $timestamp );
 
-		// Fixed holidays
+		// Fixed holidays.
 		$fixed = array(
-			'01-01', // Nyttårsdag
-			'05-01', // 1. mai
-			'05-17', // 17. mai
-			'12-25', // 1. juledag
-			'12-26', // 2. juledag
+			'01-01', // Nyttårsdag.
+			'05-01', // 1. mai.
+			'05-17', // 17. mai.
+			'12-25', // 1. juledag.
+			'12-26', // 2. juledag.
 		);
 
-		if ( in_array( $md, $fixed ) ) {
+		if ( in_array( $md, $fixed, true ) ) {
 			return true;
 		}
 
-		// Moving holidays (Easter based)
-		$easter = easter_date( $year );
+		// Moving holidays (Easter based).
+		$days   = easter_days( $year );
+		$easter = new \DateTimeImmutable( "$year-03-21 UTC" );
+		$easter = $easter->modify( "+$days days" );
 
 		$moving = array(
-			date( 'm-d', $easter - 3 * 86400 ), // Skjærtorsdag
-			date( 'm-d', $easter - 2 * 86400 ), // Langfredag
-			date( 'm-d', $easter ),             // 1. påskedag
-			date( 'm-d', $easter + 1 * 86400 ), // 2. påskedag
-			date( 'm-d', $easter + 39 * 86400 ), // Kr. Himmelfart
-			date( 'm-d', $easter + 49 * 86400 ), // 1. pinsedag
-			date( 'm-d', $easter + 50 * 86400 ), // 2. pinsedag
+			$easter->modify( '-3 days' )->format( 'm-d' ), // Skjærtorsdag.
+			$easter->modify( '-2 days' )->format( 'm-d' ), // Langfredag.
+			$easter->format( 'm-d' ),                      // 1. påskedag.
+			$easter->modify( '+1 day' )->format( 'm-d' ),  // 2. påskedag.
+			$easter->modify( '+39 days' )->format( 'm-d' ), // Kr. Himmelfart.
+			$easter->modify( '+49 days' )->format( 'm-d' ), // 1. pinsedag.
+			$easter->modify( '+50 days' )->format( 'm-d' ), // 2. pinsedag.
 		);
 
-		if ( in_array( $md, $moving ) ) {
+		if ( in_array( $md, $moving, true ) ) {
 			return true;
 		}
 
