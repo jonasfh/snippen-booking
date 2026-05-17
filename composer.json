@@ -46,7 +46,8 @@
             "@demo:bookings",
             "@demo:pages",
             "@demo:me",
-            "@demo:env"
+            "@demo:env",
+            "@demo:mail"
         ],
         "demo:clean": "@demo:clear",
         "demo:reset": "@demo:clear",
