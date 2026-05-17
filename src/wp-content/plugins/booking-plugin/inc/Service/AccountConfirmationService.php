@@ -50,10 +50,6 @@ class AccountConfirmationService {
 	 * @return bool True on success, false on failure.
 	 */
 	public function send_code( int $user_id ): bool {
-		if ( 'yes' !== get_option( 'snippen_sms_account_confirmation_enabled' ) ) {
-			return false;
-		}
-
 		$phone = get_user_meta( $user_id, 'snippen_phone', true );
 		if ( empty( $phone ) ) {
 			return false;
@@ -61,6 +57,15 @@ class AccountConfirmationService {
 
 		$code    = $this->generate_code( $user_id );
 		$message = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
+
+		if ( 'yes' !== get_option( 'snippen_sms_account_confirmation_enabled' ) ) {
+			$user = get_userdata( $user_id );
+			if ( ! $user || empty( $user->user_email ) ) {
+				return false;
+			}
+			$subject = __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
+			return wp_mail( $user->user_email, $subject, $message );
+		}
 
 		return $this->sms_service->send( $phone, $message );
 	}
