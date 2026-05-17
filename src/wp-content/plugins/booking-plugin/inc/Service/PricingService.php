@@ -7,48 +7,54 @@ namespace SnippenBooking\Service;
  */
 class PricingService {
 
-    /**
-     * Get price for a specific combination of objects, slot IDs and date
-     * 
-     * @param array $objectIds
-     * @param array|int $slotIds One or more slot IDs that represent the time slot for the objects
-     * @param string $date YYYY-MM-DD
-     * @return float|null Price or null if no price found
-     */
-    public function getPrice($objectIds, $slotIds, $date = null) {
-        global $wpdb;
+	/**
+	 * Get price for a specific combination of objects, slot IDs and date
+	 *
+	 * @param array     $objectIds
+	 * @param array|int $slotIds One or more slot IDs that represent the time slot for the objects
+	 * @param string    $date YYYY-MM-DD
+	 * @return float|null Price or null if no price found
+	 */
+	public function getPrice( $objectIds, $slotIds, $date = null ) {
+		global $wpdb;
 
-        if (empty($objectIds)) return 0;
-        if (!$date) $date = date('Y-m-d');
+		if ( empty( $objectIds ) ) {
+			return 0;
+		}
+		if ( ! $date ) {
+			$date = date( 'Y-m-d' );
+		}
 
-        if (!is_array($slotIds)) $slotIds = [$slotIds];
-        $slotIds = array_map('intval', $slotIds);
+		if ( ! is_array( $slotIds ) ) {
+			$slotIds = array( $slotIds );
+		}
+		$slotIds = array_map( 'intval', $slotIds );
 
-        $holiday_service = new HolidayService();
-        $is_holiday = $holiday_service->isHoliday($date);
-        $day_of_week = date('w', strtotime($date)); // 0 (Sun) to 6 (Sat)
+		$holiday_service = new HolidayService();
+		$is_holiday      = $holiday_service->isHoliday( $date );
+		$day_of_week     = date( 'w', strtotime( $date ) ); // 0 (Sun) to 6 (Sat)
 
-        $table_prices = $wpdb->prefix . 'snippen_prices';
-        $table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+		$table_prices        = $wpdb->prefix . 'snippen_prices';
+		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
 
-        $object_count = count($objectIds);
-        $obj_in_clause = implode(',', array_fill(0, $object_count, '%d'));
-        $slot_in_clause = implode(',', array_fill(0, count($slotIds), '%d'));
+		$object_count   = count( $objectIds );
+		$obj_in_clause  = implode( ',', array_fill( 0, $object_count, '%d' ) );
+		$slot_in_clause = implode( ',', array_fill( 0, count( $slotIds ), '%d' ) );
 
-        $params = array_merge([$object_count], $slotIds, $objectIds, [$object_count]);
-        
-        // Find prices that match EXACTLY or by NAME if multi-object
-        // First, get the names of the requested slots
-        $slot_names = $wpdb->get_col("SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode(',', $slotIds) . ")");
-        $slot_name_clause = "";
-        if (!empty($slot_names)) {
-            $name_placeholders = implode(',', array_fill(0, count($slot_names), '%s'));
-            $slot_name_clause = "OR p.slot_id IN (SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE name IN ($name_placeholders))";
-            $params = array_merge([$object_count], $slotIds, $slot_names, $objectIds, [$object_count]);
-        }
+		$params = array_merge( array( $object_count ), $slotIds, $objectIds, array( $object_count ) );
 
-        $query = $wpdb->prepare(
-            "SELECT p.* 
+		// Find prices that match EXACTLY or by NAME if multi-object
+		// First, get the names of the requested slots
+		$slot_names       = $wpdb->get_col( "SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode( ',', $slotIds ) . ')' );
+		$slot_name_clause = '';
+		if ( ! empty( $slot_names ) ) {
+			$name_placeholders = implode( ',', array_fill( 0, count( $slot_names ), '%s' ) );
+			$slot_name_clause  = "OR p.slot_id IN (SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE name IN ($name_placeholders))";
+			$params            = array_merge( array( $object_count ), $slotIds, $slot_names, $objectIds, array( $object_count ) );
+		}
+
+		$query = $wpdb->prepare(
+			"SELECT p.* 
              FROM $table_prices p
              JOIN (
                 SELECT price_id 
@@ -64,59 +70,70 @@ class PricingService {
                 GROUP BY price_id 
                 HAVING COUNT(*) = %d
              )",
-            ...$params
-        );
+			...$params
+		);
 
-        $prices = $wpdb->get_results($query);
-        
-        if (empty($prices)) {
-            if (count($objectIds) > 1) {
-                $total_sum = 0;
-                foreach ($objectIds as $obj_id) {
-                    $obj_slot = $wpdb->get_row($wpdb->prepare(
-                        "SELECT id FROM {$wpdb->prefix}snippen_time_slots 
+		$prices = $wpdb->get_results( $query );
+
+		if ( empty( $prices ) ) {
+			if ( count( $objectIds ) > 1 ) {
+				$total_sum = 0;
+				foreach ( $objectIds as $obj_id ) {
+					$obj_slot = $wpdb->get_row(
+						$wpdb->prepare(
+							"SELECT id FROM {$wpdb->prefix}snippen_time_slots 
                          WHERE booking_object_id = %d 
-                         AND name IN (SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode(',', $slotIds) . "))
-                         LIMIT 1", $obj_id
-                    ));
-                    
-                    if ($obj_slot) {
-                        $individual_price = $this->getPrice([$obj_id], [$obj_slot->id], $date);
-                        if ($individual_price !== null) {
-                            $total_sum += $individual_price;
-                        }
-                    }
-                }
-                return $total_sum > 0 ? $total_sum : null;
-            }
-            return null;
-        }
+                         AND name IN (SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode( ',', $slotIds ) . '))
+                         LIMIT 1',
+							$obj_id
+						)
+					);
 
-        // Filter and find the best match based on priority
-        $best_price = null;
-        $max_priority = -1;
+					if ( $obj_slot ) {
+						$individual_price = $this->getPrice( array( $obj_id ), array( $obj_slot->id ), $date );
+						if ( $individual_price !== null ) {
+							$total_sum += $individual_price;
+						}
+					}
+				}
+				return $total_sum > 0 ? $total_sum : null;
+			}
+			return null;
+		}
 
-        foreach ($prices as $p) {
-            // Check holiday
-            if ($p->is_holiday && !$is_holiday) continue;
-            
-            // Check days of week
-            if ($p->days_of_week !== null && $p->days_of_week !== '') {
-                $allowed_days = explode(',', $p->days_of_week);
-                if (!in_array((string)$day_of_week, $allowed_days)) continue;
-            }
+		// Filter and find the best match based on priority
+		$best_price   = null;
+		$max_priority = -1;
 
-            // Check date range
-            if ($p->date_start && $date < $p->date_start) continue;
-            if ($p->date_end && $date > $p->date_end) continue;
+		foreach ( $prices as $p ) {
+			// Check holiday
+			if ( $p->is_holiday && ! $is_holiday ) {
+				continue;
+			}
 
-            // If we are here, the price is a candidate
-            if ((int)$p->priority > $max_priority) {
-                $max_priority = (int)$p->priority;
-                $best_price = (float)$p->price;
-            }
-        }
+			// Check days of week
+			if ( $p->days_of_week !== null && $p->days_of_week !== '' ) {
+				$allowed_days = explode( ',', $p->days_of_week );
+				if ( ! in_array( (string) $day_of_week, $allowed_days ) ) {
+					continue;
+				}
+			}
 
-        return $best_price;
-    }
+			// Check date range
+			if ( $p->date_start && $date < $p->date_start ) {
+				continue;
+			}
+			if ( $p->date_end && $date > $p->date_end ) {
+				continue;
+			}
+
+			// If we are here, the price is a candidate
+			if ( (int) $p->priority > $max_priority ) {
+				$max_priority = (int) $p->priority;
+				$best_price   = (float) $p->price;
+			}
+		}
+
+		return $best_price;
+	}
 }

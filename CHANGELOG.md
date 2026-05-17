@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.1] - 2026-05-17
+### Added
+- **Tagged Booking Pages**: Enabled tag (post_tag) support for WordPress pages. Pages tagged with `snippen-booking` will now display as quick links at the top of the Admin Booking overview page.
+
 ## [1.3.0] - 2026-05-17
 ### Added
 - **User Account Confirmation**: Added functionality for users to confirm their accounts via a shortcode. Confirmed users can then create bookings.
