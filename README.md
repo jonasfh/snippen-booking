@@ -35,6 +35,8 @@ Users must confirm their account via SMS before they can create bookings. The ac
 ### SMS Settings
 Granular SMS settings are available in the WordPress admin dashboard under **Settings > SMS Innstillinger**. Here you can configure API credentials and enable or disable specific SMS notification types, such as booking confirmations and account confirmations.
 
+If an SMS notification is disabled, the system will automatically fall back to sending that notification via email to ensure that confirmation codes and booking details are still delivered to the user.
+
 ### Door Codes
 Booking objects (venues) can be configured with a door code in the WordPress Admin dashboard under **Snippen Booking > Lokaler**.
 
