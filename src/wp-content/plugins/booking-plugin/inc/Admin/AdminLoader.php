@@ -90,6 +90,15 @@ class AdminLoader {
 			'snippen-booking-settings',
 			array( self::class, 'render_settings_page' )
 		);
+
+		add_submenu_page(
+			'snippen-booking',
+			__( 'Beboer Import', 'snippen-booking' ),
+			__( 'Beboer Import', 'snippen-booking' ),
+			'manage_options',
+			'snippen-booking-import',
+			array( self::class, 'render_import_page' )
+		);
 	}
 
 	/**
@@ -187,6 +196,18 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Innstillinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+		}
+	}
+
+	/**
+	 * Render Import Page
+	 */
+	public static function render_import_page() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\ImportPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\ImportPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'Beboer Import', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
 		}
 	}
 }

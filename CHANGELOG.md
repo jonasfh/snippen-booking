@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.3] - 2026-05-17
+### Added
+- **Resident Import Page**: Implemented a new "Beboer Import" settings page under the admin dashboard for bulk importing resident accounts via copy-paste.
+  - **Data Formats**: Supports both Line-by-Line ABBL format (Name, Email, Phone) and Tab-Separated Values (TSV) format with custom column mapping.
+  - **Look-Ahead Shift Recovery**: Built a robust look-ahead parser for line-by-line format that automatically recovers from missing email or phone fields (data shifts) and logs detailed, clear error/warning skip lists.
+  - **Custom User Role**: Imported/updated users are assigned the custom WordPress role `holmen_resident` ("Holmen Sameie Beboer") which inherits subscriber capabilities.
+  - **Deletion Sync**: Automatically flags any `holmen_resident` not present in the current import list as deleted via `snippen_user_deleted = 'yes'` user metadata. Clears this flag for any imported users.
+  - **Manual Deletion Toggle**: Added a manual "Slettet beboer" checkbox to the WP User Profile screen, enabling admins to manually mark or reactivate residents.
+  - **Access & Deletion Enforcement**: Robust 4-layer enforcement blocking deleted users: prevents login via the `wp_authenticate_user` pipeline, blocks password reset via `allow_password_reset`, blocks API booking requests, and blocks SMS code verification requests.
+- **Integration Tests**: Added comprehensive integration tests in `ImportPageTest.php` verifying parsing, look-ahead shifts, TSV mapping, phone normalization, custom role creation, deletion sync, login blocks, and manual toggles.
+
 ## [1.4.2] - 2026-05-17
 ### Added
 - **SMS Fallback to Email**: Implemented a comprehensive email fallback for SMS when SMS options are disabled in WordPress settings.

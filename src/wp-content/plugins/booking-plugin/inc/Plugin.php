@@ -58,6 +58,33 @@ class Plugin {
 			add_filter( 'wp_mail_from', array( __CLASS__, 'get_mail_from' ) );
 			add_filter( 'wp_mail_from_name', array( __CLASS__, 'get_mail_from_name' ) );
 		}
+
+		// Blocks for deleted users (Issue #37)
+		add_filter( 'wp_authenticate_user', array( __CLASS__, 'block_deleted_users_login' ), 10, 1 );
+		add_filter( 'allow_password_reset', array( __CLASS__, 'block_deleted_users_password_reset' ), 10, 2 );
+	}
+
+	/**
+	 * Block authentication for deleted/deactivated users
+	 */
+	public static function block_deleted_users_login( $user ) {
+		if ( is_wp_error( $user ) ) {
+			return $user;
+		}
+		if ( get_user_meta( $user->ID, 'snippen_user_deleted', true ) === 'yes' ) {
+			return new \WP_Error( 'user_deleted', __( 'Kontoen din er slettet eller deaktivert. Vennligst kontakt administrator.', 'snippen-booking' ) );
+		}
+		return $user;
+	}
+
+	/**
+	 * Block password reset requests for deleted/deactivated users
+	 */
+	public static function block_deleted_users_password_reset( $allow, $user_id ) {
+		if ( get_user_meta( $user_id, 'snippen_user_deleted', true ) === 'yes' ) {
+			return false;
+		}
+		return $allow;
 	}
 
 	/**
