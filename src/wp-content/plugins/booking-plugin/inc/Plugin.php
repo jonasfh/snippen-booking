@@ -51,6 +51,13 @@ class Plugin {
 
 		// Render single booking popup in footer if booking_uuid query param is present
 		add_action( 'wp_footer', array( __CLASS__, 'render_booking_popup' ) );
+
+		// SMTP fallback / configuration hooks.
+		if ( 'yes' === get_option( 'snippen_smtp_enabled', 'no' ) ) {
+			add_action( 'phpmailer_init', array( __CLASS__, 'configure_smtp' ) );
+			add_filter( 'wp_mail_from', array( __CLASS__, 'get_mail_from' ) );
+			add_filter( 'wp_mail_from_name', array( __CLASS__, 'get_mail_from_name' ) );
+		}
 	}
 
 	/**
@@ -213,5 +220,48 @@ class Plugin {
 			}
 		});
 		</script>';
+	}
+
+	/**
+	 * Configure PHPMailer to use SMTP
+	 *
+	 * @param object $phpmailer PHPMailer instance.
+	 */
+	public static function configure_smtp( $phpmailer ) {
+		$phpmailer->isSMTP();
+		// phpcs:ignore
+		$phpmailer->Host       = get_option( 'snippen_smtp_host', 'smtp.gmail.com' );
+		// phpcs:ignore
+		$phpmailer->SMTPAuth   = true;
+		// phpcs:ignore
+		$phpmailer->Port       = intval( get_option( 'snippen_smtp_port', 587 ) );
+		// phpcs:ignore
+		$phpmailer->Username   = get_option( 'snippen_smtp_user' );
+		// phpcs:ignore
+		$phpmailer->Password   = get_option( 'snippen_smtp_pass' );
+		// phpcs:ignore
+		$phpmailer->SMTPSecure = get_option( 'snippen_smtp_encryption', 'tls' );
+	}
+
+	/**
+	 * Set the custom email sender
+	 *
+	 * @param string $original_email Original sender email.
+	 * @return string
+	 */
+	public static function get_mail_from( $original_email ) {
+		$from_email = get_option( 'snippen_smtp_from_email' );
+		return ! empty( $from_email ) ? $from_email : $original_email;
+	}
+
+	/**
+	 * Set the custom email sender name
+	 *
+	 * @param string $original_name Original sender name.
+	 * @return string
+	 */
+	public static function get_mail_from_name( $original_name ) {
+		$from_name = get_option( 'snippen_smtp_from_name' );
+		return ! empty( $from_name ) ? $from_name : $original_name;
 	}
 }
