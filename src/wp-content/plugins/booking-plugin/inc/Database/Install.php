@@ -7,18 +7,18 @@ namespace SnippenBooking\Database;
  */
 class Install {
 
-    /**
-     * Run activation tasks
-     */
-    public static function activate() {
-        global $wpdb;
-        $charset_collate = $wpdb->get_charset_collate();
+	/**
+	 * Run activation tasks
+	 */
+	public static function activate() {
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
 
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-        // Booking objects table
-        $table_objects = $wpdb->prefix . 'snippen_booking_objects';
-        $sql_objects = "CREATE TABLE $table_objects (
+		// Booking objects table
+		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
+		$sql_objects   = "CREATE TABLE $table_objects (
             id INT NOT NULL AUTO_INCREMENT,
             name VARCHAR(255) NOT NULL,
             description TEXT,
@@ -28,11 +28,11 @@ class Install {
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta( $sql_objects );
+		dbDelta( $sql_objects );
 
-        // Time slots table
-        $table_slots = $wpdb->prefix . 'snippen_time_slots';
-        $sql_slots = "CREATE TABLE $table_slots (
+		// Time slots table
+		$table_slots = $wpdb->prefix . 'snippen_time_slots';
+		$sql_slots   = "CREATE TABLE $table_slots (
             id INT NOT NULL AUTO_INCREMENT,
             booking_object_id INT NOT NULL,
             name VARCHAR(255) NOT NULL,
@@ -47,11 +47,11 @@ class Install {
             PRIMARY KEY  (id),
             KEY booking_object_id (booking_object_id)
         ) $charset_collate;";
-        dbDelta( $sql_slots );
+		dbDelta( $sql_slots );
 
-        // Bookings table
-        $table_bookings = $wpdb->prefix . 'snippen_bookings';
-        $sql_bookings = "CREATE TABLE $table_bookings (
+		// Bookings table
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$sql_bookings   = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
             facility VARCHAR(50),
             user_id BIGINT UNSIGNED NOT NULL,
@@ -71,11 +71,11 @@ class Install {
             KEY slot_id (slot_id),
             KEY user_id (user_id)
         ) $charset_collate;";
-        dbDelta( $sql_bookings );
+		dbDelta( $sql_bookings );
 
-        // Booking objects junction table (many-to-many relationship)
-        $table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
-        $sql_booking_objects = "CREATE TABLE $table_booking_objects (
+		// Booking objects junction table (many-to-many relationship)
+		$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$sql_booking_objects   = "CREATE TABLE $table_booking_objects (
             id INT NOT NULL AUTO_INCREMENT,
             booking_id BIGINT NOT NULL,
             booking_object_id INT NOT NULL,
@@ -86,11 +86,11 @@ class Install {
             KEY booking_object_id (booking_object_id),
             UNIQUE KEY unique_booking_object (booking_id, booking_object_id)
         ) $charset_collate;";
-        dbDelta( $sql_booking_objects );
+		dbDelta( $sql_booking_objects );
 
-        // Pricing table
-        $table_prices = $wpdb->prefix . 'snippen_prices';
-        $sql_prices = "CREATE TABLE $table_prices (
+		// Pricing table
+		$table_prices = $wpdb->prefix . 'snippen_prices';
+		$sql_prices   = "CREATE TABLE $table_prices (
             id INT NOT NULL AUTO_INCREMENT,
             name VARCHAR(100) NOT NULL,
             description TEXT,
@@ -107,11 +107,11 @@ class Install {
             KEY slot_id (slot_id),
             KEY priority (priority)
         ) $charset_collate;";
-        dbDelta( $sql_prices );
+		dbDelta( $sql_prices );
 
-        // Price booking objects junction table
-        $table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
-        $sql_price_objects = "CREATE TABLE $table_price_objects (
+		// Price booking objects junction table
+		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+		$sql_price_objects   = "CREATE TABLE $table_price_objects (
             id INT NOT NULL AUTO_INCREMENT,
             price_id INT NOT NULL,
             booking_object_id INT NOT NULL,
@@ -120,164 +120,193 @@ class Install {
             KEY booking_object_id (booking_object_id),
             UNIQUE KEY unique_price_object (price_id, booking_object_id)
         ) $charset_collate;";
-        dbDelta( $sql_price_objects );
+		dbDelta( $sql_price_objects );
 
-        // Seed data if empty
-        $object_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_objects" );
-        if ( $object_count == 0 ) {
-            // 1. Festsalen
-            $wpdb->insert( $table_objects, array(
-                'name' => 'Festsalen',
-                'description' => 'Vårt største lokale med plass til mange gjester.'
-            ) );
-            $festsalen_id = $wpdb->insert_id;
+		// Seed data if empty
+		$object_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_objects" );
+		if ( $object_count == 0 ) {
+			// 1. Festsalen
+			$wpdb->insert(
+				$table_objects,
+				array(
+					'name'        => 'Festsalen',
+					'description' => 'Vårt største lokale med plass til mange gjester.',
+				)
+			);
+			$festsalen_id = $wpdb->insert_id;
 
-            // 2. Peisestuen
-            $wpdb->insert( $table_objects, array(
-                'name' => 'Peisestuen',
-                'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.'
-            ) );
-            $peisestuen_id = $wpdb->insert_id;
+			// 2. Peisestuen
+			$wpdb->insert(
+				$table_objects,
+				array(
+					'name'        => 'Peisestuen',
+					'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.',
+				)
+			);
+			$peisestuen_id = $wpdb->insert_id;
 
-            // Seed slots for Festsalen
-            $this_slots = array(
-                array(
-                    'name' => 'Hele dagen',
-                    'description' => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
-                    'start_time' => '11:00:00',
-                    'end_time' => '23:00:00',
-                    'cleanup_hours' => 12,
-                    'allow_multi_object' => 1
-                ),
-                array(
-                    'name' => 'Formiddag',
-                    'description' => 'Fra kl 08:00 til 16:00. Du må vaske og ryddet lokalet når du forlater det.',
-                    'start_time' => '08:00:00',
-                    'end_time' => '16:00:00',
-                    'cleanup_hours' => 0
-                ),
-                array(
-                    'name' => 'Ettermiddag',
-                    'description' => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
-                    'start_time' => '16:00:00',
-                    'end_time' => '23:00:00',
-                    'cleanup_hours' => 9
-                )
-            );
+			// Seed slots for Festsalen
+			$this_slots = array(
+				array(
+					'name'               => 'Hele dagen',
+					'description'        => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
+					'start_time'         => '11:00:00',
+					'end_time'           => '23:00:00',
+					'cleanup_hours'      => 12,
+					'allow_multi_object' => 1,
+				),
+				array(
+					'name'          => 'Formiddag',
+					'description'   => 'Fra kl 08:00 til 16:00. Du må vaske og ryddet lokalet når du forlater det.',
+					'start_time'    => '08:00:00',
+					'end_time'      => '16:00:00',
+					'cleanup_hours' => 0,
+				),
+				array(
+					'name'          => 'Ettermiddag',
+					'description'   => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
+					'start_time'    => '16:00:00',
+					'end_time'      => '23:00:00',
+					'cleanup_hours' => 9,
+				),
+			);
 
-            foreach ( array( $festsalen_id, $peisestuen_id ) as $obj_id ) {
-                foreach ( $this_slots as $slot ) {
-                    $wpdb->insert( $table_slots, array_merge( $slot, array( 'booking_object_id' => $obj_id ) ) );
-                }
-            }
-        }
-        
-        // Seed prices if empty
-        $price_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_prices" );
-        if ( $price_count == 0 ) {
-            $slots = ['Hele dagen', 'Formiddag', 'Ettermiddag'];
-            $base_prices = [
-                'Hele dagen' => 1000,
-                'Formiddag' => 500,
-                'Ettermiddag' => 500
-            ];
+			foreach ( array( $festsalen_id, $peisestuen_id ) as $obj_id ) {
+				foreach ( $this_slots as $slot ) {
+					$wpdb->insert( $table_slots, array_merge( $slot, array( 'booking_object_id' => $obj_id ) ) );
+				}
+			}
+		}
 
-            // 1. Individual prices for each object
-            $objects = $wpdb->get_results( "SELECT id, name FROM $table_objects" );
-            foreach ( $objects as $obj ) {
-                $obj_slots = $wpdb->get_results( $wpdb->prepare("SELECT id, name FROM $table_slots WHERE booking_object_id = %d", $obj->id) );
-                
-                foreach ( $obj_slots as $slot_item ) {
-                    $slot_name = $slot_item->name;
-                    $price = $base_prices[$slot_name] ?? 1000;
-                    # if ($obj->name === 'Peisestuen') $price *= 0.8; // Peisestuen is cheaper
-                    
-                    // Standard Weekday Price (Mon-Thu)
-                    $wpdb->insert( $table_prices, [
-                        'name' => $obj->name . ' - ' . $slot_name . ' (Hverdag)',
-                        'price' => $price,
-                        'slot_id' => $slot_item->id,
-                        'days_of_week' => '1,2,3,4',
-                        'priority' => 0
-                    ] );
-                    $price_id = $wpdb->insert_id;
-                    $wpdb->insert( $table_price_objects, [
-                        'price_id' => $price_id,
-                        'booking_object_id' => $obj->id
-                    ] );
+		// Seed prices if empty
+		$price_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_prices" );
+		if ( $price_count == 0 ) {
+			$slots       = array( 'Hele dagen', 'Formiddag', 'Ettermiddag' );
+			$base_prices = array(
+				'Hele dagen'  => 1000,
+				'Formiddag'   => 500,
+				'Ettermiddag' => 500,
+			);
 
-                    // Weekend Price (Fri-Sun)
-                    $wpdb->insert( $table_prices, [
-                        'name' => $obj->name . ' - ' . $slot_name . ' (Helg)',
-                        'price' => $price * 2,
-                        'slot_id' => $slot_item->id,
-                        'days_of_week' => '5,6,0',
-                        'priority' => 10
-                    ] );
-                    $price_id = $wpdb->insert_id;
-                    $wpdb->insert( $table_price_objects, [
-                        'price_id' => $price_id,
-                        'booking_object_id' => $obj->id
-                    ] );
-                }
-            }
+			// 1. Individual prices for each object
+			$objects = $wpdb->get_results( "SELECT id, name FROM $table_objects" );
+			foreach ( $objects as $obj ) {
+				$obj_slots = $wpdb->get_results( $wpdb->prepare( "SELECT id, name FROM $table_slots WHERE booking_object_id = %d", $obj->id ) );
 
-            // 2. Combined prices (Hele området)
-            // Need a representative slot_id for "Hele dagen"
-            $hele_dagen_slot = $wpdb->get_row("SELECT id FROM $table_slots WHERE name = 'Hele dagen' LIMIT 1");
-            $hele_dagen_id = $hele_dagen_slot ? $hele_dagen_slot->id : 0;
+				foreach ( $obj_slots as $slot_item ) {
+					$slot_name = $slot_item->name;
+					$price     = $base_prices[ $slot_name ] ?? 1000;
+					// if ($obj->name === 'Peisestuen') $price *= 0.8; // Peisestuen is cheaper
 
-            // Standard
-            $wpdb->insert( $table_prices, [
-                'name' => 'Hele området - Hele dagen (Hverdag)',
-                'price' => 2000,
-                'slot_id' => $hele_dagen_id,
-                'days_of_week' => '1,2,3,4',
-                'priority' => 0
-            ] );
-            $combined_price_id = $wpdb->insert_id;
-            foreach ( $objects as $obj ) {
-                $wpdb->insert( $table_price_objects, [
-                    'price_id' => $combined_price_id,
-                    'booking_object_id' => $obj->id
-                ] );
-            }
+					// Standard Weekday Price (Mon-Thu)
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'         => $obj->name . ' - ' . $slot_name . ' (Hverdag)',
+							'price'        => $price,
+							'slot_id'      => $slot_item->id,
+							'days_of_week' => '1,2,3,4',
+							'priority'     => 0,
+						)
+					);
+					$price_id = $wpdb->insert_id;
+					$wpdb->insert(
+						$table_price_objects,
+						array(
+							'price_id'          => $price_id,
+							'booking_object_id' => $obj->id,
+						)
+					);
 
-            // Weekend
-            $wpdb->insert( $table_prices, [
-                'name' => 'Hele området - Hele dagen (Helg)',
-                'price' => 4000,
-                'slot_id' => $hele_dagen_id,
-                'days_of_week' => '5,6,0',
-                'priority' => 10
-            ] );
-            $combined_price_id = $wpdb->insert_id;
-            foreach ( $objects as $obj ) {
-                $wpdb->insert( $table_price_objects, [
-                    'price_id' => $combined_price_id,
-                    'booking_object_id' => $obj->id
-                ] );
-            }
+					// Weekend Price (Fri-Sun)
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'         => $obj->name . ' - ' . $slot_name . ' (Helg)',
+							'price'        => $price * 2,
+							'slot_id'      => $slot_item->id,
+							'days_of_week' => '5,6,0',
+							'priority'     => 10,
+						)
+					);
+					$price_id = $wpdb->insert_id;
+					$wpdb->insert(
+						$table_price_objects,
+						array(
+							'price_id'          => $price_id,
+							'booking_object_id' => $obj->id,
+						)
+					);
+				}
+			}
 
-            // 3. Special Holiday Price (General)
-            // $wpdb->insert( $table_prices, [
-            //     'name' => 'Helligdagstillegg (Alle lokaler)',
-            //     'price' => 8000,
-            //     'slot_id' => $hele_dagen_id,
-            //     'is_holiday' => 1,
-            //     'priority' => 100
-            // ] );
-            // $holiday_price_id = $wpdb->insert_id;
-            // foreach ( $objects as $obj ) {
-            //     $wpdb->insert( $table_price_objects, [
-            //         'price_id' => $holiday_price_id,
-            //         'booking_object_id' => $obj->id
-            //     ] );
-            // }
-        }
+			// 2. Combined prices (Hele området)
+			// Need a representative slot_id for "Hele dagen"
+			$hele_dagen_slot = $wpdb->get_row( "SELECT id FROM $table_slots WHERE name = 'Hele dagen' LIMIT 1" );
+			$hele_dagen_id   = $hele_dagen_slot ? $hele_dagen_slot->id : 0;
 
-        // Run migrations
-        MigrationManager::run();
-    }
+			// Standard
+			$wpdb->insert(
+				$table_prices,
+				array(
+					'name'         => 'Hele området - Hele dagen (Hverdag)',
+					'price'        => 2000,
+					'slot_id'      => $hele_dagen_id,
+					'days_of_week' => '1,2,3,4',
+					'priority'     => 0,
+				)
+			);
+			$combined_price_id = $wpdb->insert_id;
+			foreach ( $objects as $obj ) {
+				$wpdb->insert(
+					$table_price_objects,
+					array(
+						'price_id'          => $combined_price_id,
+						'booking_object_id' => $obj->id,
+					)
+				);
+			}
+
+			// Weekend
+			$wpdb->insert(
+				$table_prices,
+				array(
+					'name'         => 'Hele området - Hele dagen (Helg)',
+					'price'        => 4000,
+					'slot_id'      => $hele_dagen_id,
+					'days_of_week' => '5,6,0',
+					'priority'     => 10,
+				)
+			);
+			$combined_price_id = $wpdb->insert_id;
+			foreach ( $objects as $obj ) {
+				$wpdb->insert(
+					$table_price_objects,
+					array(
+						'price_id'          => $combined_price_id,
+						'booking_object_id' => $obj->id,
+					)
+				);
+			}
+
+			// 3. Special Holiday Price (General)
+			// $wpdb->insert( $table_prices, [
+			// 'name' => 'Helligdagstillegg (Alle lokaler)',
+			// 'price' => 8000,
+			// 'slot_id' => $hele_dagen_id,
+			// 'is_holiday' => 1,
+			// 'priority' => 100
+			// ] );
+			// $holiday_price_id = $wpdb->insert_id;
+			// foreach ( $objects as $obj ) {
+			// $wpdb->insert( $table_price_objects, [
+			// 'price_id' => $holiday_price_id,
+			// 'booking_object_id' => $obj->id
+			// ] );
+			// }
+		}
+
+		// Run migrations
+		MigrationManager::run();
+	}
 }
-

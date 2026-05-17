@@ -36,10 +36,10 @@ class AccountConfirmationService {
 	 */
 	public function generate_code( int $user_id ): string {
 		$code = sprintf( '%06d', wp_rand( 0, 999999 ) );
-		
+
 		update_user_meta( $user_id, 'snippen_confirmation_code', $code );
 		update_user_meta( $user_id, 'snippen_confirmation_code_expiry', time() + ( 15 * MINUTE_IN_SECONDS ) );
-		
+
 		return $code;
 	}
 
@@ -59,7 +59,7 @@ class AccountConfirmationService {
 			return false;
 		}
 
-		$code = $this->generate_code( $user_id );
+		$code    = $this->generate_code( $user_id );
 		$message = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
 
 		return $this->sms_service->send( $phone, $message );

@@ -32,14 +32,18 @@ class AccountConfirmationShortcode {
 		wp_enqueue_style( 'snippen-booking-public', plugins_url( 'css/booking.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );
 		wp_enqueue_script( 'snippen-account-confirmation', plugins_url( 'js/account-confirmation.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), '1.1.0', true );
 
-		wp_localize_script( 'snippen-account-confirmation', 'snippenConfirmation', array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'snippen_confirmation_nonce' ),
-			'strings' => array(
-				'error'   => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
-				'success' => __( 'Din konto er nå bekreftet! Du blir videresendt til innlogging.', 'snippen-booking' )
+		wp_localize_script(
+			'snippen-account-confirmation',
+			'snippenConfirmation',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'snippen_confirmation_nonce' ),
+				'strings' => array(
+					'error'   => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
+					'success' => __( 'Din konto er nå bekreftet! Du blir videresendt til innlogging.', 'snippen-booking' ),
+				),
 			)
-		) );
+		);
 
 		ob_start();
 		?>
