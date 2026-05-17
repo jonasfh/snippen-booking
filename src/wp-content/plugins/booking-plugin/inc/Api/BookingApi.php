@@ -131,8 +131,11 @@ class BookingApi {
 			$price = 0;
 		}
 
+		$uuid = wp_generate_uuid4();
+
 		// Insert single booking record
 		$booking_data = array(
+			'uuid'           => $uuid,
 			'booking_date'   => $booking_date,
 			'user_id'        => $booking_user_id,
 			'slot_id'        => $first_slot_id,
@@ -191,10 +194,12 @@ class BookingApi {
 			// Send SMS notification
 			if ( 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled' ) ) {
 				$sms_service = new \SnippenBooking\Service\KeySmsService();
+				$sms_link    = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
 				$sms_message = sprintf(
-					__( 'Takk for din bookingforespørsel for %1$s den %2$s. Vi kontakter deg snart.', 'snippen-booking' ),
+					__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),
 					$object_names,
-					$booking_date
+					$booking_date,
+					$sms_link
 				);
 				$sms_service->send( $customer_phone, $sms_message );
 			}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Snippen Booking
  * Description: Booking plugin for Snippen community house.
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: Snippen
  * Text Domain: snippen-booking
  * License: GPLv2 or later
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define version constant
-define( 'SNIPPEN_BOOKING_VERSION', '1.3.1' );
+define( 'SNIPPEN_BOOKING_VERSION', '1.3.2' );
 
 // Load autoloader
 require_once __DIR__ . '/autoloader.php';

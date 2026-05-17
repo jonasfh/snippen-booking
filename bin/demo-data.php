@@ -150,6 +150,7 @@ if ($action === 'generate') {
                 // Insert main booking
                 $phone = get_user_meta($user->ID, 'snippen_phone', true) ?: '+4799887766';
                 $wpdb->insert($table_bookings, array(
+                    'uuid' => wp_generate_uuid4(),
                     'user_id' => $user->ID,
                     'slot_id' => (int) $first_slot_id,
                     'booking_date' => $date_str,
@@ -201,6 +202,7 @@ if ($action === 'generate') {
                     // Insert booking record
                     $phone = get_user_meta($user->ID, 'snippen_phone', true) ?: '+4712345678';
                     $wpdb->insert($table_bookings, array(
+                        'uuid' => wp_generate_uuid4(),
                         'user_id' => $user->ID,
                         'slot_id' => (int) $slot->id,
                         'booking_date' => $date_str,
