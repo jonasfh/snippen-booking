@@ -25,6 +25,8 @@ Guide AI agents working in this repository.
 - **ALWAYS suggest a commit message** Focus on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without qusotes.
 - **GitHub Issue Workflow**: When tasked with solving a specific GitHub issue (e.g., "solve issue #15"), follow the dedicated workflow below.
 - **ALWAYS update version and changelog when changes to src/ folder is made**
+- **Always keep README.md updated with user-related changes**
+- **Always keep DEV_README.md updated with developer-related changes**
 
 ## Plugin Structure
 

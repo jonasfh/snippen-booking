@@ -65,7 +65,7 @@ class UserBookingsPage {
 
 		$query = $wpdb->prepare(
 			"
-            SELECT b.*, s.name as slot_name 
+            SELECT b.*, s.name as slot_name, s.start_time, s.end_time 
             FROM $table_bookings b 
             LEFT JOIN $table_slots s ON b.slot_id = s.id 
             WHERE b.user_id = %d AND b.deleted_at IS NULL",
@@ -170,12 +170,22 @@ class UserBookingsPage {
 		echo '</div></td></tr>';
 
 		// Details Row
+		\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
+
+		$door_code_display = '';
+		if ( \SnippenBooking\Service\DoorCodeService::is_in_window( $booking ) ) {
+			$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
+		} else {
+			$door_code_display = '<span style="color:#64748b; font-style:italic;">' . esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' ) . '</span>';
+		}
+
 		echo '<tr class="snippen-details-row" id="details-' . $booking->id . '" style="display:none; background:#f8fafc;">';
 		echo '<td colspan="6" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
-		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:30px;">';
+		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:30px;">';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Booket den:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->created_at ) . '</div>';
+		echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>' . $door_code_display . '</div>';
 		echo '</div></td></tr>';
 	}
 
