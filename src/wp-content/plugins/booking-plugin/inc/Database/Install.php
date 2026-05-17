@@ -53,6 +53,7 @@ class Install {
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$sql_bookings   = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
+            uuid VARCHAR(36) NULL,
             facility VARCHAR(50),
             user_id BIGINT UNSIGNED NOT NULL,
             slot_id INT NOT NULL,
@@ -67,6 +68,7 @@ class Install {
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id),
+            UNIQUE KEY uuid (uuid),
             KEY booking_date (booking_date),
             KEY slot_id (slot_id),
             KEY user_id (user_id)

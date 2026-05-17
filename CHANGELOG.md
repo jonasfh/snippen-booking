@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.2] - 2026-05-17
+### Added
+- **Secure Single Booking Popup**: Implemented a secure read-only single booking popup overlay on the front-end when `booking_uuid` is detected in the URL query parameters.
+- **Access Control & Redirect**: Restricts booking details access to only the booking owner or administrators, prompting guest visitors with a premium Vipps login overlay that redirects back seamlessly after login.
+- **Database & Data Migration**: Added a unique `uuid` column to the bookings database table and automatically backfilled existing records with unique UUIDs.
+- **SMS Integration**: Updated the booking confirmation SMS to include the direct, non-guessable popup link to their booking.
+- **Demo Generator UUIDs**: Enforced secure UUID generation in `demo-bookings` creation script.
+
 ## [1.3.1] - 2026-05-17
 ### Added
 - **Tagged Booking Pages**: Enabled tag (post_tag) support for WordPress pages. Pages tagged with `snippen-booking` will now display as quick links at the top of the Admin Booking overview page.
