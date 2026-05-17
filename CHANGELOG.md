@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2] - 2026-05-17
+### Added
+- **SMS Fallback to Email**: Implemented a comprehensive email fallback for SMS when SMS options are disabled in WordPress settings.
+  - **Account Confirmation**: If account confirmation SMS is disabled, the verification code is sent via email fallback. Step-by-step UI instructions and AJAX responses are dynamically updated to guide the user accordingly.
+  - **Booking Confirmation**: If booking confirmation SMS is disabled, customers automatically receive their booking details and unique UUID link via email.
+  - **Integration Tests**: Added `SmsFallbackTest` suite covering fallback notification scenarios for both account and booking processes.
+
 ## [1.4.1] - 2026-05-17
 ### Fixed
 - **Norwegian Holiday Timezone Bug**: Resolved a timezone mismatch/DST transition bug in `HolidayService` where Easter-based moving holidays (such as 2. pinsedag / Whit Monday) would shift to the wrong date if the PHP default timezone was different from the system timezone (a common scenario in WordPress sites set to UTC). Implemented a robust, mathematically exact, and timezone-independent calculation using `easter_days()` and `DateTimeImmutable`.

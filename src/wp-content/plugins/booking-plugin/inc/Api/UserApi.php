@@ -91,15 +91,20 @@ class UserApi {
 			wp_send_json_error( array( 'message' => 'Kontoen er allerede bekreftet. Vennligst logg inn.' ) );
 		}
 
+		$sms_enabled = 'yes' === get_option( 'snippen_sms_account_confirmation_enabled' );
 		if ( $service->send_code( $user->ID ) ) {
 			wp_send_json_success(
 				array(
-					'message' => 'Bekreftelseskode er sendt på SMS.',
+					'message' => $sms_enabled ? __( 'Bekreftelseskode er sendt på SMS.', 'snippen-booking' ) : __( 'Bekreftelseskode er sendt på e-post.', 'snippen-booking' ),
 					'user_id' => $user->ID,
 				)
 			);
 		} else {
-			wp_send_json_error( array( 'message' => 'Kunne ikke sende SMS. Kontakt administrator.' ) );
+			wp_send_json_error(
+				array(
+					'message' => $sms_enabled ? __( 'Kunne ikke sende SMS. Kontakt administrator.', 'snippen-booking' ) : __( 'Kunne ikke sende e-post. Kontakt administrator.', 'snippen-booking' ),
+				)
+			);
 		}
 	}
 

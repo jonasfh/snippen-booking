@@ -202,6 +202,26 @@ class BookingApi {
 					$sms_link
 				);
 				$sms_service->send( $customer_phone, $sms_message );
+			} else {
+				// Send via email fallback!
+				$sms_link     = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
+				$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
+				$mail_message = sprintf(
+					__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
+					$object_names,
+					$booking_date,
+					$sms_link
+				);
+				$recipient = $customer_email;
+				if ( empty( $recipient ) ) {
+					$user = get_userdata( $booking_user_id );
+					if ( $user ) {
+						$recipient = $user->user_email;
+					}
+				}
+				if ( ! empty( $recipient ) ) {
+					wp_mail( $recipient, $subject, $mail_message );
+				}
 			}
 
 			wp_send_json_success(
