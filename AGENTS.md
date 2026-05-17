@@ -22,7 +22,7 @@ Guide AI agents working in this repository.
 - **Always include created_at and modified_at timestamps on database tables**
 - **Check for latest versions**: Always ensure that the latest available versions of frameworks, libraries, and GitHub Actions are used, unless there is a specific reason not to. If old versions are discovered, notify the developer.
 - **DO NOT commit or push changes** (the USER handles version control), **EXCEPT** when following the "GitHub Issue Workflow" below.
-- Always suggest a commit message focused on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without quotes.
+- **ALWAYS suggest a commit message** Focus on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without qusotes.
 - **GitHub Issue Workflow**: When tasked with solving a specific GitHub issue (e.g., "solve issue #15"), follow the dedicated workflow below.
 
 ## Plugin Structure
@@ -114,7 +114,7 @@ class AvailabilityApiTest extends TestCase {
 - Plugin is symlinked into WordPress at `/wordpress/wp-content/plugins/snippen-booking`
 - Use `wp-cli` for WordPress operations
 - Use `composer` for dependencies and test commands
-- Always run tests before committing
+- Always run tests after changes in code
 
 ## Common Commands (in container terminal)
 
