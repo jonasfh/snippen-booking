@@ -55,7 +55,10 @@ foreach ($objects as $obj) {
         'post_status'  => 'publish',
         'post_author'  => 1,
     );
-    wp_insert_post( $new_page );
+    $post_id = wp_insert_post( $new_page );
+    if ( $post_id && ! is_wp_error( $post_id ) ) {
+        wp_set_object_terms( $post_id, 'snippen-booking', 'post_tag' );
+    }
     echo "Created: $page_title\n";
 }
 
@@ -71,7 +74,10 @@ if (count($objects) > 1) {
         'post_status'  => 'publish',
         'post_author'  => 1,
     );
-    wp_insert_post( $new_page );
+    $post_id = wp_insert_post( $new_page );
+    if ( $post_id && ! is_wp_error( $post_id ) ) {
+        wp_set_object_terms( $post_id, 'snippen-booking', 'post_tag' );
+    }
     echo "Created: $page_title\n";
 }
 
