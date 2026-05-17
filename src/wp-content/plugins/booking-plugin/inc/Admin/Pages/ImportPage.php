@@ -107,7 +107,24 @@ class ImportPage {
 		echo '</form>';
 		echo '</div>';
 
-		// Inline Javascript to toggle the mapping field dynamically
+		// Glassmorphic Loading Overlay
+		echo '<div id="snippen-import-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; justify-content: center; align-items: center; flex-direction: column; color: #fff; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">';
+		echo '<div style="background: rgba(30, 41, 59, 0.95); padding: 40px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); margin: 20px;">';
+		echo '<div class="snippen-spinner-ring" style="width: 70px; height: 70px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: snippen-spin 1s infinite linear; margin: 0 auto 24px auto;"></div>';
+		echo '<h3 style="color: #f8fafc; font-size: 20px; font-weight: 600; margin: 0 0 12px 0; border: none; padding: 0; line-height: 1.2;">' . esc_html__( 'Behandler import...', 'snippen-booking' ) . '</h3>';
+		echo '<p style="color: #94a3b8; font-size: 14px; margin: 0 0 20px 0; line-height: 1.5;">' . esc_html__( 'Vennligst vent mens vi synkroniserer og oppdaterer beboerlisten. Dette kan ta noen sekunder.', 'snippen-booking' ) . '</p>';
+		echo '<p style="color: #ef4444; font-size: 11px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">' . esc_html__( 'Lukk eller oppdater ikke dette vinduet', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+		echo '</div>';
+
+		echo '<style>
+		@keyframes snippen-spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+		</style>';
+
+		// Inline Javascript to toggle the mapping field dynamically and show overlay on submit
 		echo '<script>
 		function toggleMappingField() {
 			var format = document.getElementById("snippen_import_format").value;
@@ -118,6 +135,18 @@ class ImportPage {
 				container.style.display = "none";
 			}
 		}
+
+		document.addEventListener("DOMContentLoaded", function() {
+			var form = document.querySelector(".snippen-card form");
+			if (form) {
+				form.addEventListener("submit", function() {
+					var overlay = document.getElementById("snippen-import-overlay");
+					if (overlay) {
+						overlay.style.display = "flex";
+					}
+				});
+			}
+		});
 		</script>';
 	}
 
@@ -131,7 +160,10 @@ class ImportPage {
 			return false;
 		}
 
-		set_time_limit( 0 ); // Prevent timeout for larger lists
+		if ( ! ini_get( 'safe_mode' ) ) {
+			@set_time_limit( 0 ); // Prevent timeout for larger lists
+		}
+		@ignore_user_abort( true ); // Keep running even if client disconnects
 
 		$raw_data = isset( $_POST['snippen_import_data'] ) ? trim( $_POST['snippen_import_data'] ) : '';
 		$format   = isset( $_POST['snippen_import_format'] ) ? sanitize_text_field( $_POST['snippen_import_format'] ) : 'line';
