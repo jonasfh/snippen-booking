@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.1] - 2026-05-17
+### Fixed
+- **Norwegian Holiday Timezone Bug**: Resolved a timezone mismatch/DST transition bug in `HolidayService` where Easter-based moving holidays (such as 2. pinsedag / Whit Monday) would shift to the wrong date if the PHP default timezone was different from the system timezone (a common scenario in WordPress sites set to UTC). Implemented a robust, mathematically exact, and timezone-independent calculation using `easter_days()` and `DateTimeImmutable`.
+- **Unit Tests**: Added complete test coverage for moving and fixed holidays across multiple years under mismatched timezone conditions.
+
 ## [1.4.0] - 2026-05-17
 ### Added
 - **Door Code Support for Venues**: Added a `door_code` field to booking objects (rooms/venues) inside the Admin booking objects screen.
