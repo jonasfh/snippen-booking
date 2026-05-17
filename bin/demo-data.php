@@ -56,6 +56,12 @@ if ($action === 'clear') {
             wp_delete_user($sub->ID);
         }
     }
+    $residents = get_users(['role' => 'holmen_resident']);
+    foreach ($residents as $res) {
+        if (strpos($res->user_email, '@example.no') !== false) {
+            wp_delete_user($res->ID);
+        }
+    }
     echo "Success: Demo users cleared.\n";
 
     exit(0);
@@ -79,7 +85,7 @@ if ($action === 'users') {
                 'user_pass'  => 'demo',
                 'user_email' => $email,
                 'display_name' => $first . ' ' . $last,
-                'role'       => 'subscriber'
+                'role'       => 'holmen_resident'
             ]);
             if (!is_wp_error($user_id)) {
                 $phone = '+47' . (rand(0, 1) ? '4' : '9') . rand(1000000, 9999999);
@@ -114,8 +120,8 @@ if ($action === 'generate') {
         $service = new \SnippenBooking\Service\AvailabilityService();
         $pricing_service = new \SnippenBooking\Service\PricingService();
         
-        // Fetch subscriber users to link bookings
-        $subscriber_users = get_users(['role' => 'subscriber', 'fields' => ['ID', 'display_name', 'user_email']]);
+        // Fetch holmen_resident users to link bookings
+        $subscriber_users = get_users(['role' => 'holmen_resident', 'fields' => ['ID', 'display_name', 'user_email']]);
         $default_admin = get_users(['role' => 'administrator', 'number' => 1, 'fields' => ['ID', 'display_name', 'user_email']])[0];
 
         // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele dagen")

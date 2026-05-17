@@ -39,7 +39,7 @@ if (username_exists($username)) {
         'user_email' => $email,
         'user_pass' => $pass,
         'display_name' => $name,
-        'role' => 'subscriber'
+        'role' => 'holmen_resident'
     ]);
 } else {
     $user_id = wp_insert_user([
@@ -47,7 +47,7 @@ if (username_exists($username)) {
         'user_pass'  => $pass,
         'user_email' => $email,
         'display_name' => $name,
-        'role'       => 'subscriber'
+        'role'       => 'holmen_resident'
     ]);
     
     if (is_wp_error($user_id)) {
@@ -63,4 +63,4 @@ echo "Success: Test user set up.\n";
 echo "Username: $username\n";
 echo "Email: $email\n";
 echo "Phone: $phone\n";
-echo "Role: subscriber\n";
+echo "Role: holmen_resident\n";
