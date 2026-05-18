@@ -8,18 +8,40 @@ namespace SnippenBooking\Admin\Pages;
 class PricingPage {
 
 	/**
+	 * Validation errors
+	 * @var array
+	 */
+	private $errors = array();
+
+	/**
 	 * Render the page
 	 */
 	public function render() {
 		$action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : 'list';
 		$id     = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
 
-		// Handle POST submissions
-		$this->handle_request();
-
 		echo '<div class="snippen-booking-admin-wrap">';
 
 		$this->render_header( $action );
+
+		// Render any validation errors
+		if ( ! empty( $this->errors ) ) {
+			foreach ( $this->errors as $error ) {
+				echo '<div class="notice notice-error"><p>' . esc_html( $error ) . '</p></div>';
+			}
+		}
+
+		// Render success/info messages passed in query params
+		if ( isset( $_GET['message'] ) ) {
+			$msg_type = sanitize_text_field( $_GET['message'] );
+			if ( $msg_type === 'created' ) {
+				$this->show_message( __( 'Prisregel lagret.', 'snippen-booking' ) );
+			} elseif ( $msg_type === 'updated' ) {
+				$this->show_message( __( 'Prisregel oppdatert.', 'snippen-booking' ) );
+			} elseif ( $msg_type === 'deleted' ) {
+				$this->show_message( __( 'Prisregel slettet.', 'snippen-booking' ) );
+			}
+		}
 
 		switch ( $action ) {
 			case 'add':
@@ -61,7 +83,7 @@ class PricingPage {
 	/**
 	 * Handle POST requests (Save/Delete)
 	 */
-	private function handle_request() {
+	public function handle_request() {
 		if ( ! isset( $_POST['snippen_price_nonce'] ) || ! wp_verify_nonce( $_POST['snippen_price_nonce'], 'snippen_save_price' ) ) {
 			if ( isset( $_GET['action'] ) && $_GET['action'] === 'delete' && isset( $_GET['id'] ) ) {
 				if ( isset( $_GET['_wpnonce'] ) && wp_verify_nonce( $_GET['_wpnonce'], 'delete_price_' . $_GET['id'] ) ) {
@@ -91,7 +113,7 @@ class PricingPage {
 		$object_ids = isset( $_POST['object_ids'] ) ? array_map( 'intval', $_POST['object_ids'] ) : array();
 
 		if ( empty( $object_ids ) ) {
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'Du må velge minst ett lokale.', 'snippen-booking' ) . '</p></div>';
+			$this->errors[] = __( 'Du må velge minst ett lokale.', 'snippen-booking' );
 			return;
 		}
 
@@ -109,12 +131,12 @@ class PricingPage {
 
 		if ( $id > 0 ) {
 			$wpdb->update( $table_prices, $data, array( 'id' => $id ) );
-			$this->show_message( __( 'Prisregel oppdatert.', 'snippen-booking' ) );
+			$message_key = 'updated';
 		} else {
 			$data['created_at'] = current_time( 'mysql' );
 			$wpdb->insert( $table_prices, $data );
 			$id = $wpdb->insert_id;
-			$this->show_message( __( 'Prisregel lagret.', 'snippen-booking' ) );
+			$message_key = 'created';
 		}
 
 		// Update objects junction
@@ -129,10 +151,12 @@ class PricingPage {
 			);
 		}
 
-		if ( ! isset( $_POST['id'] ) || $_POST['id'] == 0 ) {
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing' ) );
-			exit;
+		if ( $message_key === 'created' ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&message=created' ) );
+		} else {
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $id . '&message=updated' ) );
 		}
+		exit;
 	}
 
 	/**
@@ -145,7 +169,8 @@ class PricingPage {
 
 		$wpdb->delete( $table_price_objects, array( 'price_id' => $id ) );
 		$wpdb->delete( $table_prices, array( 'id' => $id ) );
-		$this->show_message( __( 'Prisregel slettet.', 'snippen-booking' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&message=deleted' ) );
+		exit;
 	}
 
 	/**

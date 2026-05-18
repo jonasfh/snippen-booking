@@ -14,12 +14,21 @@ class BookingObjectsPage {
 		$action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : 'list';
 		$id     = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
 
-		// Handle POST submissions
-		$this->handle_request();
-
 		echo '<div class="snippen-booking-admin-wrap">';
 
 		$this->render_header( $action );
+
+		// Render success/info messages passed in query params
+		if ( isset( $_GET['message'] ) ) {
+			$msg_type = sanitize_text_field( $_GET['message'] );
+			if ( $msg_type === 'created' ) {
+				$this->show_message( __( 'Lokale lagret.', 'snippen-booking' ) );
+			} elseif ( $msg_type === 'updated' ) {
+				$this->show_message( __( 'Lokale oppdatert.', 'snippen-booking' ) );
+			} elseif ( $msg_type === 'deleted' ) {
+				$this->show_message( __( 'Lokale slettet.', 'snippen-booking' ) );
+			}
+		}
 
 		switch ( $action ) {
 			case 'add':
@@ -61,7 +70,7 @@ class BookingObjectsPage {
 	/**
 	 * Handle POST requests (Save/Delete)
 	 */
-	private function handle_request() {
+	public function handle_request() {
 		if ( ! isset( $_POST['snippen_object_nonce'] ) || ! wp_verify_nonce( $_POST['snippen_object_nonce'], 'snippen_save_object' ) ) {
 
 			// Check for delete action (GET)
@@ -93,23 +102,24 @@ class BookingObjectsPage {
 			$old_door_code = $wpdb->get_var( $wpdb->prepare( "SELECT door_code FROM $table WHERE id = %d", $id ) );
 
 			$wpdb->update( $table, $data, array( 'id' => $id ) );
-			$this->show_message( __( 'Lokale oppdatert.', 'snippen-booking' ) );
 
 			if ( $old_door_code !== $door_code ) {
 				\SnippenBooking\Service\DoorCodeService::handle_object_door_code_change( $id, $door_code );
 			}
+
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects&action=edit&id=' . $id . '&message=updated' ) );
+			exit;
 		} else {
 			$data['created_at'] = current_time( 'mysql' );
 			$wpdb->insert( $table, $data );
 			$new_id = $wpdb->insert_id;
-			$this->show_message( __( 'Lokale lagret.', 'snippen-booking' ) );
 
 			if ( ! empty( $door_code ) ) {
 				\SnippenBooking\Service\DoorCodeService::handle_object_door_code_change( $new_id, $door_code );
 			}
 
 			// Redirect to list
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects&message=created' ) );
 			exit;
 		}
 	}
@@ -121,7 +131,8 @@ class BookingObjectsPage {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_booking_objects';
 		$wpdb->update( $table, array( 'deleted_at' => current_time( 'mysql' ) ), array( 'id' => $id ) );
-		$this->show_message( __( 'Lokale slettet.', 'snippen-booking' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects&message=deleted' ) );
+		exit;
 	}
 
 	/**
