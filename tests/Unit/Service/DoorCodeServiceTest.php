@@ -153,9 +153,9 @@ class DoorCodeServiceTest extends TestCase {
 		);
 
 		// Fake/force slot times so it is definitely in the window
-		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 2 hours' ) );
-		$booking->start_time   = date( 'H:i:s', strtotime( $mysql_now . ' + 2 hours' ) );
-		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' + 5 hours' ) );
+		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 12 hours' ) );
+		$booking->start_time   = '12:00:00';
+		$booking->end_time     = '16:00:00';
 
 		// Sync door code
 		DoorCodeService::sync_booking_door_code( $booking );
@@ -166,9 +166,9 @@ class DoorCodeServiceTest extends TestCase {
 		$this->assertEquals( '9876', $booking->door_code );
 
 		// Now force the slot times so it is outside the window (past)
-		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' - 10 hours' ) );
-		$booking->start_time   = date( 'H:i:s', strtotime( $mysql_now . ' - 10 hours' ) );
-		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' - 5 hours' ) );
+		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' - 3 days' ) );
+		$booking->start_time   = '12:00:00';
+		$booking->end_time     = '16:00:00';
 
 		// Sync again
 		DoorCodeService::sync_booking_door_code( $booking );
@@ -247,9 +247,9 @@ class DoorCodeServiceTest extends TestCase {
 		);
 
 		// Fake/force slot times so it is inside the window
-		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 1 hours' ) );
-		$booking->start_time   = date( 'H:i:s', strtotime( $mysql_now . ' + 1 hours' ) );
-		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' + 4 hours' ) );
+		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 12 hours' ) );
+		$booking->start_time   = '12:00:00';
+		$booking->end_time     = '16:00:00';
 
 		// Sync door code
 		DoorCodeService::sync_booking_door_code( $booking );

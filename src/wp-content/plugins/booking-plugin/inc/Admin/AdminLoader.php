@@ -8,6 +8,24 @@ namespace SnippenBooking\Admin;
 class AdminLoader {
 
 	/**
+	 * BookingObjectsPage instance
+	 * @var \SnippenBooking\Admin\Pages\BookingObjectsPage|null
+	 */
+	private static $objects_page_instance = null;
+
+	/**
+	 * TimeSlotsPage instance
+	 * @var \SnippenBooking\Admin\Pages\TimeSlotsPage|null
+	 */
+	private static $slots_page_instance = null;
+
+	/**
+	 * PricingPage instance
+	 * @var \SnippenBooking\Admin\Pages\PricingPage|null
+	 */
+	private static $pricing_page_instance = null;
+
+	/**
 	 * Register admin hooks
 	 */
 	public static function register() {
@@ -55,7 +73,7 @@ class AdminLoader {
 			array( self::class, 'render_bookings_page' )
 		);
 
-		add_submenu_page(
+		$objects_hook = add_submenu_page(
 			'snippen-booking',
 			__( 'Lokaler', 'snippen-booking' ),
 			__( 'Lokaler', 'snippen-booking' ),
@@ -64,7 +82,7 @@ class AdminLoader {
 			array( self::class, 'render_objects_page' )
 		);
 
-		add_submenu_page(
+		$slots_hook = add_submenu_page(
 			'snippen-booking',
 			__( 'Tidsluker', 'snippen-booking' ),
 			__( 'Tidsluker', 'snippen-booking' ),
@@ -73,7 +91,7 @@ class AdminLoader {
 			array( self::class, 'render_slots_page' )
 		);
 
-		add_submenu_page(
+		$pricing_hook = add_submenu_page(
 			'snippen-booking',
 			__( 'Prisregler', 'snippen-booking' ),
 			__( 'Prisregler', 'snippen-booking' ),
@@ -99,6 +117,46 @@ class AdminLoader {
 			'snippen-booking-import',
 			array( self::class, 'render_import_page' )
 		);
+
+		if ( $objects_hook ) {
+			add_action( 'load-' . $objects_hook, array( self::class, 'handle_objects_page_save' ) );
+		}
+		if ( $slots_hook ) {
+			add_action( 'load-' . $slots_hook, array( self::class, 'handle_slots_page_save' ) );
+		}
+		if ( $pricing_hook ) {
+			add_action( 'load-' . $pricing_hook, array( self::class, 'handle_pricing_page_save' ) );
+		}
+	}
+
+	/**
+	 * Handle Objects Page save early (before headers)
+	 */
+	public static function handle_objects_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\BookingObjectsPage' ) ) {
+			self::$objects_page_instance = new \SnippenBooking\Admin\Pages\BookingObjectsPage();
+			self::$objects_page_instance->handle_request();
+		}
+	}
+
+	/**
+	 * Handle Slots Page save early (before headers)
+	 */
+	public static function handle_slots_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\TimeSlotsPage' ) ) {
+			self::$slots_page_instance = new \SnippenBooking\Admin\Pages\TimeSlotsPage();
+			self::$slots_page_instance->handle_request();
+		}
+	}
+
+	/**
+	 * Handle Pricing Page save early (before headers)
+	 */
+	public static function handle_pricing_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\PricingPage' ) ) {
+			self::$pricing_page_instance = new \SnippenBooking\Admin\Pages\PricingPage();
+			self::$pricing_page_instance->handle_request();
+		}
 	}
 
 	/**
@@ -143,7 +201,9 @@ class AdminLoader {
 	 * Render Objects Page
 	 */
 	public static function render_objects_page() {
-		if ( class_exists( 'SnippenBooking\Admin\Pages\BookingObjectsPage' ) ) {
+		if ( self::$objects_page_instance ) {
+			self::$objects_page_instance->render();
+		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\BookingObjectsPage' ) ) {
 			$page = new \SnippenBooking\Admin\Pages\BookingObjectsPage();
 			$page->render();
 		} else {
@@ -155,7 +215,9 @@ class AdminLoader {
 	 * Render Slots Page
 	 */
 	public static function render_slots_page() {
-		if ( class_exists( 'SnippenBooking\Admin\Pages\TimeSlotsPage' ) ) {
+		if ( self::$slots_page_instance ) {
+			self::$slots_page_instance->render();
+		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\TimeSlotsPage' ) ) {
 			$page = new \SnippenBooking\Admin\Pages\TimeSlotsPage();
 			$page->render();
 		} else {
@@ -167,7 +229,9 @@ class AdminLoader {
 	 * Render Pricing Page
 	 */
 	public static function render_pricing_page() {
-		if ( class_exists( 'SnippenBooking\Admin\Pages\PricingPage' ) ) {
+		if ( self::$pricing_page_instance ) {
+			self::$pricing_page_instance->render();
+		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\PricingPage' ) ) {
 			$page = new \SnippenBooking\Admin\Pages\PricingPage();
 			$page->render();
 		} else {

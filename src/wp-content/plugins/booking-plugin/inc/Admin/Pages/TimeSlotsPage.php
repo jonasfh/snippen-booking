@@ -15,12 +15,21 @@ class TimeSlotsPage {
 		$id            = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
 		$object_filter = isset( $_GET['object_id'] ) ? intval( $_GET['object_id'] ) : 0;
 
-		// Handle POST submissions
-		$this->handle_request();
-
 		echo '<div class="snippen-booking-admin-wrap">';
 
 		$this->render_header( $action );
+
+		// Render success/info messages passed in query params
+		if ( isset( $_GET['message'] ) ) {
+			$msg_type = sanitize_text_field( $_GET['message'] );
+			if ( $msg_type === 'created' ) {
+				$this->show_message( __( 'Tidsluke lagret.', 'snippen-booking' ) );
+			} elseif ( $msg_type === 'updated' ) {
+				$this->show_message( __( 'Tidsluke oppdatert.', 'snippen-booking' ) );
+			} elseif ( $msg_type === 'deleted' ) {
+				$this->show_message( __( 'Tidsluke slettet.', 'snippen-booking' ) );
+			}
+		}
 
 		switch ( $action ) {
 			case 'add':
@@ -62,7 +71,7 @@ class TimeSlotsPage {
 	/**
 	 * Handle POST requests (Save/Delete)
 	 */
-	private function handle_request() {
+	public function handle_request() {
 		if ( ! isset( $_POST['snippen_slot_nonce'] ) || ! wp_verify_nonce( $_POST['snippen_slot_nonce'], 'snippen_save_slot' ) ) {
 			if ( isset( $_GET['action'] ) && $_GET['action'] === 'delete' && isset( $_GET['id'] ) ) {
 				if ( isset( $_GET['_wpnonce'] ) && wp_verify_nonce( $_GET['_wpnonce'], 'delete_slot_' . $_GET['id'] ) ) {
@@ -97,12 +106,12 @@ class TimeSlotsPage {
 
 		if ( $id > 0 ) {
 			$wpdb->update( $table, $data, array( 'id' => $id ) );
-			$this->show_message( __( 'Tidsluke oppdatert.', 'snippen-booking' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&action=edit&id=' . $id . '&message=updated' ) );
+			exit;
 		} else {
 			$data['created_at'] = current_time( 'mysql' );
 			$wpdb->insert( $table, $data );
-			$this->show_message( __( 'Tidsluke lagret.', 'snippen-booking' ) );
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&message=created' ) );
 			exit;
 		}
 	}
@@ -114,7 +123,8 @@ class TimeSlotsPage {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_time_slots';
 		$wpdb->update( $table, array( 'deleted_at' => current_time( 'mysql' ) ), array( 'id' => $id ) );
-		$this->show_message( __( 'Tidsluke slettet.', 'snippen-booking' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&message=deleted' ) );
+		exit;
 	}
 
 	/**

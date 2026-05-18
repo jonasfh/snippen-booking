@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.5] - 2026-05-18
+
+### Fixed
+- **Admin Redirection & Headers Warning**: Fixed the `Cannot modify header information - headers already sent` PHP warning when saving or deleting pricing rules, booking objects, or time slots.
+  - Implemented the standard WordPress early-load action hook (`load-{$page_hook}`) to process form submissions (POST) and deletions (GET) before any HTML output or HTTP headers are sent.
+  - Refactored `AdminLoader.php`, `PricingPage.php`, `BookingObjectsPage.php`, and `TimeSlotsPage.php` to follow the Post/Redirect/Get (PRG) pattern.
+  - Handled early validation errors and success notices cleanly by passing query parameters and using custom notice render logic.
+
 ## [1.4.4] - 2026-05-18
 ### Added
 - **SMTP Settings Page Fields**: Added premium SMTP setup fields under the plugin's "Innstillinger" dashboard.
