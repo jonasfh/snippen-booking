@@ -40,7 +40,10 @@
         "demo:sms": "php bin/demo-sms.php",
         "demo:mail": "php bin/demo-mail.php",
         "demo:me": "php bin/demo-me.php",
-        "demo:env": "@demo:sms",
+        "demo:env": [
+            "@demo:sms",
+            "@demo:mail"
+        ],
         "demo": [
             "@demo:users",
             "@demo:bookings",
