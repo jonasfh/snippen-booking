@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.4] - 2026-05-18
+### Added
+- **SMTP Settings Page Fields**: Added premium SMTP setup fields under the plugin's "Innstillinger" dashboard.
+  - **SMTP Configuration**: Enables configuring custom SMTP host, port, username, password, encryption type (None, SSL, TLS), and sender identity (From Email and From Name).
+  - **Dynamic Saving**: Safely sanitizes, validates, and persists all SMTP preferences.
+- **Midnight Crossing Door Code Bugfix**: Fixed a bug in `DoorCodeService::is_in_window()` where bookings/slots crossing midnight could calculate negative duration/incorrect window endpoints due to date mismatch, resolving test suite flaky failures under late-hour environments.
+- **Integration & Unit Tests**: Added a new `SettingsPageTest.php` suite to assert the rendering and saving of SMTP settings, and verified the PHPMailer configuration action integration.
+
 ## [1.4.3] - 2026-05-17
 ### Added
 - **Resident Import Page**: Implemented a new "Beboer Import" settings page under the admin dashboard for bulk importing resident accounts via copy-paste.

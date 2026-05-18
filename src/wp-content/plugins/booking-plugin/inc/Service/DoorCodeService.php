@@ -39,6 +39,10 @@ class DoorCodeService {
 		$start = new \DateTime( $booking->booking_date . ' ' . $booking->start_time );
 		$end   = new \DateTime( $booking->booking_date . ' ' . $booking->end_time );
 
+		if ( $end < $start ) {
+			$end->modify( '+1 day' );
+		}
+
 		$start_window = clone $start;
 		$start_window->modify( "-{$hours_before} hours" );
 
