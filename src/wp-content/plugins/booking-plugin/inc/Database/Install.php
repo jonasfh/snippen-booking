@@ -241,6 +241,27 @@ class Install {
 							'booking_object_id' => $obj->id,
 						)
 					);
+
+					// State holidays Price
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'         => $obj->name . ' - ' . $slot_name . ' (Helligdager og høytider)',
+							'price'        => $price * 2,
+							'slot_id'      => $slot_item->id,
+							'priority'     => 100,
+							'is_holiday'   => 1,
+
+						)
+					);
+					$price_id = $wpdb->insert_id;
+					$wpdb->insert(
+						$table_price_objects,
+						array(
+							'price_id'          => $price_id,
+							'booking_object_id' => $obj->id,
+						)
+					);
 				}
 			}
 
@@ -280,6 +301,29 @@ class Install {
 					'slot_id'      => $hele_dagen_id,
 					'days_of_week' => '5,6,0',
 					'priority'     => 10,
+				)
+			);
+			$combined_price_id = $wpdb->insert_id;
+			foreach ( $objects as $obj ) {
+				$wpdb->insert(
+					$table_price_objects,
+					array(
+						'price_id'          => $combined_price_id,
+						'booking_object_id' => $obj->id,
+					)
+				);
+			}
+
+			// State holidays
+			$wpdb->insert(
+				$table_prices,
+				array(
+					'name'         => 'Hele området - Hele dagen (Helligdager og høytider)',
+					'price'        => 4000,
+					'slot_id'      => $hele_dagen_id,
+					'priority'     => 100,
+					'is_holiday'   => 1,
+
 				)
 			);
 			$combined_price_id = $wpdb->insert_id;
