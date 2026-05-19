@@ -129,7 +129,11 @@ class BookingListShortcode {
 			FROM $table_bookings b 
 			LEFT JOIN $table_slots s ON b.slot_id = s.id 
 			WHERE b.user_id = %d AND b.deleted_at IS NULL
-			ORDER BY b.booking_date DESC, s.start_time ASC",
+			ORDER BY 
+				CASE WHEN b.booking_date >= CURDATE() THEN 0 ELSE 1 END ASC,
+				CASE WHEN b.booking_date >= CURDATE() THEN b.booking_date END ASC,
+				CASE WHEN b.booking_date < CURDATE() THEN b.booking_date END DESC,
+				s.start_time ASC",
 			$user_id
 		);
 
