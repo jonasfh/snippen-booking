@@ -25,8 +25,8 @@ $booking_enabled = getenv('SMS_BOOKING_CONFIRMATION_ENABLED') ?: 'yes';
 $account_enabled = getenv('SMS_ACCOUNT_CONFIRMATION_ENABLED') ?: 'yes';
 
 if (!$username || !$api_key) {
-    echo "Error: KEYSMS_USERNAME and KEYSMS_API_KEY must be set in .env\n";
-    exit(1);
+    echo "Info: KEYSMS_USERNAME and KEYSMS_API_KEY are not set in .env. Skipping KeySMS setting setup.\n";
+    exit(0);
 }
 
 update_option('snippen_keysms_username', $username);
