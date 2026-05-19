@@ -37,7 +37,7 @@ class BookingListShortcodeTest extends TestCase {
         $this->assertStringContainsString( 'name="loginform"', $output );
         $this->assertStringContainsString( 'id="user_login"', $output );
         $this->assertStringContainsString( 'id="user_pass"', $output );
-        $this->assertStringContainsString( 'class="vipps-login-btn"', $output );
+        $this->assertStringContainsString( 'id="wp-submit"', $output );
     }
 
     /**

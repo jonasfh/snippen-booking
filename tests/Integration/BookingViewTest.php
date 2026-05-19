@@ -69,7 +69,7 @@ class BookingViewTest extends TestCase {
 		$output = ob_get_clean();
 
 		$this->assertStringContainsString( 'Logg inn kreves', $output );
-		$this->assertStringContainsString( 'Logg inn med Vipps', $output );
+		$this->assertStringContainsString( 'Logg inn', $output );
 		// Verify redirect URL includes the booking_uuid
 		$expected_redirect = urlencode( add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) ) );
 		$this->assertStringContainsString( $expected_redirect, $output );

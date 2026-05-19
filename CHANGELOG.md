@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.3] - 2026-05-19
+
+### Removed
+- **Vipps Login**: Removed all references, CSS styling, documentation, and buttons/links to Vipps login across the plugin UI and code.
+- **Login Card Divider**: Removed the "eller" divider and Vipps login container from the guest login card.
+
+### Changed
+- **Modal and Calendar Login Buttons**: Replaced the Vipps login buttons in the booking details modal and the main calendar page with standard "Logg inn" buttons/links styled with primary brand color blue.
+
 ## [1.5.2] - 2026-05-19
 
 ### Added

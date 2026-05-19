@@ -170,7 +170,7 @@ class Plugin {
 			echo '<div class="snippen-modal-login-content">';
 			echo '<h2>' . esc_html__( 'Logg inn kreves', 'snippen-booking' ) . '</h2>';
 			echo '<p>' . esc_html__( 'Du må logge inn for å se denne bookingen.', 'snippen-booking' ) . '</p>';
-			echo '<a href="' . esc_url( $login_url ) . '" class="vipps-login-btn">' . esc_html__( 'Logg inn med Vipps', 'snippen-booking' ) . '</a>';
+			echo '<a href="' . esc_url( $login_url ) . '" class="snippen-login-btn">' . esc_html__( 'Logg inn', 'snippen-booking' ) . '</a>';
 			echo '</div>';
 		} else {
 			// 3. Logged in -> check permission

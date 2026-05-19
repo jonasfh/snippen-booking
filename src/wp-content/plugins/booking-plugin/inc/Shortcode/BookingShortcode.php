@@ -94,7 +94,7 @@ class BookingShortcode {
 			<?php if ( ! $is_logged_in ) : ?>
 				<div class="snippen-login-prompt">
 					<p>Du må være beboer og innlogget for å kunne booke. Kalenderen under viser kun tilgjengelighet.</p>
-					<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="vipps-login-btn">Logg inn med Vipps</a>
+					<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="snippen-login-btn"><?php esc_html_e( 'Logg inn', 'snippen-booking' ); ?></a>
 				</div>
 			<?php endif; ?>
 
