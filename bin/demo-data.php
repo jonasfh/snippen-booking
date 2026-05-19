@@ -130,55 +130,55 @@ if ($action === 'generate') {
             $slot_names = ['Hele dagen', 'Formiddag', 'Ettermiddag'];
             $target_name = $slot_names[array_rand($slot_names)];
             
-            // Find corresponding slot IDs for each object
-            $slots_to_book = [];
-            $all_available = true;
+            // Find global slot ID by name
+            $slot = $wpdb->get_row($wpdb->prepare(
+                "SELECT id FROM $table_slots WHERE name = %s AND allow_multi_object = 1 AND deleted_at IS NULL",
+                $target_name
+            ));
             
-            foreach ($objects as $obj) {
-                $slot = $wpdb->get_row($wpdb->prepare(
-                    "SELECT id FROM $table_slots WHERE booking_object_id = %d AND name = %s AND allow_multi_object = 1 AND deleted_at IS NULL",
-                    $obj->id, $target_name
-                ));
-                
-                if (!$slot || !$service->isSlotAvailable($obj->id, $date_str, $slot->id)) {
-                    $all_available = false;
-                    break;
+            if ($slot) {
+                $all_available = true;
+                foreach ($objects as $obj) {
+                    if (!$service->isSlotAvailable($obj->id, $date_str, $slot->id)) {
+                        $all_available = false;
+                        break;
+                    }
                 }
-                $slots_to_book[$obj->id] = $slot->id;
-            }
-            
-            if ($all_available && !empty($slots_to_book)) {
-                $first_slot_id = reset($slots_to_book);
-                $price = $pricing_service->getPrice(array_keys($slots_to_book), array_values($slots_to_book), $date_str) ?: 0;
                 
-                $user = !empty($subscriber_users) ? $subscriber_users[array_rand($subscriber_users)] : $default_admin;
+                if ($all_available) {
+                    $obj_ids = array_column($objects, 'id');
+                    $slot_ids = array_fill(0, count($objects), $slot->id);
+                    $price = $pricing_service->getPrice($obj_ids, $slot_ids, $date_str) ?: 0;
+                    
+                    $user = !empty($subscriber_users) ? $subscriber_users[array_rand($subscriber_users)] : $default_admin;
 
-                // Insert main booking
-                $phone = get_user_meta($user->ID, 'snippen_phone', true) ?: '+4799887766';
-                $wpdb->insert($table_bookings, array(
-                    'uuid' => wp_generate_uuid4(),
-                    'user_id' => $user->ID,
-                    'slot_id' => (int) $first_slot_id,
-                    'booking_date' => $date_str,
-                    'customer_name' => $user->display_name,
-                    'customer_email' => $user->user_email,
-                    'customer_phone' => $phone,
-                    'price' => $price,
-                    'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
-                ));
-                
-                $booking_id = $wpdb->insert_id;
-                
-                // Link all objects
-                foreach ($slots_to_book as $obj_id => $sid) {
-                    $wpdb->insert($table_booking_objects, array(
-                        'booking_id' => $booking_id,
-                        'booking_object_id' => (int) $obj_id
+                    // Insert main booking
+                    $phone = get_user_meta($user->ID, 'snippen_phone', true) ?: '+4799887766';
+                    $wpdb->insert($table_bookings, array(
+                        'uuid' => wp_generate_uuid4(),
+                        'user_id' => $user->ID,
+                        'slot_id' => (int) $slot->id,
+                        'booking_date' => $date_str,
+                        'customer_name' => $user->display_name,
+                        'customer_email' => $user->user_email,
+                        'customer_phone' => $phone,
+                        'price' => $price,
+                        'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
                     ));
+                    
+                    $booking_id = $wpdb->insert_id;
+                    
+                    // Link all objects
+                    foreach ($objects as $obj) {
+                        $wpdb->insert($table_booking_objects, array(
+                            'booking_id' => $booking_id,
+                            'booking_object_id' => (int) $obj->id
+                        ));
+                    }
+                    
+                    $count++;
+                    continue; // Skip individual bookings for this day to keep it simple
                 }
-                
-                $count++;
-                continue; // Skip individual bookings for this day to keep it simple
             }
         }
 
@@ -186,10 +186,7 @@ if ($action === 'generate') {
         foreach ($objects as $obj) {
             // 30% chance of bookings for this object on this day
             if (rand(1, 10) <= 3) {
-                $slots = $wpdb->get_results($wpdb->prepare(
-                    "SELECT id, name FROM $table_slots WHERE booking_object_id = %d AND deleted_at IS NULL",
-                    $obj->id
-                ));
+                $slots = $wpdb->get_results("SELECT id, name FROM $table_slots WHERE deleted_at IS NULL");
                 
                 if (empty($slots)) continue;
 
