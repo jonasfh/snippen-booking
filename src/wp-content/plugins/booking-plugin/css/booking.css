@@ -569,8 +569,8 @@
     font-weight: 500;
 }
 
-.vipps-login-btn {
-    background-color: #ff5b24; /* Vipps orange */
+.snippen-login-btn {
+    background-color: var(--primary-color);
     color: white !important;
     padding: 10px 20px;
     border-radius: 50px;
@@ -581,8 +581,8 @@
     transition: background-color 0.2s;
 }
 
-.vipps-login-btn:hover {
-    background-color: #e04815;
+.snippen-login-btn:hover {
+    background-color: var(--primary-hover);
 }
 
 .snippen-calendar-view.readonly-mode .slot-item.available {
@@ -846,29 +846,25 @@
     margin-bottom: 30px;
 }
 
-/* Vipps Login Button styling */
-.vipps-login-btn {
+/* Modal Login Button styling */
+.snippen-booking-modal-content .snippen-login-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     padding: 16px 24px;
-    background-color: #ff5b00; /* Standard Vipps orange color */
-    color: #ffffff !important;
+    border-radius: 16px;
     font-size: 16px;
     font-weight: 700;
-    border-radius: 16px;
-    text-decoration: none !important;
     transition: background-color 0.2s ease, transform 0.1s ease;
-    box-shadow: 0 4px 6px -1px rgba(255, 91, 0, 0.2), 0 2px 4px -2px rgba(255, 91, 0, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -2px rgba(37, 99, 235, 0.2);
 }
 
-.vipps-login-btn:hover {
-    background-color: #e05000;
+.snippen-booking-modal-content .snippen-login-btn:hover {
     transform: translateY(-1px);
 }
 
-.vipps-login-btn:active {
+.snippen-booking-modal-content .snippen-login-btn:active {
     transform: translateY(0);
 }
 
@@ -1273,38 +1269,6 @@
     cursor: pointer;
 }
 
-.vipps-login-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 25px 0;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.vipps-login-divider::before,
-.vipps-login-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.vipps-login-divider span {
-    padding: 0 10px;
-}
-
-.vipps-login-wrapper {
-    display: flex;
-    justify-content: center;
-}
-
-.vipps-login-wrapper .vipps-login-btn {
-    width: 100%;
-    text-align: center;
-    display: block;
-    box-sizing: border-box;
-}
 
 @media (max-width: 480px) {
     .snippen-booking-login-card {

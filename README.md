@@ -39,7 +39,7 @@ Residents can see their booking history (and self-cancel active bookings) on the
 [snippen_booking_list]
 ```
 
-By default, if the user is not logged in, the shortcode will return an empty string. To display a premium login form (including Username/Password inputs and a "Logg inn med Vipps" button) to guest users, you can set the `login-form` attribute:
+By default, if the user is not logged in, the shortcode will return an empty string. To display a premium login form to guest users, you can set the `login-form` attribute:
 
 ```text
 [snippen_booking_list login-form="1"]

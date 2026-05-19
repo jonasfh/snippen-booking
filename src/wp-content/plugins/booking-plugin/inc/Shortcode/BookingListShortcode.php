@@ -95,16 +95,6 @@ class BookingListShortcode {
 					<?php esc_html_e( 'Logg inn', 'snippen-booking' ); ?>
 				</button>
 			</form>
-
-			<div class="vipps-login-divider">
-				<span><?php esc_html_e( 'eller', 'snippen-booking' ); ?></span>
-			</div>
-
-			<div class="vipps-login-wrapper">
-				<a href="<?php echo esc_url( wp_login_url( $redirect_url ) ); ?>" class="vipps-login-btn">
-					<?php esc_html_e( 'Logg inn med Vipps', 'snippen-booking' ); ?>
-				</a>
-			</div>
 		</div>
 		<?php
 		return ob_get_clean();
