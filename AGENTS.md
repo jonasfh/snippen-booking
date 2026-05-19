@@ -182,6 +182,82 @@ When an agent is asked to solve a specific GitHub issue, the following workflow 
 - Use dependency injection patterns where practical
 - Keep AJAX handlers (in Api classes) thin - delegate to other classes
 
+## Documentation
+
+Use `README.md` for user-facing documentation (installation, usage, FAQs) and `DEV_README.md` for developer-facing documentation (architecture, coding standards, contribution guidelines). Keep both updated with any relevant changes.
+
+Include diagrams to make docs easier to read and understand.
+
+### Mermaid diagrams
+
+Use Mermaid diagrams for visual documentation of database schema, class relationships, and workflows. Follow the rules below to ensure Mermaid diagrams are correctly parsed and rendered.
+
+#### Mermaid `erDiagram` rules
+
+When generating Mermaid `erDiagram` diagrams:
+
+- ALL relationships MUST be written on a single physical line.
+- Never insert line breaks inside relationship definitions.
+- Mermaid `erDiagram` parser is extremely sensitive to newlines.
+
+Correct:
+
+\```mermaid
+erDiagram
+    users ||--o{ orders : places
+\```
+
+Incorrect:
+
+\```mermaid
+erDiagram
+    users ||--o{
+        orders : places
+\```
+
+Also avoid:
+
+\```mermaid
+erDiagram
+    users ||--o{ orders :
+        places
+\```
+
+Entity blocks MAY span multiple lines:
+
+\```mermaid
+erDiagram
+
+    users {
+        INT id PK
+        VARCHAR email
+    }
+
+    orders {
+        INT id PK
+        INT user_id FK
+    }
+
+    users ||--o{ orders : places
+\```
+
+Additional rules:
+
+- Keep every relationship declaration on exactly one line.
+- Avoid tabs in Mermaid diagrams.
+- Prefer simple relation labels:
+  - contains
+  - belongs_to
+  - has_many
+  - references
+  - targets
+- Avoid quoted labels unless necessary.
+- Prefer ASCII-only labels if possible.
+
+Before committing Mermaid diagrams:
+- Validate them in Mermaid Live Editor.
+- Ensure no automatic formatter has wrapped relationship lines.
+
 ## Versioning & Changelog
 - **Version Bump**: When making functional changes, you must bump the version number in `src/wp-content/plugins/booking-plugin/booking-plugin.php`, UNLESS this is already done in the current branch.
 - **CHANGELOG.md**: Every version bump must be accompanied by an entry in `CHANGELOG.md` under a header like `## [X.Y.Z] - YYYY-MM-DD`.
