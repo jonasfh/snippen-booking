@@ -62,6 +62,9 @@ class Plugin {
 		// Blocks for deleted users (Issue #37)
 		add_filter( 'wp_authenticate_user', array( __CLASS__, 'block_deleted_users_login' ), 10, 1 );
 		add_filter( 'allow_password_reset', array( __CLASS__, 'block_deleted_users_password_reset' ), 10, 2 );
+
+		// Always redirect 'holmen_resident' to the front page on login (Issue #45)
+		add_filter( 'login_redirect', array( __CLASS__, 'redirect_holmen_resident_login' ), 10, 3 );
 	}
 
 	/**
@@ -85,6 +88,23 @@ class Plugin {
 			return false;
 		}
 		return $allow;
+	}
+
+	/**
+	 * Always redirect 'holmen_resident' users to the front page upon login (Issue #45)
+	 *
+	 * @param string             $redirect_to Where to redirect to.
+	 * @param string             $request     The redirect destination requested.
+	 * @param \WP_User|\WP_Error $user        WP_User object or WP_Error if login failed.
+	 * @return string
+	 */
+	public static function redirect_holmen_resident_login( $redirect_to, $request, $user ) {
+		if ( ! is_wp_error( $user ) && $user instanceof \WP_User ) {
+			if ( in_array( 'holmen_resident', (array) $user->roles, true ) ) {
+				return home_url( '/' );
+			}
+		}
+		return $redirect_to;
 	}
 
 	/**

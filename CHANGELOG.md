@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.1] - 2026-05-19
+
+### Added
+- **Front Page Login Redirect for Residents**: Always redirect users with the custom role "Holmen Sameie Beboer" (`holmen_resident`) to the front page (`home_url('/')`) upon logging in. This improves user experience and avoids confusing backend redirects to WordPress profile page/WP Admin.
+- **Integration Tests**: Added comprehensive PHPUnit integration tests in `LoginRedirectTest.php` to verify redirection behaviour for residents, regular users, and login errors.
+
 ## [1.5.0] - 2026-05-19
 
 ### Changed
