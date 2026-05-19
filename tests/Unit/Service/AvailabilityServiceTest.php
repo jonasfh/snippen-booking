@@ -137,7 +137,7 @@ class AvailabilityServiceTest extends TestCase {
             'booking_object_id' => 1
         ]);
 
-        // Slot 5 is "Formiddag" for Object 2 (based on seed logic)
-        $this->assertTrue($this->service->isSlotAvailable(2, $date, 5), 'Object 2 should be available even if Object 1 is booked');
+        // Slot 2 is global "Formiddag" (based on seed logic)
+        $this->assertTrue($this->service->isSlotAvailable(2, $date, 2), 'Object 2 should be available even if Object 1 is booked');
     }
 }

@@ -21,9 +21,8 @@ class AvailabilityService {
 		$table_slots = $wpdb->prefix . 'snippen_time_slots';
 		$slot        = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM $table_slots WHERE id = %d AND booking_object_id = %d",
-				$slotId,
-				$objectId
+				"SELECT * FROM $table_slots WHERE id = %d",
+				$slotId
 			)
 		);
 
@@ -90,10 +89,7 @@ class AvailabilityService {
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 
 		$all_slots = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM $table_slots WHERE booking_object_id = %d AND deleted_at IS NULL",
-				$objectId
-			)
+			"SELECT * FROM $table_slots WHERE deleted_at IS NULL"
 		);
 
 		// Fetch all bookings that could affect this range (including those from before and after)

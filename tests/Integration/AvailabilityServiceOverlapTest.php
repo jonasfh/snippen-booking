@@ -16,7 +16,6 @@ class AvailabilityServiceOverlapTest extends TestCase {
         $obj_id = $wpdb->insert_id;
         
         $wpdb->insert($wpdb->prefix . 'snippen_time_slots', [
-            'booking_object_id' => $obj_id,
             'name' => 'Hele dagen',
             'start_time' => '11:00:00',
             'end_time' => '23:00:00',

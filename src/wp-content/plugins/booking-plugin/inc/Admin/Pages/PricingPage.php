@@ -9,6 +9,7 @@ class PricingPage {
 
 	/**
 	 * Validation errors
+	 *
 	 * @var array
 	 */
 	private $errors = array();
@@ -135,7 +136,7 @@ class PricingPage {
 		} else {
 			$data['created_at'] = current_time( 'mysql' );
 			$wpdb->insert( $table_prices, $data );
-			$id = $wpdb->insert_id;
+			$id          = $wpdb->insert_id;
 			$message_key = 'created';
 		}
 
@@ -296,11 +297,10 @@ class PricingPage {
 
 		$all_slots   = $wpdb->get_results(
 			"
-            SELECT s.id, s.name, s.start_time, o.name as object_name 
+            SELECT s.id, s.name, s.start_time 
             FROM $table_slots s 
-            JOIN $table_objects o ON s.booking_object_id = o.id 
             WHERE s.deleted_at IS NULL 
-            ORDER BY o.name ASC, s.start_time ASC"
+            ORDER BY s.start_time ASC"
 		);
 		$all_objects = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
 
@@ -326,19 +326,8 @@ class PricingPage {
 		echo '<select name="slot_id" id="slot_id" required>';
 		echo '<option value="">' . esc_html__( 'Velg tidsluke...', 'snippen-booking' ) . '</option>';
 
-		$current_obj = '';
 		foreach ( $all_slots as $s ) {
-			if ( $current_obj !== $s->object_name ) {
-				if ( $current_obj !== '' ) {
-					echo '</optgroup>';
-				}
-				echo '<optgroup label="' . esc_attr( $s->object_name ) . '">';
-				$current_obj = $s->object_name;
-			}
 			echo '<option value="' . esc_attr( $s->id ) . '" ' . selected( $rule ? $rule->slot_id : 0, $s->id, false ) . '>' . esc_html( $s->name ) . ' (' . substr( $s->start_time, 0, 5 ) . ')</option>';
-		}
-		if ( $current_obj !== '' ) {
-			echo '</optgroup>';
 		}
 		echo '</select>';
 		echo '</div>';

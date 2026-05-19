@@ -35,7 +35,6 @@ class Install {
 		$table_slots = $wpdb->prefix . 'snippen_time_slots';
 		$sql_slots   = "CREATE TABLE $table_slots (
             id INT NOT NULL AUTO_INCREMENT,
-            booking_object_id INT NOT NULL,
             name VARCHAR(255) NOT NULL,
             description TEXT,
             start_time TIME DEFAULT '00:00:00',
@@ -45,8 +44,7 @@ class Install {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
-            PRIMARY KEY  (id),
-            KEY booking_object_id (booking_object_id)
+            PRIMARY KEY  (id)
         ) $charset_collate;";
 		dbDelta( $sql_slots );
 
@@ -149,7 +147,7 @@ class Install {
 			);
 			$peisestuen_id = $wpdb->insert_id;
 
-			// Seed slots for Festsalen
+			// Seed global slots
 			$this_slots = array(
 				array(
 					'name'               => 'Hele dagen',
@@ -175,10 +173,8 @@ class Install {
 				),
 			);
 
-			foreach ( array( $festsalen_id, $peisestuen_id ) as $obj_id ) {
-				foreach ( $this_slots as $slot ) {
-					$wpdb->insert( $table_slots, array_merge( $slot, array( 'booking_object_id' => $obj_id ) ) );
-				}
+			foreach ( $this_slots as $slot ) {
+				$wpdb->insert( $table_slots, $slot );
 			}
 		}
 
@@ -193,11 +189,10 @@ class Install {
 			);
 
 			// 1. Individual prices for each object
-			$objects = $wpdb->get_results( "SELECT id, name FROM $table_objects" );
+			$objects      = $wpdb->get_results( "SELECT id, name FROM $table_objects" );
+			$global_slots = $wpdb->get_results( "SELECT id, name FROM $table_slots" );
 			foreach ( $objects as $obj ) {
-				$obj_slots = $wpdb->get_results( $wpdb->prepare( "SELECT id, name FROM $table_slots WHERE booking_object_id = %d", $obj->id ) );
-
-				foreach ( $obj_slots as $slot_item ) {
+				foreach ( $global_slots as $slot_item ) {
 					$slot_name = $slot_item->name;
 					$price     = $base_prices[ $slot_name ] ?? 1000;
 					// if ($obj->name === 'Peisestuen') $price *= 0.8; // Peisestuen is cheaper
@@ -246,11 +241,11 @@ class Install {
 					$wpdb->insert(
 						$table_prices,
 						array(
-							'name'         => $obj->name . ' - ' . $slot_name . ' (Helligdager og høytider)',
-							'price'        => $price * 2,
-							'slot_id'      => $slot_item->id,
-							'priority'     => 100,
-							'is_holiday'   => 1,
+							'name'       => $obj->name . ' - ' . $slot_name . ' (Helligdager og høytider)',
+							'price'      => $price * 2,
+							'slot_id'    => $slot_item->id,
+							'priority'   => 100,
+							'is_holiday' => 1,
 
 						)
 					);
@@ -318,11 +313,11 @@ class Install {
 			$wpdb->insert(
 				$table_prices,
 				array(
-					'name'         => 'Hele området - Hele dagen (Helligdager og høytider)',
-					'price'        => 4000,
-					'slot_id'      => $hele_dagen_id,
-					'priority'     => 100,
-					'is_holiday'   => 1,
+					'name'       => 'Hele området - Hele dagen (Helligdager og høytider)',
+					'price'      => 4000,
+					'slot_id'    => $hele_dagen_id,
+					'priority'   => 100,
+					'is_holiday' => 1,
 
 				)
 			);
@@ -358,7 +353,7 @@ class Install {
 		MigrationManager::run();
 
 		// Register custom resident role (Issue #37)
-		$subscriber = get_role( 'subscriber' );
+		$subscriber   = get_role( 'subscriber' );
 		$capabilities = $subscriber ? $subscriber->capabilities : array( 'read' => true );
 		add_role( 'holmen_resident', __( 'Holmen Sameie Beboer', 'snippen-booking' ), $capabilities );
 	}

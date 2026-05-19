@@ -100,4 +100,69 @@ For information on how AI agents (and developers) should workflow GitHub issues,
 
 Use [tastewp.com](https://tastewp.com). This is perhaps the easiest service. You just go to the site, press "Set it up!", and you get a ready-to-use WordPress site that lasts for 48 hours. Here you can go into the admin panel, upload your .zip file under Plugins, and check that everything works and looks good.
 
+## Database Schema
+
+```mermaid
+erDiagram
+    booking_objects {
+        INT id PK
+        VARCHAR name
+        TEXT description
+        DATETIME created_at
+        DATETIME modified_at
+        DATETIME deleted_at
+    }
+    time_slots {
+        INT id PK
+        VARCHAR name
+        TEXT description
+        TIME start_time
+        TIME end_time
+        INT cleanup_hours
+        TINYINT allow_multi_object
+        DATETIME created_at
+        DATETIME modified_at
+        DATETIME deleted_at
+    }
+    bookings {
+        INT id PK
+        INT slot_id FK
+        DATE booking_date
+        VARCHAR customer_name
+        VARCHAR customer_email
+        VARCHAR customer_phone
+        TEXT message
+        DATETIME created_at
+        DATETIME modified_at
+        DATETIME deleted_at
+    }
+    prices {
+        INT id PK
+        VARCHAR name
+        DECIMAL price
+        INT slot_id FK
+        VARCHAR days_of_week
+        INT priority
+        TINYINT is_holiday
+        DATETIME created_at
+        DATETIME modified_at
+        DATETIME deleted_at
+    }
+    bookings_booking_objects {
+        INT booking_id FK
+        INT booking_object_id FK
+    }
+    price_objects {
+        INT price_id FK
+        INT booking_object_id FK
+    }
+
+    time_slots ||--o{ bookings : references
+    time_slots ||--o{ prices : references
+    bookings ||--|{ bookings_booking_objects : belongs_to
+    booking_objects ||--|{ bookings_booking_objects : belongs_to
+    prices ||--|{ price_objects : belongs_to
+    booking_objects ||--|{ price_objects : belongs_to
+```
+
 

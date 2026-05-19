@@ -84,7 +84,7 @@ class UserApi {
 			wp_send_json_error( array( 'message' => 'Fant ingen beboer med dette telefonnummeret. Kontakt administrator.' ) );
 		}
 
-		$user    = $users[0];
+		$user = $users[0];
 
 		if ( get_user_meta( $user->ID, 'snippen_user_deleted', true ) === 'yes' ) {
 			wp_send_json_error( array( 'message' => 'Denne beboeren er slettet eller deaktivert. Kontakt administrator.' ) );

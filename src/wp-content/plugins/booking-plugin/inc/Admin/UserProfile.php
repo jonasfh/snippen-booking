@@ -154,14 +154,18 @@ class UserProfile {
 			return $views;
 		}
 
-		$count = count( get_users( array(
-			'meta_key'   => 'snippen_user_deleted',
-			'meta_value' => 'yes',
-			'fields'     => 'ID',
-		) ) );
+		$count = count(
+			get_users(
+				array(
+					'meta_key'   => 'snippen_user_deleted',
+					'meta_value' => 'yes',
+					'fields'     => 'ID',
+				)
+			)
+		);
 
 		if ( $count > 0 ) {
-			$class = ( isset( $_GET['deleted_residents'] ) && $_GET['deleted_residents'] === '1' ) ? ' class="current"' : '';
+			$class                      = ( isset( $_GET['deleted_residents'] ) && $_GET['deleted_residents'] === '1' ) ? ' class="current"' : '';
 			$views['deleted_residents'] = sprintf(
 				'<a href="%s"%s>%s <span class="count">(%d)</span></a>',
 				add_query_arg( 'deleted_residents', '1', admin_url( 'users.php' ) ),
@@ -186,7 +190,7 @@ class UserProfile {
 
 		$screen = get_current_screen();
 		if ( $screen && $screen->id === 'users' && isset( $_GET['deleted_residents'] ) && $_GET['deleted_residents'] === '1' ) {
-			$meta_query = $query->get( 'meta_query' ) ?: array();
+			$meta_query   = $query->get( 'meta_query' ) ?: array();
 			$meta_query[] = array(
 				'key'     => 'snippen_user_deleted',
 				'value'   => 'yes',
