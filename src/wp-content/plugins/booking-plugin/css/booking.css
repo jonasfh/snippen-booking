@@ -968,3 +968,347 @@
         grid-column: span 1;
     }
 }
+
+/* Snippen Booking List Shortcode Styles - Premium & Responsive */
+.snippen-booking-list-container {
+    max-width: 1100px;
+    margin: 40px auto;
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+.snippen-booking-list-container h3 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin-bottom: 25px;
+}
+
+.booking-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.booking-list-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.booking-list-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: #cbd5e1;
+}
+
+.booking-list-card .card-header {
+    padding: 20px 24px;
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-main-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.booking-list-card .booking-date {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.booking-list-card .booking-slot-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.booking-list-card .card-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-grow: 1;
+}
+
+.booking-list-card .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.booking-list-card .detail-row .label {
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 90px;
+}
+
+.booking-list-card .detail-row .value {
+    color: var(--text-main);
+    font-weight: 500;
+    text-align: right;
+}
+
+.booking-list-card .venues-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.booking-list-card .snippen-tag {
+    font-size: 11px;
+    font-weight: 700;
+    background: #eff6ff;
+    color: var(--primary-color);
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid #dbeafe;
+}
+
+.booking-list-card .detail-row.description-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.booking-list-card .detail-row.description-row .value {
+    text-align: left;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.4;
+}
+
+.booking-list-card .detail-row .price {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.booking-list-card .door-code-row {
+    padding: 12px;
+    border-radius: 12px;
+    margin-top: 5px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.booking-list-card .door-code-row.active-code {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.booking-list-card .door-code-row.active-code .label {
+    color: #047857;
+}
+
+.booking-list-card .door-code-row.hidden-code {
+    background: #f8fafc;
+    border-color: #f1f5f9;
+}
+
+.booking-list-card .door-code-row .code-unavailable {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.booking-list-card .card-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    background: #ffffff;
+}
+
+.booking-list-card .footer-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.snippen-btn-cancel-booking {
+    background: #fff;
+    color: var(--error-color);
+    border: 1px solid #fecaca;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.snippen-btn-cancel-booking:hover {
+    background: #fef2f2;
+    border-color: var(--error-color);
+    transform: translateY(-1px);
+}
+
+/* Empty Bookings State */
+.snippen-empty-bookings-card {
+    background: #fff;
+    border: 2px dashed var(--border-color);
+    border-radius: 24px;
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 500px;
+    margin: 40px auto;
+    box-shadow: var(--shadow-sm);
+}
+
+.snippen-empty-bookings-card .empty-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.snippen-empty-bookings-card p {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Premium Login Form Styling */
+.snippen-booking-login-card {
+    max-width: 440px;
+    margin: 40px auto;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    padding: 40px;
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+.login-card-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-card-header h3 {
+    margin: 0 0 10px 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.login-card-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.snippen-login-form .form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.snippen-login-form label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.snippen-login-form input[type="text"],
+.snippen-login-form input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.2s;
+    background: #fff;
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+
+.snippen-login-form input[type="text"]:focus,
+.snippen-login-form input[type="password"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.snippen-login-form .form-row-remember {
+    margin-bottom: 25px;
+}
+
+.snippen-login-form .form-row-remember label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.snippen-login-form .form-row-remember input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+}
+
+.vipps-login-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 25px 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.vipps-login-divider::before,
+.vipps-login-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.vipps-login-divider span {
+    padding: 0 10px;
+}
+
+.vipps-login-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.vipps-login-wrapper .vipps-login-btn {
+    width: 100%;
+    text-align: center;
+    display: block;
+    box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+    .snippen-booking-login-card {
+        padding: 30px 20px;
+        margin: 20px 10px;
+    }
+}
