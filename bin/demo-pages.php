@@ -83,7 +83,7 @@ if (count($objects) > 1) {
 
 // 3. Create Account Confirmation page
 $page_title = 'Booking Demo - Aktivering av konto';
-$page_content = '[snippen_account_confirmation]';
+$page_content = '[snippen_account_confirmation]' . "\n\n<h3>Mine Bookinger (Demo)</h3>\n" . '[snippen_booking_list login-form=1]';
 
 $new_page = array(
     'post_type'    => 'page',

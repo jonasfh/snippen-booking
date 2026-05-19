@@ -45,6 +45,7 @@ class Plugin {
 		\SnippenBooking\Api\BookingActionsApi::register();
 		\SnippenBooking\Api\UserApi::register();
 		\SnippenBooking\Shortcode\AccountConfirmationShortcode::register();
+		\SnippenBooking\Shortcode\BookingListShortcode::register();
 
 		// Allow tagging pages (required for issue #25)
 		register_taxonomy_for_object_type( 'post_tag', 'page' );

@@ -586,6 +586,48 @@ jQuery(document).ready(function ($) {
         }
     }
 
+    // --- Snippen Booking List Frontend Actions ---
+    // Handle cancellation from the frontend card list
+    $('.snippen-booking-list-container').on('click', '.snippen-btn-cancel-booking.cancel', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var id = $btn.data('id');
+        var $card = $btn.closest('.booking-list-card');
+        var $badge = $card.find('.snippen-badge');
+
+        var confirmMsg = 'Vil du virkelig avbryte denne bookingen?';
+        if (window.confirm && !window.confirm(confirmMsg)) {
+            return;
+        }
+
+        $btn.prop('disabled', true).css('opacity', '0.5');
+
+        $.post(snippenBookingAjax.ajaxurl, {
+            action: 'snippen_update_booking_status',
+            nonce: snippenBookingAjax.admin_nonce,
+            id: id,
+            status: 'cancelled'
+        }, function (response) {
+            if (response.success) {
+                // Update UI badge
+                $badge.text(response.data.status_label)
+                      .removeClass('snippen-status-pending snippen-status-confirmed snippen-status-cancelled')
+                      .addClass('snippen-status-' + response.data.new_status);
+                
+                // Fade out the cancel button since it's now cancelled
+                $btn.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            } else {
+                alert(response.data.message || 'Det oppsto en feil. Prøv igjen.');
+                $btn.prop('disabled', false).css('opacity', '1');
+            }
+        }).fail(function () {
+            alert('Det oppsto en feil. Prøv igjen.');
+            $btn.prop('disabled', false).css('opacity', '1');
+        });
+    });
+
     // Initialize
     init();
 });

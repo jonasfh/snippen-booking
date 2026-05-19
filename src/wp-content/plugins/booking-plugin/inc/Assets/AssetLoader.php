@@ -41,6 +41,7 @@ class AssetLoader {
 			array(
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'snippen_booking_nonce' ),
+				'admin_nonce' => wp_create_nonce( 'snippen_admin_nonce' ),
 			)
 		);
 	}

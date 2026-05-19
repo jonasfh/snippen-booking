@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.2] - 2026-05-19
+
+### Added
+- **Booking List Shortcode**: Created the `[snippen_booking_list]` shortcode to render the current user's booking history in a premium card list on the frontend.
+  - Supports self-cancellation of bookings with responsive AJAX updates.
+  - Displays dynamic secure door codes within the configurable time window.
+  - Incorporates the `login-form` attribute to display a sleek, custom-designed login card and "Logg inn med Vipps" button to guests.
+- **Demo Page Integration**: Automatically appended the booking list shortcode to the Account Confirmation demo page to showcase both user-facing actions in one view.
+- **Unit and Integration Tests**: Implemented comprehensive unit and integration test coverage for the shortcode registration, guest-rendering, login box, and resident booking lists.
+
 ## [1.5.1] - 2026-05-19
 
 ### Added

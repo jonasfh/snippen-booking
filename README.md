@@ -32,6 +32,19 @@ Users must confirm their account via SMS before they can create bookings. The ac
 [snippen_account_confirmation]
 ```
 
+### Displaying User Bookings
+Residents can see their booking history (and self-cancel active bookings) on the frontend in a beautiful card list using the following shortcode:
+
+```text
+[snippen_booking_list]
+```
+
+By default, if the user is not logged in, the shortcode will return an empty string. To display a premium login form (including Username/Password inputs and a "Logg inn med Vipps" button) to guest users, you can set the `login-form` attribute:
+
+```text
+[snippen_booking_list login-form="1"]
+```
+
 ### SMS Settings
 Granular SMS settings are available in the WordPress admin dashboard under **Settings > SMS Innstillinger**. Here you can configure API credentials and enable or disable specific SMS notification types, such as booking confirmations and account confirmations.
 
