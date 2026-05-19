@@ -9,18 +9,21 @@ class AdminLoader {
 
 	/**
 	 * BookingObjectsPage instance
+	 *
 	 * @var \SnippenBooking\Admin\Pages\BookingObjectsPage|null
 	 */
 	private static $objects_page_instance = null;
 
 	/**
 	 * TimeSlotsPage instance
+	 *
 	 * @var \SnippenBooking\Admin\Pages\TimeSlotsPage|null
 	 */
 	private static $slots_page_instance = null;
 
 	/**
 	 * PricingPage instance
+	 *
 	 * @var \SnippenBooking\Admin\Pages\PricingPage|null
 	 */
 	private static $pricing_page_instance = null;

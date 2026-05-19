@@ -79,21 +79,9 @@ class PricingService {
 			if ( count( $objectIds ) > 1 ) {
 				$total_sum = 0;
 				foreach ( $objectIds as $obj_id ) {
-					$obj_slot = $wpdb->get_row(
-						$wpdb->prepare(
-							"SELECT id FROM {$wpdb->prefix}snippen_time_slots 
-                         WHERE booking_object_id = %d 
-                         AND name IN (SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode( ',', $slotIds ) . '))
-                         LIMIT 1',
-							$obj_id
-						)
-					);
-
-					if ( $obj_slot ) {
-						$individual_price = $this->getPrice( array( $obj_id ), array( $obj_slot->id ), $date );
-						if ( $individual_price !== null ) {
-							$total_sum += $individual_price;
-						}
+					$individual_price = $this->getPrice( array( $obj_id ), $slotIds, $date );
+					if ( $individual_price !== null ) {
+						$total_sum += $individual_price;
 					}
 				}
 				return $total_sum > 0 ? $total_sum : null;

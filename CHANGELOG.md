@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.0] - 2026-05-19
+
+### Changed
+- **Decoupled Time Slots Model**: Refactored the `snippen_time_slots` database model to make time slots global and shared, removing the direct `booking_object_id` relation.
+  - Added a database migration (`Migration_1_5_0`) to deduplicate existing time slots (trimming and grouping by lowercase name), map all existing bookings and pricing configurations to the new canonical slot IDs, and safely drop the `booking_object_id` column and its index.
+  - Refactored `Install.php` to seed global, shared time slots and individual/combined prices correctly.
+  - Refactored `AvailabilityService` and `PricingService` fallback logic to support global slot validation.
+  - Refactored `BookingApi` and `AvailabilityApi` controller AJAX endpoints to simplify slot validation, pricing lookups, and multi-object filters.
+  - Simplified Admin UIs by removing the venue selector/filter from the **Tidsluker (Slots)** page and removing the venue grouping (`optgroup`) from the **Prisregler (Pricing)** rule creation form.
+
 ## [1.4.5] - 2026-05-18
 
 ### Fixed

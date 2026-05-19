@@ -65,7 +65,7 @@ class BookingApi {
 			$matched_slot_id = 0;
 			// Find which of the submitted slot_ids belongs to this object
 			foreach ( $slot_ids as $sid ) {
-				$slot_check = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE id = %d AND booking_object_id = %d", $sid, $obj_id ) );
+				$slot_check = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE id = %d", $sid ) );
 				if ( $slot_check ) {
 					$matched_slot_id = $sid;
 					break;
@@ -216,7 +216,7 @@ class BookingApi {
 					$booking_date,
 					$sms_link
 				);
-				$recipient = $customer_email;
+				$recipient    = $customer_email;
 				if ( empty( $recipient ) ) {
 					$user = get_userdata( $booking_user_id );
 					if ( $user ) {

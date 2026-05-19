@@ -26,11 +26,11 @@ class ImportPage {
 
 		echo '<div class="snippen-booking-admin-wrap">';
 		$this->render_header();
-		
+
 		if ( $results ) {
 			$this->render_results( $results );
 		}
-		
+
 		$this->render_form();
 		echo '</div>';
 	}
@@ -73,7 +73,7 @@ class ImportPage {
 	 * Render the form
 	 */
 	private function render_form() {
-		$format = isset( $_POST['snippen_import_format'] ) ? sanitize_text_field( $_POST['snippen_import_format'] ) : 'line';
+		$format  = isset( $_POST['snippen_import_format'] ) ? sanitize_text_field( $_POST['snippen_import_format'] ) : 'line';
 		$mapping = isset( $_POST['snippen_import_mapping'] ) ? sanitize_text_field( $_POST['snippen_import_mapping'] ) : 'name,email,phone';
 
 		echo '<div class="snippen-card">';
@@ -225,7 +225,7 @@ class ImportPage {
 				if ( is_wp_error( $user_id ) ) {
 					$logs[] = sprintf( "ERROR: Kunne ikke importere '%s' - %s", esc_html( $name ), $user_id->get_error_message() );
 				} else {
-					$success_count++;
+					++$success_count;
 					$imported_ids[] = $user_id;
 				}
 			}
@@ -239,7 +239,7 @@ class ImportPage {
 				$line = trim( $lines[ $i ] );
 
 				if ( empty( $line ) || $line === 'Reservert' ) {
-					$i++;
+					++$i;
 					continue;
 				}
 
@@ -250,7 +250,7 @@ class ImportPage {
 					// Look-ahead for email (Line + 1)
 					$next_non_empty_idx = $i + 1;
 					while ( $next_non_empty_idx < $total_lines && trim( $lines[ $next_non_empty_idx ] ) === '' ) {
-						$next_non_empty_idx++;
+						++$next_non_empty_idx;
 					}
 
 					$email_line = '';
@@ -261,7 +261,7 @@ class ImportPage {
 					// Look-ahead for phone (Line + 2)
 					$next_next_non_empty_idx = $next_non_empty_idx + 1;
 					while ( $next_next_non_empty_idx < $total_lines && trim( $lines[ $next_next_non_empty_idx ] ) === '' ) {
-						$next_next_non_empty_idx++;
+						++$next_next_non_empty_idx;
 					}
 
 					$phone_line = '';
@@ -287,7 +287,7 @@ class ImportPage {
 						if ( is_wp_error( $user_id ) ) {
 							$logs[] = sprintf( "ERROR: Kunne ikke importere '%s' - %s", esc_html( $name ), $user_id->get_error_message() );
 						} else {
-							$success_count++;
+							++$success_count;
 							$imported_ids[] = $user_id;
 						}
 
@@ -296,11 +296,11 @@ class ImportPage {
 					} else {
 						// Shift / missing field detected! Skip current name and recover from next line
 						$logs[] = sprintf( "ERROR: '%s' hoppet over - Mangler e-post eller telefonnummer.", esc_html( $name ) );
-						$i++;
+						++$i;
 					}
 				} else {
 					// Orphan email/phone or unrelated lines
-					$i++;
+					++$i;
 				}
 			}
 		}
@@ -313,15 +313,15 @@ class ImportPage {
 				'fields' => 'ID',
 			)
 		);
-		$residents = array_map( 'intval', $residents );
+		$residents     = array_map( 'intval', $residents );
 
 		foreach ( $residents as $res_id ) {
 			if ( ! in_array( $res_id, $imported_ids, true ) ) {
-				$user_meta = get_userdata( $res_id );
+				$user_meta    = get_userdata( $res_id );
 				$display_name = $user_meta ? $user_meta->display_name : 'ID ' . $res_id;
-				
+
 				update_user_meta( $res_id, 'snippen_user_deleted', 'yes' );
-				$deleted_count++;
+				++$deleted_count;
 				$logs[] = sprintf( "INFO: '%s' er ikke lenger i import-listen, markert som slettet.", esc_html( $display_name ) );
 			}
 		}
@@ -336,11 +336,11 @@ class ImportPage {
 	/**
 	 * Perform Upsert on Resident
 	 *
-	 * @param string $name
-	 * @param string $email
+	 * @param string       $name
+	 * @param string       $email
 	 * @param string|false $normalized_phone
-	 * @param string $address
-	 * @param string $unit
+	 * @param string       $address
+	 * @param string       $unit
 	 * @return int|\WP_Error User ID on success or WP_Error on failure.
 	 */
 	private function upsert_resident( $name, $email, $normalized_phone, $address = '', $unit = '' ) {

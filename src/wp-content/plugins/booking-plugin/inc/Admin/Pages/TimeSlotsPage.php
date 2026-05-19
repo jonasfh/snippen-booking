@@ -85,7 +85,6 @@ class TimeSlotsPage {
 		$table = $wpdb->prefix . 'snippen_time_slots';
 
 		$id                 = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$booking_object_id  = intval( $_POST['booking_object_id'] );
 		$name               = sanitize_text_field( $_POST['name'] );
 		$description        = sanitize_textarea_field( $_POST['description'] );
 		$start_time         = sanitize_text_field( $_POST['start_time'] );
@@ -94,7 +93,6 @@ class TimeSlotsPage {
 		$allow_multi_object = isset( $_POST['allow_multi_object'] ) ? 1 : 0;
 
 		$data = array(
-			'booking_object_id'  => $booking_object_id,
 			'name'               => $name,
 			'description'        => $description,
 			'start_time'         => $start_time,
@@ -139,42 +137,19 @@ class TimeSlotsPage {
 	 */
 	private function render_list( $object_filter = 0 ) {
 		global $wpdb;
-		$table_slots   = $wpdb->prefix . 'snippen_time_slots';
-		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
-
-		$objects = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
-
-		// Filter UI
-		echo '<div class="snippen-card">';
-		echo '<form method="get" action="">';
-		echo '<input type="hidden" name="page" value="snippen-booking-slots">';
-		echo '<div class="snippen-filter-row" style="display:flex; align-items:center; gap:10px;">';
-		echo '<label>' . esc_html__( 'Filtrer på lokale:', 'snippen-booking' ) . '</label>';
-		echo '<select name="object_id" onchange="this.form.submit()">';
-		echo '<option value="0">' . esc_html__( 'Alle lokaler', 'snippen-booking' ) . '</option>';
-		foreach ( $objects as $obj ) {
-			echo '<option value="' . esc_attr( $obj->id ) . '" ' . selected( $object_filter, $obj->id, false ) . '>' . esc_html( $obj->name ) . '</option>';
-		}
-		echo '</select>';
-		echo '</div></form>';
-		echo '</div>';
+		$table_slots = $wpdb->prefix . 'snippen_time_slots';
 
 		// Query slots
-		$query = "SELECT s.*, o.name as object_name 
+		$query = "SELECT s.* 
                   FROM $table_slots s 
-                  JOIN $table_objects o ON s.booking_object_id = o.id 
-                  WHERE s.deleted_at IS NULL";
-		if ( $object_filter > 0 ) {
-			$query .= $wpdb->prepare( ' AND s.booking_object_id = %d', $object_filter );
-		}
-		$query .= ' ORDER BY o.name ASC, s.start_time ASC';
+                  WHERE s.deleted_at IS NULL 
+                  ORDER BY s.start_time ASC";
 
 		$slots = $wpdb->get_results( $query );
 
 		echo '<div class="snippen-card">';
 		echo '<table class="snippen-list-table">';
 		echo '<thead><tr>';
-		echo '<th>' . esc_html__( 'Lokale', 'snippen-booking' ) . '</th>';
 		echo '<th>' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
 		echo '<th>' . esc_html__( 'Tid', 'snippen-booking' ) . '</th>';
 		echo '<th>' . esc_html__( 'Vask (t)', 'snippen-booking' ) . '</th>';
@@ -184,14 +159,13 @@ class TimeSlotsPage {
 		echo '<tbody>';
 
 		if ( empty( $slots ) ) {
-			echo '<tr><td colspan="6">' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</td></tr>';
+			echo '<tr><td colspan="5">' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $slots as $slot ) {
 				$edit_url   = admin_url( 'admin.php?page=snippen-booking-slots&action=edit&id=' . $slot->id );
 				$delete_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-slots&action=delete&id=' . $slot->id ), 'delete_slot_' . $slot->id );
 
 				echo '<tr>';
-				echo '<td>' . esc_html( $slot->object_name ) . '</td>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $slot->name ) . '</a></strong></td>';
 				echo '<td>' . esc_html( substr( $slot->start_time, 0, 5 ) . ' - ' . substr( $slot->end_time, 0, 5 ) ) . '</td>';
 				echo '<td>' . esc_html( $slot->cleanup_hours ) . '</td>';
@@ -212,29 +186,16 @@ class TimeSlotsPage {
 	 */
 	private function render_form( $id = 0 ) {
 		global $wpdb;
-		$table_slots   = $wpdb->prefix . 'snippen_time_slots';
-		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
-		$slot          = null;
+		$table_slots = $wpdb->prefix . 'snippen_time_slots';
+		$slot        = null;
 
 		if ( $id > 0 ) {
 			$slot = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_slots WHERE id = %d", $id ) );
 		}
 
-		$objects = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
-
 		echo '<div class="snippen-card"><form method="post" action="">';
 		wp_nonce_field( 'snippen_save_slot', 'snippen_slot_nonce' );
 		echo '<input type="hidden" name="id" value="' . esc_attr( $id ) . '">';
-
-		echo '<div class="snippen-form-group">';
-		echo '<label for="booking_object_id">' . esc_html__( 'Tilhører lokale', 'snippen-booking' ) . '</label>';
-		echo '<select name="booking_object_id" id="booking_object_id" required>';
-		echo '<option value="">' . esc_html__( 'Velg lokale...', 'snippen-booking' ) . '</option>';
-		foreach ( $objects as $obj ) {
-			echo '<option value="' . esc_attr( $obj->id ) . '" ' . selected( $slot ? $slot->booking_object_id : 0, $obj->id, false ) . '>' . esc_html( $obj->name ) . '</option>';
-		}
-		echo '</select>';
-		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
 		echo '<label for="name">' . esc_html__( 'Navn på tidsluke', 'snippen-booking' ) . '</label>';
