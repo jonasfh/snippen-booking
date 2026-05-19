@@ -24,8 +24,8 @@ $name = getenv('TEST_USER_NAME') ?: 'Test User';
 $pass = getenv('TEST_USER_PASS') ?: 'passord123';
 
 if (!$email || !$phone) {
-    echo "Error: TEST_USER_EMAIL and TEST_USER_PHONE must be set in .env\n";
-    exit(1);
+    echo "Info: TEST_USER_EMAIL and TEST_USER_PHONE are not set in .env. Skipping test user creation.\n";
+    exit(0);
 }
 
 $username = strtolower(str_replace(' ', '.', $name));
