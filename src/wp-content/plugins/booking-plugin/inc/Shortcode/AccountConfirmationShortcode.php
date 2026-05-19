@@ -26,7 +26,7 @@ class AccountConfirmationShortcode {
 	 */
 	public static function render() {
 		if ( is_user_logged_in() ) {
-			return '<div class="snippen-booking-info">' . esc_html__( 'Du er allerede logget inn.', 'snippen-booking' ) . '</div>';
+			return '';
 		}
 
 		wp_enqueue_style( 'snippen-booking-public', plugins_url( 'css/booking.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );

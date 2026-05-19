@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.4] - 2026-05-19
+
+### Changed
+- **Account Confirmation Shortcode**: Updated the `[snippen_account_confirmation]` shortcode to return an empty string when the user is already logged in, ensuring no redundant output is displayed.
+- **Unit and Integration Tests**: Added a new integration test suite `AccountConfirmationShortcodeTest.php` to verify shortcode behavior for logged-in and guest users.
+
+
 ## [1.5.3] - 2026-05-19
 
 ### Removed
