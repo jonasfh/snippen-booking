@@ -1,6 +1,9 @@
 name: PHPUnit Tests
 
 on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
     paths:
@@ -44,13 +47,16 @@ jobs:
         wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1
         wp core install --path=/tmp/wordpress --url=http://localhost --title="Test Site" --admin_user=admin --admin_password=admin --admin_email=admin@example.com
         
+        # Link and activate the plugin so constants and hooks are registered
+        ln -s $GITHUB_WORKSPACE/src/wp-content/plugins/booking-plugin /tmp/wordpress/wp-content/plugins/snippen-booking
+        wp plugin activate snippen-booking --path=/tmp/wordpress
+        
     - name: Run tests
       env:
         WP_ABSPATH: /tmp/wordpress/
       run: |
         echo "### PHPUnit Test Results 🧪" >> $GITHUB_STEP_SUMMARY
-        # Run activation manually to create tables since we're not running a full WP request cycle
-        php -r "require_once '/tmp/wordpress/wp-load.php'; require_once 'src/wp-content/plugins/booking-plugin/autoloader.php'; \SnippenBooking\Plugin::activate();"
+        # Run PHPUnit tests
         if composer test; then
           echo "✅ Alle tester passerte!" >> $GITHUB_STEP_SUMMARY
         else
