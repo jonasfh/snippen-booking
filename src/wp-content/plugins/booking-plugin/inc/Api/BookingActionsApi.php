@@ -25,7 +25,7 @@ class BookingActionsApi {
 		$id     = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
 		$status = isset( $_POST['status'] ) ? sanitize_text_field( $_POST['status'] ) : '';
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'manage_snippen_bookings' ) ) {
 			// Only allow cancellation of own bookings for non-admins
 			if ( $status !== 'cancelled' ) {
 				wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );

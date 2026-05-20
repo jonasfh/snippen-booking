@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.5] - 2026-05-20
+
+### Added
+- **Booking Management Capability**: Introduced the dedicated `manage_snippen_bookings` capability to decouple booking administration from the WordPress `administrator` role.
+- **User Profile UI Field**: Added a new "Booking administrator" checkbox to the WordPress user profile screen (visible only to those who can edit users) to manually grant or revoke the capability.
+- **Backward Compatibility Mapping**: Implemented a dynamic mapping filter on `user_has_cap` to automatically grant `manage_snippen_bookings` capability to existing site administrators (users with `manage_options`) without silent database modifications.
+- **Notification email routing**: Updated email notification dispatching so booking request notifications are sent exclusively to users possessing the `manage_snippen_bookings` capability.
+- **Integration Tests**: Created a full suite of integration tests in `BookingManagementCapabilityTest.php` covering dynamic user capability assignment, backwards compatibility, action access controls, and notification email routing.
+
 ## [1.5.4] - 2026-05-19
 
 ### Changed

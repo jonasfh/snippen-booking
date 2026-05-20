@@ -24,7 +24,7 @@ class UserApi {
 	 * Search users by name, login or email
 	 */
 	public static function search_users() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'manage_snippen_bookings' ) ) {
 			wp_send_json_error( array( 'message' => 'Ingen tilgang.' ) );
 		}
 

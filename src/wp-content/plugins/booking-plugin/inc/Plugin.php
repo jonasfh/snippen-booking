@@ -175,7 +175,7 @@ class Plugin {
 		} else {
 			// 3. Logged in -> check permission
 			$current_user_id = get_current_user_id();
-			$is_admin        = current_user_can( 'manage_options' );
+			$is_admin        = current_user_can( 'manage_snippen_bookings' );
 			$is_owner        = intval( $booking->user_id ) === $current_user_id;
 
 			if ( ! $is_admin && ! $is_owner ) {
