@@ -4,6 +4,7 @@ namespace SnippenBooking\Api;
 
 use SnippenBooking\Service\AvailabilityService;
 use SnippenBooking\Service\PricingService;
+use SnippenBooking\Helper\Capabilities;
 
 /**
  * Handles booking submission AJAX requests
@@ -88,7 +89,7 @@ class BookingApi {
 		$current_user_id = get_current_user_id();
 		$booking_user_id = $current_user_id;
 
-		if ( current_user_can( 'manage_snippen_bookings' ) && ! empty( $_POST['user_id'] ) ) {
+		if ( Capabilities::can_manage_bookings() && ! empty( $_POST['user_id'] ) ) {
 			$booking_user_id = intval( $_POST['user_id'] );
 		}
 

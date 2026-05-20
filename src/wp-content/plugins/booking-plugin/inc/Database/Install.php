@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Database;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Handles plugin activation and database setup
  */
@@ -127,9 +129,29 @@ class Install {
 		// Run migrations
 		MigrationManager::run();
 
+		// Register plugin capabilities
+		// NOTE: Capabilities are NOT automatically assigned to any role.
+		// Site administrators must manually assign them to roles via admin UI.
+		self::register_capabilities();
+
 		// Register custom resident role (Issue #37)
 		$subscriber   = get_role( 'subscriber' );
 		$capabilities = $subscriber ? $subscriber->capabilities : array( 'read' => true );
 		add_role( 'holmen_resident', __( 'Holmen Sameie Beboer', 'snippen-booking' ), $capabilities );
+	}
+
+	/**
+	 * Register plugin-specific capabilities.
+	 *
+	 * This method makes plugin capabilities available in WordPress.
+	 * Capabilities are NOT automatically assigned to any role - site administrators
+	 * must manually assign them to roles via the admin UI or programmatically.
+	 *
+	 * @return void
+	 */
+	private static function register_capabilities() {
+		// Plugin capabilities are defined in the Capabilities helper class.
+		// They can be assigned to roles via WordPress admin UI or programmatically.
+		// This is a documentation point - capabilities are defined in Capabilities::get_all_capabilities()
 	}
 }

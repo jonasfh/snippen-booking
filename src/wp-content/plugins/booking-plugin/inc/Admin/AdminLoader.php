@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Admin;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Main loader for the admin interface
  */
@@ -41,28 +43,6 @@ class AdminLoader {
 
 		// Custom user profile fields
 		UserProfile::register();
-
-		// Add backwards compatibility capability mapping
-		add_filter( 'user_has_cap', array( __CLASS__, 'map_admin_capabilities' ), 10, 4 );
-	}
-
-	/**
-	 * Map manage_snippen_bookings capability to site administrators (manage_options) for backwards compatibility
-	 *
-	 * @param array   $allcaps All the capabilities of the user.
-	 * @param array   $caps    Actual capabilities being checked.
-	 * @param array   $args    Parameters passed to current_user_can().
-	 * @param \WP_User $user    The user object.
-	 * @return array
-	 */
-	public static function map_admin_capabilities( $allcaps, $caps, $args, $user ) {
-		if ( in_array( 'manage_snippen_bookings', $caps, true ) ) {
-			// If the user has manage_options capability, grant manage_snippen_bookings dynamically
-			if ( ! empty( $allcaps['manage_options'] ) ) {
-				$allcaps['manage_snippen_bookings'] = true;
-			}
-		}
-		return $allcaps;
 	}
 
 	/**
@@ -72,7 +52,7 @@ class AdminLoader {
 		add_menu_page(
 			__( 'Bookinger', 'snippen-booking' ),
 			__( 'Bookinger', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking',
 			array( self::class, 'render_bookings_page' ),
 			'dashicons-calendar-alt',
@@ -93,7 +73,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Oversikt', 'snippen-booking' ),
 			__( 'Oversikt', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking',
 			array( self::class, 'render_bookings_page' )
 		);
@@ -102,7 +82,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Lokaler', 'snippen-booking' ),
 			__( 'Lokaler', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking-objects',
 			array( self::class, 'render_objects_page' )
 		);
@@ -111,7 +91,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Tidsluker', 'snippen-booking' ),
 			__( 'Tidsluker', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking-slots',
 			array( self::class, 'render_slots_page' )
 		);
@@ -120,7 +100,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Prisregler', 'snippen-booking' ),
 			__( 'Prisregler', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking-pricing',
 			array( self::class, 'render_pricing_page' )
 		);
@@ -129,7 +109,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Innstillinger', 'snippen-booking' ),
 			__( 'Innstillinger', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking-settings',
 			array( self::class, 'render_settings_page' )
 		);
@@ -141,7 +121,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Beboer Import', 'snippen-booking' ),
 			__( 'Beboer Import', 'snippen-booking' ),
-			'manage_snippen_bookings',
+			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking-import',
 			array( self::class, 'render_import_page' )
 		);

@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Api;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Handles user-related AJAX requests
  */
@@ -24,7 +26,7 @@ class UserApi {
 	 * Search users by name, login or email
 	 */
 	public static function search_users() {
-		if ( ! current_user_can( 'manage_snippen_bookings' ) ) {
+		if ( ! Capabilities::can_manage_bookings() ) {
 			wp_send_json_error( array( 'message' => 'Ingen tilgang.' ) );
 		}
 

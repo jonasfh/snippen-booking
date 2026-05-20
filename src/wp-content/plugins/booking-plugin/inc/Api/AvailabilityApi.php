@@ -4,6 +4,7 @@ namespace SnippenBooking\Api;
 
 use SnippenBooking\Service\AvailabilityService;
 use SnippenBooking\Service\PricingService;
+use SnippenBooking\Helper\Capabilities;
 
 /**
  * Handles AJAX availability requests
@@ -76,7 +77,7 @@ class AvailabilityApi {
 		$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
 		$table_objects         = $wpdb->prefix . 'snippen_booking_objects';
 
-		$is_admin      = current_user_can( 'manage_snippen_bookings' );
+		$is_admin      = Capabilities::can_manage_bookings();
 		$select_fields = 'b.booking_date, b.slot_id, s.name as slot_name, s.start_time, s.end_time, s.cleanup_hours';
 		if ( $is_admin ) {
 			$select_fields .= ', b.customer_name, b.customer_email, b.customer_phone, b.description as booking_description';

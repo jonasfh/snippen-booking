@@ -8,6 +8,7 @@ use SnippenBooking\Shortcode\BookingShortcode;
 use SnippenBooking\Api\AvailabilityApi;
 use SnippenBooking\Api\BookingApi;
 use SnippenBooking\Admin\AdminLoader;
+use SnippenBooking\Helper\Capabilities;
 
 /**
  * Main plugin class - bootstrapper
@@ -176,7 +177,7 @@ class Plugin {
 		} else {
 			// 3. Logged in -> check permission
 			$current_user_id = get_current_user_id();
-			$is_admin        = current_user_can( 'manage_snippen_bookings' );
+			$is_admin        = Capabilities::can_manage_bookings();
 			$is_owner        = intval( $booking->user_id ) === $current_user_id;
 
 			if ( ! $is_admin && ! $is_owner ) {
@@ -320,8 +321,8 @@ class Plugin {
 	 * @return void
 	 */
 	public static function maybe_redirect_to_setup_wizard() {
-		// Only for admins
-		if ( ! current_user_can( 'manage_options' ) ) {
+		// Only for users with booking management capability
+		if ( ! Capabilities::can_manage_bookings() ) {
 			return;
 		}
 

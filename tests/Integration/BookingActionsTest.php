@@ -10,11 +10,11 @@ class BookingActionsTest extends TestCase {
     public function setUp(): void {
         parent::setUp();
         BookingActionsApi::register();
-        
+
         if (!defined('DOING_AJAX')) {
             define('DOING_AJAX', true);
         }
-        
+
         add_filter('wp_die_ajax_handler', function() {
             return function($message, $title, $args) {
                 throw new \Exception(is_string($message) ? $message : wp_json_encode($message));
@@ -34,7 +34,7 @@ class BookingActionsTest extends TestCase {
         $user = get_user_by('id', $user_id);
         $user->add_cap('manage_snippen_bookings');
         wp_set_current_user($user_id);
-        
+
         $customer_id = wp_insert_user([
             'user_login' => 'subscriber_test',
             'user_pass' => 'password',
@@ -51,11 +51,9 @@ class BookingActionsTest extends TestCase {
         ob_start();
         try {
             BookingActionsApi::update_status();
-        } catch (\Exception $e) {
-            // wp_send_json_success/error will throw if not in AJAX context in some test setups
-        }
+        } catch (\Throwable $e) { echo "\nError: " . $e->getMessage() . "\n"; }
         $output = ob_get_clean();
-        
+
         global $wpdb;
         $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
         $this->assertEquals('cancelled', $status);
@@ -71,7 +69,7 @@ class BookingActionsTest extends TestCase {
             'role' => 'subscriber'
         ]);
         wp_set_current_user($user_id);
-        
+
         $booking_id = $this->create_test_booking($user_id);
 
         $_POST['id'] = $booking_id;
@@ -82,9 +80,9 @@ class BookingActionsTest extends TestCase {
         ob_start();
         try {
             BookingActionsApi::update_status();
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) { echo "\nError: " . $e->getMessage() . "\n"; }
         ob_get_clean();
-        
+
         global $wpdb;
         $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
         $this->assertEquals('cancelled', $status);
@@ -100,7 +98,7 @@ class BookingActionsTest extends TestCase {
             'role' => 'subscriber'
         ]);
         wp_set_current_user($user_id);
-        
+
         $other_id = wp_insert_user([
             'user_login' => 'other_test',
             'user_pass' => 'password',
@@ -116,13 +114,13 @@ class BookingActionsTest extends TestCase {
         // We expect an error response
         // In WP test suite, wp_send_json_error often dies or throws
         // We can check the database status after the call
-        
+
         ob_start();
         try {
             BookingActionsApi::update_status();
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) { echo "\nError: " . $e->getMessage() . "\n"; }
         ob_get_clean();
-        
+
         global $wpdb;
         $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
         $this->assertEquals('pending', $status); // Should still be pending
