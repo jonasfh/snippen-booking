@@ -19,3 +19,6 @@ require_once __DIR__ . '/../src/wp-content/plugins/booking-plugin/autoloader.php
 
 // Define test fixtures directory
 define( 'SNIPPEN_BOOKING_TESTS_DIR', __DIR__ );
+
+// Ensure tables and seed data exist for all tests
+\SnippenBooking\Database\Install::activate();

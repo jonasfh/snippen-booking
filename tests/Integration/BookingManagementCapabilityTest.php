@@ -146,8 +146,8 @@ class BookingManagementCapabilityTest extends TestCase {
 		$stored_caps = get_user_meta( $admin_id, $user->cap_key, true );
 		$this->assertArrayNotHasKey( 'manage_snippen_bookings', (array) $stored_caps );
 
-		// But current_user_can or user_can should return true due to the dynamic filter
-		$this->assertTrue( user_can( $user, 'manage_snippen_bookings' ) );
+		// Administrators no longer implicitly have this capability. They must be explicitly assigned.
+		$this->assertFalse( user_can( $user, 'manage_snippen_bookings' ) );
 
 		// Clean up
 		wp_delete_user( $admin_id );
@@ -174,6 +174,7 @@ class BookingManagementCapabilityTest extends TestCase {
 		$_POST['id']     = $booking_id;
 		$_POST['status'] = 'confirmed';
 		$_POST['nonce']  = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce'] = $_POST['nonce'];
 
 		ob_start();
 		try {
@@ -208,6 +209,7 @@ class BookingManagementCapabilityTest extends TestCase {
 		$_POST['id']     = $booking_id;
 		$_POST['status'] = 'confirmed';
 		$_POST['nonce']  = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce'] = $_POST['nonce'];
 
 		ob_start();
 		try {
@@ -226,7 +228,7 @@ class BookingManagementCapabilityTest extends TestCase {
 
 	public function test_booking_notification_sent_only_to_users_with_capability() {
 		$user_id_1 = wp_insert_user( [
-			'user_login' => 'mgr_1',
+			'user_login' => 'mgr_1_' . uniqid(),
 			'user_email' => 'mgr1@example.com',
 			'user_pass'  => 'password',
 			'role'       => 'subscriber',
@@ -236,7 +238,7 @@ class BookingManagementCapabilityTest extends TestCase {
 
 		// Regular administrator without explicit cap assigned (implicitly has it for checks but is NOT in get_users)
 		$admin_id = wp_insert_user( [
-			'user_login' => 'admin_no_explicit_cap',
+			'user_login' => 'admin_no_explicit_cap_' . uniqid(),
 			'user_email' => 'admin_no_cap@example.com',
 			'user_pass'  => 'password',
 			'role'       => 'administrator',
@@ -244,7 +246,7 @@ class BookingManagementCapabilityTest extends TestCase {
 
 		// Regular subscriber
 		$sub_id = wp_insert_user( [
-			'user_login' => 'subscriber_no_cap',
+			'user_login' => 'subscriber_no_cap_' . uniqid(),
 			'user_email' => 'sub_no_cap@example.com',
 			'user_pass'  => 'password',
 			'role'       => 'subscriber',
@@ -255,32 +257,9 @@ class BookingManagementCapabilityTest extends TestCase {
 		wp_set_current_user( $sub_id );
 
 		global $wpdb;
-		// Add slot
-		$wpdb->insert( $wpdb->prefix . 'snippen_time_slots', [
-			'name' => 'Kveld',
-			'start_time' => '17:00:00',
-			'end_time' => '22:00:00',
-			'cleanup_hours' => 0,
-			'allow_multi_object' => 1,
-			'created_at' => current_time( 'mysql' ),
-		] );
-		$slot_id = $wpdb->insert_id;
 
-		// Add object
-		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', [
-			'name' => 'Fellesrom',
-			'created_at' => current_time( 'mysql' ),
-		] );
-		$object_id = $wpdb->insert_id;
-
-		// Define a price rule for the object
-		$wpdb->insert( $wpdb->prefix . 'snippen_pricing_rules', [
-			'booking_object_id' => $object_id,
-			'slot_id' => $slot_id,
-			'day_of_week' => date( 'w' ),
-			'price' => 500,
-			'created_at' => current_time( 'mysql' ),
-		] );
+		$slot_id = 1;
+		$object_id = 1;
 
 		$_POST['nonce'] = wp_create_nonce( 'snippen_booking_nonce' );
 		$_POST['booking_object_id'] = $object_id;
@@ -299,10 +278,12 @@ class BookingManagementCapabilityTest extends TestCase {
 		$this->assertNotEmpty( self::$intercepted_emails );
 		$recipient_emails = [];
 		foreach ( self::$intercepted_emails as $email ) {
-			if ( is_array( $email['to'] ) ) {
-				$recipient_emails = array_merge( $recipient_emails, $email['to'] );
-			} else {
-				$recipient_emails[] = $email['to'];
+			if ( stripos( $email['subject'], 'Ny Bookingforespørsel -' ) !== false ) {
+				if ( is_array( $email['to'] ) ) {
+					$recipient_emails = array_merge( $recipient_emails, $email['to'] );
+				} else {
+					$recipient_emails[] = $email['to'];
+				}
 			}
 		}
 

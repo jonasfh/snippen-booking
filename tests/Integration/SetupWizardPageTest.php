@@ -7,6 +7,8 @@ use SnippenBooking\Admin\SetupWizard;
 
 class SetupWizardPageTest extends TestCase {
 
+	protected $requires_seed_data = false;
+
 	protected function setUp(): void {
 		parent::setUp();
 		// Ensure we're in admin

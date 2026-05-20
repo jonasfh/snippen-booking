@@ -39,7 +39,7 @@ class SettingsPageTest extends TestCase {
 		$page->render();
 		$output = ob_get_clean();
 
-		$this->assertStringContainsString( 'E-post Innstillinger (SMTP)', $output );
+		$this->assertStringContainsString( 'Innstillinger for Kun E-post', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_enabled"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_host"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_port"', $output );
