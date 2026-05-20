@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.6.0] - 2026-05-20
+
+### Changed
+- **Removed Automatic Seed Data on Activation**: Plugin activation no longer automatically creates demo booking objects, time slots, and pricing models. This aligns with WordPress.org plugin expectations and ensures production-safe deployments.
+  - Plugin activation now only creates database schema, registers capabilities, and initializes required options.
+  - Database remains empty after activation, preventing pollution of production environments.
+
+### Added
+- **Optional Setup Wizard**: Implemented a lightweight setup wizard accessible after first plugin activation or manually via admin menu (Snippen Booking > Setup Wizard).
+  - **Onboarding Flow**: Guides administrators through optional configuration with the ability to create starter data.
+  - **Skippable**: Administrators can skip the wizard entirely and configure everything manually later.
+  - **Repeatable**: Setup wizard can be re-run at any time from the admin menu.
+  - **Idempotent Creation**: Wizard prevents duplicate seed data creation if run multiple times.
+  - **Smart Redirect**: Automatically redirects administrators to wizard after first activation (only once, only for single activation, respects bulk plugin activation).
+
+- **SetupWizard Class**: New `SnippenBooking\Admin\SetupWizard` class providing:
+  - `is_completed()` - Check if wizard has been completed
+  - `mark_completed()` - Mark wizard as completed (stores version info for future migrations)
+  - `reset()` - Reset wizard state for testing/re-running
+  - `create_starter_setup()` - Create starter booking objects, time slots, and pricing (idempotent)
+
+- **SetupWizardPage Admin Page**: New admin interface displaying:
+  - Welcome screen with setup wizard overview
+  - Button to create starter setup with 2 sample booking objects (Festsalen, Peisestuen), 3 time slots, and pricing for weekdays/weekends/holidays
+  - Option to skip wizard for manual configuration
+  - Information about what starter setup includes
+
+- **Comprehensive Test Suite**:
+  - `SetupWizardTest.php` - Unit tests for wizard state management and idempotent data creation
+  - `SetupWizardPageTest.php` - Integration tests for admin page rendering and form submission
+  - Updated `InstallTest.php` - Verification that activation no longer creates seed data
+
 ## [1.5.6] - 2026-05-20
 
 ### Added

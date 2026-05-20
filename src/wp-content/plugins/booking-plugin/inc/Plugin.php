@@ -24,6 +24,7 @@ class Plugin {
 		// Hook into WordPress init
 		add_action( 'init', array( __CLASS__, 'register_hooks' ) );
 		add_action( 'admin_init', array( __CLASS__, 'check_for_updates' ) );
+		add_action( 'admin_init', array( __CLASS__, 'maybe_redirect_to_setup_wizard' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 	}
 
@@ -311,5 +312,51 @@ class Plugin {
 	public static function get_mail_from_name( $original_name ) {
 		$from_name = get_option( 'snippen_smtp_from_name' );
 		return ! empty( $from_name ) ? $from_name : $original_name;
+	}
+
+	/**
+	 * Redirect to setup wizard on first plugin activation (only once)
+	 *
+	 * @return void
+	 */
+	public static function maybe_redirect_to_setup_wizard() {
+		// Only for admins
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Check if we're on a plugin page already
+		if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'snippen-booking' ) === 0 ) {
+			return;
+		}
+
+		// Don't redirect during bulk plugin activation
+		if ( isset( $_GET['activate-multi'] ) ) {
+			return;
+		}
+
+		// Check if wizard has been completed
+		if ( \SnippenBooking\Admin\SetupWizard::is_completed() ) {
+			return;
+		}
+
+		// Check if there's already setup data
+		global $wpdb;
+		$object_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
+		if ( $object_count > 0 ) {
+			\SnippenBooking\Admin\SetupWizard::mark_completed();
+			return;
+		}
+
+		// Redirect to setup wizard
+		wp_safe_remote_get(
+			add_query_arg(
+				'page',
+				'snippen-booking-setup-wizard',
+				admin_url( 'admin.php' )
+			)
+		);
+		wp_redirect( add_query_arg( 'page', 'snippen-booking-setup-wizard', admin_url( 'admin.php' ) ) );
+		exit;
 	}
 }

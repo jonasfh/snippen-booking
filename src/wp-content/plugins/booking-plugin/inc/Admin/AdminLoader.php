@@ -134,6 +134,9 @@ class AdminLoader {
 			array( self::class, 'render_settings_page' )
 		);
 
+		// Setup Wizard
+		SetupWizardPage::register();
+
 		add_submenu_page(
 			'snippen-booking',
 			__( 'Beboer Import', 'snippen-booking' ),
