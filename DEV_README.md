@@ -165,4 +165,82 @@ erDiagram
     booking_objects ||--|{ price_objects : belongs_to
 ```
 
+## Pluggable Notification System
+
+The plugin supports a pluggable notification architecture, allowing you to easily add new SMS or email delivery providers via WordPress filter hooks.
+
+### Creating a Custom SMS Provider
+
+To create a custom SMS provider (for example, using Twilio), you must implement `SnippenBooking\Service\Notification\SmsProviderInterface`:
+
+```php
+use SnippenBooking\Service\Notification\SmsProviderInterface;
+
+class TwilioSmsProvider implements SmsProviderInterface {
+    
+    public function get_id(): string {
+        return 'twilio';
+    }
+
+    public function get_name(): string {
+        return 'Twilio SMS';
+    }
+
+    public function get_settings_schema(): array {
+        return array(
+            array(
+                'key'         => 'snippen_twilio_sid',
+                'label'       => 'Twilio Account SID',
+                'type'        => 'text',
+                'required'    => true,
+                'description' => 'Finn denne i Twilio Console.',
+            ),
+            array(
+                'key'         => 'snippen_twilio_token',
+                'label'       => 'Twilio Auth Token',
+                'type'        => 'password',
+                'required'    => true,
+                'description' => 'Hold denne hemmelig.',
+            ),
+            array(
+                'key'         => 'snippen_twilio_from',
+                'label'       => 'Twilio Telefonnummer',
+                'type'        => 'text',
+                'required'    => true,
+            ),
+        );
+    }
+
+    public function is_configured(): bool {
+        $sid   = get_option('snippen_twilio_sid');
+        $token = get_option('snippen_twilio_token');
+        $from  = get_option('snippen_twilio_from');
+        return !empty($sid) && !empty($token) && !empty($from);
+    }
+
+    public function send_sms(string $to, string $message): bool {
+        $sid   = get_option('snippen_twilio_sid');
+        $token = get_option('snippen_twilio_token');
+        $from  = get_option('snippen_twilio_from');
+        
+        // Execute HTTP requests or use the SDK to send the SMS.
+        return true;
+    }
+}
+```
+
+### Registering Your Provider
+
+Register your custom provider using the `snippen_booking_notification_providers` filter hook:
+
+```php
+add_filter('snippen_booking_notification_providers', function($providers) {
+    $providers[] = new TwilioSmsProvider();
+    return $providers;
+});
+```
+
+Once registered, your provider will automatically appear as a card inside **Innstillinger > Varslingstilbyder (Transport)**, and its configuration fields will be rendered dynamically!
+
+
 

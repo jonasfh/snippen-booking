@@ -176,69 +176,8 @@ class BookingApi {
 		}
 
 		if ( $success_count == count( $booking_object_ids ) ) {
-			// Get object names for notification
-			$table_objects = $wpdb->prefix . 'snippen_booking_objects';
-			$in_clause     = implode( ',', array_fill( 0, count( $booking_object_ids ), '%d' ) );
-			$objects       = $wpdb->get_results( $wpdb->prepare( "SELECT name FROM $table_objects WHERE id IN ($in_clause)", ...$booking_object_ids ) );
-			$object_names  = implode( ' og ', wp_list_pluck( $objects, 'name' ) );
-
-			// Send email notification to all booking administrators
-			$admin_users = get_users( array(
-				'capability' => 'manage_snippen_bookings',
-			) );
-
-			$to = array();
-			foreach ( $admin_users as $admin_user ) {
-				if ( ! empty( $admin_user->user_email ) ) {
-					$to[] = $admin_user->user_email;
-				}
-			}
-
-			if ( ! empty( $to ) ) {
-				$subject  = 'Ny Bookingforespørsel - ' . $object_names;
-				$message  = "Ny bookingforespørsel mottatt:\n\n";
-				$message .= 'Lokale: ' . $object_names . "\n";
-				$message .= 'Dato: ' . $booking_date . "\n";
-				$message .= 'Navn: ' . $customer_name . "\n";
-				$message .= 'Email: ' . $customer_email . "\n";
-				$message .= 'Telefon: ' . $customer_phone . "\n";
-				$message .= 'Beskrivelse: ' . $description . "\n";
-
-				wp_mail( $to, $subject, $message );
-			}
-
-			// Send SMS notification
-			if ( 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled' ) ) {
-				$sms_service = new \SnippenBooking\Service\KeySmsService();
-				$sms_link    = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
-				$sms_message = sprintf(
-					__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),
-					$object_names,
-					$booking_date,
-					$sms_link
-				);
-				$sms_service->send( $customer_phone, $sms_message );
-			} else {
-				// Send via email fallback!
-				$sms_link     = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
-				$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
-				$mail_message = sprintf(
-					__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
-					$object_names,
-					$booking_date,
-					$sms_link
-				);
-				$recipient    = $customer_email;
-				if ( empty( $recipient ) ) {
-					$user = get_userdata( $booking_user_id );
-					if ( $user ) {
-						$recipient = $user->user_email;
-					}
-				}
-				if ( ! empty( $recipient ) ) {
-					wp_mail( $recipient, $subject, $mail_message );
-				}
-			}
+			$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+			$notification_manager->send_booking_notifications( $booking_id, $uuid );
 
 			wp_send_json_success(
 				array(

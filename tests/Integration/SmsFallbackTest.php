@@ -111,7 +111,6 @@ class SmsFallbackTest extends TestCase {
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_time_slots',
 			array(
-				'booking_object_id' => $obj_id,
 				'name'              => 'Hele dagen',
 				'start_time'        => '10:00:00',
 				'end_time'          => '22:00:00',
