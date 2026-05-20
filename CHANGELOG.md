@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.1] - 2026-05-20
+
+### Fixed
+- **Test Suite**: Resolved massive test failures in `Unit` and `Integration` tests caused by the v1.6.0 removal of automatic database seeding.
+  - Implemented dynamic seed data injection within the core `TestCase::setUp()` environment via `SetupWizard::create_starter_setup()`.
+  - Added strict database table isolation using `TRUNCATE` instead of `DELETE` to ensure `AUTO_INCREMENT` values start cleanly at 1 for every test.
+  - Updated legacy test assertions, capability checks (`manage_snippen_bookings`), and email subject matching strategies to pass under the newly decoupled architecture.
+  - Mitigated test flakiness by forcing `uniqid()` on mock user creation routines.
+
 ## [1.6.0] - 2026-05-20
 
 ### Changed
