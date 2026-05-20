@@ -37,16 +37,26 @@ class UserProfile {
 	 * @param \WP_User $user
 	 */
 	public static function render_user_fields( $user ) {
-		// Only allow admins to see/edit this field
-		if ( ! current_user_can( 'manage_options' ) ) {
+		// Only allow users who can manage/edit users to see/edit these fields
+		if ( ! current_user_can( 'edit_users' ) ) {
 			return;
 		}
 
+		wp_nonce_field( 'snippen_booking_user_fields', 'snippen_booking_user_fields_nonce' );
 		$phone = get_user_meta( $user->ID, 'snippen_phone', true );
 		?>
 		<hr />
 		<h3><?php _e( 'Snippen Booking Informasjon', 'snippen-booking' ); ?></h3>
 		<table class="form-table">
+			<tr>
+				<th><label for="manage_snippen_bookings"><?php _e( 'Booking administrator', 'snippen-booking' ); ?></label></th>
+				<td>
+					<label>
+						<input type="checkbox" name="manage_snippen_bookings" id="manage_snippen_bookings" value="yes" <?php checked( user_can( $user, 'manage_snippen_bookings' ) ); ?> />
+						<?php _e( 'Can manage bookings and receive booking notifications.', 'snippen-booking' ); ?>
+					</label>
+				</td>
+			</tr>
 			<tr>
 				<th><label for="snippen_phone"><?php _e( 'Telefonnummer', 'snippen-booking' ); ?></label></th>
 				<td>
@@ -91,12 +101,12 @@ class UserProfile {
 	 * @param \WP_User  $user
 	 */
 	public static function validate_user_fields( $errors, $update, $user ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'edit_users' ) ) {
 			return;
 		}
 
 		if ( isset( $_POST['snippen_phone'] ) ) {
-			$raw_phone = sanitize_text_field( $_POST['snippen_phone'] );
+			$raw_phone = sanitize_text_field( wp_unslash( $_POST['snippen_phone'] ) );
 			if ( ! empty( $raw_phone ) ) {
 				$normalized_phone = \SnippenBooking\Helper\PhoneHelper::normalize_phone( $raw_phone );
 
@@ -115,13 +125,27 @@ class UserProfile {
 	 * @param int $user_id
 	 */
 	public static function save_user_fields( $user_id ) {
-		// Only allow admins to save this field
-		if ( ! current_user_can( 'manage_options' ) ) {
+		// Only allow users with edit_users to save Snippen booking user fields
+		if ( ! current_user_can( 'edit_users' ) ) {
 			return;
 		}
 
+		// Verify custom fields nonce
+		if ( ! isset( $_POST['snippen_booking_user_fields_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['snippen_booking_user_fields_nonce'] ) ), 'snippen_booking_user_fields' ) ) {
+			return;
+		}
+
+		$user = get_userdata( $user_id );
+		if ( $user ) {
+			if ( isset( $_POST['manage_snippen_bookings'] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST['manage_snippen_bookings'] ) ) ) {
+				$user->add_cap( 'manage_snippen_bookings' );
+			} else {
+				$user->remove_cap( 'manage_snippen_bookings' );
+			}
+		}
+
 		if ( isset( $_POST['snippen_phone'] ) ) {
-			$raw_phone = sanitize_text_field( $_POST['snippen_phone'] );
+			$raw_phone = sanitize_text_field( wp_unslash( $_POST['snippen_phone'] ) );
 			if ( empty( $raw_phone ) ) {
 				update_user_meta( $user_id, 'snippen_phone', '' );
 			} else {
@@ -132,11 +156,11 @@ class UserProfile {
 			}
 		}
 
-		if ( isset( $_POST['snippen_force_confirm'] ) && $_POST['snippen_force_confirm'] === 'yes' ) {
+		if ( isset( $_POST['snippen_force_confirm'] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST['snippen_force_confirm'] ) ) ) {
 			update_user_meta( $user_id, 'snippen_account_confirmed', 'yes' );
 		}
 
-		if ( isset( $_POST['snippen_user_deleted'] ) && $_POST['snippen_user_deleted'] === 'yes' ) {
+		if ( isset( $_POST['snippen_user_deleted'] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST['snippen_user_deleted'] ) ) ) {
 			update_user_meta( $user_id, 'snippen_user_deleted', 'yes' );
 		} else {
 			delete_user_meta( $user_id, 'snippen_user_deleted' );
@@ -150,7 +174,7 @@ class UserProfile {
 	 * @return array
 	 */
 	public static function add_deleted_residents_view( $views ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'edit_users' ) ) {
 			return $views;
 		}
 
@@ -184,7 +208,7 @@ class UserProfile {
 	 * @param \WP_User_Query $query
 	 */
 	public static function filter_users_by_deleted_status( $query ) {
-		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_admin() || ! current_user_can( 'edit_users' ) ) {
 			return;
 		}
 

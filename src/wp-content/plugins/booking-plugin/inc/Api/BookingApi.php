@@ -88,7 +88,7 @@ class BookingApi {
 		$current_user_id = get_current_user_id();
 		$booking_user_id = $current_user_id;
 
-		if ( current_user_can( 'manage_options' ) && ! empty( $_POST['user_id'] ) ) {
+		if ( current_user_can( 'manage_snippen_bookings' ) && ! empty( $_POST['user_id'] ) ) {
 			$booking_user_id = intval( $_POST['user_id'] );
 		}
 
@@ -182,18 +182,30 @@ class BookingApi {
 			$objects       = $wpdb->get_results( $wpdb->prepare( "SELECT name FROM $table_objects WHERE id IN ($in_clause)", ...$booking_object_ids ) );
 			$object_names  = implode( ' og ', wp_list_pluck( $objects, 'name' ) );
 
-			// Send email notification
-			$to       = get_option( 'admin_email' );
-			$subject  = 'Ny Bookingforespørsel - ' . $object_names;
-			$message  = "Ny bookingforespørsel mottatt:\n\n";
-			$message .= 'Lokale: ' . $object_names . "\n";
-			$message .= 'Dato: ' . $booking_date . "\n";
-			$message .= 'Navn: ' . $customer_name . "\n";
-			$message .= 'Email: ' . $customer_email . "\n";
-			$message .= 'Telefon: ' . $customer_phone . "\n";
-			$message .= 'Beskrivelse: ' . $description . "\n";
+			// Send email notification to all booking administrators
+			$admin_users = get_users( array(
+				'capability' => 'manage_snippen_bookings',
+			) );
 
-			wp_mail( $to, $subject, $message );
+			$to = array();
+			foreach ( $admin_users as $admin_user ) {
+				if ( ! empty( $admin_user->user_email ) ) {
+					$to[] = $admin_user->user_email;
+				}
+			}
+
+			if ( ! empty( $to ) ) {
+				$subject  = 'Ny Bookingforespørsel - ' . $object_names;
+				$message  = "Ny bookingforespørsel mottatt:\n\n";
+				$message .= 'Lokale: ' . $object_names . "\n";
+				$message .= 'Dato: ' . $booking_date . "\n";
+				$message .= 'Navn: ' . $customer_name . "\n";
+				$message .= 'Email: ' . $customer_email . "\n";
+				$message .= 'Telefon: ' . $customer_phone . "\n";
+				$message .= 'Beskrivelse: ' . $description . "\n";
+
+				wp_mail( $to, $subject, $message );
+			}
 
 			// Send SMS notification
 			if ( 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled' ) ) {
