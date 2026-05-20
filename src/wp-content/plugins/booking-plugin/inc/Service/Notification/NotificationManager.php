@@ -7,6 +7,8 @@
 
 namespace SnippenBooking\Service\Notification;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Class NotificationManager
  */
@@ -194,7 +196,7 @@ class NotificationManager {
 		// 1. Send admin notification alerts
 		$admin_route = $this->get_channel_route( self::TYPE_ADMIN_BOOKING );
 		$admin_users = get_users( array(
-			'capability' => 'manage_snippen_bookings',
+			'capability' => Capabilities::MANAGE_BOOKINGS,
 		) );
 
 		$admin_emails = array();

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.2] - 2026-05-21
+
+### Changed
+- **Capability-Based Authorization**: Replaced all hardcoded string checks for `manage_snippen_bookings` with the `Capabilities` helper class.
+- **Admin Access**: Removed implicit `manage_options` mapping to `manage_snippen_bookings` capability for administrators. The capability must now be explicitly assigned.
+
 ## [1.6.1] - 2026-05-20
 
 ### Fixed

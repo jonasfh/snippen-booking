@@ -8,6 +8,7 @@
 namespace SnippenBooking\Admin\Pages;
 
 use SnippenBooking\Helper\PhoneHelper;
+use SnippenBooking\Helper\Capabilities;
 
 /**
  * Import Page
@@ -18,7 +19,7 @@ class ImportPage {
 	 * Render the page
 	 */
 	public function render() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::can_manage_bookings() ) {
 			wp_die( esc_html__( 'Ingen tilgang.', 'snippen-booking' ) );
 		}
 

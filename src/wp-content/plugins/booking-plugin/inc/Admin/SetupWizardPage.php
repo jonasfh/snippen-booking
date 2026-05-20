@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Admin;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Setup Wizard Admin Page
  */
@@ -17,7 +19,7 @@ class SetupWizardPage {
 			'snippen-booking',
 			__( 'Setup Wizard', 'snippen-booking' ),
 			__( 'Setup Wizard', 'snippen-booking' ),
-			'manage_options',
+			Capabilities::MANAGE_BOOKINGS,
 			self::PAGE_SLUG,
 			array( __CLASS__, 'render_page' )
 		);

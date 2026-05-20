@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Shortcode;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Handles booking shortcode rendering
  */
@@ -78,7 +80,7 @@ class BookingShortcode {
 			data-user-name="<?php echo $user_name; ?>"
 			data-user-email="<?php echo $user_email; ?>"
 			data-user-phone="<?php echo $user_phone; ?>"
-			data-is-admin="<?php echo current_user_can( 'manage_snippen_bookings' ) ? 'true' : 'false'; ?>">
+			data-is-admin="<?php echo Capabilities::can_manage_bookings() ? 'true' : 'false'; ?>">
 			<div class="booking-header-section">
 				<div class="header-main">
 					<h3><?php echo esc_html( $combined_name ); ?></h3>
@@ -119,7 +121,7 @@ class BookingShortcode {
 					<input type="hidden" name="user_id" id="selected-user-id" value="<?php echo get_current_user_id(); ?>">
 					
 					<div class="form-grid">
-						<?php if ( current_user_can( 'manage_snippen_bookings' ) ) : ?>
+						<?php if ( Capabilities::can_manage_bookings() ) : ?>
 						<div class="form-group full-width admin-only-field">
 							<label for="user-search">Søk etter beboer (Admin)</label>
 							<div class="user-search-wrapper">
@@ -132,18 +134,18 @@ class BookingShortcode {
 
 						<div class="form-group">
 							<label for="name">Navn på beboer</label>
-							<input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" <?php echo current_user_can( 'manage_snippen_bookings' ) ? '' : 'readonly'; ?>>
+							<input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
 							<label for="email">E-post</label>
-							<input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" <?php echo current_user_can( 'manage_snippen_bookings' ) ? '' : 'readonly'; ?>>
+							<input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
 							<label for="phone">Telefon</label>
 							<input type="tel" name="phone" id="phone" placeholder="+47..." value="<?php echo esc_attr( $user_phone ); ?>" readonly required>
-							<?php if ( $is_logged_in && empty( $user_phone ) && ! current_user_can( 'manage_snippen_bookings' ) ) : ?>
+							<?php if ( $is_logged_in && empty( $user_phone ) && ! Capabilities::can_manage_bookings() ) : ?>
 								<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Mangler telefonnummer på din profil. Kontakt administrator.</p>
 							<?php endif; ?>
 						</div>
@@ -154,7 +156,7 @@ class BookingShortcode {
 						</div>
 					</div>
 
-					<button type="submit" class="booking-submit" <?php echo ( $is_logged_in && empty( $user_phone ) && ! current_user_can( 'manage_snippen_bookings' ) ) ? 'disabled' : ''; ?>>
+					<button type="submit" class="booking-submit" <?php echo ( $is_logged_in && empty( $user_phone ) && ! Capabilities::can_manage_bookings() ) ? 'disabled' : ''; ?>>
 						Send bookingforespørsel
 					</button>
 				</form>
@@ -162,7 +164,7 @@ class BookingShortcode {
 			</div>
 			<?php endif; ?>
 
-			<?php if ( current_user_can( 'manage_snippen_bookings' ) ) : ?>
+			<?php if ( Capabilities::can_manage_bookings() ) : ?>
 			<div id="booking-info-modal" class="snippen-modal" style="display: none;">
 				<div class="modal-overlay"></div>
 				<div class="modal-content">

@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Admin;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Handles custom user profile fields for administrators
  */
@@ -52,7 +54,7 @@ class UserProfile {
 				<th><label for="manage_snippen_bookings"><?php _e( 'Booking administrator', 'snippen-booking' ); ?></label></th>
 				<td>
 					<label>
-						<input type="checkbox" name="manage_snippen_bookings" id="manage_snippen_bookings" value="yes" <?php checked( user_can( $user, 'manage_snippen_bookings' ) ); ?> />
+						<input type="checkbox" name="manage_snippen_bookings" id="manage_snippen_bookings" value="yes" <?php checked( user_can( $user, Capabilities::MANAGE_BOOKINGS ) ); ?> />
 						<?php _e( 'Can manage bookings and receive booking notifications.', 'snippen-booking' ); ?>
 					</label>
 				</td>
@@ -137,10 +139,10 @@ class UserProfile {
 
 		$user = get_userdata( $user_id );
 		if ( $user ) {
-			if ( isset( $_POST['manage_snippen_bookings'] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST['manage_snippen_bookings'] ) ) ) {
-				$user->add_cap( 'manage_snippen_bookings' );
+			if ( isset( $_POST[Capabilities::MANAGE_BOOKINGS] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST[Capabilities::MANAGE_BOOKINGS] ) ) ) {
+				$user->add_cap( Capabilities::MANAGE_BOOKINGS );
 			} else {
-				$user->remove_cap( 'manage_snippen_bookings' );
+				$user->remove_cap( Capabilities::MANAGE_BOOKINGS );
 			}
 		}
 

@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Api;
 
+use SnippenBooking\Helper\Capabilities;
+
 /**
  * Handles AJAX actions for booking management (Approve/Cancel)
  */
@@ -25,7 +27,7 @@ class BookingActionsApi {
 		$id     = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
 		$status = isset( $_POST['status'] ) ? sanitize_text_field( $_POST['status'] ) : '';
 
-		if ( ! current_user_can( 'manage_snippen_bookings' ) ) {
+		if ( ! Capabilities::can_manage_bookings() ) {
 			// Only allow cancellation of own bookings for non-admins
 			if ( $status !== 'cancelled' ) {
 				wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
