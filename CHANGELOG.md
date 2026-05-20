@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.6] - 2026-05-20
+
+### Added
+- **Pluggable Notification Architecture**: Replaced tightly-coupled, hardcoded SMS and email fallback logic with an extensible, provider-based notification system registered via dynamic filters.
+- **Delivery Channels Routing**: Added a configuration panel under "Innstillinger" allowing administrators to individually route each system notification type (`user_activation`, `booking_confirmation`, `admin_booking_notification`) to either **Kun E-post (Email only)** or **SMS (med e-post fallback)**.
+- **SMS Sandbox / Utviklingsmodus**: Introduced a global settings sandbox checkbox. When enabled, all SMS notifications bypass actual sending and gracefully route to their email fallback, preventing unnecessary SMS fees during development and testing.
+- **Status Badges & Dynamic Admin Forms**: Rendered premium provider selection cards displaying active indicators and real-time status badges (Configured vs Missing settings). Custom dynamic setting forms load fields dynamically based on provider schemas with fluid CSS fade-in animations.
+- **Unit and Integration Tests**: Implemented a comprehensive suite of tests (`NotificationManagerTest.php` and `NotificationPluggableTest.php`) verifying dynamic provider registration, schema loading, sandbox mode interceptions, fallback routing, and legacy option migration pathways.
+
 ## [1.5.5] - 2026-05-20
 
 ### Added

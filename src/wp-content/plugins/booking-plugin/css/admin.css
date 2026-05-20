@@ -236,3 +236,84 @@
     color: #475569;
 }
 
+/* Pluggable Notification Provider Styles */
+.snippen-provider-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+    margin-bottom: 24px;
+}
+
+.snippen-provider-option {
+    position: relative;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+}
+
+.snippen-provider-option:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.08);
+}
+
+.snippen-provider-option.active {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+}
+
+.snippen-provider-option input[type="radio"] {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    margin: 0;
+    accent-color: var(--primary-color);
+}
+
+.snippen-provider-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.snippen-provider-status {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 12px;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.snippen-provider-status.configured {
+    color: var(--success-color);
+}
+
+.snippen-provider-status.unconfigured {
+    color: #b45309;
+}
+
+.provider-settings-section {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: snippenFadeIn 0.3s ease-in-out;
+}
+
+@keyframes snippenFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+

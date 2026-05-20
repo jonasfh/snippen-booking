@@ -1,0 +1,275 @@
+<?php
+/**
+ * Central Notification Manager Orchestrator
+ *
+ * @package SnippenBooking\Service\Notification
+ */
+
+namespace SnippenBooking\Service\Notification;
+
+/**
+ * Class NotificationManager
+ */
+class NotificationManager {
+
+	/**
+	 * Notification type: User account activation
+	 */
+	const TYPE_USER_ACTIVATION = 'user_activation';
+
+	/**
+	 * Notification type: Customer booking request confirmation
+	 */
+	const TYPE_BOOKING_CONFIRMATION = 'booking_confirmation';
+
+	/**
+	 * Notification type: Admin booking request alert
+	 */
+	const TYPE_ADMIN_BOOKING = 'admin_booking';
+
+	/**
+	 * Get all registered notification providers.
+	 *
+	 * @return NotificationProviderInterface[]
+	 */
+	public function get_providers(): array {
+		$providers = array(
+			new EmailProvider(),
+			new KeySmsProvider(),
+		);
+
+		return apply_filters( 'snippen_booking_notification_providers', $providers );
+	}
+
+	/**
+	 * Get a provider by its unique ID.
+	 *
+	 * @param string $id Provider ID.
+	 * @return NotificationProviderInterface|null
+	 */
+	public function get_provider( string $id ): ?NotificationProviderInterface {
+		foreach ( $this->get_providers() as $provider ) {
+			if ( $provider->get_id() === $id ) {
+				return $provider;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Get the active SMS/notification provider ID.
+	 * Migrates legacy option flags if the active provider is not yet set.
+	 *
+	 * @return string
+	 */
+	public function get_active_provider_id(): string {
+		$active = get_option( 'snippen_active_notification_provider' );
+		if ( false === $active ) {
+			// Migrate legacy SMS flags: if either was active, choose keysms, else email.
+			$sms_booking = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+			$sms_account = get_option( 'snippen_sms_account_confirmation_enabled', 'no' );
+			if ( 'yes' === $sms_booking || 'yes' === $sms_account ) {
+				$active = 'keysms';
+			} else {
+				$active = 'email';
+			}
+			update_option( 'snippen_active_notification_provider', $active );
+		}
+		return $active;
+	}
+
+	/**
+	 * Get the delivery route channel selected for a given notification type.
+	 * Decouples the decision of E-post vs SMS from the plugin core settings.
+	 *
+	 * @param string $type Notification type constant.
+	 * @return string 'email' or 'sms'.
+	 */
+	public function get_channel_route( string $type ): string {
+		$option_key = 'snippen_route_' . $type;
+		$route      = get_option( $option_key );
+		if ( false === $route ) {
+			// Establish backward-compatible defaults based on legacy toggles
+			if ( self::TYPE_USER_ACTIVATION === $type ) {
+				$route = ( 'yes' === get_option( 'snippen_sms_account_confirmation_enabled', 'no' ) ) ? 'sms' : 'email';
+			} elseif ( self::TYPE_BOOKING_CONFIRMATION === $type ) {
+				$route = ( 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' ) ) ? 'sms' : 'email';
+			} else {
+				$route = 'email';
+			}
+			update_option( $option_key, $route );
+		}
+		return $route;
+	}
+
+	/**
+	 * Check if SMS Sandbox / Utviklingsmodus is enabled.
+	 * When active, all SMS notifications bypass sending and route immediately
+	 * to their email fallback, saving SMS api charges.
+	 *
+	 * @return bool
+	 */
+	public function is_sandbox_mode(): bool {
+		return 'yes' === get_option( 'snippen_sms_sandbox_mode', 'no' );
+	}
+
+	/**
+	 * Send an account confirmation verification code to a user.
+	 *
+	 * @param int    $user_id User ID.
+	 * @param string $code    The 6-digit confirmation code.
+	 * @return bool True on success, false on failure.
+	 */
+	public function send_account_confirmation( int $user_id, string $code ): bool {
+		$phone = get_user_meta( $user_id, 'snippen_phone', true );
+		$user  = get_userdata( $user_id );
+		if ( ! $user ) {
+			return false;
+		}
+
+		$message = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
+		$route   = $this->get_channel_route( self::TYPE_USER_ACTIVATION );
+
+		// 1. Process SMS transport if requested and configured, unless Sandbox is enabled.
+		if ( 'sms' === $route && ! empty( $phone ) ) {
+			if ( $this->is_sandbox_mode() ) {
+				error_log( sprintf( 'NotificationManager [SANDBOX MODE]: Bypassed SMS confirmation to %s. Routing to email fallback instead. Message: %s', $phone, $message ) );
+			} else {
+				$provider_id = $this->get_active_provider_id();
+				$provider    = $this->get_provider( $provider_id );
+
+				if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
+					$success = $provider->send_sms( $phone, $message );
+					if ( $success ) {
+						return true;
+					}
+					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s provider. Attempting email fallback.', $provider_id ) );
+				}
+			}
+		}
+
+		// 2. Email fallback or direct Email transport.
+		$email_provider = $this->get_provider( 'email' );
+		if ( $email_provider instanceof EmailProviderInterface && ! empty( $user->user_email ) ) {
+			$subject = __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
+			return $email_provider->send_email( $user->user_email, $subject, $message );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Send booking request notifications (to admins and the customer).
+	 *
+	 * @param int    $booking_id Booking ID.
+	 * @param string $uuid       Booking UUID.
+	 * @return bool True if customer notification succeeds, false otherwise.
+	 */
+	public function send_booking_notifications( int $booking_id, string $uuid ): bool {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_bookings WHERE id = %d", $booking_id ) );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		// Fetch associated locales/objects
+		$objs = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM $table_junction bo 
+				 JOIN $table_objects o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		$object_names = implode( ' og ', $objs );
+
+		$email_provider = $this->get_provider( 'email' );
+
+		// 1. Send admin notification alerts
+		$admin_route = $this->get_channel_route( self::TYPE_ADMIN_BOOKING );
+		$admin_users = get_users( array(
+			'capability' => 'manage_snippen_bookings',
+		) );
+
+		$admin_emails = array();
+		foreach ( $admin_users as $admin ) {
+			if ( ! empty( $admin->user_email ) ) {
+				$admin_emails[] = $admin->user_email;
+			}
+		}
+
+		if ( ! empty( $admin_emails ) && $email_provider instanceof EmailProviderInterface ) {
+			$subject  = 'Ny Bookingforespørsel - ' . $object_names;
+			$message  = "Ny bookingforespørsel mottatt:\n\n";
+			$message .= 'Lokale: ' . $object_names . "\n";
+			$message .= 'Dato: ' . $booking->booking_date . "\n";
+			$message .= 'Navn: ' . $booking->customer_name . "\n";
+			$message .= 'Email: ' . $booking->customer_email . "\n";
+			$message .= 'Telefon: ' . $booking->customer_phone . "\n";
+			$message .= 'Beskrivelse: ' . $booking->description . "\n";
+
+			foreach ( $admin_emails as $admin_email ) {
+				$email_provider->send_email( $admin_email, $subject, $message );
+			}
+		}
+
+		// 2. Send customer confirmation
+		$customer_route = $this->get_channel_route( self::TYPE_BOOKING_CONFIRMATION );
+		$sms_link       = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
+
+		if ( 'sms' === $customer_route && ! empty( $booking->customer_phone ) ) {
+			$sms_message = sprintf(
+				__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),
+				$object_names,
+				$booking->booking_date,
+				$sms_link
+			);
+
+			if ( $this->is_sandbox_mode() ) {
+				error_log( sprintf( 'NotificationManager [SANDBOX MODE]: Bypassed SMS booking confirmation to %s. Routing to email fallback instead.', $booking->customer_phone ) );
+			} else {
+				$provider_id = $this->get_active_provider_id();
+				$provider    = $this->get_provider( $provider_id );
+
+				if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
+					$success = $provider->send_sms( $booking->customer_phone, $sms_message );
+					if ( $success ) {
+						return true;
+					}
+					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s provider. Attempting email fallback.', $provider_id ) );
+				}
+			}
+		}
+
+		// Customer Email Fallback
+		if ( $email_provider instanceof EmailProviderInterface ) {
+			$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
+			$mail_message = sprintf(
+				__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
+				$object_names,
+				$booking->booking_date,
+				$sms_link
+			);
+
+			$recipient = $booking->customer_email;
+			if ( empty( $recipient ) ) {
+				$user = get_userdata( $booking->user_id );
+				if ( $user ) {
+					$recipient = $user->user_email;
+				}
+			}
+
+			if ( ! empty( $recipient ) ) {
+				return $email_provider->send_email( $recipient, $subject, $mail_message );
+			}
+		}
+
+		return false;
+	}
+}
