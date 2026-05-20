@@ -144,6 +144,8 @@ class DoorCodeIntegrationTest extends TestCase {
 				'role'       => 'administrator',
 			) );
 		}
+		$user_obj = get_userdata( $admin_id );
+		$user_obj->add_cap('manage_snippen_bookings');
 		wp_set_current_user( $admin_id );
 
 		$_GET['booking_uuid'] = $uuid;

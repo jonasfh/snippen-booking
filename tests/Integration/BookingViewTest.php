@@ -80,13 +80,13 @@ class BookingViewTest extends TestCase {
 	 */
 	public function test_renders_unauthorized_for_other_user() {
 		$owner_id = wp_insert_user([
-			'user_login' => 'owner_user',
+			'user_login' => 'owner_user_' . uniqid(),
 			'user_pass' => 'password',
 			'role' => 'subscriber'
 		]);
 
 		$other_id = wp_insert_user([
-			'user_login' => 'other_user',
+			'user_login' => 'other_user_' . uniqid(),
 			'user_pass' => 'password',
 			'role' => 'subscriber'
 		]);
@@ -111,7 +111,7 @@ class BookingViewTest extends TestCase {
 	 */
 	public function test_owner_can_view_booking() {
 		$owner_id = wp_insert_user([
-			'user_login' => 'owner_user_2',
+			'user_login' => 'owner_user_2_' . uniqid(),
 			'user_pass' => 'password',
 			'role' => 'subscriber'
 		]);
@@ -138,16 +138,18 @@ class BookingViewTest extends TestCase {
 	 */
 	public function test_admin_can_view_any_booking() {
 		$owner_id = wp_insert_user([
-			'user_login' => 'owner_user_3',
+			'user_login' => 'owner_user_3_' . uniqid(),
 			'user_pass' => 'password',
 			'role' => 'subscriber'
 		]);
 
 		$admin_id = wp_insert_user([
-			'user_login' => 'admin_user_view',
+			'user_login' => 'admin_user_view_' . uniqid(),
 			'user_pass' => 'password',
 			'role' => 'administrator'
 		]);
+		$admin_user = get_userdata( $admin_id );
+		$admin_user->add_cap( 'manage_snippen_bookings' );
 
 		$uuid = wp_generate_uuid4();
 		$this->create_test_booking_with_uuid( $owner_id, $uuid, 'confirmed', 'Admin Viewable Booking' );

@@ -11,8 +11,15 @@ class BookingActionsTest extends TestCase {
         parent::setUp();
         BookingActionsApi::register();
         
-        // Mock global wpdb and current user if needed
-        // TestCase base class usually handles some of this
+        if (!defined('DOING_AJAX')) {
+            define('DOING_AJAX', true);
+        }
+        
+        add_filter('wp_die_ajax_handler', function() {
+            return function($message, $title, $args) {
+                throw new \Exception(is_string($message) ? $message : wp_json_encode($message));
+            };
+        });
     }
 
     /**
@@ -24,6 +31,8 @@ class BookingActionsTest extends TestCase {
             'user_pass' => 'password',
             'role' => 'administrator'
         ]);
+        $user = get_user_by('id', $user_id);
+        $user->add_cap('manage_snippen_bookings');
         wp_set_current_user($user_id);
         
         $customer_id = wp_insert_user([
@@ -36,6 +45,7 @@ class BookingActionsTest extends TestCase {
         $_POST['id'] = $booking_id;
         $_POST['status'] = 'cancelled';
         $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
 
         // Capture output
         ob_start();
@@ -67,6 +77,7 @@ class BookingActionsTest extends TestCase {
         $_POST['id'] = $booking_id;
         $_POST['status'] = 'cancelled';
         $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
 
         ob_start();
         try {
@@ -100,6 +111,7 @@ class BookingActionsTest extends TestCase {
         $_POST['id'] = $booking_id;
         $_POST['status'] = 'cancelled';
         $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
 
         // We expect an error response
         // In WP test suite, wp_send_json_error often dies or throws
