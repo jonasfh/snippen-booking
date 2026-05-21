@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-21T21:10:25+00:00\n"
+"POT-Creation-Date: 2026-05-21T21:13:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: snippen-booking\n"
@@ -360,6 +360,10 @@ msgstr ""
 
 #: inc/Admin/Pages/ImportPage.php:93
 msgid "Kolonne-mapping (for TSV)"
+msgstr ""
+
+#: inc/Admin/Pages/ImportPage.php:94
+msgid "name,email,phone"
 msgstr ""
 
 #: inc/Admin/Pages/ImportPage.php:95
@@ -1281,8 +1285,17 @@ msgstr ""
 msgid "Brukernavn eller e-post"
 msgstr ""
 
+#: inc/Shortcode/BookingListShortcode.php:79
+#: inc/Shortcode/BookingShortcode.php:142
+msgid "navn@eksempel.no"
+msgstr ""
+
 #: inc/Shortcode/BookingListShortcode.php:83
 msgid "Passord"
+msgstr ""
+
+#: inc/Shortcode/BookingListShortcode.php:84
+msgid "Ditt passord"
 msgstr ""
 
 #: inc/Shortcode/BookingListShortcode.php:90
@@ -1330,12 +1343,20 @@ msgstr ""
 msgid "Søk etter beboer (Admin)"
 msgstr ""
 
+#: inc/Shortcode/BookingShortcode.php:128
+msgid "Begynn å skrive navn eller e-post..."
+msgstr ""
+
 #: inc/Shortcode/BookingShortcode.php:131
 msgid "La feltet være tomt for å booke i ditt eget navn."
 msgstr ""
 
 #: inc/Shortcode/BookingShortcode.php:136
 msgid "Navn på beboer"
+msgstr ""
+
+#: inc/Shortcode/BookingShortcode.php:137
+msgid "Fullt navn"
 msgstr ""
 
 #: inc/Shortcode/BookingShortcode.php:149

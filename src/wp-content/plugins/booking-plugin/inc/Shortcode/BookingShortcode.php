@@ -125,7 +125,7 @@ class BookingShortcode {
 						<div class="form-group full-width admin-only-field">
 							<label for="user-search"><?php esc_html_e( 'Søk etter beboer (Admin)', 'snippen-booking' ); ?></label>
 							<div class="user-search-wrapper">
-								<input type="text" id="user-search" placeholder="Begynn å skrive navn eller e-post..." autocomplete="off" value="<?php echo $user_name; ?>">
+								<input type="text" id="user-search" placeholder="<?php esc_attr_e( 'Begynn å skrive navn eller e-post...', 'snippen-booking' ); ?>" autocomplete="off" value="<?php echo $user_name; ?>">
 								<div id="user-search-results" class="search-results-dropdown" style="display: none;"></div>
 							</div>
 							<p class="description"><?php esc_html_e( 'La feltet være tomt for å booke i ditt eget navn.', 'snippen-booking' ); ?></p>
@@ -134,12 +134,12 @@ class BookingShortcode {
 
 						<div class="form-group">
 							<label for="name"><?php esc_html_e( 'Navn på beboer', 'snippen-booking' ); ?></label>
-							<input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+							<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo $user_name; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
 							<label for="email"><?php esc_html_e( 'E-post', 'snippen-booking' ); ?></label>
-							<input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+							<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo $user_email; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">

@@ -91,7 +91,7 @@ class ImportPage {
 
 		echo '<div class="snippen-form-group" id="mapping-container" style="' . ( $format === 'tsv' ? '' : 'display:none;' ) . '">';
 		echo '<label for="snippen_import_mapping">' . esc_html__( 'Kolonne-mapping (for TSV)', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_import_mapping" id="snippen_import_mapping" value="' . esc_attr( $mapping ) . '" class="regular-text" placeholder="name,email,phone">';
+		echo '<input type="text" name="snippen_import_mapping" id="snippen_import_mapping" value="' . esc_attr( $mapping ) . '" class="regular-text" placeholder="' . esc_attr__( 'name,email,phone', 'snippen-booking' ) . '">';
 		echo '<p class="description">' . esc_html__( 'Definer rekkefølgen på kolonnene i tabellen (kommaseparert). Støttede felter: name, email, phone, address, unit', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
