@@ -199,7 +199,7 @@ class TimeSlotsPage {
 
 		echo '<div class="snippen-form-group">';
 		echo '<label for="name">' . esc_html__( 'Navn på tidsluke', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="name" id="name" value="' . esc_attr( $slot ? $slot->name : '' ) . '" required class="regular-text" placeholder="F.eks. Hele dagen">';
+		echo '<input type="text" name="name" id="name" value="' . esc_attr( $slot ? $slot->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Hele dagen', 'snippen-booking' ) . '">';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
