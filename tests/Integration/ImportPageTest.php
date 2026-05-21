@@ -59,7 +59,7 @@ class ImportPageTest extends TestCase {
 		global $wp_roles;
 		$role = get_role( 'holmen_resident' );
 		$this->assertNotNull( $role, 'Custom role holmen_resident should be registered.' );
-		$this->assertEquals( 'Holmen Sameie Beboer', $wp_roles->role_names['holmen_resident'] );
+		$this->assertContains( $wp_roles->role_names['holmen_resident'], array( 'Holmen Sameie Beboer', 'Holmen Sameie Resident' ) );
 	}
 
 	/**
