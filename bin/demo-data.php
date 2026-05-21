@@ -104,8 +104,20 @@ if ($action === 'generate') {
     $objects = $wpdb->get_results("SELECT id FROM $table_objects WHERE deleted_at IS NULL");
 
     if (empty($objects)) {
-        echo "Error: No booking objects found. Please activate the plugin first.\n";
-        exit(1);
+        echo "No booking objects found. Running Setup Wizard to create starter data...\n";
+        if (class_exists('\SnippenBooking\Admin\SetupWizard')) {
+            $result = \SnippenBooking\Admin\SetupWizard::create_starter_setup();
+            if ($result['success']) {
+                echo "Starter data created successfully.\n";
+                $objects = $wpdb->get_results("SELECT id FROM $table_objects WHERE deleted_at IS NULL");
+            } else {
+                echo "Error creating starter data: " . $result['message'] . "\n";
+                exit(1);
+            }
+        } else {
+            echo "Error: SnippenBooking\Admin\SetupWizard not found. Please activate the plugin first.\n";
+            exit(1);
+        }
     }
 
     $count = 0;
