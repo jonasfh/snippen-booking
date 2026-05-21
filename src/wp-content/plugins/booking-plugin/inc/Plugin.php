@@ -40,6 +40,8 @@ class Plugin {
 	 * Register all hooks
 	 */
 	public static function register_hooks() {
+		load_plugin_textdomain( 'snippen-booking', false, dirname( plugin_basename( dirname( __DIR__ ) . '/booking-plugin.php' ) ) . '/languages' );
+
 		BookingShortcode::register();
 		AvailabilityApi::register();
 		BookingApi::register();

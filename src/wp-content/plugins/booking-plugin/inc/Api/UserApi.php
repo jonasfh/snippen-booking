@@ -27,7 +27,7 @@ class UserApi {
 	 */
 	public static function search_users() {
 		if ( ! Capabilities::can_manage_bookings() ) {
-			wp_send_json_error( array( 'message' => 'Ingen tilgang.' ) );
+			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
 		}
 
 		$search = isset( $_GET['term'] ) ? sanitize_text_field( $_GET['term'] ) : '';
@@ -64,13 +64,13 @@ class UserApi {
 		$phone = isset( $_POST['phone'] ) ? sanitize_text_field( $_POST['phone'] ) : '';
 
 		if ( empty( $phone ) ) {
-			wp_send_json_error( array( 'message' => 'Telefonnummer mangler.' ) );
+			wp_send_json_error( array( 'message' => __( 'Telefonnummer mangler.', 'snippen-booking' ) ) );
 		}
 
 		$normalized_phone = \SnippenBooking\Helper\PhoneHelper::normalize_phone( $phone );
 
 		if ( ! $normalized_phone ) {
-			wp_send_json_error( array( 'message' => 'Ugyldig telefonnummer. Kun norske nummer er støttet.' ) );
+			wp_send_json_error( array( 'message' => __( 'Ugyldig telefonnummer. Kun norske nummer er støttet.', 'snippen-booking' ) ) );
 		}
 
 		// Find user by phone number meta
@@ -83,19 +83,19 @@ class UserApi {
 		);
 
 		if ( empty( $users ) ) {
-			wp_send_json_error( array( 'message' => 'Fant ingen beboer med dette telefonnummeret. Kontakt administrator.' ) );
+			wp_send_json_error( array( 'message' => __( 'Fant ingen beboer med dette telefonnummeret. Kontakt administrator.', 'snippen-booking' ) ) );
 		}
 
 		$user = $users[0];
 
 		if ( get_user_meta( $user->ID, 'snippen_user_deleted', true ) === 'yes' ) {
-			wp_send_json_error( array( 'message' => 'Denne beboeren er slettet eller deaktivert. Kontakt administrator.' ) );
+			wp_send_json_error( array( 'message' => __( 'Denne beboeren er slettet eller deaktivert. Kontakt administrator.', 'snippen-booking' ) ) );
 		}
 
 		$service = new \SnippenBooking\Service\AccountConfirmationService();
 
 		if ( $service->is_confirmed( $user->ID ) ) {
-			wp_send_json_error( array( 'message' => 'Kontoen er allerede bekreftet. Vennligst logg inn.' ) );
+			wp_send_json_error( array( 'message' => __( 'Kontoen er allerede bekreftet. Vennligst logg inn.', 'snippen-booking' ) ) );
 		}
 
 		$sms_enabled = 'yes' === get_option( 'snippen_sms_account_confirmation_enabled' );
@@ -124,13 +124,13 @@ class UserApi {
 		$password = isset( $_POST['password'] ) ? $_POST['password'] : '';
 
 		if ( ! $user_id || empty( $code ) || empty( $password ) ) {
-			wp_send_json_error( array( 'message' => 'Mangler nødvendige felt.' ) );
+			wp_send_json_error( array( 'message' => __( 'Mangler nødvendige felt.', 'snippen-booking' ) ) );
 		}
 
 		$service = new \SnippenBooking\Service\AccountConfirmationService();
 
 		if ( ! $service->verify_code( $user_id, $code ) ) {
-			wp_send_json_error( array( 'message' => 'Ugyldig eller utløpt kode.' ) );
+			wp_send_json_error( array( 'message' => __( 'Ugyldig eller utløpt kode.', 'snippen-booking' ) ) );
 		}
 
 		$result = $service->confirm_account( $user_id, $password );
@@ -139,6 +139,6 @@ class UserApi {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		wp_send_json_success( array( 'message' => 'Din konto er nå bekreftet! Du kan nå logge inn.' ) );
+		wp_send_json_success( array( 'message' => __( 'Din konto er nå bekreftet! Du kan nå logge inn.', 'snippen-booking' ) ) );
 	}
 }

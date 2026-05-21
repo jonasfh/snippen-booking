@@ -2,9 +2,10 @@
 /**
  * Plugin Name: Snippen Booking
  * Description: Booking plugin for Snippen community house.
- * Version: 1.6.2
+ * Version: 1.7.0
  * Author: Snippen
  * Text Domain: snippen-booking
+ * Domain Path: /languages
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
@@ -22,7 +23,7 @@ if ( ! function_exists( 'holmen_save_phone_number' ) ) {
 }
 
 // Define version constant
-define( 'SNIPPEN_BOOKING_VERSION', '1.6.2' );
+define( 'SNIPPEN_BOOKING_VERSION', '1.7.0' );
 
 // Load autoloader
 require_once __DIR__ . '/autoloader.php';

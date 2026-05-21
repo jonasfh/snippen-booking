@@ -207,14 +207,14 @@ class NotificationManager {
 		}
 
 		if ( ! empty( $admin_emails ) && $email_provider instanceof EmailProviderInterface ) {
-			$subject  = 'Ny Bookingforespørsel - ' . $object_names;
-			$message  = "Ny bookingforespørsel mottatt:\n\n";
-			$message .= 'Lokale: ' . $object_names . "\n";
-			$message .= 'Dato: ' . $booking->booking_date . "\n";
-			$message .= 'Navn: ' . $booking->customer_name . "\n";
-			$message .= 'Email: ' . $booking->customer_email . "\n";
-			$message .= 'Telefon: ' . $booking->customer_phone . "\n";
-			$message .= 'Beskrivelse: ' . $booking->description . "\n";
+			$subject  = sprintf( __( 'Ny Bookingforespørsel - %s', 'snippen-booking' ), $object_names );
+			$message  = __( 'Ny bookingforespørsel mottatt:', 'snippen-booking' ) . "\n\n";
+			$message .= __( 'Lokale:', 'snippen-booking' ) . ' ' . $object_names . "\n";
+			$message .= __( 'Dato:', 'snippen-booking' ) . ' ' . $booking->booking_date . "\n";
+			$message .= __( 'Navn:', 'snippen-booking' ) . ' ' . $booking->customer_name . "\n";
+			$message .= __( 'Email:', 'snippen-booking' ) . ' ' . $booking->customer_email . "\n";
+			$message .= __( 'Telefon:', 'snippen-booking' ) . ' ' . $booking->customer_phone . "\n";
+			$message .= __( 'Beskrivelse:', 'snippen-booking' ) . ' ' . $booking->description . "\n";
 
 			foreach ( $admin_emails as $admin_email ) {
 				$email_provider->send_email( $admin_email, $subject, $message );

@@ -9,6 +9,7 @@ class SetupWizardTest extends TestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
+		SetupWizard::reset();
 		// Clean up any existing data
 		$this->cleanup_setup_data();
 	}

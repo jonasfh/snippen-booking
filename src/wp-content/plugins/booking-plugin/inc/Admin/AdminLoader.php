@@ -201,7 +201,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\BookingsPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Bookinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Bookinger', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
@@ -215,7 +215,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\BookingObjectsPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
@@ -229,7 +229,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\TimeSlotsPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Tidsluker', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Tidsluker', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
@@ -243,7 +243,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\PricingPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Prisregler', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Prisregler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
@@ -255,7 +255,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\UserBookingsPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Mine Bookinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Mine Bookinger', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
@@ -267,7 +267,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\SettingsPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Innstillinger', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Innstillinger', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
@@ -279,7 +279,7 @@ class AdminLoader {
 			$page = new \SnippenBooking\Admin\Pages\ImportPage();
 			$page->render();
 		} else {
-			echo '<div class="wrap"><h1>' . esc_html__( 'Beboer Import', 'snippen-booking' ) . '</h1><p>Under utvikling...</p></div>';
+			echo '<div class="wrap"><h1>' . esc_html__( 'Beboer Import', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 }
