@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.0] - 2026-05-21
+
+### Added
+- **Uninstall Routine**: Added `uninstall.php` to clean up all database tables, options, and user meta when the plugin is deleted.
+- **Uninstall Settings**: Added a new "Behold data ved avinstallering" option in Settings to preserve data when uninstalling, which is useful for temporary plugin deactivation.
+
 ## [1.7.1] - 2026-05-21
 
 ### Added

@@ -69,6 +69,12 @@ Outside of the configured active time window, the system securely hides the door
 
 For bookings containing **multiple rooms**, the system automatically sanitizes, combines, and deduplicates the door codes (displaying only a single code if the venues share the same entrance door code).
 
+## Uninstalling
+
+When the plugin is deleted from WordPress (via the Plugins page), it will by default clean up all associated data, including database tables, settings, and user capabilities, leaving no orphaned data behind.
+
+If you are uninstalling the plugin temporarily or wish to keep the booking data, you can enable the **Behold data ved avinstallering** (Preserve data on uninstall) option under **Snippen Booking > Innstillinger** before deleting the plugin.
+
 ## Contributing and Development
 
 If you are a developer looking to contribute to the code, set up the dev environment, or run tests, please refer to the developer documentation in [DEV_README.md](DEV_README.md).
