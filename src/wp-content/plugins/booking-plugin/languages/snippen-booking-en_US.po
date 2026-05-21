@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Snippen Booking 1.7.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
-"POT-Creation-Date: 2026-05-21T21:10:25+00:00\n"
+"POT-Creation-Date: 2026-05-21T21:13:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -322,6 +322,10 @@ msgstr "Tab-separated (TSV / Table-copy from ABBL)"
 #: inc/Admin/Pages/ImportPage.php:93
 msgid "Kolonne-mapping (for TSV)"
 msgstr "Column Mapping (for TSV)"
+
+#: inc/Admin/Pages/ImportPage.php:94
+msgid "name,email,phone"
+msgstr "name,email,phone"
 
 #: inc/Admin/Pages/ImportPage.php:95
 msgid ""
@@ -1286,9 +1290,18 @@ msgstr "Log in with your resident account to view your bookings."
 msgid "Brukernavn eller e-post"
 msgstr "Username or email"
 
+#: inc/Shortcode/BookingListShortcode.php:79
+#: inc/Shortcode/BookingShortcode.php:142
+msgid "navn@eksempel.no"
+msgstr "name@example.com"
+
 #: inc/Shortcode/BookingListShortcode.php:83
 msgid "Passord"
 msgstr "Password"
+
+#: inc/Shortcode/BookingListShortcode.php:84
+msgid "Ditt passord"
+msgstr "Your password"
 
 #: inc/Shortcode/BookingListShortcode.php:90
 msgid "Husk meg"
@@ -1339,6 +1352,10 @@ msgstr "Loading calendar..."
 msgid "Søk etter beboer (Admin)"
 msgstr "Search for resident (Admin)"
 
+#: inc/Shortcode/BookingShortcode.php:128
+msgid "Begynn å skrive navn eller e-post..."
+msgstr "Start typing name or email..."
+
 #: inc/Shortcode/BookingShortcode.php:131
 msgid "La feltet være tomt for å booke i ditt eget navn."
 msgstr "Leave the field empty to book in your own name."
@@ -1346,6 +1363,10 @@ msgstr "Leave the field empty to book in your own name."
 #: inc/Shortcode/BookingShortcode.php:136
 msgid "Navn på beboer"
 msgstr "Resident name"
+
+#: inc/Shortcode/BookingShortcode.php:137
+msgid "Fullt navn"
+msgstr "Full name"
 
 #: inc/Shortcode/BookingShortcode.php:149
 msgid "Mangler telefonnummer på din profil. Kontakt administrator."
