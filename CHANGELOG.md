@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.1] - 2026-05-21
+
+### Added
+- **English Translation**: Added English translation (`en_US`) by generating the `.po` and `.mo` files for all user-facing strings.
+
 ## [1.7.0] - 2026-05-21
 
 ### Added
