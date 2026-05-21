@@ -39,8 +39,16 @@ class AccountConfirmationShortcode {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'snippen_confirmation_nonce' ),
 				'strings' => array(
-					'error'   => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
-					'success' => __( 'Din konto er nå bekreftet! Du blir videresendt til innlogging.', 'snippen-booking' ),
+					'error'               => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
+					'success'             => __( 'Din konto er nå bekreftet! Du blir videresendt til innlogging.', 'snippen-booking' ),
+					'enterPhone'          => __( 'Vennligst skriv inn telefonnummer.', 'snippen-booking' ),
+					'sending'             => __( 'Sender...', 'snippen-booking' ),
+					'fillAllFields'       => __( 'Vennligst fyll ut alle felt.', 'snippen-booking' ),
+					'passwordsNotMatch'   => __( 'Passordene er ikke like.', 'snippen-booking' ),
+					'passwordMinLength'   => __( 'Passordet må være minst 8 tegn.', 'snippen-booking' ),
+					'verifying'           => __( 'Verifiserer...', 'snippen-booking' ),
+					'sendCode'            => __( 'Send kode', 'snippen-booking' ),
+					'confirmAndSavePass'  => __( 'Bekreft og lagre passord', 'snippen-booking' ),
 				),
 			)
 		);

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.7.0] - 2026-05-21
+
+### Added
+- **Full Internationalization (i18n)**: Implemented full translation support for the plugin to meet WordPress standards.
+- **Text Domain**: Registered `snippen-booking` text domain with a placeholder `/languages` directory.
+- **JavaScript Localization**: Passed translated PHP strings to JS via `wp_localize_script`, replacing all hardcoded Norwegian strings in `js/booking.js` and `js/account-confirmation.js`.
+- **PHP Localization**: Audited and replaced raw strings in API responses, Shortcodes, Admin pages, and Services with translation functions (`__()`, `esc_html__()`, etc.).
+- **Robust SMS/Email Notification Strings**: Updated `NotificationManager` subjects and messages to use `sprintf` and `__()` properly instead of raw concatenations.
+
+### Fixed
+- **Test Flakiness**: Fixed two flaky integration/unit tests (`SetupWizardTest` and `BookingsPageTest`) by ensuring clean database and post states before execution.
 ## [1.6.2] - 2026-05-21
 
 ### Changed

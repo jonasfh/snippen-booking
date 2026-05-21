@@ -124,7 +124,7 @@ jQuery(document).ready(function ($) {
      */
     function renderCalendar() {
         var $calendar = $('#calendar-container');
-        $calendar.html('<div class="calendar-loader">Oppdaterer tilgjengelighet...</div>');
+        $calendar.html('<div class="calendar-loader">' + snippenBookingAjax.strings.updatingAvailability + '</div>');
 
         var startDateStr = formatDateISO(currentStartDate);
 
@@ -140,7 +140,7 @@ jQuery(document).ready(function ($) {
                 if (response.success) {
                     drawWeek(response.data);
                 } else {
-                    $calendar.html('<div class="error">Kunne ikke laste kalender.</div>');
+                    $calendar.html('<div class="error">' + snippenBookingAjax.strings.errorLoadingCalendar + '</div>');
                 }
             }
         });
@@ -173,7 +173,7 @@ jQuery(document).ready(function ($) {
         weekHtml += '<div class="week-grid">';
 
         var tempDate = new Date(currentStartDate);
-        var dayNames = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+        var dayNames = snippenBookingAjax.strings.weekdays;
 
         for (var i = 0; i < 7; i++) {
             var dateStr = formatDateISO(tempDate);
@@ -220,7 +220,7 @@ jQuery(document).ready(function ($) {
                     }
                     weekHtml += '</div>';
                 } else if (isBlocked && !isPast) {
-                    weekHtml += '<div class="slot-item unavailable" title="Blokkert av utvasktid">';
+                    weekHtml += '<div class="slot-item unavailable" title="' + snippenBookingAjax.strings.blockedByCleanup + '">';
                     weekHtml += '<span class="slot-name">' + slot.name + '</span>';
                     weekHtml += '</div>';
                 } else {
@@ -274,7 +274,7 @@ jQuery(document).ready(function ($) {
 
             html += '<li class="' + (isActive ? 'active' : '') + '" data-start="' + formatDateISO(weekStart) + '">';
             html += '<span>' + formatDateRange(weekStart) + '</span>';
-            html += '<span class="week-nr-badge">Uke ' + weekNr + '</span>';
+            html += '<span class="week-nr-badge">' + snippenBookingAjax.strings.weekLabel + ' ' + weekNr + '</span>';
             html += '</li>';
 
             tempDate.setDate(tempDate.getDate() + 7);
@@ -360,7 +360,7 @@ jQuery(document).ready(function ($) {
         var $submitBtn = $form.find('.booking-submit');
         var $response = $('#booking-response');
 
-        $submitBtn.prop('disabled', true).text('Sender forespørsel...');
+        $submitBtn.prop('disabled', true).text(snippenBookingAjax.strings.sendingRequest);
         $response.hide();
 
         var formData = {
@@ -389,13 +389,13 @@ jQuery(document).ready(function ($) {
                         renderCalendar();
                     }, 3000);
                 } else {
-                    $response.removeClass('success').addClass('error').html(response.data.message || 'Noe gikk galt.').fadeIn();
-                    $submitBtn.prop('disabled', false).text('Prøv igjen');
+                    $response.removeClass('success').addClass('error').html(response.data.message || snippenBookingAjax.strings.somethingWentWrong).fadeIn();
+                    $submitBtn.prop('disabled', false).text(snippenBookingAjax.strings.tryAgain);
                 }
             },
             error: function () {
-                $response.removeClass('success').addClass('error').html('Tilkoblingsfeil.').fadeIn();
-                $submitBtn.prop('disabled', false).text('Prøv igjen');
+                $response.removeClass('success').addClass('error').html(snippenBookingAjax.strings.connectionError).fadeIn();
+                $submitBtn.prop('disabled', false).text(snippenBookingAjax.strings.tryAgain);
             }
         });
     }
@@ -435,12 +435,12 @@ jQuery(document).ready(function ($) {
                             var html = '';
                             response.data.forEach(function(user) {
                                 html += '<div class="user-result-item" data-id="' + user.id + '" data-name="' + user.name + '" data-email="' + user.email + '" data-phone="' + (user.phone || '') + '">';
-                                html += '<strong>' + user.name + '</strong><br><small>' + user.email + (user.phone ? ' | ' + user.phone : ' | <span style="color:red">Mangler tlf</span>') + '</small>';
+                                html += '<strong>' + user.name + '</strong><br><small>' + user.email + (user.phone ? ' | ' + user.phone : ' | <span style="color:red">' + snippenBookingAjax.strings.missingPhoneShort + '</span>') + '</small>';
                                 html += '</div>';
                             });
                             $results.html(html).show();
                         } else {
-                            $results.html('<div class="no-results">Ingen beboere funnet.</div>').show();
+                            $results.html('<div class="no-results">' + snippenBookingAjax.strings.noResidentsFound + '</div>').show();
                         }
                     }
                 });
@@ -580,7 +580,7 @@ jQuery(document).ready(function ($) {
         
         if (!phone) {
             $submitBtn.prop('disabled', true);
-            $phoneGroup.append('<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Denne brukeren mangler telefonnummer og kan ikke booke.</p>');
+            $phoneGroup.append('<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">' + snippenBookingAjax.strings.missingPhoneLong + '</p>');
         } else {
             $submitBtn.prop('disabled', false);
         }
@@ -595,7 +595,7 @@ jQuery(document).ready(function ($) {
         var $card = $btn.closest('.booking-list-card');
         var $badge = $card.find('.snippen-badge');
 
-        var confirmMsg = 'Vil du virkelig avbryte denne bookingen?';
+        var confirmMsg = snippenBookingAjax.strings.confirmCancel;
         if (window.confirm && !window.confirm(confirmMsg)) {
             return;
         }
@@ -619,11 +619,11 @@ jQuery(document).ready(function ($) {
                     $(this).remove();
                 });
             } else {
-                alert(response.data.message || 'Det oppsto en feil. Prøv igjen.');
+                alert(response.data.message || snippenBookingAjax.strings.errorTryAgain);
                 $btn.prop('disabled', false).css('opacity', '1');
             }
         }).fail(function () {
-            alert('Det oppsto en feil. Prøv igjen.');
+            alert(snippenBookingAjax.strings.errorTryAgain);
             $btn.prop('disabled', false).css('opacity', '1');
         });
     });

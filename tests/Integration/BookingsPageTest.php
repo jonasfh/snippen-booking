@@ -65,6 +65,8 @@ class BookingsPageTest extends TestCase {
      * Test that render_tagged_pages renders nothing when no pages are tagged
      */
     public function test_render_tagged_pages_empty_output() {
+        $existing = get_posts( array( 'post_type' => 'page', 'posts_per_page' => -1, 'tax_query' => array( array( 'taxonomy' => 'post_tag', 'field' => 'slug', 'terms' => 'snippen-booking' ) ) ) );
+        foreach( $existing as $p ) { wp_delete_post( $p->ID, true ); }
         $bookings_page = new BookingsPage();
         
         $reflection = new \ReflectionClass( BookingsPage::class );

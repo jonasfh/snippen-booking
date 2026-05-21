@@ -41,7 +41,7 @@ class AvailabilityApi {
 		$start_date = sanitize_text_field( $_GET['start_date'] ?? '' ); // YYYY-MM-DD
 
 		if ( empty( $object_ids ) || empty( $start_date ) ) {
-			wp_send_json_error( array( 'message' => 'Manglende påkrevde parametere' ) );
+			wp_send_json_error( array( 'message' => __( 'Manglende påkrevde parametere', 'snippen-booking' ) ) );
 		}
 
 		// Lead time (N days)

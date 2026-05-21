@@ -12,11 +12,11 @@ jQuery(document).ready(function($) {
         var phone = $('#snippen_phone_confirm').val();
         
         if (!phone) {
-            showMessage('Vennligst skriv inn telefonnummer.', 'error');
+            showMessage(snippenConfirmation.strings.enterPhone, 'error');
             return;
         }
 
-        $(this).prop('disabled', true).text('Sender...');
+        $(this).prop('disabled', true).text(snippenConfirmation.strings.sending);
 
         $.post(snippenConfirmation.ajaxUrl, {
             action: 'snippen_request_confirmation_code',
@@ -30,7 +30,7 @@ jQuery(document).ready(function($) {
                 showMessage(res.data.message, 'success');
             } else {
                 showMessage(res.data.message || snippenConfirmation.strings.error, 'error');
-                $('#snippen-request-code').prop('disabled', false).text('Send kode');
+                $('#snippen-request-code').prop('disabled', false).text(snippenConfirmation.strings.sendCode);
             }
         });
     });
@@ -42,21 +42,21 @@ jQuery(document).ready(function($) {
         var confirm = $('#snippen_confirm_password').val();
 
         if (!code || !password || !confirm) {
-            showMessage('Vennligst fyll ut alle felt.', 'error');
+            showMessage(snippenConfirmation.strings.fillAllFields, 'error');
             return;
         }
 
         if (password !== confirm) {
-            showMessage('Passordene er ikke like.', 'error');
+            showMessage(snippenConfirmation.strings.passwordsNotMatch, 'error');
             return;
         }
 
         if (password.length < 8) {
-            showMessage('Passordet må være minst 8 tegn.', 'error');
+            showMessage(snippenConfirmation.strings.passwordMinLength, 'error');
             return;
         }
 
-        $(this).prop('disabled', true).text('Verifiserer...');
+        $(this).prop('disabled', true).text(snippenConfirmation.strings.verifying);
 
         $.post(snippenConfirmation.ajaxUrl, {
             action: 'snippen_verify_confirmation_code',
@@ -73,7 +73,7 @@ jQuery(document).ready(function($) {
                 }, 3000);
             } else {
                 showMessage(res.data.message || snippenConfirmation.strings.error, 'error');
-                $('#snippen-verify-code').prop('disabled', false).text('Bekreft og lagre passord');
+                $('#snippen-verify-code').prop('disabled', false).text(snippenConfirmation.strings.confirmAndSavePass);
             }
         });
     });

@@ -38,7 +38,7 @@ class BookingShortcode {
 		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
 
 		if ( empty( $object_ids ) ) {
-			return '<div class="snippen-booking-error">Ugyldig objekt-ID.</div>';
+			return '<div class="snippen-booking-error">' . esc_html__( 'Ugyldig objekt-ID.', 'snippen-booking' ) . '</div>';
 		}
 
 		$in_clause = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
@@ -46,7 +46,7 @@ class BookingShortcode {
 		$objects   = $wpdb->get_results( $query );
 
 		if ( empty( $objects ) ) {
-			return '<div class="snippen-booking-error">Booking-objekt(er) ikke funnet.</div>';
+			return '<div class="snippen-booking-error">' . esc_html__( 'Booking-objekt(er) ikke funnet.', 'snippen-booking' ) . '</div>';
 		}
 
 		// Combine names and info
@@ -85,7 +85,7 @@ class BookingShortcode {
 				<div class="header-main">
 					<h3><?php echo esc_html( $combined_name ); ?></h3>
 					<?php if ( $info_link ) : ?>
-						<a href="<?php echo esc_url( $info_link ); ?>" class="info-link" target="_blank">Mer info &rarr;</a>
+						<a href="<?php echo esc_url( $info_link ); ?>" class="info-link" target="_blank"><?php esc_html_e( 'Mer info &rarr;', 'snippen-booking' ); ?></a>
 					<?php endif; ?>
 				</div>
 				<?php if ( $combined_description ) : ?>
@@ -95,13 +95,13 @@ class BookingShortcode {
 
 			<?php if ( ! $is_logged_in ) : ?>
 				<div class="snippen-login-prompt">
-					<p>Du må være beboer og innlogget for å kunne booke. Kalenderen under viser kun tilgjengelighet.</p>
+					<p><?php esc_html_e( 'Du må være beboer og innlogget for å kunne booke. Kalenderen under viser kun tilgjengelighet.', 'snippen-booking' ); ?></p>
 					<a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="snippen-login-btn"><?php esc_html_e( 'Logg inn', 'snippen-booking' ); ?></a>
 				</div>
 			<?php endif; ?>
 
 			<div id="calendar-container" class="snippen-calendar-view <?php echo ! $is_logged_in ? 'readonly-mode' : ''; ?>">
-				<div class="calendar-loader">Laster kalender...</div>
+				<div class="calendar-loader"><?php esc_html_e( 'Laster kalender...', 'snippen-booking' ); ?></div>
 			</div>
 
 			<?php if ( $is_logged_in ) : ?>
@@ -123,35 +123,35 @@ class BookingShortcode {
 					<div class="form-grid">
 						<?php if ( Capabilities::can_manage_bookings() ) : ?>
 						<div class="form-group full-width admin-only-field">
-							<label for="user-search">Søk etter beboer (Admin)</label>
+							<label for="user-search"><?php esc_html_e( 'Søk etter beboer (Admin)', 'snippen-booking' ); ?></label>
 							<div class="user-search-wrapper">
 								<input type="text" id="user-search" placeholder="Begynn å skrive navn eller e-post..." autocomplete="off" value="<?php echo $user_name; ?>">
 								<div id="user-search-results" class="search-results-dropdown" style="display: none;"></div>
 							</div>
-							<p class="description">La feltet være tomt for å booke i ditt eget navn.</p>
+							<p class="description"><?php esc_html_e( 'La feltet være tomt for å booke i ditt eget navn.', 'snippen-booking' ); ?></p>
 						</div>
 						<?php endif; ?>
 
 						<div class="form-group">
-							<label for="name">Navn på beboer</label>
+							<label for="name"><?php esc_html_e( 'Navn på beboer', 'snippen-booking' ); ?></label>
 							<input type="text" name="name" id="name" required placeholder="Fullt navn" value="<?php echo $user_name; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
-							<label for="email">E-post</label>
+							<label for="email"><?php esc_html_e( 'E-post', 'snippen-booking' ); ?></label>
 							<input type="email" name="email" id="email" required placeholder="navn@eksempel.no" value="<?php echo $user_email; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
-							<label for="phone">Telefon</label>
+							<label for="phone"><?php esc_html_e( 'Telefon', 'snippen-booking' ); ?></label>
 							<input type="tel" name="phone" id="phone" placeholder="+47..." value="<?php echo esc_attr( $user_phone ); ?>" readonly required>
 							<?php if ( $is_logged_in && empty( $user_phone ) && ! Capabilities::can_manage_bookings() ) : ?>
-								<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;">Mangler telefonnummer på din profil. Kontakt administrator.</p>
+								<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;"><?php esc_html_e( 'Mangler telefonnummer på din profil. Kontakt administrator.', 'snippen-booking' ); ?></p>
 							<?php endif; ?>
 						</div>
 						
 						<div class="form-group full-width">
-							<label for="description">Beskrivelse av arrangement (valgfritt)</label>
+							<label for="description"><?php esc_html_e( 'Beskrivelse av arrangement (valgfritt)', 'snippen-booking' ); ?></label>
 							<textarea name="description" id="description" rows="3" placeholder="F.eks. Bursdag, møte, etc."></textarea>
 						</div>
 					</div>
@@ -169,7 +169,7 @@ class BookingShortcode {
 				<div class="modal-overlay"></div>
 				<div class="modal-content">
 					<div class="modal-header">
-						<h4>Bookingdetaljer</h4>
+						<h4><?php esc_html_e( 'Bookingdetaljer', 'snippen-booking' ); ?></h4>
 						<button type="button" class="close-modal">&times;</button>
 					</div>
 					<div class="modal-body" id="booking-info-content"></div>

@@ -27,11 +27,11 @@ class BookingApi {
 
 		// Verify nonce
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'snippen_booking_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Security check failed' ) );
+			wp_send_json_error( array( 'message' => __( 'Security check failed', 'snippen-booking' ) ) );
 		}
 
 		if ( ! is_user_logged_in() ) {
-			wp_send_json_error( array( 'message' => 'Du må være innlogget for å booke.' ) );
+			wp_send_json_error( array( 'message' => __( 'Du må være innlogget for å booke.', 'snippen-booking' ) ) );
 		}
 
 		$object_ids_raw = isset( $_POST['booking_object_id'] ) ? $_POST['booking_object_id'] : array();
@@ -54,7 +54,7 @@ class BookingApi {
 		$slot_ids     = array_filter( $slot_ids );
 
 		if ( empty( $booking_object_ids ) || empty( $booking_date ) || empty( $slot_ids ) ) {
-			wp_send_json_error( array( 'message' => 'Mangler nødvendige felt.' ) );
+			wp_send_json_error( array( 'message' => __( 'Mangler nødvendige felt.', 'snippen-booking' ) ) );
 		}
 
 		// Check if available (using advanced overlap detection) for all requested slots
@@ -74,7 +74,7 @@ class BookingApi {
 			}
 
 			if ( ! $matched_slot_id || ! $availability_service->isSlotAvailable( $obj_id, $booking_date, $matched_slot_id ) ) {
-				wp_send_json_error( array( 'message' => 'En eller flere tidsluker er ikke lenger tilgjengelig.' ) );
+				wp_send_json_error( array( 'message' => __( 'En eller flere tidsluker er ikke lenger tilgjengelig.', 'snippen-booking' ) ) );
 			}
 			$slots_to_book[ $obj_id ] = $matched_slot_id;
 		}
@@ -94,18 +94,18 @@ class BookingApi {
 		}
 
 		if ( ! $booking_user_id ) {
-			wp_send_json_error( array( 'message' => 'Ugyldig bruker.' ) );
+			wp_send_json_error( array( 'message' => __( 'Ugyldig bruker.', 'snippen-booking' ) ) );
 		}
 
 		if ( get_user_meta( $booking_user_id, 'snippen_user_deleted', true ) === 'yes' ) {
-			wp_send_json_error( array( 'message' => 'Kontoen din er slettet eller deaktivert. Kontakt administrator.' ) );
+			wp_send_json_error( array( 'message' => __( 'Kontoen din er slettet eller deaktivert. Kontakt administrator.', 'snippen-booking' ) ) );
 		}
 
 		// Fetch phone from user meta securely (cannot be changed by user in form)
 		$customer_phone = get_user_meta( $booking_user_id, 'snippen_phone', true );
 
 		if ( empty( $customer_phone ) ) {
-			wp_send_json_error( array( 'message' => 'Brukeren mangler telefonnummer på sin profil. Vennligst kontakt administrator.' ) );
+			wp_send_json_error( array( 'message' => __( 'Brukeren mangler telefonnummer på sin profil. Vennligst kontakt administrator.', 'snippen-booking' ) ) );
 		}
 		$description = sanitize_textarea_field( $_POST['description'] ?? '' );
 
@@ -123,7 +123,7 @@ class BookingApi {
 		// RESTRICTION: For multi-object bookings, only allow slots flagged as such
 		if ( count( $slots_to_book ) > 1 ) {
 			if ( ! $slot_info || ! $slot_info->allow_multi_object ) {
-				wp_send_json_error( array( 'message' => 'Denne tidsluken tillater ikke booking av flere lokaler samtidig.' ) );
+				wp_send_json_error( array( 'message' => __( 'Denne tidsluken tillater ikke booking av flere lokaler samtidig.', 'snippen-booking' ) ) );
 			}
 		}
 
@@ -156,7 +156,7 @@ class BookingApi {
 		$booking_inserted = $wpdb->insert( $table_bookings, $booking_data );
 
 		if ( ! $booking_inserted ) {
-			wp_send_json_error( array( 'message' => 'Kunne ikke lagre booking. Vennligst prøv igjen.' ) );
+			wp_send_json_error( array( 'message' => __( 'Kunne ikke lagre booking. Vennligst prøv igjen.', 'snippen-booking' ) ) );
 		}
 
 		$booking_id    = $wpdb->insert_id;
@@ -182,13 +182,13 @@ class BookingApi {
 
 			wp_send_json_success(
 				array(
-					'message' => 'Bookingforespørsel sendt! Vi kontakter deg snart.',
+					'message' => __( 'Bookingforespørsel sendt! Vi kontakter deg snart.', 'snippen-booking' ),
 				)
 			);
 		} else {
 			// Clean up the booking if junction inserts failed
 			$wpdb->delete( $table_bookings, array( 'id' => $booking_id ) );
-			wp_send_json_error( array( 'message' => 'Kunne ikke lagre alle bookinger. Vennligst prøv igjen.' ) );
+			wp_send_json_error( array( 'message' => __( 'Kunne ikke lagre alle bookinger. Vennligst prøv igjen.', 'snippen-booking' ) ) );
 		}
 	}
 }
