@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Snippen Booking 1.7.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
-"POT-Creation-Date: 2026-05-21T20:54:00+00:00\n"
+"POT-Creation-Date: 2026-05-21T21:10:25+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -600,6 +600,10 @@ msgstr "No time slots found."
 #: inc/Admin/Pages/TimeSlotsPage.php:201
 msgid "Navn på tidsluke"
 msgstr "Time Slot Name"
+
+#: inc/Admin/Pages/TimeSlotsPage.php:202
+msgid "F.eks. Hele dagen"
+msgstr "E.g., All day"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:206
 msgid "Starttid (HH:MM)"
