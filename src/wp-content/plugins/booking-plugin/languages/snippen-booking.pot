@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Snippen Booking 1.7.0\n"
+"Project-Id-Version: Snippen Booking 1.7.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-21T19:08:58+00:00\n"
+"POT-Creation-Date: 2026-05-21T20:54:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: snippen-booking\n"
@@ -438,6 +438,10 @@ msgstr ""
 
 #: inc/Admin/Pages/PricingPage.php:312
 msgid "Navn på prisregel"
+msgstr ""
+
+#: inc/Admin/Pages/PricingPage.php:313
+msgid "F.eks. Helgepris Festsalen"
 msgstr ""
 
 #: inc/Admin/Pages/PricingPage.php:317
@@ -1336,4 +1340,8 @@ msgstr ""
 
 #: inc/Shortcode/BookingShortcode.php:154
 msgid "Beskrivelse av arrangement (valgfritt)"
+msgstr ""
+
+#: inc/Shortcode/BookingShortcode.php:155
+msgid "F.eks. Bursdag, møte, etc."
 msgstr ""
