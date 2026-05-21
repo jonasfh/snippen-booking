@@ -152,7 +152,7 @@ class BookingShortcode {
 						
 						<div class="form-group full-width">
 							<label for="description"><?php esc_html_e( 'Beskrivelse av arrangement (valgfritt)', 'snippen-booking' ); ?></label>
-							<textarea name="description" id="description" rows="3" placeholder="F.eks. Bursdag, møte, etc."></textarea>
+							<textarea name="description" id="description" rows="3" placeholder="<?php esc_attr_e( 'F.eks. Bursdag, møte, etc.', 'snippen-booking' ); ?>"></textarea>
 						</div>
 					</div>
 

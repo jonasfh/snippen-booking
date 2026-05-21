@@ -310,7 +310,7 @@ class PricingPage {
 
 		echo '<div class="snippen-form-group">';
 		echo '<label for="name">' . esc_html__( 'Navn på prisregel', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="name" id="name" value="' . esc_attr( $rule ? $rule->name : '' ) . '" required class="regular-text" placeholder="F.eks. Helgepris Festsalen">';
+		echo '<input type="text" name="name" id="name" value="' . esc_attr( $rule ? $rule->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Helgepris Festsalen', 'snippen-booking' ) . '">';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
