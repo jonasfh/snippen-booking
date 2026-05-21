@@ -59,6 +59,10 @@ class SettingsPage {
 		update_option( 'snippen_route_booking_confirmation', $route_book );
 		update_option( 'snippen_route_admin_booking', $route_adm );
 
+		// Save uninstall settings
+		$preserve_data = isset( $_POST['snippen_preserve_data_on_uninstall'] ) ? 'yes' : 'no';
+		update_option( 'snippen_preserve_data_on_uninstall', $preserve_data );
+
 		// Sync legacy checkboxes for 100% backward compatibility
 		update_option( 'snippen_sms_account_confirmation_enabled', ( 'sms' === $route_user ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_booking_confirmation_enabled', ( 'sms' === $route_book ) ? 'yes' : 'no' );
@@ -244,6 +248,17 @@ class SettingsPage {
 		echo '<div class="snippen-form-group">';
 		echo '<label for="snippen_door_code_hours_after">' . esc_html__( 'Vis dørkode y timer etter booking slutt', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="snippen_door_code_hours_after" id="snippen_door_code_hours_after" value="' . esc_attr( $door_code_hours_after ) . '" class="small-text" min="0">';
+		echo '</div>';
+
+		// 5. Avinstallering Settings Panel
+		$preserve_data = get_option( 'snippen_preserve_data_on_uninstall', 'no' );
+		echo '<h3 style="margin-top:40px;">' . esc_html__( 'Avinstallering', 'snippen-booking' ) . '</h3>';
+		echo '<div class="snippen-form-group" style="background:#fff1f2; border:1px solid #fecdd3; padding:16px; border-radius:8px;">';
+		echo '<label style="font-weight:700; color:#9f1239; display: flex; align-items: center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_preserve_data_on_uninstall" value="yes" ' . checked( $preserve_data, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Behold data ved avinstallering', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin: 4px 0 0 24px;">' . esc_html__( 'Hvis dette ikke er krysset av, vil all data (tabeller, innstillinger og brukermeta) knyttet til Snippen Booking bli slettet når pluginen slettes fra WordPress.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		// Form actions
