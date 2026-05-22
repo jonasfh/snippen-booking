@@ -24,6 +24,7 @@ class HelpPage {
 						<h2 class="hndle"><span><?php esc_html_e( 'Hurtigstart (TL;DR)', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
 							<p><?php esc_html_e( 'Den raskeste måten å komme i gang på er å bruke Setup Wizard (veiviseren). Den oppretter standard lokaler, tidsluker og priser som du senere kan tilpasse.', 'snippen-booking' ); ?></p>
+							<p><strong><?php esc_html_e( 'VIKTIG:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'For å se resten av booking-menyene (som Oversikt, Lokaler, etc.), må du gi deg selv tilgangen "Booking Administrator" på din egen brukerprofil under "Brukere" i WordPress.', 'snippen-booking' ); ?></p>
 							<ol>
 								<li><strong><?php esc_html_e( 'Kjør Setup Wizard', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Gå til "Setup Wizard" for å generere et ferdig oppsett.', 'snippen-booking' ); ?></li>
 								<li><strong><?php esc_html_e( 'Legg inn booking-skjema', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Legg til shortcoden [snippen_booking] på en side for å la brukere booke.', 'snippen-booking' ); ?></li>
@@ -80,6 +81,7 @@ class HelpPage {
 					<div class="postbox">
 						<h2 class="hndle"><span><?php esc_html_e( 'Rettigheter og tilgang', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
+							<p><strong><?php esc_html_e( 'VIKTIG FOR ADMINISTRATORER:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Selv om du er WordPress Administrator, MÅ du manuelt huke av for "Booking Administrator" inne på din egen brukerprofil (under "Brukere") for å få tilgang til oppsett og administrering av bookinger.', 'snippen-booking' ); ?></p>
 							<p><?php esc_html_e( 'Det er to hovedtyper brukere med tilgang til administrasjon av bookinger:', 'snippen-booking' ); ?></p>
 							<ul>
 								<li><strong><?php esc_html_e( 'WordPress Administrator:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Har full tilgang til alt.', 'snippen-booking' ); ?></li>
