@@ -68,7 +68,7 @@ class ImportPageTest extends TestCase {
 	public function testLineByLineParserWithShifts() {
 		// Mock a POST request
 		$_POST['snippen_import_nonce']  = wp_create_nonce( 'snippen_import_residents' );
-		$_POST['snippen_import_format'] = 'line';
+		$_POST['snippen_import_provider'] = 'simple_text';
 		
 		// The exact look-ahead shift test block from Issue #37 requirements
 		$_POST['snippen_import_data'] = "
@@ -150,7 +150,7 @@ ola@nordmann.no
 	 */
 	public function testTsvParserWithMapping() {
 		$_POST['snippen_import_nonce']   = wp_create_nonce( 'snippen_import_residents' );
-		$_POST['snippen_import_format']  = 'tsv';
+		$_POST['snippen_import_provider']  = 'tsv';
 		$_POST['snippen_import_mapping'] = 'name,email,phone,address,unit';
 		$_POST['snippen_import_data']    = "Kari Nord\tkari@nord.no\t+4791112222\tSnippveien 12\tH0101\nPer Sør\tper@sor.no\t92223333\tSnippveien 14\tH0202";
 
@@ -196,7 +196,7 @@ ola@nordmann.no
 
 		// 2. Perform import with a completely different resident
 		$_POST['snippen_import_nonce']   = wp_create_nonce( 'snippen_import_residents' );
-		$_POST['snippen_import_format']  = 'tsv';
+		$_POST['snippen_import_provider']  = 'tsv';
 		$_POST['snippen_import_mapping'] = 'name,email,phone';
 		$_POST['snippen_import_data']    = "New Guy\tnewguy@example.com\t98765432";
 

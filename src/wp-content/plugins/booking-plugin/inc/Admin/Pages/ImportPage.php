@@ -7,13 +7,22 @@
 
 namespace SnippenBooking\Admin\Pages;
 
-use SnippenBooking\Helper\PhoneHelper;
 use SnippenBooking\Helper\Capabilities;
+use SnippenBooking\Import\ImportManager;
 
 /**
  * Import Page
  */
 class ImportPage {
+
+	/**
+	 * @var ImportManager
+	 */
+	private $import_manager;
+
+	public function __construct() {
+		$this->import_manager = new ImportManager();
+	}
 
 	/**
 	 * Render the page
@@ -74,32 +83,28 @@ class ImportPage {
 	 * Render the form
 	 */
 	private function render_form() {
-		$format  = isset( $_POST['snippen_import_format'] ) ? sanitize_text_field( $_POST['snippen_import_format'] ) : 'line';
-		$mapping = isset( $_POST['snippen_import_mapping'] ) ? sanitize_text_field( $_POST['snippen_import_mapping'] ) : 'name,email,phone';
+		$providers = $this->import_manager->get_providers();
+		$active_provider_id = isset( $_POST['snippen_import_provider'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_import_provider'] ) ) : ( ! empty( $providers ) ? $providers[0]->get_id() : '' );
 
 		echo '<div class="snippen-card">';
 		echo '<form method="post" action="">';
 		wp_nonce_field( 'snippen_import_residents', 'snippen_import_nonce' );
 
 		echo '<div class="snippen-form-group">';
-		echo '<label for="snippen_import_format">' . esc_html__( 'Dataformat', 'snippen-booking' ) . '</label>';
-		echo '<select name="snippen_import_format" id="snippen_import_format" class="regular-text" onchange="toggleMappingField()">';
-		echo '<option value="line" ' . selected( $format, 'line', false ) . '>' . esc_html__( 'Linje-for-linje (Navn, E-post, Telefon - Lookahead)', 'snippen-booking' ) . '</option>';
-		echo '<option value="tsv" ' . selected( $format, 'tsv', false ) . '>' . esc_html__( 'Tabulator-separert (TSV / Tabell-kopi fra ABBL)', 'snippen-booking' ) . '</option>';
+		echo '<label for="snippen_import_provider">' . esc_html__( 'Velg Importmetode', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_import_provider" id="snippen_import_provider" class="regular-text" onchange="snippenToggleProviderUI()">';
+		foreach ( $providers as $provider ) {
+			echo '<option value="' . esc_attr( $provider->get_id() ) . '" ' . selected( $active_provider_id, $provider->get_id(), false ) . '>' . esc_html( $provider->get_name() ) . '</option>';
+		}
 		echo '</select>';
 		echo '</div>';
 
-		echo '<div class="snippen-form-group" id="mapping-container" style="' . ( $format === 'tsv' ? '' : 'display:none;' ) . '">';
-		echo '<label for="snippen_import_mapping">' . esc_html__( 'Kolonne-mapping (for TSV)', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_import_mapping" id="snippen_import_mapping" value="' . esc_attr( $mapping ) . '" class="regular-text" placeholder="' . esc_attr__( 'name,email,phone', 'snippen-booking' ) . '">';
-		echo '<p class="description">' . esc_html__( 'Definer rekkefølgen på kolonnene i tabellen (kommaseparert). Støttede felter: name, email, phone, address, unit', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group">';
-		echo '<label for="snippen_import_data">' . esc_html__( 'Lim inn beboerdata', 'snippen-booking' ) . '</label>';
-		echo '<textarea name="snippen_import_data" id="snippen_import_data" rows="15" style="width:100%; font-family:monospace; font-size:13px;" required></textarea>';
-		echo '<p class="description">' . esc_html__( 'For linje-for-linje: 3 påfølgende linjer per beboer (1: Navn, 2: E-post, 3: Telefon). Linjer som inneholder nøyaktig "Reservert" ignoreres.', 'snippen-booking' ) . '</p>';
-		echo '</div>';
+		foreach ( $providers as $provider ) {
+			$display = ( $provider->get_id() === $active_provider_id ) ? 'block' : 'none';
+			echo '<div id="provider_ui_' . esc_attr( $provider->get_id() ) . '" class="snippen-provider-ui" style="display: ' . esc_attr( $display ) . ';">';
+			$provider->render_ui();
+			echo '</div>';
+		}
 
 		echo '<div class="snippen-form-actions">';
 		echo '<button type="submit" class="snippen-btn snippen-btn-primary">' . esc_html__( 'Start Import', 'snippen-booking' ) . '</button>';
@@ -125,19 +130,34 @@ class ImportPage {
 		}
 		</style>';
 
-		// Inline Javascript to toggle the mapping field dynamically and show overlay on submit
+		// Inline Javascript
 		echo '<script>
-		function toggleMappingField() {
-			var format = document.getElementById("snippen_import_format").value;
-			var container = document.getElementById("mapping-container");
-			if (format === "tsv") {
-				container.style.display = "";
-			} else {
-				container.style.display = "none";
+		function snippenToggleProviderUI() {
+			var activeProvider = document.getElementById("snippen_import_provider").value;
+			var uis = document.querySelectorAll(".snippen-provider-ui");
+			uis.forEach(function(ui) {
+				ui.style.display = "none";
+				// Disable inputs in hidden providers to avoid post conflicts
+				var inputs = ui.querySelectorAll("input, textarea, select");
+				inputs.forEach(function(input) {
+					input.disabled = true;
+				});
+			});
+			
+			var activeUI = document.getElementById("provider_ui_" + activeProvider);
+			if (activeUI) {
+				activeUI.style.display = "block";
+				// Enable inputs in active provider
+				var activeInputs = activeUI.querySelectorAll("input, textarea, select");
+				activeInputs.forEach(function(input) {
+					input.disabled = false;
+				});
 			}
 		}
 
 		document.addEventListener("DOMContentLoaded", function() {
+			snippenToggleProviderUI(); // Initialize correct state on load
+			
 			var form = document.querySelector(".snippen-card form");
 			if (form) {
 				form.addEventListener("submit", function() {
@@ -166,147 +186,21 @@ class ImportPage {
 		}
 		@ignore_user_abort( true ); // Keep running even if client disconnects
 
-		$raw_data = isset( $_POST['snippen_import_data'] ) ? trim( $_POST['snippen_import_data'] ) : '';
-		$format   = isset( $_POST['snippen_import_format'] ) ? sanitize_text_field( $_POST['snippen_import_format'] ) : 'line';
-		$mapping  = isset( $_POST['snippen_import_mapping'] ) ? sanitize_text_field( $_POST['snippen_import_mapping'] ) : 'name,email,phone';
-
-		if ( empty( $raw_data ) ) {
+		$provider_id = isset( $_POST['snippen_import_provider'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_import_provider'] ) ) : '';
+		
+		$provider = $this->import_manager->get_provider( $provider_id );
+		
+		if ( ! $provider ) {
 			return array(
 				'success' => 0,
 				'deleted' => 0,
-				'logs'    => array( 'ERROR: Ingen data oppgitt.' ),
+				'logs'    => array( 'ERROR: Ugyldig importmetode valgt.' ),
 			);
 		}
 
-		$success_count = 0;
-		$logs          = array();
-		$imported_ids  = array();
+		$result = $provider->import( wp_unslash( $_POST ) );
 
-		if ( $format === 'tsv' ) {
-			// Tab-separated parsing
-			$mapping_fields = array_map( 'trim', explode( ',', strtolower( $mapping ) ) );
-			$rows           = explode( "\n", $raw_data );
-
-			foreach ( $rows as $row_index => $row_str ) {
-				$row_str = trim( $row_str );
-				if ( empty( $row_str ) || $row_str === 'Reservert' ) {
-					continue;
-				}
-
-				$cols = explode( "\t", $row_str );
-				$data = array();
-
-				foreach ( $mapping_fields as $col_index => $field ) {
-					$data[ $field ] = isset( $cols[ $col_index ] ) ? trim( $cols[ $col_index ] ) : '';
-				}
-
-				$name    = sanitize_text_field( $data['name'] ?? '' );
-				$email   = sanitize_email( $data['email'] ?? '' );
-				$phone   = sanitize_text_field( $data['phone'] ?? '' );
-				$address = sanitize_text_field( $data['address'] ?? '' );
-				$unit    = sanitize_text_field( $data['unit'] ?? '' );
-
-				if ( empty( $name ) || empty( $email ) || empty( $phone ) ) {
-					$logs[] = sprintf( 'ERROR: Rad %d hoppet over - Mangler navn, e-post eller telefonnummer.', $row_index + 1 );
-					continue;
-				}
-
-				$is_email_valid   = is_email( $email );
-				$normalized_phone = PhoneHelper::normalize_phone( $phone );
-
-				if ( ! $is_email_valid ) {
-					$logs[] = sprintf( "WARNING: Beboer '%s' har en ugyldig e-postadresse '%s'.", esc_html( $name ), esc_html( $email ) );
-				}
-				if ( ! $normalized_phone ) {
-					$logs[] = sprintf( "WARNING: Beboer '%s' har et ikke-norsk eller ugyldig telefonnummer '%s'.", esc_html( $name ), esc_html( $phone ) );
-				}
-
-				$user_id = $this->upsert_resident( $name, $email, $normalized_phone, $address, $unit );
-
-				if ( is_wp_error( $user_id ) ) {
-					$logs[] = sprintf( "ERROR: Kunne ikke importere '%s' - %s", esc_html( $name ), $user_id->get_error_message() );
-				} else {
-					++$success_count;
-					$imported_ids[] = $user_id;
-				}
-			}
-		} else {
-			// Line-by-line look-ahead parsing
-			$lines       = explode( "\n", $raw_data );
-			$total_lines = count( $lines );
-			$i           = 0;
-
-			while ( $i < $total_lines ) {
-				$line = trim( $lines[ $i ] );
-
-				if ( empty( $line ) || $line === 'Reservert' ) {
-					++$i;
-					continue;
-				}
-
-				// If it doesn't look like email or phone format, it's a potential Name!
-				if ( ! $this->looks_like_email( $line ) && ! $this->looks_like_phone( $line ) ) {
-					$name = sanitize_text_field( $line );
-
-					// Look-ahead for email (Line + 1)
-					$next_non_empty_idx = $i + 1;
-					while ( $next_non_empty_idx < $total_lines && trim( $lines[ $next_non_empty_idx ] ) === '' ) {
-						++$next_non_empty_idx;
-					}
-
-					$email_line = '';
-					if ( $next_non_empty_idx < $total_lines ) {
-						$email_line = trim( $lines[ $next_non_empty_idx ] );
-					}
-
-					// Look-ahead for phone (Line + 2)
-					$next_next_non_empty_idx = $next_non_empty_idx + 1;
-					while ( $next_next_non_empty_idx < $total_lines && trim( $lines[ $next_next_non_empty_idx ] ) === '' ) {
-						++$next_next_non_empty_idx;
-					}
-
-					$phone_line = '';
-					if ( $next_next_non_empty_idx < $total_lines ) {
-						$phone_line = trim( $lines[ $next_next_non_empty_idx ] );
-					}
-
-					// Verification of formats
-					if ( ! empty( $email_line ) && $this->looks_like_email( $email_line ) && ! empty( $phone_line ) && $this->looks_like_phone( $phone_line ) ) {
-						// Valid block detected!
-						$is_email_valid   = is_email( $email_line );
-						$normalized_phone = PhoneHelper::normalize_phone( $phone_line );
-
-						if ( ! $is_email_valid ) {
-							$logs[] = sprintf( "WARNING: Beboer '%s' har en ugyldig e-postadresse '%s'.", esc_html( $name ), esc_html( $email_line ) );
-						}
-						if ( ! $normalized_phone ) {
-							$logs[] = sprintf( "WARNING: Beboer '%s' har et ikke-norsk eller ugyldig telefonnummer '%s'.", esc_html( $name ), esc_html( $phone_line ) );
-						}
-
-						$user_id = $this->upsert_resident( $name, $email_line, $normalized_phone );
-
-						if ( is_wp_error( $user_id ) ) {
-							$logs[] = sprintf( "ERROR: Kunne ikke importere '%s' - %s", esc_html( $name ), $user_id->get_error_message() );
-						} else {
-							++$success_count;
-							$imported_ids[] = $user_id;
-						}
-
-						// Advance loop pointer past this resident block
-						$i = $next_next_non_empty_idx + 1;
-					} else {
-						// Shift / missing field detected! Skip current name and recover from next line
-						$logs[] = sprintf( "ERROR: '%s' hoppet over - Mangler e-post eller telefonnummer.", esc_html( $name ) );
-						++$i;
-					}
-				} else {
-					// Orphan email/phone or unrelated lines
-					++$i;
-				}
-			}
-		}
-
-		// Sync Deletion Logic
+		// Sync Deletion Logic (apply to all providers uniformly)
 		$deleted_count = 0;
 		$residents     = get_users(
 			array(
@@ -315,9 +209,10 @@ class ImportPage {
 			)
 		);
 		$residents     = array_map( 'intval', $residents );
+		$logs          = $result->logs;
 
 		foreach ( $residents as $res_id ) {
-			if ( ! in_array( $res_id, $imported_ids, true ) ) {
+			if ( ! in_array( $res_id, $result->imported_ids, true ) ) {
 				$user_meta    = get_userdata( $res_id );
 				$display_name = $user_meta ? $user_meta->display_name : 'ID ' . $res_id;
 
@@ -328,106 +223,9 @@ class ImportPage {
 		}
 
 		return array(
-			'success' => $success_count,
+			'success' => $result->success,
 			'deleted' => $deleted_count,
 			'logs'    => $logs,
 		);
-	}
-
-	/**
-	 * Perform Upsert on Resident
-	 *
-	 * @param string       $name
-	 * @param string       $email
-	 * @param string|false $normalized_phone
-	 * @param string       $address
-	 * @param string       $unit
-	 * @return int|\WP_Error User ID on success or WP_Error on failure.
-	 */
-	private function upsert_resident( $name, $email, $normalized_phone, $address = '', $unit = '' ) {
-		$name_parts = explode( ' ', $name, 2 );
-		$first_name = $name_parts[0];
-		$last_name  = isset( $name_parts[1] ) ? $name_parts[1] : '';
-
-		$user_id = email_exists( $email );
-
-		if ( $user_id ) {
-			// Update existing user
-			$user = new \WP_User( $user_id );
-			$user->set_role( 'holmen_resident' );
-
-			wp_update_user(
-				array(
-					'ID'           => $user_id,
-					'display_name' => $name,
-					'first_name'   => $first_name,
-					'last_name'    => $last_name,
-				)
-			);
-		} else {
-			// Create new user
-			$username = $email;
-			$password = wp_generate_password( 12, false );
-			$user_id  = wp_create_user( $username, $password, $email );
-
-			if ( is_wp_error( $user_id ) ) {
-				return $user_id;
-			}
-
-			$user = new \WP_User( $user_id );
-			$user->set_role( 'holmen_resident' );
-
-			wp_update_user(
-				array(
-					'ID'           => $user_id,
-					'display_name' => $name,
-					'first_name'   => $first_name,
-					'last_name'    => $last_name,
-				)
-			);
-		}
-
-		// Ensure we clear deletion status if they are present in the import
-		delete_user_meta( $user_id, 'snippen_user_deleted' );
-
-		// Save phone number using global helper holmen_save_phone_number
-		if ( $normalized_phone ) {
-			if ( function_exists( 'holmen_save_phone_number' ) ) {
-				holmen_save_phone_number( $user_id, $normalized_phone );
-			} else {
-				update_user_meta( $user_id, 'snippen_phone', $normalized_phone );
-			}
-		}
-
-		// Save address & unit if defined
-		if ( ! empty( $address ) ) {
-			update_user_meta( $user_id, 'snippen_address', $address );
-		}
-		if ( ! empty( $unit ) ) {
-			update_user_meta( $user_id, 'snippen_unit', $unit );
-		}
-
-		return $user_id;
-	}
-
-	/**
-	 * Check if a line looks like an email
-	 *
-	 * @param string $line
-	 * @return bool
-	 */
-	private function looks_like_email( $line ) {
-		return strpos( $line, '@' ) !== false;
-	}
-
-	/**
-	 * Check if a line looks like a phone number
-	 *
-	 * @param string $line
-	 * @return bool
-	 */
-	private function looks_like_phone( $line ) {
-		$digits = preg_replace( '/[^0-9]/', '', $line );
-		return preg_match( '/^\+?[0-9\s\-]+$/', $line ) && strlen( $digits ) >= 5;
 	}
 }
