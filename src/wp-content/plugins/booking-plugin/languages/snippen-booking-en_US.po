@@ -1309,7 +1309,7 @@ msgstr "Remember me"
 msgid "Du har ingen registrerte bookinger."
 msgstr "You have no registered bookings."
 
-#: inc/Admin/Pages/HelpPage.php:71
+#: inc/Admin/Pages/HelpPage.php:72
 #: inc/Shortcode/BookingListShortcode.php:226
 msgid "Lokaler:"
 msgstr "Venues:"
@@ -1397,211 +1397,211 @@ msgstr "Quick Start (TL;DR)"
 msgid "Den raskeste måten å komme i gang på er å bruke Setup Wizard (veiviseren). Den oppretter standard lokaler, tidsluker og priser som du senere kan tilpasse."
 msgstr "The fastest way to get started is by using the Setup Wizard. It creates default venues, time slots, and prices that you can customize later."
 
-#: inc/Admin/Pages/HelpPage.php:28
+#: inc/Admin/Pages/HelpPage.php:29
 msgid "Kjør Setup Wizard"
 msgstr "Run Setup Wizard"
 
-#: inc/Admin/Pages/HelpPage.php:28
+#: inc/Admin/Pages/HelpPage.php:29
 msgid "Gå til \"Setup Wizard\" for å generere et ferdig oppsett."
 msgstr ""
 
-#: inc/Admin/Pages/HelpPage.php:29
+#: inc/Admin/Pages/HelpPage.php:30
 msgid "Legg inn booking-skjema"
 msgstr "Add Booking Form"
 
-#: inc/Admin/Pages/HelpPage.php:29
+#: inc/Admin/Pages/HelpPage.php:30
 msgid "Legg til shortcoden [snippen_booking] på en side for å la brukere booke."
 msgstr "Add the shortcode [snippen_booking] to a page to allow users to book."
 
-#: inc/Admin/Pages/HelpPage.php:30
+#: inc/Admin/Pages/HelpPage.php:31
 msgid "Brukertilgang"
 msgstr "User Access"
 
-#: inc/Admin/Pages/HelpPage.php:30
+#: inc/Admin/Pages/HelpPage.php:31
 msgid "Legg til shortcoden [snippen_account_confirmation] på en egen side slik at beboere kan bekrefte kontoen sin."
 msgstr "Add the shortcode [snippen_account_confirmation] to a separate page so residents can confirm their account."
 
-#: inc/Admin/Pages/HelpPage.php:37
+#: inc/Admin/Pages/HelpPage.php:38
 msgid "Bruk av Shortcodes"
 msgstr "Using Shortcodes"
 
-#: inc/Admin/Pages/HelpPage.php:39
+#: inc/Admin/Pages/HelpPage.php:40
 msgid "Systemet bruker shortcodes for å vise innhold for brukerne. Disse plasseres på vanlige WordPress-sider."
 msgstr "The system uses shortcodes to display content to users. These are placed on regular WordPress pages."
 
-#: inc/Admin/Pages/HelpPage.php:41
+#: inc/Admin/Pages/HelpPage.php:42
 msgid "1. Bookingskjema:"
 msgstr "1. Booking Form:"
 
-#: inc/Admin/Pages/HelpPage.php:43
+#: inc/Admin/Pages/HelpPage.php:44
 msgid "Denne viser kalender og skjema for booking. Hvis du vil begrense skjemaet til ett bestemt lokale, kan du bruke object_id:"
 msgstr "This displays the calendar and booking form. If you want to limit the form to a specific venue, you can use object_id:"
 
-#: inc/Admin/Pages/HelpPage.php:45
+#: inc/Admin/Pages/HelpPage.php:46
 msgid "2. Brukeraktivering:"
 msgstr "2. User Activation:"
 
-#: inc/Admin/Pages/HelpPage.php:47
+#: inc/Admin/Pages/HelpPage.php:48
 msgid "Brukes på en side der importerte brukere/beboere kan skrive inn telefonnummeret sitt for å motta en SMS-kode, og dermed aktivere kontoen sin for booking."
 msgstr "Used on a page where imported users/residents can enter their phone number to receive an SMS code, thereby activating their account for booking."
 
-#: inc/Admin/Pages/HelpPage.php:53
+#: inc/Admin/Pages/HelpPage.php:54
 msgid "Hva Setup Wizard (veiviseren) installerer"
 msgstr "What the Setup Wizard Installs"
 
-#: inc/Admin/Pages/HelpPage.php:55
+#: inc/Admin/Pages/HelpPage.php:56
 msgid "Hvis du har kjørt veiviseren (Setup Wizard), er det automatisk opprettet demodata for å hjelpe deg i gang. Dette inkluderer:"
 msgstr "If you have run the Setup Wizard, demo data is automatically created to help you get started. This includes:"
 
-#: inc/Admin/Pages/HelpPage.php:57
+#: inc/Admin/Pages/HelpPage.php:58
 msgid "Eksempellokaler"
 msgstr "Example Venues"
 
-#: inc/Admin/Pages/HelpPage.php:58
+#: inc/Admin/Pages/HelpPage.php:59
 msgid "Standard tidsluker (f.eks. dag-, kvelds- og helgeleie)"
 msgstr "Default time slots (e.g., day, evening, and weekend rentals)"
 
-#: inc/Admin/Pages/HelpPage.php:59
+#: inc/Admin/Pages/HelpPage.php:60
 msgid "Standard prisregler"
 msgstr "Default pricing rules"
 
-#: inc/Admin/Pages/HelpPage.php:61
+#: inc/Admin/Pages/HelpPage.php:62
 msgid "Dette er kun for demonstrasjon. Du kan trygt redigere eller slette disse dataene for å tilpasse ditt eget oppsett."
 msgstr "This is for demonstration only. You can safely edit or delete this data to customize your own setup."
 
-#: inc/Admin/Pages/HelpPage.php:67
+#: inc/Admin/Pages/HelpPage.php:68
 msgid "Slik fungerer det (kjernekonsepter)"
 msgstr "How It Works (Core Concepts)"
 
-#: inc/Admin/Pages/HelpPage.php:69
+#: inc/Admin/Pages/HelpPage.php:70
 msgid "Snippen Booking bygger på følgende konsepter:"
 msgstr "Snippen Booking is built on the following concepts:"
 
-#: inc/Admin/Pages/HelpPage.php:71
+#: inc/Admin/Pages/HelpPage.php:72
 msgid "Det fysiske rommet eller ressursen som kan bookes."
 msgstr "The physical room or resource that can be booked."
 
-#: inc/Admin/Pages/HelpPage.php:72
+#: inc/Admin/Pages/HelpPage.php:73
 msgid "Tidsluker:"
 msgstr "Time Slots:"
 
-#: inc/Admin/Pages/HelpPage.php:72
+#: inc/Admin/Pages/HelpPage.php:73
 msgid "Definerer nøyaktig når, og hvor lenge, et lokale kan bookes."
 msgstr "Defines exactly when and for how long a venue can be booked."
 
-#: inc/Admin/Pages/HelpPage.php:73
+#: inc/Admin/Pages/HelpPage.php:74
 msgid "Prisregler:"
 msgstr "Pricing Rules:"
 
-#: inc/Admin/Pages/HelpPage.php:73
+#: inc/Admin/Pages/HelpPage.php:74
 msgid "Regler som bestemmer kostnaden basert på tidsluke, dag og lokale."
 msgstr "Rules that determine the cost based on time slot, day, and venue."
 
-#: inc/Admin/Pages/HelpPage.php:74
+#: inc/Admin/Pages/HelpPage.php:75
 msgid "Bookinger:"
 msgstr "Bookings:"
 
-#: inc/Admin/Pages/HelpPage.php:74
+#: inc/Admin/Pages/HelpPage.php:75
 msgid "Selve reservasjonen som brukeren oppretter."
 msgstr "The actual reservation created by the user."
 
-#: inc/Admin/Pages/HelpPage.php:81
+#: inc/Admin/Pages/HelpPage.php:82
 msgid "Rettigheter og tilgang"
 msgstr "Permissions and Access"
 
-#: inc/Admin/Pages/HelpPage.php:83
+#: inc/Admin/Pages/HelpPage.php:85
 msgid "Det er to hovedtyper brukere med tilgang til administrasjon av bookinger:"
 msgstr "There are two main types of users with access to manage bookings:"
 
-#: inc/Admin/Pages/HelpPage.php:85
+#: inc/Admin/Pages/HelpPage.php:87
 msgid "WordPress Administrator:"
 msgstr "WordPress Administrator:"
 
-#: inc/Admin/Pages/HelpPage.php:85
+#: inc/Admin/Pages/HelpPage.php:87
 msgid "Har full tilgang til alt."
 msgstr "Has full access to everything."
 
-#: inc/Admin/Pages/HelpPage.php:86
+#: inc/Admin/Pages/HelpPage.php:88
 msgid "Brukere med egenskapen \"manage_snippen_bookings\":"
 msgstr ""
 
-#: inc/Admin/Pages/HelpPage.php:86
+#: inc/Admin/Pages/HelpPage.php:88
 msgid "Kan administrere bookinger og motta varsler, men trenger ikke være fulle WordPress-administratorer. Dette gis via brukerprofilen."
 msgstr "Can manage bookings and receive notifications, but do not need to be full WordPress administrators. This is granted via the user profile."
 
-#: inc/Admin/Pages/HelpPage.php:88
+#: inc/Admin/Pages/HelpPage.php:90
 msgid "Vanlige brukere som bare skal bestille et lokale trenger IKKE admin-tilgang. De gjør alt på forsiden (via shortcode)."
 msgstr "Regular users who just need to book a venue DO NOT need admin access. They do everything on the front end (via shortcode)."
 
-#: inc/Admin/Pages/HelpPage.php:94
+#: inc/Admin/Pages/HelpPage.php:96
 msgid "Tidsluker (Time Slots) og Vasketid"
 msgstr "Time Slots and Cleaning Time"
 
-#: inc/Admin/Pages/HelpPage.php:96
+#: inc/Admin/Pages/HelpPage.php:98
 msgid "Når du oppretter en tidsluke, definerer du start- og sluttidspunkt, samt eventuelle timer til vask/rydding før og etter. Vasketiden legger beslag på lokalet og forhindrer andre bookinger i den perioden."
 msgstr "When creating a time slot, you define the start and end times, as well as any hours for cleaning/tidying before and after. Cleaning time occupies the venue and prevents other bookings during that period."
 
-#: inc/Admin/Pages/HelpPage.php:97
+#: inc/Admin/Pages/HelpPage.php:99
 msgid "Konsekvenser av vasketid (eksempel):"
 msgstr "Consequences of cleaning time (example):"
 
-#: inc/Admin/Pages/HelpPage.php:99
+#: inc/Admin/Pages/HelpPage.php:101
 msgid "Hvis du har en dagleie fra 08:00 - 16:00, og angir \"2 timer vask etterpå\", vil lokalet være sperret frem til kl. 18:00."
 msgstr ""
 
-#: inc/Admin/Pages/HelpPage.php:100
+#: inc/Admin/Pages/HelpPage.php:102
 msgid "Dette betyr at en kveldsleie som starter kl. 16:00 eller 17:00 VIL VÆRE UTILGJENGELIG samme dag."
 msgstr "This means that an evening rental starting at 16:00 or 17:00 WILL BE UNAVAILABLE the same day."
 
-#: inc/Admin/Pages/HelpPage.php:101
+#: inc/Admin/Pages/HelpPage.php:103
 msgid "Neste tilgjengelige tidsluke kan tidligst starte kl. 18:00."
 msgstr "The next available time slot can start no earlier than 18:00."
 
-#: inc/Admin/Pages/HelpPage.php:103
+#: inc/Admin/Pages/HelpPage.php:105
 msgid "Luker vil ikke la seg overstyre dersom det oppstår kollisjon i tidspunktene (inkludert vasketid), med mindre du eksplisitt tillater overlapping for delte arrangementer."
 msgstr "Slots will not be overridden if there is a collision in times (including cleaning time), unless you explicitly allow overlapping for shared events."
 
-#: inc/Admin/Pages/HelpPage.php:109
+#: inc/Admin/Pages/HelpPage.php:111
 msgid "Prisregler og Prioritet"
 msgstr "Pricing Rules and Priority"
 
-#: inc/Admin/Pages/HelpPage.php:111
+#: inc/Admin/Pages/HelpPage.php:113
 msgid "Prisregler styrer hva det koster å booke, basert på ukedag, tidsluke og lokale."
 msgstr "Pricing rules control the cost of booking based on weekday, time slot, and venue."
 
-#: inc/Admin/Pages/HelpPage.php:113
+#: inc/Admin/Pages/HelpPage.php:115
 msgid "Prioritet:"
 msgstr "Priority:"
 
-#: inc/Admin/Pages/HelpPage.php:113
+#: inc/Admin/Pages/HelpPage.php:115
 msgid "Hvis to regler gjelder for samme dag (f.eks. en generell pris og en spesifikk helligdagspris), er det \"Priority\"-feltet som avgjør hvilken som vinner. Et HØYERE tall trumfer et lavere tall. (For eksempel vil en regel med prioritet 10 overstyre en regel med prioritet 0)."
 msgstr ""
 
-#: inc/Admin/Pages/HelpPage.php:114
+#: inc/Admin/Pages/HelpPage.php:116
 msgid "Flere lokaler (Multi-object):"
 msgstr "Multiple venues (Multi-object):"
 
-#: inc/Admin/Pages/HelpPage.php:114
+#: inc/Admin/Pages/HelpPage.php:116
 msgid "Husk at dersom du tillater leie av flere lokaler samtidig (f.eks. \"Leie hele bygget\"), MÅ du opprette egne prisregler som gjelder for akkurat denne kombinasjonen av lokaler. Hvis ikke vil ikke systemet vite hva kombinasjonen koster."
 msgstr ""
 
-#: inc/Admin/Pages/HelpPage.php:121
+#: inc/Admin/Pages/HelpPage.php:123
 msgid "Kombinasjon av flere lokaler (Multi-object)"
 msgstr "Combining multiple venues (Multi-object)"
 
-#: inc/Admin/Pages/HelpPage.php:123
+#: inc/Admin/Pages/HelpPage.php:125
 msgid "Du kan tillate at brukere booker flere lokaler i samme slengen ved å sette inn en shortcode med flere ID-er:"
 msgstr "You can allow users to book multiple venues at once by inserting a shortcode with multiple IDs:"
 
-#: inc/Admin/Pages/HelpPage.php:125
+#: inc/Admin/Pages/HelpPage.php:127
 msgid "Viktige forutsetninger (Implikasjoner i oppsettet):"
 msgstr "Important prerequisites (Implications for setup):"
 
-#: inc/Admin/Pages/HelpPage.php:127
+#: inc/Admin/Pages/HelpPage.php:129
 msgid "Tidsluken du ønsker å tilby MÅ ha krysset av for \"Tillat delt booking (Shared booking)\". Kun da kan den gjelde over flere uavhengige lokaler samtidig."
 msgstr ""
 
-#: inc/Admin/Pages/HelpPage.php:128
+#: inc/Admin/Pages/HelpPage.php:130
 msgid "Du må som nevnt over ha opprettet en egen \"Prisregel\" i systemet der BEGGE lokalene er krysset av, slik at systemet vet totalprisen for kombinasjonen."
 msgstr ""
 
@@ -1615,4 +1615,20 @@ msgstr ""
 
 #: inc/Admin/Pages/SettingsPage.php:261
 msgid "Hvis dette ikke er krysset av, vil all data (tabeller, innstillinger og brukermeta) knyttet til Snippen Booking bli slettet når pluginen slettes fra WordPress."
+msgstr ""
+
+#: inc/Admin/Pages/HelpPage.php:27
+msgid "VIKTIG:"
+msgstr "IMPORTANT:"
+
+#: inc/Admin/Pages/HelpPage.php:27
+msgid "For å se resten av booking-menyene (som Oversikt, Lokaler, etc.), må du gi deg selv tilgangen \"Booking Administrator\" på din egen brukerprofil under \"Brukere\" i WordPress."
+msgstr ""
+
+#: inc/Admin/Pages/HelpPage.php:84
+msgid "VIKTIG FOR ADMINISTRATORER:"
+msgstr "IMPORTANT FOR ADMINISTRATORS:"
+
+#: inc/Admin/Pages/HelpPage.php:84
+msgid "Selv om du er WordPress Administrator, MÅ du manuelt huke av for \"Booking Administrator\" inne på din egen brukerprofil (under \"Brukere\") for å få tilgang til oppsett og administrering av bookinger."
 msgstr ""
