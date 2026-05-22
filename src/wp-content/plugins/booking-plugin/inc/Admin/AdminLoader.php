@@ -114,6 +114,15 @@ class AdminLoader {
 			array( self::class, 'render_settings_page' )
 		);
 
+		add_submenu_page(
+			'snippen-booking',
+			__( 'Hjelp / Manual', 'snippen-booking' ),
+			__( 'Hjelp / Manual', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-help',
+			array( self::class, 'render_help_page' )
+		);
+
 		// Setup Wizard
 		SetupWizardPage::register();
 
@@ -280,6 +289,18 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Beboer Import', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render Help Page
+	 */
+	public static function render_help_page() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\HelpPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\HelpPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'Hjelp / Manual', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 }
