@@ -88,7 +88,7 @@ class BookingsPage {
 
 		echo '<div class="snippen-card" style="padding: 15px 24px; margin-bottom: 20px;">';
 		echo '<form method="get" action="" style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">';
-		echo '<input type="hidden" name="page" value="snippen-booking">';
+		echo '<input type="hidden" name="page" value="snippen-booking-oversikt">';
 
 		echo '<div class="snippen-filter-group">';
 		echo '<select name="status" onchange="this.form.submit()">';

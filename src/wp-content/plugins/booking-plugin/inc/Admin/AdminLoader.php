@@ -50,11 +50,11 @@ class AdminLoader {
 	 */
 	public static function add_admin_menu() {
 		add_menu_page(
-			__( 'Bookinger', 'snippen-booking' ),
-			__( 'Bookinger', 'snippen-booking' ),
+			__( 'Snippen Booking', 'snippen-booking' ),
+			__( 'Snippen Booking', 'snippen-booking' ),
 			'view_snippen_booking_menu',
 			'snippen-booking',
-			array( self::class, 'render_bookings_page' ),
+			array( self::class, 'render_help_page' ),
 			'dashicons-calendar-alt',
 			25
 		);
@@ -71,10 +71,19 @@ class AdminLoader {
 
 		add_submenu_page(
 			'snippen-booking',
+			__( 'Hjelp / Manual', 'snippen-booking' ),
+			__( 'Hjelp / Manual', 'snippen-booking' ),
+			'view_snippen_booking_manual',
+			'snippen-booking',
+			array( self::class, 'render_help_page' )
+		);
+
+		add_submenu_page(
+			'snippen-booking',
 			__( 'Oversikt', 'snippen-booking' ),
 			__( 'Oversikt', 'snippen-booking' ),
 			Capabilities::MANAGE_BOOKINGS,
-			'snippen-booking',
+			'snippen-booking-oversikt',
 			array( self::class, 'render_bookings_page' )
 		);
 
@@ -114,14 +123,7 @@ class AdminLoader {
 			array( self::class, 'render_settings_page' )
 		);
 
-		add_submenu_page(
-			'snippen-booking',
-			__( 'Hjelp / Manual', 'snippen-booking' ),
-			__( 'Hjelp / Manual', 'snippen-booking' ),
-			'view_snippen_booking_manual',
-			'snippen-booking-help',
-			array( self::class, 'render_help_page' )
-		);
+
 
 		// Setup Wizard
 		SetupWizardPage::register();
