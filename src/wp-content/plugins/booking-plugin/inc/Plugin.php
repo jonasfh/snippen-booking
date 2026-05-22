@@ -70,6 +70,22 @@ class Plugin {
 
 		// Always redirect 'holmen_resident' to the front page on login (Issue #45)
 		add_filter( 'login_redirect', array( __CLASS__, 'redirect_holmen_resident_login' ), 10, 3 );
+
+		// Dynamic capabilities for admin menu (Issue #69)
+		add_filter( 'user_has_cap', array( __CLASS__, 'map_menu_capabilities' ), 10, 4 );
+	}
+
+	/**
+	 * Map virtual capabilities for menu access so admins can see Help without booking capability
+	 */
+	public static function map_menu_capabilities( $allcaps, $caps, $args, $user ) {
+		// Virtual capability to see the top level menu and the manual
+		if ( isset( $caps[0] ) && in_array( $caps[0], array( 'view_snippen_booking_menu', 'view_snippen_booking_manual' ), true ) ) {
+			if ( ! empty( $allcaps['manage_options'] ) || ! empty( $allcaps[ Capabilities::MANAGE_BOOKINGS ] ) ) {
+				$allcaps[ $caps[0] ] = true;
+			}
+		}
+		return $allcaps;
 	}
 
 	/**
