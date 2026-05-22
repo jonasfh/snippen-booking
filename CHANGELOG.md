@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.0] - 2026-05-22
+
+### Added
+- **User Manual**: Added a dedicated "Hjelp / Manual" section in the WordPress admin interface.
+- **Onboarding**: Improved discoverability after installation by providing built-in documentation about core concepts, shortcodes, and configuration.
+
 ## [1.8.0] - 2026-05-21
 
 ### Added
