@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0] - 2026-05-22
+
+### Added
+- **Pluggable Resident Import Architecture**: Refactored the resident import page to use a flexible, provider-based architecture.
+- **Import Providers**: Split the existing "Line-by-line" and "TSV" parsing logic into their own independent provider classes for easier maintenance and future extensibility.
+- **Provider UI Customization**: Allowed each import provider to render its own specific configuration fields within the import page.
+
 ## [1.9.0] - 2026-05-22
 
 ### Added
