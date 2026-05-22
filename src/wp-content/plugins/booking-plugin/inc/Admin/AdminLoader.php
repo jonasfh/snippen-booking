@@ -52,7 +52,7 @@ class AdminLoader {
 		add_menu_page(
 			__( 'Bookinger', 'snippen-booking' ),
 			__( 'Bookinger', 'snippen-booking' ),
-			Capabilities::MANAGE_BOOKINGS,
+			'view_snippen_booking_menu',
 			'snippen-booking',
 			array( self::class, 'render_bookings_page' ),
 			'dashicons-calendar-alt',
@@ -118,7 +118,7 @@ class AdminLoader {
 			'snippen-booking',
 			__( 'Hjelp / Manual', 'snippen-booking' ),
 			__( 'Hjelp / Manual', 'snippen-booking' ),
-			Capabilities::MANAGE_BOOKINGS,
+			'view_snippen_booking_manual',
 			'snippen-booking-help',
 			array( self::class, 'render_help_page' )
 		);

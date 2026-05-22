@@ -23,12 +23,11 @@ class HelpPage {
 					<div class="postbox">
 						<h2 class="hndle"><span><?php esc_html_e( 'Hurtigstart (TL;DR)', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
+							<p><?php esc_html_e( 'Den raskeste måten å komme i gang på er å bruke Setup Wizard (veiviseren). Den oppretter standard lokaler, tidsluker og priser som du senere kan tilpasse.', 'snippen-booking' ); ?></p>
 							<ol>
-								<li><strong><?php esc_html_e( 'Opprett lokaler', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Gå til "Lokaler" for å definere hva som kan bookes.', 'snippen-booking' ); ?></li>
-								<li><strong><?php esc_html_e( 'Tidsluker', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Gå til "Tidsluker" og konfigurer når lokalene er tilgjengelige.', 'snippen-booking' ); ?></li>
-								<li><strong><?php esc_html_e( 'Priser', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Gå til "Prisregler" for å sette priser.', 'snippen-booking' ); ?></li>
-								<li><strong><?php esc_html_e( 'Shortcode', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Legg til [snippen_booking] på en side der brukerne skal kunne booke.', 'snippen-booking' ); ?></li>
-								<li><strong><?php esc_html_e( 'Tilgang', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Gi "Booking Administrator" tilgang til de ansatte som skal administrere bookinger.', 'snippen-booking' ); ?></li>
+								<li><strong><?php esc_html_e( 'Kjør Setup Wizard', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Gå til "Setup Wizard" for å generere et ferdig oppsett.', 'snippen-booking' ); ?></li>
+								<li><strong><?php esc_html_e( 'Legg inn booking-skjema', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Legg til shortcoden [snippen_booking] på en side for å la brukere booke.', 'snippen-booking' ); ?></li>
+								<li><strong><?php esc_html_e( 'Brukertilgang', 'snippen-booking' ); ?>:</strong> <?php esc_html_e( 'Legg til shortcoden [snippen_account_confirmation] på en egen side slik at beboere kan bekrefte kontoen sin.', 'snippen-booking' ); ?></li>
 							</ol>
 						</div>
 					</div>
@@ -37,13 +36,15 @@ class HelpPage {
 					<div class="postbox">
 						<h2 class="hndle"><span><?php esc_html_e( 'Bruk av Shortcodes', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
-							<p><?php esc_html_e( 'Systemet bruker shortcodes for å vise booking-skjemaet for brukerne. Shortcoden plasseres på en hvilken som helst side i WordPress.', 'snippen-booking' ); ?></p>
-							<p><strong><?php esc_html_e( 'Standard bruk:', 'snippen-booking' ); ?></strong></p>
+							<p><?php esc_html_e( 'Systemet bruker shortcodes for å vise innhold for brukerne. Disse plasseres på vanlige WordPress-sider.', 'snippen-booking' ); ?></p>
+							
+							<h4><?php esc_html_e( '1. Bookingskjema:', 'snippen-booking' ); ?></h4>
 							<p><code>[snippen_booking]</code></p>
-							<p><?php esc_html_e( 'Denne viser skjemaet og lar brukeren velge blant tilgjengelige lokaler. Hvis du vil begrense skjemaet til ett bestemt lokale, kan du bruke object_id-attributtet:', 'snippen-booking' ); ?></p>
-							<p><code>[snippen_booking object_id="1"]</code></p>
-							<p><?php esc_html_e( 'Du kan også kombinere flere lokaler:', 'snippen-booking' ); ?></p>
-							<p><code>[snippen_booking object_id="1,2"]</code></p>
+							<p><?php esc_html_e( 'Denne viser kalender og skjema for booking. Hvis du vil begrense skjemaet til ett bestemt lokale, kan du bruke object_id:', 'snippen-booking' ); ?> <code>[snippen_booking object_id="1"]</code></p>
+							
+							<h4><?php esc_html_e( '2. Brukeraktivering:', 'snippen-booking' ); ?></h4>
+							<p><code>[snippen_account_confirmation]</code></p>
+							<p><?php esc_html_e( 'Brukes på en side der importerte brukere/beboere kan skrive inn telefonnummeret sitt for å motta en SMS-kode, og dermed aktivere kontoen sin for booking.', 'snippen-booking' ); ?></p>
 						</div>
 					</div>
 
@@ -90,39 +91,42 @@ class HelpPage {
 
 					<!-- 6. Time Slots -->
 					<div class="postbox">
-						<h2 class="hndle"><span><?php esc_html_e( 'Tidsluker (Time Slots)', 'snippen-booking' ); ?></span></h2>
+						<h2 class="hndle"><span><?php esc_html_e( 'Tidsluker (Time Slots) og Vasketid', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
-							<p><?php esc_html_e( 'Når du oppretter en tidsluke, definerer du start- og sluttidspunkt, samt eventuelle timer til vask/rydding før og etter.', 'snippen-booking' ); ?></p>
-							<p><?php esc_html_e( 'Eksempler:', 'snippen-booking' ); ?></p>
+							<p><?php esc_html_e( 'Når du oppretter en tidsluke, definerer du start- og sluttidspunkt, samt eventuelle timer til vask/rydding før og etter. Vasketiden legger beslag på lokalet og forhindrer andre bookinger i den perioden.', 'snippen-booking' ); ?></p>
+							<p><strong><?php esc_html_e( 'Konsekvenser av vasketid (eksempel):', 'snippen-booking' ); ?></strong></p>
 							<ul>
-								<li><?php esc_html_e( 'Dagleie: 08:00 - 16:00', 'snippen-booking' ); ?></li>
-								<li><?php esc_html_e( 'Kveldsleie: 17:00 - 23:00', 'snippen-booking' ); ?></li>
-								<li><?php esc_html_e( 'Hele dagen: 08:00 - 23:00', 'snippen-booking' ); ?></li>
+								<li><?php esc_html_e( 'Hvis du har en dagleie fra 08:00 - 16:00, og angir "2 timer vask etterpå", vil lokalet være sperret frem til kl. 18:00.', 'snippen-booking' ); ?></li>
+								<li><?php esc_html_e( 'Dette betyr at en kveldsleie som starter kl. 16:00 eller 17:00 VIL VÆRE UTILGJENGELIG samme dag.', 'snippen-booking' ); ?></li>
+								<li><?php esc_html_e( 'Neste tilgjengelige tidsluke kan tidligst starte kl. 18:00.', 'snippen-booking' ); ?></li>
 							</ul>
-							<p><?php esc_html_e( 'Luker vil ikke la seg overstyre dersom det oppstår kollisjon i tidspunktene, med mindre du eksplisitt tillater overlapping.', 'snippen-booking' ); ?></p>
+							<p><?php esc_html_e( 'Luker vil ikke la seg overstyre dersom det oppstår kollisjon i tidspunktene (inkludert vasketid), med mindre du eksplisitt tillater overlapping for delte arrangementer.', 'snippen-booking' ); ?></p>
 						</div>
 					</div>
 
 					<!-- 7. Pricing Rules -->
 					<div class="postbox">
-						<h2 class="hndle"><span><?php esc_html_e( 'Prisregler', 'snippen-booking' ); ?></span></h2>
+						<h2 class="hndle"><span><?php esc_html_e( 'Prisregler og Prioritet', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
-							<p><?php esc_html_e( 'Prisregler lar deg styre prisen basert på flere faktorer:', 'snippen-booking' ); ?></p>
+							<p><?php esc_html_e( 'Prisregler styrer hva det koster å booke, basert på ukedag, tidsluke og lokale.', 'snippen-booking' ); ?></p>
 							<ul>
-								<li><strong><?php esc_html_e( 'Standardpris:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Gjelder vanligvis mandag til torsdag.', 'snippen-booking' ); ?></li>
-								<li><strong><?php esc_html_e( 'Helgepris:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Du kan opprette en egen regel for fredag til søndag med en høyere pris.', 'snippen-booking' ); ?></li>
-								<li><strong><?php esc_html_e( 'Prioritet:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Hvis to regler overlapper, brukes regelen med høyest prioritet.', 'snippen-booking' ); ?></li>
+								<li><strong><?php esc_html_e( 'Prioritet:', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Hvis to regler gjelder for samme dag (f.eks. en generell pris og en spesifikk helligdagspris), er det "Priority"-feltet som avgjør hvilken som vinner. Et HØYERE tall trumfer et lavere tall. (For eksempel vil en regel med prioritet 10 overstyre en regel med prioritet 0).', 'snippen-booking' ); ?></li>
+								<li><strong><?php esc_html_e( 'Flere lokaler (Multi-object):', 'snippen-booking' ); ?></strong> <?php esc_html_e( 'Husk at dersom du tillater leie av flere lokaler samtidig (f.eks. "Leie hele bygget"), MÅ du opprette egne prisregler som gjelder for akkurat denne kombinasjonen av lokaler. Hvis ikke vil ikke systemet vite hva kombinasjonen koster.', 'snippen-booking' ); ?></li>
 							</ul>
 						</div>
 					</div>
 
 					<!-- 8. Multi-Object Bookings -->
 					<div class="postbox">
-						<h2 class="hndle"><span><?php esc_html_e( 'Kombinasjon av flere lokaler', 'snippen-booking' ); ?></span></h2>
+						<h2 class="hndle"><span><?php esc_html_e( 'Kombinasjon av flere lokaler (Multi-object)', 'snippen-booking' ); ?></span></h2>
 						<div class="inside">
-							<p><?php esc_html_e( 'Du kan tillate at brukere booker flere lokaler samtidig (f.eks. "Leie hele bygget"). Dette oppnås ved å bruke shortcode med flere ID-er:', 'snippen-booking' ); ?></p>
+							<p><?php esc_html_e( 'Du kan tillate at brukere booker flere lokaler i samme slengen ved å sette inn en shortcode med flere ID-er:', 'snippen-booking' ); ?></p>
 							<p><code>[snippen_booking object_id="1,2"]</code></p>
-							<p><?php esc_html_e( 'Prisen vil da kalkuleres basert på regler som dekker ett eller begge lokalene.', 'snippen-booking' ); ?></p>
+							<p><strong><?php esc_html_e( 'Viktige forutsetninger (Implikasjoner i oppsettet):', 'snippen-booking' ); ?></strong></p>
+							<ul>
+								<li><?php esc_html_e( 'Tidsluken du ønsker å tilby MÅ ha krysset av for "Tillat delt booking (Shared booking)". Kun da kan den gjelde over flere uavhengige lokaler samtidig.', 'snippen-booking' ); ?></li>
+								<li><?php esc_html_e( 'Du må som nevnt over ha opprettet en egen "Prisregel" i systemet der BEGGE lokalene er krysset av, slik at systemet vet totalprisen for kombinasjonen.', 'snippen-booking' ); ?></li>
+							</ul>
 						</div>
 					</div>
 
