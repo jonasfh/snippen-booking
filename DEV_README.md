@@ -183,7 +183,7 @@ To create a custom SMS provider (for example, using Twilio), you must implement 
 use SnippenBooking\Service\Notification\SmsProviderInterface;
 
 class TwilioSmsProvider implements SmsProviderInterface {
-    
+
     public function get_id(): string {
         return 'twilio';
     }
@@ -228,7 +228,7 @@ class TwilioSmsProvider implements SmsProviderInterface {
         $sid   = get_option('snippen_twilio_sid');
         $token = get_option('snippen_twilio_token');
         $from  = get_option('snippen_twilio_from');
-        
+
         // Execute HTTP requests or use the SDK to send the SMS.
         return true;
     }
@@ -248,5 +248,63 @@ add_filter('snippen_booking_notification_providers', function($providers) {
 
 Once registered, your provider will automatically appear as a card inside **Innstillinger > Varslingstilbyder (Transport)**, and its configuration fields will be rendered dynamically!
 
+## Pluggable Resident Import System
 
+The plugin also supports a pluggable architecture for importing residents. You can easily add new import formats (like CSV, custom text formats, or integrations with external systems) via WordPress filter hooks.
 
+### Creating a Custom Import Provider
+
+To create a custom import provider, you should implement `SnippenBooking\Import\ResidentImportProviderInterface` or extend `SnippenBooking\Import\Provider\AbstractResidentImportProvider` (which includes helpful `upsert_resident` methods).
+
+```php
+use SnippenBooking\Import\Provider\AbstractResidentImportProvider;
+use SnippenBooking\Import\ResidentImportResult;
+
+class CsvResidentImportProvider extends AbstractResidentImportProvider {
+
+    public function get_id(): string {
+        return 'csv_import';
+    }
+
+    public function get_name(): string {
+        return 'CSV Import';
+    }
+
+    public function get_description(): string {
+        return 'Importer beboere fra en CSV-fil.';
+    }
+
+    public function render_ui(): void {
+        echo '<div class="snippen-form-group">';
+        echo '<label for="snippen_import_data_csv">Lim inn CSV data</label>';
+        echo '<textarea name="snippen_import_data" id="snippen_import_data_csv" rows="15" style="width:100%;"></textarea>';
+        echo '</div>';
+    }
+
+    public function import( $input ): ResidentImportResult {
+        $result = new ResidentImportResult();
+        $raw_data = isset( $input['snippen_import_data'] ) ? trim( $input['snippen_import_data'] ) : '';
+
+        // 1. Parse CSV data from $raw_data
+        // 2. Call $user_id = $this->upsert_resident($name, $email, $phone) for each valid row
+        // 3. Keep track of successes and logs
+        //    $result->success++;
+        //    $result->imported_ids[] = $user_id;
+
+        return $result;
+    }
+}
+```
+
+### Registering Your Import Provider
+
+Register your custom provider using the `snippen_booking_import_providers` filter hook:
+
+```php
+add_filter('snippen_booking_import_providers', function($providers) {
+    $providers[] = new CsvResidentImportProvider();
+    return $providers;
+});
+```
+
+Once registered, your provider will automatically appear in the dropdown menu on the **Beboer Import** page, and its custom UI will be rendered when selected!
