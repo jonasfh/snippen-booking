@@ -43,7 +43,7 @@ jobs:
     - name: Setup WordPress
       run: |
         mkdir -p /tmp/wordpress
-        wp core download --path=/tmp/wordpress
+        wp core download --version=7.0 --path=/tmp/wordpress
         wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1
         wp core install --path=/tmp/wordpress --url=http://localhost --title="Test Site" --admin_user=admin --admin_password=admin --admin_email=admin@example.com
         

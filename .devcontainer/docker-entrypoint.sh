@@ -28,6 +28,7 @@ echo "Downloading WordPress..."
 
 if [ ! -f wp-load.php ]; then
   wp core download \
+    --version=7.0 \
     --locale=en_US \
     --allow-root
 fi
