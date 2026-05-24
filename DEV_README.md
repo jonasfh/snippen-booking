@@ -96,6 +96,43 @@ For information on how AI agents (and developers) should workflow GitHub issues,
 - Xdebug warnings about `host.docker.internal:9003` are normal if you don’t have a debugger attached.
 - If you change the plugin or config and the site stops working, rebuild/reopen the devcontainer and/or delete `/wordpress/wp-config.php` to force reconfiguration.
 
+### Security Best Practices
+
+The plugin includes a centralized `SnippenBooking\Helper\Security` class for common security operations. When adding new features, follow these patterns:
+
+#### Nonce Verification
+All state-changing AJAX endpoints must verify a nonce:
+```php
+// In AJAX handlers (dies with JSON error on failure):
+Security::verify_ajax_nonce( 'snippen_booking_nonce' );
+
+// For public endpoints (nopriv), verify only for logged-in users:
+if ( is_user_logged_in() ) {
+    check_ajax_referer( 'snippen_booking_nonce', 'nonce', false );
+}
+```
+
+#### Input Sanitization
+Use the Security helper for safe request access:
+```php
+$name   = Security::get_post_text( 'name' );
+$id     = Security::get_post_int( 'id' );
+$filter = Security::get_query_text( 'status', 'all' );
+```
+
+#### Output Escaping
+Always escape dynamic output in templates:
+- HTML content: `esc_html()`
+- HTML attributes: `esc_attr()`
+- URLs: `esc_url()`
+
+#### SQL LIKE Queries
+Always escape user input before using in LIKE clauses:
+```php
+$like_search = '%' . $wpdb->esc_like( $search_term ) . '%';
+$query .= $wpdb->prepare( ' AND name LIKE %s', $like_search );
+```
+
 ### Uninstall Process
 
 The plugin implements a proper `uninstall.php` to clean up its footprint when a site administrator deletes the plugin from WordPress.

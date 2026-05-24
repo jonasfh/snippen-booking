@@ -141,7 +141,8 @@ class BookingsPage {
 		}
 
 		if ( $s ) {
-			$query .= $wpdb->prepare( ' AND (b.customer_name LIKE %s OR b.customer_email LIKE %s)', '%' . $s . '%', '%' . $s . '%' );
+			$like_search = '%' . $wpdb->esc_like( $s ) . '%';
+			$query      .= $wpdb->prepare( ' AND (b.customer_name LIKE %s OR b.customer_email LIKE %s)', $like_search, $like_search );
 		}
 
 		if ( ! $show_all && ! $s ) {
@@ -223,7 +224,7 @@ class BookingsPage {
 		$status_class = 'snippen-status-' . $booking->status;
 		$booking_date = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
 
-		echo '<tr class="snippen-booking-row" id="booking-' . $booking->id . '">';
+		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
 		echo '<td><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
 		echo '<td><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small></td>';
 		echo '<td><strong>' . esc_html( $booking->customer_name ) . '</strong><br><small>' . esc_html( $booking->customer_email ) . '</small></td>';
@@ -238,16 +239,16 @@ class BookingsPage {
 		echo '<div style="display:flex; justify-content:flex-end; gap:8px;">';
 
 		if ( $booking->status === 'pending' ) {
-			echo '<button class="snippen-btn-action approve" data-id="' . $booking->id . '" title="' . esc_attr__( 'Godkjenn', 'snippen-booking' ) . '"><span class="dashicons dashicons-yes"></span></button>';
+			echo '<button class="snippen-btn-action approve" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Godkjenn', 'snippen-booking' ) . '"><span class="dashicons dashicons-yes"></span></button>';
 		}
 		if ( $booking->status !== 'cancelled' ) {
-			echo '<button class="snippen-btn-action cancel" data-id="' . $booking->id . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
+			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
 		}
 
 		echo '</div></td></tr>';
 
 		// Details Row (Hidden)
-		echo '<tr class="snippen-details-row" id="details-' . $booking->id . '" style="display:none; background:#f8fafc;">';
+		echo '<tr class="snippen-details-row" id="details-' . esc_attr( $booking->id ) . '" style="display:none; background:#f8fafc;">';
 		echo '<td colspan="7" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
 		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:30px;">';
 		echo '<div><strong>' . esc_html__( 'Kontaktinfo:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->customer_phone ?: '-' ) . '</div>';

@@ -231,7 +231,7 @@ class Plugin {
 					default:
 						$status_label = $booking->status;
 				}
-				$status_class = 'snippen-badge snippen-status-' . $booking->status;
+				$status_class = 'snippen-badge snippen-status-' . esc_attr( $booking->status );
 
 				echo '<div class="snippen-modal-details-content">';
 				echo '<h2>' . esc_html__( 'Bookingdetaljer', 'snippen-booking' ) . '</h2>';
@@ -260,7 +260,7 @@ class Plugin {
 					echo '<div class="detail-item full-width"><strong>' . esc_html__( 'Beskrivelse', 'snippen-booking' ) . ':</strong><span class="detail-desc">' . esc_html( $booking->description ) . '</span></div>';
 				}
 
-				echo '<div class="detail-item"><strong>' . esc_html__( 'Pris', 'snippen-booking' ) . ':</strong><span class="detail-price">' . number_format( $booking->price, 0, ',', ' ' ) . ',-</span></div>';
+				echo '<div class="detail-item"><strong>' . esc_html__( 'Pris', 'snippen-booking' ) . ':</strong><span class="detail-price">' . esc_html( number_format( $booking->price, 0, ',', ' ' ) ) . ',-</span></div>';
 				echo '<div class="detail-item"><strong>' . esc_html__( 'Booket den', 'snippen-booking' ) . ':</strong><span>' . esc_html( date_i18n( get_option( 'date_format' ) . ' H:i', strtotime( $booking->created_at ) ) ) . '</span></div>';
 
 				echo '</div>'; // grid

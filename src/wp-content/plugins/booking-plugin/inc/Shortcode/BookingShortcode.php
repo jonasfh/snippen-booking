@@ -76,10 +76,10 @@ class BookingShortcode {
 		<div class="snippen-booking-container" 
 			data-object-id="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>" 
 			data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>"
-			data-user-id="<?php echo get_current_user_id(); ?>"
-			data-user-name="<?php echo $user_name; ?>"
-			data-user-email="<?php echo $user_email; ?>"
-			data-user-phone="<?php echo $user_phone; ?>"
+			data-user-id="<?php echo esc_attr( get_current_user_id() ); ?>"
+			data-user-name="<?php echo esc_attr( $user_name ); ?>"
+			data-user-email="<?php echo esc_attr( $user_email ); ?>"
+			data-user-phone="<?php echo esc_attr( $user_phone ); ?>"
 			data-is-admin="<?php echo Capabilities::can_manage_bookings() ? 'true' : 'false'; ?>">
 			<div class="booking-header-section">
 				<div class="header-main">
@@ -118,14 +118,14 @@ class BookingShortcode {
 					<input type="hidden" name="event_date" id="event-date">
 					<input type="hidden" name="slot_id" id="slot-id">
 					<input type="hidden" name="booking_object_id" value="<?php echo esc_attr( wp_json_encode( $object_ids ) ); ?>">
-					<input type="hidden" name="user_id" id="selected-user-id" value="<?php echo get_current_user_id(); ?>">
+					<input type="hidden" name="user_id" id="selected-user-id" value="<?php echo esc_attr( get_current_user_id() ); ?>">
 					
 					<div class="form-grid">
 						<?php if ( Capabilities::can_manage_bookings() ) : ?>
 						<div class="form-group full-width admin-only-field">
 							<label for="user-search"><?php esc_html_e( 'Søk etter beboer (Admin)', 'snippen-booking' ); ?></label>
 							<div class="user-search-wrapper">
-								<input type="text" id="user-search" placeholder="<?php esc_attr_e( 'Begynn å skrive navn eller e-post...', 'snippen-booking' ); ?>" autocomplete="off" value="<?php echo $user_name; ?>">
+								<input type="text" id="user-search" placeholder="<?php esc_attr_e( 'Begynn å skrive navn eller e-post...', 'snippen-booking' ); ?>" autocomplete="off" value="<?php echo esc_attr( $user_name ); ?>">
 								<div id="user-search-results" class="search-results-dropdown" style="display: none;"></div>
 							</div>
 							<p class="description"><?php esc_html_e( 'La feltet være tomt for å booke i ditt eget navn.', 'snippen-booking' ); ?></p>
@@ -134,12 +134,12 @@ class BookingShortcode {
 
 						<div class="form-group">
 							<label for="name"><?php esc_html_e( 'Navn på beboer', 'snippen-booking' ); ?></label>
-							<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo $user_name; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+							<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_name ); ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
 							<label for="email"><?php esc_html_e( 'E-post', 'snippen-booking' ); ?></label>
-							<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo $user_email; ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+							<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_email ); ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">

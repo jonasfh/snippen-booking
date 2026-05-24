@@ -26,6 +26,8 @@ class UserApi {
 	 * Search users by name, login or email
 	 */
 	public static function search_users() {
+		check_ajax_referer( 'snippen_admin_nonce', 'nonce' );
+
 		if ( ! Capabilities::can_manage_bookings() ) {
 			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
 		}
@@ -61,6 +63,8 @@ class UserApi {
 	 * Request a confirmation code via SMS
 	 */
 	public static function request_confirmation_code() {
+		check_ajax_referer( 'snippen_confirmation_nonce', 'nonce' );
+
 		$phone = isset( $_POST['phone'] ) ? sanitize_text_field( $_POST['phone'] ) : '';
 
 		if ( empty( $phone ) ) {
@@ -119,6 +123,8 @@ class UserApi {
 	 * Verify confirmation code and set password
 	 */
 	public static function verify_confirmation_code() {
+		check_ajax_referer( 'snippen_confirmation_nonce', 'nonce' );
+
 		$user_id  = isset( $_POST['user_id'] ) ? intval( $_POST['user_id'] ) : 0;
 		$code     = isset( $_POST['code'] ) ? sanitize_text_field( $_POST['code'] ) : '';
 		$password = isset( $_POST['password'] ) ? $_POST['password'] : '';
