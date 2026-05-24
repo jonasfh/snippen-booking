@@ -1007,8 +1007,8 @@ msgid "Søn"
 msgstr "Sun"
 
 #: inc/Database/Install.php:140
-msgid "Holmen Sameie Beboer"
-msgstr "Holmen Sameie Resident"
+msgid "Snippen Beboer"
+msgstr "Snippen Resident"
 
 #: inc/Plugin.php:99
 msgid "Kontoen din er slettet eller deaktivert. Vennligst kontakt administrator."

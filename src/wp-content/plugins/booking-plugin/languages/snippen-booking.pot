@@ -1271,7 +1271,7 @@ msgid "Søn"
 msgstr ""
 
 #: inc/Database/Install.php:140
-msgid "Holmen Sameie Beboer"
+msgid "Snippen Beboer"
 msgstr ""
 
 #: inc/Plugin.php:99

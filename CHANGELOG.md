@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.12.0] - 2026-05-24
+
+### Changed
+- **Terminology Update**: Refactored the internal identifier and display name for residents. Renamed "Holmen Sameie Resident" to "Snippen Resident" across the codebase, translations, and documentation to better align with the plugin's branding.
+- **Database Migration**: Added `Migration_1_12_0` to safely migrate any existing users with the `holmen_resident` role to the new `snippen_resident` role.
+
 ## [1.11.0] - 2026-05-23
 
 ### Added
@@ -151,7 +157,7 @@
 ## [1.5.1] - 2026-05-19
 
 ### Added
-- **Front Page Login Redirect for Residents**: Always redirect users with the custom role "Holmen Sameie Beboer" (`holmen_resident`) to the front page (`home_url('/')`) upon logging in. This improves user experience and avoids confusing backend redirects to WordPress profile page/WP Admin.
+- **Front Page Login Redirect for Residents**: Always redirect users with the custom role "Snippen Beboer" (`snippen_resident`) to the front page (`home_url('/')`) upon logging in. This improves user experience and avoids confusing backend redirects to WordPress profile page/WP Admin.
 - **Integration Tests**: Added comprehensive PHPUnit integration tests in `LoginRedirectTest.php` to verify redirection behaviour for residents, regular users, and login errors.
 
 ## [1.5.0] - 2026-05-19
@@ -185,8 +191,8 @@
 - **Resident Import Page**: Implemented a new "Beboer Import" settings page under the admin dashboard for bulk importing resident accounts via copy-paste.
   - **Data Formats**: Supports both Line-by-Line ABBL format (Name, Email, Phone) and Tab-Separated Values (TSV) format with custom column mapping.
   - **Look-Ahead Shift Recovery**: Built a robust look-ahead parser for line-by-line format that automatically recovers from missing email or phone fields (data shifts) and logs detailed, clear error/warning skip lists.
-  - **Custom User Role**: Imported/updated users are assigned the custom WordPress role `holmen_resident` ("Holmen Sameie Beboer") which inherits subscriber capabilities.
-  - **Deletion Sync**: Automatically flags any `holmen_resident` not present in the current import list as deleted via `snippen_user_deleted = 'yes'` user metadata. Clears this flag for any imported users.
+  - **Custom User Role**: Imported/updated users are assigned the custom WordPress role `snippen_resident` ("Snippen Beboer") which inherits subscriber capabilities.
+  - **Deletion Sync**: Automatically flags any `snippen_resident` not present in the current import list as deleted via `snippen_user_deleted = 'yes'` user metadata. Clears this flag for any imported users.
   - **Manual Deletion Toggle**: Added a manual "Slettet beboer" checkbox to the WP User Profile screen, enabling admins to manually mark or reactivate residents.
   - **Access & Deletion Enforcement**: Robust 4-layer enforcement blocking deleted users: prevents login via the `wp_authenticate_user` pipeline, blocks password reset via `allow_password_reset`, blocks API booking requests, and blocks SMS code verification requests.
 - **Integration Tests**: Added comprehensive integration tests in `ImportPageTest.php` verifying parsing, look-ahead shifts, TSV mapping, phone normalization, custom role creation, deletion sync, login blocks, and manual toggles.

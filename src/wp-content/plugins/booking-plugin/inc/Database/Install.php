@@ -137,7 +137,7 @@ class Install {
 		// Register custom resident role (Issue #37)
 		$subscriber   = get_role( 'subscriber' );
 		$capabilities = $subscriber ? $subscriber->capabilities : array( 'read' => true );
-		add_role( 'holmen_resident', __( 'Holmen Sameie Beboer', 'snippen-booking' ), $capabilities );
+		add_role( 'snippen_resident', __( 'Snippen Beboer', 'snippen-booking' ), $capabilities );
 	}
 
 	/**

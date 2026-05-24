@@ -35,7 +35,7 @@ abstract class AbstractResidentImportProvider implements ResidentImportProviderI
 		if ( $user_id ) {
 			// Update existing user
 			$user = new \WP_User( $user_id );
-			$user->set_role( 'holmen_resident' );
+			$user->set_role( 'snippen_resident' );
 
 			wp_update_user(
 				array(
@@ -56,7 +56,7 @@ abstract class AbstractResidentImportProvider implements ResidentImportProviderI
 			}
 
 			$user = new \WP_User( $user_id );
-			$user->set_role( 'holmen_resident' );
+			$user->set_role( 'snippen_resident' );
 
 			wp_update_user(
 				array(
@@ -71,10 +71,10 @@ abstract class AbstractResidentImportProvider implements ResidentImportProviderI
 		// Ensure we clear deletion status if they are present in the import
 		delete_user_meta( $user_id, 'snippen_user_deleted' );
 
-		// Save phone number using global helper holmen_save_phone_number
-		if ( $normalized_phone ) {
-			if ( function_exists( 'holmen_save_phone_number' ) ) {
-				holmen_save_phone_number( $user_id, $normalized_phone );
+		// Save phone number using global helper snippen_save_phone_number
+		if ( ! empty( $normalized_phone ) ) {
+			if ( function_exists( 'snippen_save_phone_number' ) ) {
+				snippen_save_phone_number( $user_id, $normalized_phone );
 			} else {
 				update_user_meta( $user_id, 'snippen_phone', $normalized_phone );
 			}

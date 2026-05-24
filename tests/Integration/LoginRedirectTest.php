@@ -47,23 +47,23 @@ class LoginRedirectTest extends TestCase {
 	}
 
 	/**
-	 * Test that users with the 'holmen_resident' role are redirected to the front page.
+	 * Test that users with the 'snippen_resident' role are redirected to the front page.
 	 */
-	public function test_holmen_resident_redirects_to_front_page() {
+	public function test_snippen_resident_redirects_to_front_page() {
 		$username = 'resident_' . time();
 		$email    = $username . '@example.com';
 		$user_id  = wp_create_user( $username, 'password123', $email );
 		$this->created_user_ids[] = $user_id;
 
 		$user = new \WP_User( $user_id );
-		$user->set_role( 'holmen_resident' );
+		$user->set_role( 'snippen_resident' );
 
 		$requested_redirect = 'http://example.com/wp-admin/profile.php';
 		
 		// Apply the login_redirect filter
 		$final_redirect = apply_filters( 'login_redirect', $requested_redirect, $requested_redirect, $user );
 
-		// Should always be home_url('/') for holmen_resident
+		// Should always be home_url('/') for snippen_resident
 		$this->assertEquals( home_url( '/' ), $final_redirect );
 	}
 

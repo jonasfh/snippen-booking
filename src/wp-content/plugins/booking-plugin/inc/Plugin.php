@@ -68,8 +68,8 @@ class Plugin {
 		add_filter( 'wp_authenticate_user', array( __CLASS__, 'block_deleted_users_login' ), 10, 1 );
 		add_filter( 'allow_password_reset', array( __CLASS__, 'block_deleted_users_password_reset' ), 10, 2 );
 
-		// Always redirect 'holmen_resident' to the front page on login (Issue #45)
-		add_filter( 'login_redirect', array( __CLASS__, 'redirect_holmen_resident_login' ), 10, 3 );
+		// Always redirect 'snippen_resident' to the front page on login (Issue #45)
+		add_filter( 'login_redirect', array( __CLASS__, 'redirect_snippen_resident_login' ), 10, 3 );
 
 		// Dynamic capabilities for admin menu (Issue #69)
 		add_filter( 'user_has_cap', array( __CLASS__, 'map_menu_capabilities' ), 10, 4 );
@@ -112,16 +112,16 @@ class Plugin {
 	}
 
 	/**
-	 * Always redirect 'holmen_resident' users to the front page upon login (Issue #45)
+	 * Always redirect 'snippen_resident' users to the front page upon login (Issue #45)
 	 *
 	 * @param string             $redirect_to Where to redirect to.
 	 * @param string             $request     The redirect destination requested.
 	 * @param \WP_User|\WP_Error $user        WP_User object or WP_Error if login failed.
 	 * @return string
 	 */
-	public static function redirect_holmen_resident_login( $redirect_to, $request, $user ) {
+	public static function redirect_snippen_resident_login( $redirect_to, $request, $user ) {
 		if ( ! is_wp_error( $user ) && $user instanceof \WP_User ) {
-			if ( in_array( 'holmen_resident', (array) $user->roles, true ) ) {
+			if ( in_array( 'snippen_resident', (array) $user->roles, true ) ) {
 				return home_url( '/' );
 			}
 		}

@@ -36,7 +36,7 @@ class ImportPageTest extends TestCase {
 		\SnippenBooking\Database\Install::activate();
 
 		// Clean up any resident users to ensure a clean state
-		$residents = get_users( array( 'role' => 'holmen_resident', 'fields' => 'ID' ) );
+		$residents = get_users( array( 'role' => 'snippen_resident', 'fields' => 'ID' ) );
 		foreach ( $residents as $res_id ) {
 			wp_delete_user( $res_id );
 		}
@@ -53,13 +53,13 @@ class ImportPageTest extends TestCase {
 	}
 
 	/**
-	 * Test that the custom holmen_resident role is registered and exists.
+	 * Test that the custom snippen_resident role is registered and exists.
 	 */
 	public function testCustomRoleExists() {
 		global $wp_roles;
-		$role = get_role( 'holmen_resident' );
-		$this->assertNotNull( $role, 'Custom role holmen_resident should be registered.' );
-		$this->assertContains( $wp_roles->role_names['holmen_resident'], array( 'Holmen Sameie Beboer', 'Holmen Sameie Resident' ) );
+		$role = get_role( 'snippen_resident' );
+		$this->assertNotNull( $role, 'Custom role snippen_resident should be registered.' );
+		$this->assertContains( $wp_roles->role_names['snippen_resident'], array( 'Snippen Beboer', 'Snippen Resident' ) );
 	}
 
 	/**
@@ -110,7 +110,7 @@ ola@nordmann.no
 		$this->assertIsArray( $results );
 		
 		// Track created users for cleanup
-		$all_residents = get_users( array( 'role' => 'holmen_resident', 'fields' => 'ID' ) );
+		$all_residents = get_users( array( 'role' => 'snippen_resident', 'fields' => 'ID' ) );
 		$this->created_user_ids = $all_residents;
 
 		// 3 users should be imported successfully: Knut Knudsen, Anne Kari Martinsen, Ola Nordmann.
@@ -165,7 +165,7 @@ ola@nordmann.no
 		$this->assertEquals( 2, $results['success'] );
 
 		// Keep track for cleanup
-		$all_residents = get_users( array( 'role' => 'holmen_resident', 'fields' => 'ID' ) );
+		$all_residents = get_users( array( 'role' => 'snippen_resident', 'fields' => 'ID' ) );
 		$this->created_user_ids = array_merge( $this->created_user_ids, $all_residents );
 
 		$kari_id = email_exists( 'kari@nord.no' );
@@ -186,12 +186,12 @@ ola@nordmann.no
 	 * Test deletion sync logic.
 	 */
 	public function testDeletionSync() {
-		// 1. Create a holmen_resident who is NOT in the import list
+		// 1. Create a snippen_resident who is NOT in the import list
 		$username = 'oldresident_' . time();
 		$email    = $username . '@example.com';
 		$res_id   = wp_create_user( $username, 'password123', $email );
 		$user     = new \WP_User( $res_id );
-		$user->set_role( 'holmen_resident' );
+		$user->set_role( 'snippen_resident' );
 		$this->created_user_ids[] = $res_id;
 
 		// 2. Perform import with a completely different resident
@@ -230,7 +230,7 @@ ola@nordmann.no
 		$email    = $username . '@example.com';
 		$user_id  = wp_create_user( $username, 'password123', $email );
 		$user     = new \WP_User( $user_id );
-		$user->set_role( 'holmen_resident' );
+		$user->set_role( 'snippen_resident' );
 		update_user_meta( $user_id, 'snippen_user_deleted', 'yes' );
 		$this->created_user_ids[] = $user_id;
 
@@ -260,7 +260,7 @@ ola@nordmann.no
 		$email    = $username . '@example.com';
 		$user_id  = wp_create_user( $username, 'password123', $email );
 		$user     = new \WP_User( $user_id );
-		$user->set_role( 'holmen_resident' );
+		$user->set_role( 'snippen_resident' );
 		update_user_meta( $user_id, 'snippen_user_deleted', 'yes' );
 		$this->created_user_ids[] = $user_id;
 
@@ -278,7 +278,7 @@ ola@nordmann.no
 		set_current_screen( 'users' );
 		
 		$query = new \WP_User_Query( array(
-			'role' => 'holmen_resident',
+			'role' => 'snippen_resident',
 		) );
 		
 		// Run action hook handler
