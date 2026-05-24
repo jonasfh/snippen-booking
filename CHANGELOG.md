@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.13.1] - 2026-05-24
+
+### Changed
+- **Visual Refresh**: Redesigned the empty reservations state (`.snippen-empty-bookings-card`) to perfectly match the minimalist, typography-first WordPress theme. Removed noisy dashed borders, bright colors, and generic dashboard elements in favor of a clean, subtle layout featuring a monochrome SVG icon and elegant typography.
+
 ## [1.13.0] - 2026-05-24
 
 ### Changed

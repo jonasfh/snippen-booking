@@ -1159,25 +1159,34 @@
 
 /* Empty Bookings State */
 .snippen-empty-bookings-card {
-    background: #fff;
-    border: 2px dashed var(--border-color);
-    border-radius: 24px;
-    padding: 60px 40px;
+    background: transparent;
+    border: none;
+    padding: 40px 20px;
     text-align: center;
-    max-width: 500px;
-    margin: 40px auto;
-    box-shadow: var(--shadow-sm);
+    max-width: 100%;
+    margin: 20px 0;
+    box-shadow: none;
 }
 
 .snippen-empty-bookings-card .empty-icon {
-    font-size: 48px;
-    display: block;
-    margin-bottom: 20px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.snippen-empty-bookings-card .empty-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 .snippen-empty-bookings-card p {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 400;
     color: var(--text-muted);
     margin: 0;
 }
