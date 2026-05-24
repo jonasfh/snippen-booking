@@ -440,6 +440,7 @@
 .form-group input,
 .form-group textarea {
     width: 100%;
+    box-sizing: border-box;
     padding: 10px 14px;
     border: 2px solid var(--border-color);
     border-radius: 12px;
