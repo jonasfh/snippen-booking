@@ -204,7 +204,7 @@ class ImportPage {
 		$deleted_count = 0;
 		$residents     = get_users(
 			array(
-				'role'   => 'holmen_resident',
+				'role'   => 'snippen_resident',
 				'fields' => 'ID',
 			)
 		);

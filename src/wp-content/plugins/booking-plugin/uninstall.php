@@ -52,7 +52,7 @@ foreach ( $roles_obj->roles as $role_name => $role_info ) {
 }
 
 // 5. Remove custom role.
-remove_role( 'holmen_resident' );
+remove_role( 'snippen_resident' );
 
 // 6. Clear scheduled cron jobs.
 // We clear any scheduled cron jobs related to the plugin.
