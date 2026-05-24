@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.13.0] - 2026-05-24
+
+### Changed
+- **WordPress 7.0 Support**: Upgraded the local development environment and GitHub Actions test matrix to use WordPress 7.0 to ensure full compatibility with the latest core release.
+
 ## [1.12.0] - 2026-05-24
 
 ### Changed
