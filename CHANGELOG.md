@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.11.0] - 2026-05-23
+
+### Added
+- **Security Helper**: New centralized `SnippenBooking\Helper\Security` class providing reusable utilities for nonce verification, safe POST/GET access, and SQL LIKE escaping.
+
+### Security
+- **CSRF Protection**: Added nonce verification to all previously unprotected AJAX endpoints:
+  - `AvailabilityApi::get_availability()` — verified for logged-in users (public read-only endpoint)
+  - `UserApi::search_users()` — strict admin nonce verification
+  - `UserApi::request_confirmation_code()` — confirmation nonce verification
+  - `UserApi::verify_confirmation_code()` — confirmation nonce verification
+- **XSS Prevention (PHP)**: Escaped all dynamic output in HTML attributes using `esc_attr()`:
+  - `BookingShortcode` data attributes (`data-user-id`, `data-user-name`, `data-user-email`, `data-user-phone`)
+  - `BookingsPage` and `UserBookingsPage` booking ID attributes
+  - `Plugin.php` booking status CSS class and price output
+- **XSS Prevention (JavaScript)**: Added `escHtml()` helper to `booking.js` to escape user data before rendering in:
+  - Admin booking detail modal
+  - User search results dropdown
+- **SQL Injection Prevention**: Applied `$wpdb->esc_like()` to search term in `BookingsPage` LIKE clause to prevent wildcard injection.
+- **Input Sanitization**: Sanitized `$_POST['action']` in `SetupWizardPage` form handler.
+- **Output Escaping**: Escaped import log output with `esc_html()` in `ImportPage`.
+
 ## [1.10.0] - 2026-05-22
 
 ### Added

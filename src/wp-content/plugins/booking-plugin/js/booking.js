@@ -134,7 +134,8 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'snippen_get_availability',
                 object_id: objectId,
-                start_date: startDateStr
+                start_date: startDateStr,
+                nonce: snippenBookingAjax.nonce
             },
             success: function (response) {
                 if (response.success) {
@@ -428,14 +429,15 @@ jQuery(document).ready(function ($) {
                     url: snippenBookingAjax.ajaxurl,
                     data: {
                         action: 'snippen_search_users',
+                        nonce: snippenBookingAjax.admin_nonce,
                         term: term
                     },
                     success: function(response) {
                         if (response.success && response.data.length > 0) {
                             var html = '';
                             response.data.forEach(function(user) {
-                                html += '<div class="user-result-item" data-id="' + user.id + '" data-name="' + user.name + '" data-email="' + user.email + '" data-phone="' + (user.phone || '') + '">';
-                                html += '<strong>' + user.name + '</strong><br><small>' + user.email + (user.phone ? ' | ' + user.phone : ' | <span style="color:red">' + snippenBookingAjax.strings.missingPhoneShort + '</span>') + '</small>';
+                                html += '<div class="user-result-item" data-id="' + escHtml(user.id) + '" data-name="' + escHtml(user.name) + '" data-email="' + escHtml(user.email) + '" data-phone="' + escHtml(user.phone || '') + '">';
+                                html += '<strong>' + escHtml(user.name) + '</strong><br><small>' + escHtml(user.email) + (user.phone ? ' | ' + escHtml(user.phone) : ' | <span style="color:red">' + snippenBookingAjax.strings.missingPhoneShort + '</span>') + '</small>';
                                 html += '</div>';
                             });
                             $results.html(html).show();
@@ -481,20 +483,30 @@ jQuery(document).ready(function ($) {
     }
 
     /**
+     * Helper: Escape HTML special characters to prevent XSS
+     */
+    function escHtml(str) {
+        if (!str) return '-';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    /**
      * Admin: Show booking details in modal
      */
     function showBookingDetails(data) {
         var html = '<div class="booking-details-grid">';
         
-        html += '<div class="detail-item"><strong>Kunde:</strong><br>' + (data.customer_name || '-') + '</div>';
-        html += '<div class="detail-item"><strong>E-post:</strong><br>' + (data.customer_email || '-') + '</div>';
-        html += '<div class="detail-item"><strong>Telefon:</strong><br>' + (data.customer_phone || '-') + '</div>';
-        html += '<div class="detail-item"><strong>Lokale(r):</strong><br>' + (data.object_names || '-') + '</div>';
-        html += '<div class="detail-item"><strong>Slot:</strong><br>' + data.slot_name + '</div>';
-        html += '<div class="detail-item"><strong>Tid:</strong><br>' + data.start_time.substring(0, 5) + ' - ' + data.end_time.substring(0, 5) + '</div>';
+        html += '<div class="detail-item"><strong>Kunde:</strong><br>' + escHtml(data.customer_name) + '</div>';
+        html += '<div class="detail-item"><strong>E-post:</strong><br>' + escHtml(data.customer_email) + '</div>';
+        html += '<div class="detail-item"><strong>Telefon:</strong><br>' + escHtml(data.customer_phone) + '</div>';
+        html += '<div class="detail-item"><strong>Lokale(r):</strong><br>' + escHtml(data.object_names) + '</div>';
+        html += '<div class="detail-item"><strong>Slot:</strong><br>' + escHtml(data.slot_name) + '</div>';
+        html += '<div class="detail-item"><strong>Tid:</strong><br>' + escHtml(data.start_time ? data.start_time.substring(0, 5) : '') + ' - ' + escHtml(data.end_time ? data.end_time.substring(0, 5) : '') + '</div>';
         
         if (data.description) {
-            html += '<div class="detail-item full-width"><strong>Beskrivelse:</strong><br>' + data.description + '</div>';
+            html += '<div class="detail-item full-width"><strong>Beskrivelse:</strong><br>' + escHtml(data.description) + '</div>';
         }
         
         html += '</div>';

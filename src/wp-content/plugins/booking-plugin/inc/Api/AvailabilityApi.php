@@ -23,6 +23,11 @@ class AvailabilityApi {
 	 * Get availability for a given object and week
 	 */
 	public static function get_availability() {
+		// Verify nonce for logged-in users (nopriv users don't have valid nonces)
+		if ( is_user_logged_in() ) {
+			check_ajax_referer( 'snippen_booking_nonce', 'nonce', false );
+		}
+
 		global $wpdb;
 
 		$object_ids_raw = isset( $_GET['object_id'] ) ? $_GET['object_id'] : array();

@@ -31,13 +31,14 @@ class SetupWizardPage {
 	public static function render_page() {
 		// Handle form submissions
 		if ( isset( $_POST['action'] ) && wp_verify_nonce( $_POST['_wpnonce'], 'snippen_booking_wizard' ) ) {
-			if ( $_POST['action'] === 'create_starter_setup' ) {
+			$wizard_action = sanitize_text_field( wp_unslash( $_POST['action'] ) );
+			if ( $wizard_action === 'create_starter_setup' ) {
 				$result = SetupWizard::create_starter_setup();
 				$message_type = $result['success'] ? 'success' : 'error';
 				$message = $result['message'];
 			}
 
-			if ( $_POST['action'] === 'skip_wizard' ) {
+			if ( $wizard_action === 'skip_wizard' ) {
 				SetupWizard::mark_completed();
 				$message_type = 'info';
 				$message = __( 'Setup wizard skipped', 'snippen-booking' );

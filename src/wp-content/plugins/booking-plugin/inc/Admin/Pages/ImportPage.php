@@ -71,7 +71,7 @@ class ImportPage {
 			echo '<ul style="margin:0; padding-left:20px; font-family: monospace; font-size:12px; line-height: 1.5;">';
 			foreach ( $results['logs'] as $log ) {
 				$color = ( strpos( $log, 'ERROR:' ) === 0 ) ? 'var(--error-color)' : ( ( strpos( $log, 'WARNING:' ) === 0 ) ? '#d97706' : 'var(--text-main)' );
-				echo '<li style="color: ' . esc_attr( $color ) . ';">' . $log . '</li>'; // phpcs:ignore
+				echo '<li style="color: ' . esc_attr( $color ) . ';">' . esc_html( $log ) . '</li>';
 			}
 			echo '</ul>';
 			echo '</div>';
