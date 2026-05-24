@@ -150,6 +150,7 @@ When an agent is asked to solve a specific GitHub issue, the following workflow 
     - Start in the `main` branch.
     - Ensure `main` is up to date: `git pull origin main`.
     - Check if the terminal is logged in to GitHub: `gh auth status`. If not, inform the developer and ask them to run `gh auth login`.
+    - To read issue details, ALWAYS use `gh issue view <id> --json title,body` instead of `gh issue view <id>`. This prevents the command from failing due to deprecation warnings related to Projects (classic).
 2.  **Branching**:
     - Check if a branch already exists for the issue.
     - If not, create a new branch using the pattern: `gh-issue/<id>` (e.g., `gh-issue/15`).
