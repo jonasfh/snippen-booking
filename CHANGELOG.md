@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.13.2] - 2026-05-24
+
+### Changed
+- **Visual Adjustments**: Applied identical styling (padding, background, border-radius, shadow) to the "Mine bookinger" list container as the main reservation shortcode to ensure design consistency.
+- **Form Refinements**: Reduced vertical padding and margins on booking form input fields and textareas to prevent overlapping with adjacent design elements and improve compactness.
+
 ## [1.13.1] - 2026-05-24
 
 ### Changed
