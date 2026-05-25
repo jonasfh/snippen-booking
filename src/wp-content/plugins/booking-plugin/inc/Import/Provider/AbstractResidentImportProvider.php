@@ -35,7 +35,7 @@ abstract class AbstractResidentImportProvider implements ResidentImportProviderI
 		if ( $user_id ) {
 			// Update existing user
 			$user = new \WP_User( $user_id );
-			$user->set_role( 'snippen_resident' );
+			$user->add_role( 'snippen_resident' );
 
 			wp_update_user(
 				array(

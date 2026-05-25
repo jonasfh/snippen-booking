@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.13.3] - 2026-05-25
+
+### Fixed
+- **Resident Import**: Fixed an issue where the resident import script inadvertently overwrote the roles of existing administrators. Administrators are now excluded from being marked as deleted if they are not in the import list, and a warning is logged when this occurs.
+
 ## [1.13.2] - 2026-05-24
 
 ### Changed
