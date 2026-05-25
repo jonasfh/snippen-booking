@@ -35,10 +35,12 @@ class ImportPageTest extends TestCase {
 		// Activate plugin to register custom role and tables
 		\SnippenBooking\Database\Install::activate();
 
-		// Clean up any resident users to ensure a clean state
+		// Clean up any resident users to ensure a clean state, but NEVER delete user 1
 		$residents = get_users( array( 'role' => 'snippen_resident', 'fields' => 'ID' ) );
 		foreach ( $residents as $res_id ) {
-			wp_delete_user( $res_id );
+			if ( $res_id !== 1 ) {
+				wp_delete_user( $res_id );
+			}
 		}
 	}
 
@@ -293,5 +295,48 @@ ola@nordmann.no
 		// Clean up $_GET and screen
 		unset( $_GET['deleted_residents'] );
 		set_current_screen( 'null' );
+	}
+
+	/**
+	 * Test that existing admin users are not downgraded during import.
+	 */
+	public function testAdminNotDowngradedOnImport() {
+		// 1. Create an administrator
+		$unique_email = 'admin_' . microtime(true) . '@example.com';
+		$admin_id = wp_create_user( 'admintest_' . time(), 'password123', $unique_email );
+		$admin_user = new \WP_User( $admin_id );
+		$admin_user->set_role( 'administrator' );
+		$this->created_user_ids[] = $admin_id;
+
+		// Verify role
+		$this->assertTrue( in_array( 'administrator', (array) $admin_user->roles, true ) );
+
+		// 2. Perform import that includes the admin's email
+		$_POST['snippen_import_nonce']   = wp_create_nonce( 'snippen_import_residents' );
+		$_POST['snippen_import_provider']  = 'tsv';
+		$_POST['snippen_import_mapping'] = 'name,email,phone';
+		$_POST['snippen_import_data']    = "Admin User\t{$unique_email}\t98765432";
+
+		$import_page = new ImportPage();
+		$reflection = new \ReflectionClass( $import_page );
+		$method = $reflection->getMethod( 'handle_request' );
+		$method->setAccessible( true );
+		
+		$method->invoke( $import_page );
+
+		// 3. Verify the user still has administrator role and also snippen_resident role
+		$updated_admin = new \WP_User( $admin_id );
+		$this->assertTrue( in_array( 'administrator', (array) $updated_admin->roles, true ), 'User should retain administrator role' );
+		$this->assertTrue( in_array( 'snippen_resident', (array) $updated_admin->roles, true ), 'User should gain snippen_resident role' );
+		
+		// 4. Perform another import that EXCLUDES the admin's email
+		$_POST['snippen_import_data']    = "Another User\tanother@example.com\t98765432";
+		$method->invoke( $import_page );
+		
+		$another_id = email_exists( 'another@example.com' );
+		$this->created_user_ids[] = $another_id;
+
+		// 5. Verify the admin is NOT marked as deleted
+		$this->assertEmpty( get_user_meta( $admin_id, 'snippen_user_deleted', true ), 'Admin should not be marked as deleted even if not in import' );
 	}
 }

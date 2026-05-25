@@ -214,6 +214,13 @@ class ImportPage {
 		foreach ( $residents as $res_id ) {
 			if ( ! in_array( $res_id, $result->imported_ids, true ) ) {
 				$user_meta    = get_userdata( $res_id );
+				
+				if ( $user_meta && in_array( 'administrator', (array) $user_meta->roles, true ) ) {
+					$display_name = $user_meta ? $user_meta->display_name : 'ID ' . $res_id;
+					$logs[] = sprintf( esc_html__( "WARNING: Administrator '%s' er ikke i import-listen, og slettes ikke automatisk.", 'snippen-booking' ), esc_html( $display_name ) );
+					continue;
+				}
+
 				$display_name = $user_meta ? $user_meta->display_name : 'ID ' . $res_id;
 
 				update_user_meta( $res_id, 'snippen_user_deleted', 'yes' );
