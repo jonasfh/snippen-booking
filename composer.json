@@ -39,6 +39,7 @@
         "demo:users": "php bin/demo-data.php users",
         "demo:sms": "php bin/demo-sms.php",
         "demo:mail": "php bin/demo-mail.php",
+        "demo:notifications": "php bin/demo-notifications.php",
         "demo:me": "php bin/demo-me.php",
         "demo:env": [
             "@demo:sms",
@@ -50,6 +51,7 @@
             "@demo:pages",
             "@demo:me",
             "@demo:env",
+            "@demo:notifications",
             "@demo:mail"
         ],
         "demo:clean": "@demo:clear",

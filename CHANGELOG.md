@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.16.0] - 2026-05-29
+### Added
+- Feature (#84): Support SMS and Email channels with default templates
+- Dynamic placeholder replacement (e.g. {{user_name}}, {{booking_date}})
+- Reset templates to defaults functionality
+- Integrate templates into NotificationManager for rendering
+- Add comprehensive test coverage for template functionality
+- Update version to 1.16.0 and changelog
+
 ## [1.15.0] - 2026-05-28
 ### Added
 - Feature (#88): Require acceptance of rental terms upon booking. Added a new setting for the terms URL and a mandatory checkbox in the booking form.
