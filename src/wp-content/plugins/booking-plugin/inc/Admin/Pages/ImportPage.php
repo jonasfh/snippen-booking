@@ -83,7 +83,7 @@ class ImportPage {
 	 * Render the form
 	 */
 	private function render_form() {
-		$providers = $this->import_manager->get_providers();
+		$providers          = $this->import_manager->get_providers();
 		$active_provider_id = isset( $_POST['snippen_import_provider'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_import_provider'] ) ) : ( ! empty( $providers ) ? $providers[0]->get_id() : '' );
 
 		echo '<div class="snippen-card">';
@@ -187,9 +187,9 @@ class ImportPage {
 		@ignore_user_abort( true ); // Keep running even if client disconnects
 
 		$provider_id = isset( $_POST['snippen_import_provider'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_import_provider'] ) ) : '';
-		
+
 		$provider = $this->import_manager->get_provider( $provider_id );
-		
+
 		if ( ! $provider ) {
 			return array(
 				'success' => 0,
@@ -213,11 +213,11 @@ class ImportPage {
 
 		foreach ( $residents as $res_id ) {
 			if ( ! in_array( $res_id, $result->imported_ids, true ) ) {
-				$user_meta    = get_userdata( $res_id );
-				
+				$user_meta = get_userdata( $res_id );
+
 				if ( $user_meta && in_array( 'administrator', (array) $user_meta->roles, true ) ) {
 					$display_name = $user_meta ? $user_meta->display_name : 'ID ' . $res_id;
-					$logs[] = sprintf( esc_html__( "WARNING: Administrator '%s' er ikke i import-listen, og slettes ikke automatisk.", 'snippen-booking' ), esc_html( $display_name ) );
+					$logs[]       = sprintf( esc_html__( "WARNING: Administrator '%s' er ikke i import-listen, og slettes ikke automatisk.", 'snippen-booking' ), esc_html( $display_name ) );
 					continue;
 				}
 

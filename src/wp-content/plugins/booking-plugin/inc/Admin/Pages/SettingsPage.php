@@ -163,13 +163,13 @@ class SettingsPage {
 
 		echo '<div class="snippen-provider-selector">';
 		foreach ( $providers as $provider ) {
-			$id          = $provider->get_id();
-			$name        = $provider->get_name();
-			$is_active   = ( $active_provider_id === $id );
-			$configured  = $provider->is_configured();
-			$status_lbl  = $configured ? esc_html__( 'Konfigurert', 'snippen-booking' ) : esc_html__( 'Mangler oppsett', 'snippen-booking' );
-			$status_cls  = $configured ? 'configured' : 'unconfigured';
-			$active_cls  = $is_active ? 'active' : '';
+			$id         = $provider->get_id();
+			$name       = $provider->get_name();
+			$is_active  = ( $active_provider_id === $id );
+			$configured = $provider->is_configured();
+			$status_lbl = $configured ? esc_html__( 'Konfigurert', 'snippen-booking' ) : esc_html__( 'Mangler oppsett', 'snippen-booking' );
+			$status_cls = $configured ? 'configured' : 'unconfigured';
+			$active_cls = $is_active ? 'active' : '';
 
 			echo '<div class="snippen-provider-option ' . esc_attr( $active_cls ) . '" id="provider-card-' . esc_attr( $id ) . '" onclick="selectProvider(\'' . esc_attr( $id ) . '\')">';
 			echo '<input type="radio" name="snippen_active_notification_provider" value="' . esc_attr( $id ) . '" ' . checked( $is_active, true, false ) . ' style="pointer-events:none;">';
@@ -187,23 +187,23 @@ class SettingsPage {
 
 			echo '<div class="provider-settings-section" id="provider-settings-' . esc_attr( $id ) . '" style="' . ( $is_active ? 'display:block;' : 'display:none;' ) . '">';
 			echo '<h4 style="margin-top:0; margin-bottom:20px; font-size:16px; border-bottom:1px solid #cbd5e1; padding-bottom:8px; color:#0f172a;">';
-			echo sprintf( esc_html__( 'Innstillinger for %s', 'snippen-booking' ), esc_html( $provider->get_name() ) );
+			printf( esc_html__( 'Innstillinger for %s', 'snippen-booking' ), esc_html( $provider->get_name() ) );
 			echo '</h4>';
 
 			if ( empty( $schema ) ) {
 				echo '<p style="color:#64748b; font-style:italic; margin:0;">' . esc_html__( 'Ingen innstillinger påkrevet for denne tilbyderen.', 'snippen-booking' ) . '</p>';
 			} else {
 				foreach ( $schema as $field ) {
-					$key       = $field['key'];
-					$label     = $field['label'];
-					$type      = $field['type'];
-					$required  = $field['required'] ?? false;
-					$desc      = $field['description'] ?? '';
-					$value     = get_option( $key, '' );
-					$req_mark  = $required ? ' <span style="color:#dc2626;">*</span>' : '';
+					$key      = $field['key'];
+					$label    = $field['label'];
+					$type     = $field['type'];
+					$required = $field['required'] ?? false;
+					$desc     = $field['description'] ?? '';
+					$value    = get_option( $key, '' );
+					$req_mark = $required ? ' <span style="color:#dc2626;">*</span>' : '';
 
 					echo '<div class="snippen-form-group">';
-					
+
 					if ( 'checkbox' === $type ) {
 						echo '<label style="font-weight:normal; display:flex; align-items:center; gap:8px;">';
 						echo '<input type="checkbox" name="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" value="yes" ' . checked( $value, 'yes', false ) . ' style="margin:0;">';

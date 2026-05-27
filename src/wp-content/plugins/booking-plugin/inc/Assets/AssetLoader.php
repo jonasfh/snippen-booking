@@ -39,10 +39,10 @@ class AssetLoader {
 			'snippen-booking-script',
 			'snippenBookingAjax',
 			array(
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'snippen_booking_nonce' ),
+				'ajaxurl'     => admin_url( 'admin-ajax.php' ),
+				'nonce'       => wp_create_nonce( 'snippen_booking_nonce' ),
 				'admin_nonce' => wp_create_nonce( 'snippen_admin_nonce' ),
-				'strings' => array(
+				'strings'     => array(
 					'updatingAvailability' => __( 'Oppdaterer tilgjengelighet...', 'snippen-booking' ),
 					'errorLoadingCalendar' => __( 'Kunne ikke laste kalender.', 'snippen-booking' ),
 					'blockedByCleanup'     => __( 'Blokkert av utvasktid', 'snippen-booking' ),

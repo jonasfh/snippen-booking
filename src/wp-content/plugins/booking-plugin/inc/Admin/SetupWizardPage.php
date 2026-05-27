@@ -33,20 +33,20 @@ class SetupWizardPage {
 		if ( isset( $_POST['action'] ) && wp_verify_nonce( $_POST['_wpnonce'], 'snippen_booking_wizard' ) ) {
 			$wizard_action = sanitize_text_field( wp_unslash( $_POST['action'] ) );
 			if ( $wizard_action === 'create_starter_setup' ) {
-				$result = SetupWizard::create_starter_setup();
+				$result       = SetupWizard::create_starter_setup();
 				$message_type = $result['success'] ? 'success' : 'error';
-				$message = $result['message'];
+				$message      = $result['message'];
 			}
 
 			if ( $wizard_action === 'skip_wizard' ) {
 				SetupWizard::mark_completed();
 				$message_type = 'info';
-				$message = __( 'Setup wizard skipped', 'snippen-booking' );
+				$message      = __( 'Setup wizard skipped', 'snippen-booking' );
 			}
 		}
 
 		$wizard_completed = SetupWizard::is_completed();
-		$has_objects = (bool) self::get_object_count();
+		$has_objects      = (bool) self::get_object_count();
 		?>
 
 		<div class="wrap snippen-booking-wizard">

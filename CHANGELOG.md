@@ -282,6 +282,16 @@
 - Updated `AGENTS.md` and `DEV_README.md` with GitHub issue workflow.
 All notable changes to this project will be documented in this file.
 
+## [1.14.0] - 2026-05-27
+### Added
+- Feature (#86): Support login and password reset using phone number.
+
+## [1.13.3] - 2026-05-24
+### Added
+- **My Bookings Page**: New admin page for users to view their own bookings and details.
+- **Self-Cancellation**: Enabled users to cancel their own bookings directly from the "Mine Bookinger" page.
+- **Security**: Implemented ownership verification for AJAX booking actions to prevent unauthorized cancellations.
+
 ## [1.1.7] - 2026-05-16
 ### Added
 - **My Bookings Page**: New admin page for users to view their own bookings and details.

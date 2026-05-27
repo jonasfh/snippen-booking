@@ -7,7 +7,7 @@ namespace SnippenBooking\Admin;
  */
 class SetupWizard {
 
-	const OPTION_WIZARD_COMPLETED = 'snippen_booking_wizard_completed';
+	const OPTION_WIZARD_COMPLETED         = 'snippen_booking_wizard_completed';
 	const OPTION_WIZARD_COMPLETED_VERSION = 'snippen_booking_wizard_completed_version';
 
 	/**
@@ -43,12 +43,15 @@ class SetupWizard {
 		// Check if data already exists (idempotency)
 		$object_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
 		if ( $object_count > 0 ) {
-			return array( 'success' => false, 'message' => 'Starter setup already exists' );
+			return array(
+				'success' => false,
+				'message' => 'Starter setup already exists',
+			);
 		}
 
-		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
-		$table_slots   = $wpdb->prefix . 'snippen_time_slots';
-		$table_prices  = $wpdb->prefix . 'snippen_prices';
+		$table_objects       = $wpdb->prefix . 'snippen_booking_objects';
+		$table_slots         = $wpdb->prefix . 'snippen_time_slots';
+		$table_prices        = $wpdb->prefix . 'snippen_prices';
 		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
 
 		// 1. Create booking objects
@@ -248,6 +251,9 @@ class SetupWizard {
 			);
 		}
 
-		return array( 'success' => true, 'message' => 'Starter setup created successfully' );
+		return array(
+			'success' => true,
+			'message' => 'Starter setup created successfully',
+		);
 	}
 }

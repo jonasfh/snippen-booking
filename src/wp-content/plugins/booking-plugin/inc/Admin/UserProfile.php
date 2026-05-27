@@ -139,7 +139,7 @@ class UserProfile {
 
 		$user = get_userdata( $user_id );
 		if ( $user ) {
-			if ( isset( $_POST[Capabilities::MANAGE_BOOKINGS] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST[Capabilities::MANAGE_BOOKINGS] ) ) ) {
+			if ( isset( $_POST[ Capabilities::MANAGE_BOOKINGS ] ) && 'yes' === sanitize_text_field( wp_unslash( $_POST[ Capabilities::MANAGE_BOOKINGS ] ) ) ) {
 				$user->add_cap( Capabilities::MANAGE_BOOKINGS );
 			} else {
 				$user->remove_cap( Capabilities::MANAGE_BOOKINGS );
