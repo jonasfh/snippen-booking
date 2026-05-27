@@ -75,7 +75,7 @@ class BookingListShortcode {
 				<input type="hidden" name="redirect_to" value="<?php echo esc_url( $redirect_url ); ?>" />
 				
 				<div class="form-group">
-					<label for="user_login"><?php esc_html_e( 'Brukernavn eller e-post', 'snippen-booking' ); ?></label>
+					<label for="user_login"><?php esc_html_e( 'Brukernavn, e-post eller telefonnummer', 'snippen-booking' ); ?></label>
 					<input type="text" name="log" id="user_login" class="input" value="" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" />
 				</div>
 				

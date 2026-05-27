@@ -1565,7 +1565,7 @@ msgid "Logg inn med din beboerkonto for å se dine bookinger."
 msgstr ""
 
 #: inc/Shortcode/BookingListShortcode.php:78
-msgid "Brukernavn eller e-post"
+msgid "Brukernavn, e-post eller telefonnummer"
 msgstr ""
 
 #: inc/Shortcode/BookingListShortcode.php:79

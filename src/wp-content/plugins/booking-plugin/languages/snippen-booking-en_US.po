@@ -1275,8 +1275,8 @@ msgid "Logg inn med din beboerkonto for å se dine bookinger."
 msgstr "Log in with your resident account to view your bookings."
 
 #: inc/Shortcode/BookingListShortcode.php:78
-msgid "Brukernavn eller e-post"
-msgstr "Username or email"
+msgid "Brukernavn, e-post eller telefonnummer"
+msgstr "Username, email or phone number"
 
 #: inc/Shortcode/BookingListShortcode.php:79
 #: inc/Shortcode/BookingShortcode.php:142
