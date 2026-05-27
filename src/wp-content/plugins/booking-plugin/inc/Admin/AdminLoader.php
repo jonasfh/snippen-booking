@@ -123,8 +123,6 @@ class AdminLoader {
 			array( self::class, 'render_settings_page' )
 		);
 
-
-
 		// Setup Wizard
 		SetupWizardPage::register();
 

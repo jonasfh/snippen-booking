@@ -180,7 +180,7 @@ class NotificationManager {
 		}
 
 		// Fetch associated locales/objects
-		$objs = $wpdb->get_col(
+		$objs         = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT o.name 
 				 FROM $table_junction bo 
@@ -195,9 +195,11 @@ class NotificationManager {
 
 		// 1. Send admin notification alerts
 		$admin_route = $this->get_channel_route( self::TYPE_ADMIN_BOOKING );
-		$admin_users = get_users( array(
-			'capability' => Capabilities::MANAGE_BOOKINGS,
-		) );
+		$admin_users = get_users(
+			array(
+				'capability' => Capabilities::MANAGE_BOOKINGS,
+			)
+		);
 
 		$admin_emails = array();
 		foreach ( $admin_users as $admin ) {
