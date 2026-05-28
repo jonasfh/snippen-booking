@@ -54,10 +54,12 @@ class SettingsPage {
 		$route_user = sanitize_text_field( $_POST['snippen_route_user_activation'] ?? 'email' );
 		$route_book = sanitize_text_field( $_POST['snippen_route_booking_confirmation'] ?? 'email' );
 		$route_adm  = sanitize_text_field( $_POST['snippen_route_admin_booking'] ?? 'email' );
+		$route_pw   = sanitize_text_field( $_POST['snippen_route_password_reset'] ?? 'email' );
 
 		update_option( 'snippen_route_user_activation', $route_user );
 		update_option( 'snippen_route_booking_confirmation', $route_book );
 		update_option( 'snippen_route_admin_booking', $route_adm );
+		update_option( 'snippen_route_password_reset', $route_pw );
 
 		// Save terms URL
 		$terms_url = isset( $_POST['snippen_terms_url'] ) ? esc_url_raw( $_POST['snippen_terms_url'] ) : '';
@@ -119,6 +121,7 @@ class SettingsPage {
 		$route_user = $manager->get_channel_route( NotificationManager::TYPE_USER_ACTIVATION );
 		$route_book = $manager->get_channel_route( NotificationManager::TYPE_BOOKING_CONFIRMATION );
 		$route_adm  = $manager->get_channel_route( NotificationManager::TYPE_ADMIN_BOOKING );
+		$route_pw   = $manager->get_channel_route( NotificationManager::TYPE_PASSWORD_RESET );
 
 		echo '<div class="snippen-card"><form method="post" action="">';
 		wp_nonce_field( 'snippen_save_settings', 'snippen_settings_nonce' );
@@ -159,6 +162,15 @@ class SettingsPage {
 		echo '<option value="sms" ' . selected( $route_adm, 'sms', false ) . '>' . esc_html__( 'SMS (med e-post fallback)', 'snippen-booking' ) . '</option>';
 		echo '</select>';
 		echo '<p class="description">' . esc_html__( 'Hvordan bookingansvarlige varsles når en ny forespørsel sendes inn.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group">';
+		echo '<label for="snippen_route_password_reset">' . esc_html__( 'Tilbakestill passord (for SMS-brukere)', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_route_password_reset" id="snippen_route_password_reset" style="max-width:300px;">';
+		echo '<option value="email" ' . selected( $route_pw, 'email', false ) . '>' . esc_html__( 'Kun E-post', 'snippen-booking' ) . '</option>';
+		echo '<option value="sms" ' . selected( $route_pw, 'sms', false ) . '>' . esc_html__( 'SMS (med e-post fallback)', 'snippen-booking' ) . '</option>';
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'Kanal for å sende tilbakestillingslenke når bruker ber om nytt passord via telefonnummer.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		// 2. Active Notification Provider Selector Cards
