@@ -184,22 +184,26 @@ class PhoneAuthenticationService {
 		$normalized_phone = PhoneHelper::normalize_phone( $posted_login );
 
 		if ( $normalized_phone && $normalized_phone === get_user_meta( $user_data->ID, 'snippen_phone', true ) ) {
-			// Request was made via phone. Render SMS template.
-			$rendered = $template_service->render_template( 'password_reset', 'sms', $context );
+			// Request was made via phone. 
+			$route = $notification_manager->get_channel_route( \SnippenBooking\Service\Notification\NotificationManager::TYPE_PASSWORD_RESET );
 
-			if ( $notification_manager->is_sandbox_mode() ) {
-				error_log( sprintf( 'PhoneAuth [SANDBOX MODE]: Bypassed SMS password reset to %s.', $normalized_phone ) );
-			} else {
-				$provider_id = $notification_manager->get_active_provider_id();
-				$provider    = $notification_manager->get_provider( $provider_id );
+			if ( 'sms' === $route ) {
+				$rendered = $template_service->render_template( 'password_reset', 'sms', $context );
 
-				if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
-					$success = $provider->send_sms( $normalized_phone, $rendered['body'] );
-					if ( $success ) {
-						// Return false to abort WordPress sending the default email.
-						return false;
+				if ( $notification_manager->is_sandbox_mode() ) {
+					error_log( sprintf( 'PhoneAuth [SANDBOX MODE]: Bypassed SMS password reset to %s.', $normalized_phone ) );
+				} else {
+					$provider_id = $notification_manager->get_active_provider_id();
+					$provider    = $notification_manager->get_provider( $provider_id );
+
+					if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
+						$success = $provider->send_sms( $normalized_phone, $rendered['body'] );
+						if ( $success ) {
+							// Return false to abort WordPress sending the default email.
+							return false;
+						}
+						error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
 					}
-					error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
 				}
 			}
 		}

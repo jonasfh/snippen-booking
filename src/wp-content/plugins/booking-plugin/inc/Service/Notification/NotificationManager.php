@@ -30,6 +30,11 @@ class NotificationManager {
 	const TYPE_ADMIN_BOOKING = 'admin_booking';
 
 	/**
+	 * Notification type: Password Reset
+	 */
+	const TYPE_PASSWORD_RESET = 'password_reset';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -96,6 +101,8 @@ class NotificationManager {
 				$route = ( 'yes' === get_option( 'snippen_sms_account_confirmation_enabled', 'no' ) ) ? 'sms' : 'email';
 			} elseif ( self::TYPE_BOOKING_CONFIRMATION === $type ) {
 				$route = ( 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' ) ) ? 'sms' : 'email';
+			} elseif ( self::TYPE_PASSWORD_RESET === $type ) {
+				$route = 'sms'; // Default to SMS for password reset via phone
 			} else {
 				$route = 'email';
 			}
