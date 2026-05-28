@@ -75,4 +75,58 @@ class PhoneAuthenticationTest extends TestCase {
 		
 		$this->assertFalse( $result );
 	}
+
+	public function test_filter_password_reset_title() {
+		$user_data = get_userdata( $this->user_id );
+		$title = PhoneAuthenticationService::filter_password_reset_title( 'Default Title', 'test_user', $user_data );
+		
+		// It should replace the title with the template subject
+		$this->assertEquals( 'Tilbakestill passord', $title );
+	}
+
+	public function test_filter_password_reset_message_email() {
+		$user_data = get_userdata( $this->user_id );
+		
+		// Simulate POST missing user_login or not a phone
+		$_POST['user_login'] = 'test_user';
+		
+		$message = PhoneAuthenticationService::filter_password_reset_message( 'Default Message', 'testkey', 'test_user', $user_data );
+		
+		$this->assertStringContainsString( 'Noen har bedt om å tilbakestille passordet', $message );
+		$this->assertStringContainsString( 'action=rp&key=testkey', $message );
+	}
+
+	public function test_filter_password_reset_message_sms() {
+		$user_data = get_userdata( $this->user_id );
+		
+		// Simulate POST with phone number
+		$_POST['user_login'] = '90011223';
+		
+		// We mock the notification provider using the same approach as NotificationPluggableTest
+		require_once __DIR__ . '/NotificationPluggableTest.php';
+		\SnippenBooking\Tests\Integration\MockSmsProvider::$last_sms = null;
+		
+		$add_mock = function( $providers ) {
+			$providers[] = new \SnippenBooking\Tests\Integration\MockSmsProvider();
+			return $providers;
+		};
+		add_filter( 'snippen_booking_notification_providers', $add_mock );
+		update_option( 'snippen_active_notification_provider', 'mock_sms' );
+		update_option( 'snippen_sms_sandbox_mode', 'no' );
+		
+		$result = PhoneAuthenticationService::filter_password_reset_message( 'Default Message', 'testkey', 'test_user', $user_data );
+		
+		// Should return false because SMS was sent, aborting email
+		$this->assertFalse( $result );
+		
+		// Check if SMS was sent
+		$this->assertNotNull( \SnippenBooking\Tests\Integration\MockSmsProvider::$last_sms );
+		$this->assertEquals( '+4790011223', \SnippenBooking\Tests\Integration\MockSmsProvider::$last_sms['to'] );
+		$this->assertStringContainsString( 'tilbakestille passordet ditt', \SnippenBooking\Tests\Integration\MockSmsProvider::$last_sms['message'] );
+		$this->assertStringContainsString( 'action=rp&key=testkey', \SnippenBooking\Tests\Integration\MockSmsProvider::$last_sms['message'] );
+		
+		// Cleanup
+		remove_filter( 'snippen_booking_notification_providers', $add_mock );
+		unset( $_POST['user_login'] );
+	}
 }
