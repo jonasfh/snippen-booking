@@ -74,6 +74,9 @@ class Plugin {
 
 		// Dynamic capabilities for admin menu (Issue #69)
 		add_filter( 'user_has_cap', array( __CLASS__, 'map_menu_capabilities' ), 10, 4 );
+
+		// Intercept snippen_bare requests to serve bare pages for modals
+		add_action( 'template_redirect', array( __CLASS__, 'handle_bare_template' ) );
 	}
 
 	/**
@@ -378,5 +381,25 @@ class Plugin {
 		);
 		wp_redirect( add_query_arg( 'page', 'snippen-booking-setup-wizard', admin_url( 'admin.php' ) ) );
 		exit;
+	}
+
+	/**
+	 * Render bare template for modals
+	 */
+	public static function handle_bare_template() {
+		if ( isset( $_GET['snippen_bare'] ) && $_GET['snippen_bare'] == '1' ) {
+			if ( have_posts() ) {
+				while ( have_posts() ) {
+					the_post();
+					echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">';
+					echo '<style>body{font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 25px; color: #1e293b; line-height: 1.6;} h1, h2, h3{color: #0f172a; margin-top:0;} iframe {max-width: 100%;}</style>';
+					echo '</head><body>';
+					the_title( '<h2>', '</h2>' );
+					the_content();
+					echo '</body></html>';
+				}
+			}
+			exit;
+		}
 	}
 }

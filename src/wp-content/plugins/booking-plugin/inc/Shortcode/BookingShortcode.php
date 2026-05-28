@@ -159,12 +159,12 @@ class BookingShortcode {
 						$terms_url = get_option( 'snippen_terms_url', '' );
 						if ( ! empty( $terms_url ) ) : 
 						?>
-						<div class="form-group full-width terms-acceptance" style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
-							<label for="accept_terms" style="font-weight: normal; display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-								<input type="checkbox" name="accept_terms" id="accept_terms" required style="margin-top: 4px;">
+						<div class="form-group full-width terms-acceptance">
+							<label for="accept_terms">
+								<input type="checkbox" name="accept_terms" id="accept_terms" required>
 								<span>
 									<?php esc_html_e( 'Jeg har lest og satt meg inn i reglene for leie av Snippen grendehus, og aksepterer', 'snippen-booking' ); ?>
-									<a href="<?php echo esc_url( $terms_url ); ?>" target="_blank" style="text-decoration: underline; color: #2563eb;"><?php esc_html_e( 'disse vilkårene', 'snippen-booking' ); ?></a>.
+									<a href="<?php echo esc_url( $terms_url ); ?>" class="terms-link"><?php esc_html_e( 'disse vilkårene', 'snippen-booking' ); ?></a>.
 								</span>
 							</label>
 						</div>

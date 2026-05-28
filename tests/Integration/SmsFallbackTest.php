@@ -139,6 +139,7 @@ class SmsFallbackTest extends TestCase {
 		$_POST['name']              = 'Fallback Customer';
 		$_POST['email']             = 'fallback_customer@example.com';
 		$_POST['description']       = 'Need fallback to work!';
+		$_POST['accept_terms']      = '1';
 
 		// 5. Submit booking and catch the expected AJAX termination exception.
 		ob_start();
