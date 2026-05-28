@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.17.1] - 2026-05-28
+### Fixed
+- **Password Reset**: Fixed an issue where the password reset link was not displayed on the login form for users logging in with their phone number.
+- **Update help docs**: Updated help docs to include instructions on the booking-list shortcode.
+
 ## [1.17.0] - 2026-05-28
 ### Added
 - Feature (#90): Implemented password reset via SMS. Users who log in using their phone number will now receive a password reset link via SMS instead of email.

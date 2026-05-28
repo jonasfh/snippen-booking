@@ -46,6 +46,10 @@ class HelpPage {
 							<h4><?php esc_html_e( '2. Brukeraktivering:', 'snippen-booking' ); ?></h4>
 							<p><code>[snippen_account_confirmation]</code></p>
 							<p><?php esc_html_e( 'Brukes på en side der importerte brukere/beboere kan skrive inn telefonnummeret sitt for å motta en SMS-kode, og dermed aktivere kontoen sin for booking.', 'snippen-booking' ); ?></p>
+							
+							<h4><?php esc_html_e( '3. Mine bookinger:', 'snippen-booking' ); ?></h4>
+							<p><code>[snippen_booking_list]</code></p>
+							<p><?php esc_html_e( 'Denne viser en liste over den innloggede brukerens egne bookinger (inkludert dørkoder for aktive bookinger). Hvis du også vil inkludere et innloggingsskjema for brukere som ikke er logget inn, kan du bruke:', 'snippen-booking' ); ?> <code>[snippen_booking_list login-form="1"]</code></p>
 						</div>
 					</div>
 

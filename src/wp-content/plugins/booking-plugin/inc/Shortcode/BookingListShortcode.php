@@ -84,11 +84,14 @@ class BookingListShortcode {
 					<input type="password" name="pwd" id="user_pass" class="input" value="" required placeholder="<?php esc_attr_e( 'Ditt passord', 'snippen-booking' ); ?>" autocomplete="current-password" />
 				</div>
 				
-				<div class="form-row-remember">
+				<div class="form-row-remember" style="display: flex; justify-content: space-between; align-items: center;">
 					<label for="rememberme">
 						<input name="rememberme" type="checkbox" id="rememberme" value="forever" />
 						<?php esc_html_e( 'Husk meg', 'snippen-booking' ); ?>
 					</label>
+					<a href="<?php echo esc_url( wp_lostpassword_url() ); ?>" class="lost-password-link" style="font-size: 13px; color: #3b82f6; text-decoration: none;">
+						<?php esc_html_e( 'Glemt passord?', 'snippen-booking' ); ?>
+					</a>
 				</div>
 				
 				<button type="submit" name="wp-submit" id="wp-submit" class="booking-submit">
