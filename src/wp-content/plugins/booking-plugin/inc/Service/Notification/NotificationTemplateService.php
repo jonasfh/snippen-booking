@@ -74,7 +74,7 @@ class NotificationTemplateService {
 				),
 				'email' => array(
 					'subject' => __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' ),
-					'body'    => __( 'Hallo {{user_name}},\n\nDin bekreftelseskode for Snippen Booking er: {{confirmation_code}}\n\nKoden er gyldig i 15 minutter.\n\nVennligst enter koden på siden for å bekrefte kontoen din.', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nDin bekreftelseskode for Snippen Booking er: {{confirmation_code}}\n\nKoden er gyldig i 15 minutter.\n\nVennligst enter koden på siden for å bekrefte kontoen din.", 'snippen-booking' ),
 				),
 			),
 			'booking_confirmation' => array(
@@ -84,7 +84,7 @@ class NotificationTemplateService {
 				),
 				'email' => array(
 					'subject' => __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' ),
-					'body'    => __( 'Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				),
 			),
 			'admin_booking' => array(
@@ -94,7 +94,7 @@ class NotificationTemplateService {
 				),
 				'email' => array(
 					'subject' => __( 'Ny Bookingforespørsel - {{booking_objects}}', 'snippen-booking' ),
-					'body'    => __( 'Ny bookingforespørsel mottatt:\n\nLokale: {{booking_objects}}\nDato: {{booking_date}}\nNavn: {{user_name}}\nEmail: {{user_email}}\nTelefon: {{user_phone}}\nBeskrivelse: {{booking_description}}\n\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen.', 'snippen-booking' ),
+					'body'    => __( "Ny bookingforespørsel mottatt:\n\nLokale: {{booking_objects}}\nDato: {{booking_date}}\nNavn: {{user_name}}\nEmail: {{user_email}}\nTelefon: {{user_phone}}\nBeskrivelse: {{booking_description}}\n\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen.", 'snippen-booking' ),
 				),
 			),
 		);
