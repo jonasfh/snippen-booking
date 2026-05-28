@@ -154,6 +154,21 @@ class BookingShortcode {
 							<label for="description"><?php esc_html_e( 'Beskrivelse av arrangement (valgfritt)', 'snippen-booking' ); ?></label>
 							<textarea name="description" id="description" rows="3" placeholder="<?php esc_attr_e( 'F.eks. Bursdag, møte, etc.', 'snippen-booking' ); ?>"></textarea>
 						</div>
+						
+						<?php 
+						$terms_url = get_option( 'snippen_terms_url', '' );
+						if ( ! empty( $terms_url ) ) : 
+						?>
+						<div class="form-group full-width terms-acceptance" style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+							<label for="accept_terms" style="font-weight: normal; display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+								<input type="checkbox" name="accept_terms" id="accept_terms" required style="margin-top: 4px;">
+								<span>
+									<?php esc_html_e( 'Jeg har lest og satt meg inn i reglene for leie av Snippen grendehus, og aksepterer', 'snippen-booking' ); ?>
+									<a href="<?php echo esc_url( $terms_url ); ?>" target="_blank" style="text-decoration: underline; color: #2563eb;"><?php esc_html_e( 'disse vilkårene', 'snippen-booking' ); ?></a>.
+								</span>
+							</label>
+						</div>
+						<?php endif; ?>
 					</div>
 
 					<button type="submit" class="booking-submit" <?php echo ( $is_logged_in && empty( $user_phone ) && ! Capabilities::can_manage_bookings() ) ? 'disabled' : ''; ?>>

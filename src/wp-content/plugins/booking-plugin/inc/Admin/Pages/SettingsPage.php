@@ -59,6 +59,10 @@ class SettingsPage {
 		update_option( 'snippen_route_booking_confirmation', $route_book );
 		update_option( 'snippen_route_admin_booking', $route_adm );
 
+		// Save terms URL
+		$terms_url = isset( $_POST['snippen_terms_url'] ) ? esc_url_raw( $_POST['snippen_terms_url'] ) : '';
+		update_option( 'snippen_terms_url', $terms_url );
+
 		// Save uninstall settings
 		$preserve_data = isset( $_POST['snippen_preserve_data_on_uninstall'] ) ? 'yes' : 'no';
 		update_option( 'snippen_preserve_data_on_uninstall', $preserve_data );
@@ -248,6 +252,15 @@ class SettingsPage {
 		echo '<div class="snippen-form-group">';
 		echo '<label for="snippen_door_code_hours_after">' . esc_html__( 'Vis dørkode y timer etter booking slutt', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="snippen_door_code_hours_after" id="snippen_door_code_hours_after" value="' . esc_attr( $door_code_hours_after ) . '" class="small-text" min="0">';
+		echo '</div>';
+
+		// 4b. Booking og Vilkår
+		$terms_url = get_option( 'snippen_terms_url', '' );
+		echo '<h3 style="margin-top:40px;">' . esc_html__( 'Booking og Vilkår', 'snippen-booking' ) . '</h3>';
+		echo '<div class="snippen-form-group">';
+		echo '<label for="snippen_terms_url">' . esc_html__( 'Lenke til vilkår/regler for leie', 'snippen-booking' ) . '</label>';
+		echo '<input type="url" name="snippen_terms_url" id="snippen_terms_url" value="' . esc_url( $terms_url ) . '" class="regular-text" placeholder="https://...">';
+		echo '<p class="description">' . esc_html__( 'Hvis feltet er tomt, vises ikke akseptboksen i booking-skjemaet.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		// 5. Avinstallering Settings Panel

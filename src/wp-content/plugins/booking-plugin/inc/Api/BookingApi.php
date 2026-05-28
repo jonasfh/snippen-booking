@@ -57,6 +57,14 @@ class BookingApi {
 			wp_send_json_error( array( 'message' => __( 'Mangler nødvendige felt.', 'snippen-booking' ) ) );
 		}
 
+		$terms_url = get_option( 'snippen_terms_url', '' );
+		if ( ! empty( $terms_url ) ) {
+			$accept_terms = isset( $_POST['accept_terms'] ) ? $_POST['accept_terms'] : '';
+			if ( $accept_terms !== 'on' && $accept_terms !== 'true' && $accept_terms !== '1' ) {
+				wp_send_json_error( array( 'message' => __( 'Du må akseptere vilkårene for å kunne booke.', 'snippen-booking' ) ) );
+			}
+		}
+
 		// Check if available (using advanced overlap detection) for all requested slots
 		$availability_service = new \SnippenBooking\Service\AvailabilityService();
 		$slots_to_book        = array();
