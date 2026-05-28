@@ -268,6 +268,7 @@ class BookingManagementCapabilityTest extends TestCase {
 		$_POST['name'] = 'Beboer Test';
 		$_POST['email'] = 'sub_no_cap@example.com';
 		$_POST['description'] = 'Party';
+		$_POST['accept_terms'] = '1';
 
 		ob_start();
 		try {

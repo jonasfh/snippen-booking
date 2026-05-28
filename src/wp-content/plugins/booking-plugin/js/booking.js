@@ -640,6 +640,36 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // Handle Terms Modal
+    $(document).on('click', '.terms-link', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        var sep = url.indexOf('?') > -1 ? '&' : '?';
+        var bareUrl = url + sep + 'snippen_bare=1';
+
+        var modalHtml = '<div class="snippen-modal terms-modal" style="display:none;">' +
+            '<div class="modal-overlay"></div>' +
+            '<div class="modal-content" style="max-width: 800px; height: 80vh; display: flex; flex-direction: column;">' +
+                '<div class="modal-header">' +
+                    '<h4>' + (snippenBookingAjax.strings.termsTitle || 'Vilkår for leie') + '</h4>' +
+                    '<button type="button" class="close-modal">&times;</button>' +
+                '</div>' +
+                '<div class="modal-body" style="flex-grow: 1; padding: 0;">' +
+                    '<iframe src="' + bareUrl + '" style="width: 100%; height: 100%; border: none;"></iframe>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+        $('body').append(modalHtml);
+        $('.terms-modal').fadeIn(200);
+    });
+
+    $(document).on('click', '.terms-modal .close-modal, .terms-modal .modal-overlay', function() {
+        $('.terms-modal').fadeOut(200, function() {
+            $(this).remove();
+        });
+    });
+
     // Initialize
     init();
 });
