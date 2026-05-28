@@ -34,8 +34,20 @@ foreach ($existing_pages as $page) {
 $objects = $wpdb->get_results("SELECT id, name FROM $table_objects WHERE deleted_at IS NULL");
 
 if (empty($objects)) {
-    echo "Error: No booking objects found. Please activate the plugin first.\n";
-    exit(1);
+    echo "No booking objects found. Creating starter setup automatically...\n";
+    if ( class_exists( '\SnippenBooking\Admin\SetupWizard' ) ) {
+        $wizard = new \SnippenBooking\Admin\SetupWizard();
+        $wizard->create_starter_setup();
+        // Re-fetch objects after creation
+        $objects = $wpdb->get_results("SELECT id, name FROM $table_objects WHERE deleted_at IS NULL");
+        if (empty($objects)) {
+            echo "Error: Failed to create starter setup.\n";
+            exit(1);
+        }
+    } else {
+        echo "Error: Snippen Booking plugin is not active or SetupWizard is missing.\n";
+        exit(1);
+    }
 }
 
 echo "Generating new demo pages...\n";
