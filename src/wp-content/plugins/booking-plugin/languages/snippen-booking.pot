@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Snippen Booking 1.15.0\n"
+"Project-Id-Version: Snippen Booking 1.16.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-28T17:42:53+00:00\n"
+"POT-Creation-Date: 2026-05-28T18:09:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: snippen-booking\n"
@@ -33,7 +33,7 @@ msgstr ""
 
 #: inc/Admin/AdminLoader.php:63
 #: inc/Admin/AdminLoader.php:64
-#: inc/Admin/AdminLoader.php:267
+#: inc/Admin/AdminLoader.php:290
 #: inc/Admin/Pages/UserBookingsPage.php:35
 #: inc/Shortcode/BookingListShortcode.php:138
 msgid "Mine Bookinger"
@@ -41,7 +41,7 @@ msgstr ""
 
 #: inc/Admin/AdminLoader.php:74
 #: inc/Admin/AdminLoader.php:75
-#: inc/Admin/AdminLoader.php:303
+#: inc/Admin/AdminLoader.php:338
 msgid "Hjelp / Manual"
 msgstr ""
 
@@ -52,7 +52,7 @@ msgstr ""
 
 #: inc/Admin/AdminLoader.php:92
 #: inc/Admin/AdminLoader.php:93
-#: inc/Admin/AdminLoader.php:227
+#: inc/Admin/AdminLoader.php:250
 #: inc/Admin/Pages/BookingObjectsPage.php:50
 #: inc/Admin/Pages/BookingsPage.php:167
 #: inc/Admin/Pages/PricingPage.php:206
@@ -62,59 +62,66 @@ msgstr ""
 
 #: inc/Admin/AdminLoader.php:101
 #: inc/Admin/AdminLoader.php:102
-#: inc/Admin/AdminLoader.php:241
+#: inc/Admin/AdminLoader.php:264
 #: inc/Admin/Pages/TimeSlotsPage.php:51
 msgid "Tidsluker"
 msgstr ""
 
 #: inc/Admin/AdminLoader.php:110
 #: inc/Admin/AdminLoader.php:111
-#: inc/Admin/AdminLoader.php:255
+#: inc/Admin/AdminLoader.php:278
 #: inc/Admin/Pages/PricingPage.php:64
 msgid "Prisregler"
 msgstr ""
 
 #: inc/Admin/AdminLoader.php:119
 #: inc/Admin/AdminLoader.php:120
-#: inc/Admin/AdminLoader.php:279
+#: inc/Admin/AdminLoader.php:302
 #: inc/Admin/Pages/SettingsPage.php:35
 msgid "Innstillinger"
 msgstr ""
 
-#: inc/Admin/AdminLoader.php:131
-#: inc/Admin/AdminLoader.php:132
-#: inc/Admin/AdminLoader.php:291
+#: inc/Admin/AdminLoader.php:128
+#: inc/Admin/AdminLoader.php:129
+#: inc/Admin/AdminLoader.php:314
+msgid "Varslingsmaler"
+msgstr ""
+
+#: inc/Admin/AdminLoader.php:140
+#: inc/Admin/AdminLoader.php:141
+#: inc/Admin/AdminLoader.php:326
 #: inc/Admin/Pages/ImportPage.php:53
 msgid "Beboer Import"
 msgstr ""
 
-#: inc/Admin/AdminLoader.php:197
+#: inc/Admin/AdminLoader.php:220
 msgid "Er du sikker på at du vil slette dette?"
 msgstr ""
 
-#: inc/Admin/AdminLoader.php:198
+#: inc/Admin/AdminLoader.php:221
 #: inc/Assets/AssetLoader.php:57
 msgid "Vil du virkelig avbryte denne bookingen?"
 msgstr ""
 
-#: inc/Admin/AdminLoader.php:199
+#: inc/Admin/AdminLoader.php:222
 #: inc/Assets/AssetLoader.php:58
 #: inc/Shortcode/AccountConfirmationShortcode.php:42
 msgid "Det oppsto en feil. Prøv igjen."
 msgstr ""
 
-#: inc/Admin/AdminLoader.php:213
+#: inc/Admin/AdminLoader.php:236
 msgid "Bookinger"
 msgstr ""
 
-#: inc/Admin/AdminLoader.php:213
-#: inc/Admin/AdminLoader.php:227
-#: inc/Admin/AdminLoader.php:241
-#: inc/Admin/AdminLoader.php:255
-#: inc/Admin/AdminLoader.php:267
-#: inc/Admin/AdminLoader.php:279
-#: inc/Admin/AdminLoader.php:291
-#: inc/Admin/AdminLoader.php:303
+#: inc/Admin/AdminLoader.php:236
+#: inc/Admin/AdminLoader.php:250
+#: inc/Admin/AdminLoader.php:264
+#: inc/Admin/AdminLoader.php:278
+#: inc/Admin/AdminLoader.php:290
+#: inc/Admin/AdminLoader.php:302
+#: inc/Admin/AdminLoader.php:314
+#: inc/Admin/AdminLoader.php:326
+#: inc/Admin/AdminLoader.php:338
 msgid "Under utvikling..."
 msgstr ""
 
@@ -1593,7 +1600,14 @@ msgid "Din bekreftelseskode for Snippen Booking er: {{confirmation_code}}. Koden
 msgstr ""
 
 #: inc/Service/Notification/NotificationTemplateService.php:77
-msgid "Hallo {{user_name}},\\n\\nDin bekreftelseskode for Snippen Booking er: {{confirmation_code}}\\n\\nKoden er gyldig i 15 minutter.\\n\\nVennligst enter koden på siden for å bekrefte kontoen din."
+msgid ""
+"Hallo {{user_name}},\n"
+"\n"
+"Din bekreftelseskode for Snippen Booking er: {{confirmation_code}}\n"
+"\n"
+"Koden er gyldig i 15 minutter.\n"
+"\n"
+"Vennligst enter koden på siden for å bekrefte kontoen din."
 msgstr ""
 
 #: inc/Service/Notification/NotificationTemplateService.php:83
@@ -1601,7 +1615,14 @@ msgid "Takk for din bookingforespørsel for {{booking_objects}} den {{booking_da
 msgstr ""
 
 #: inc/Service/Notification/NotificationTemplateService.php:87
-msgid "Hallo {{user_name}},\\n\\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\\n\\nDu kan se detaljer om din booking her: {{booking_url}}\\n\\nVed spørsmål, kontakt oss."
+msgid ""
+"Hallo {{user_name}},\n"
+"\n"
+"Takk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n"
+"\n"
+"Du kan se detaljer om din booking her: {{booking_url}}\n"
+"\n"
+"Ved spørsmål, kontakt oss."
 msgstr ""
 
 #: inc/Service/Notification/NotificationTemplateService.php:93
@@ -1613,7 +1634,17 @@ msgid "Ny Bookingforespørsel - {{booking_objects}}"
 msgstr ""
 
 #: inc/Service/Notification/NotificationTemplateService.php:97
-msgid "Ny bookingforespørsel mottatt:\\n\\nLokale: {{booking_objects}}\\nDato: {{booking_date}}\\nNavn: {{user_name}}\\nEmail: {{user_email}}\\nTelefon: {{user_phone}}\\nBeskrivelse: {{booking_description}}\\n\\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen."
+msgid ""
+"Ny bookingforespørsel mottatt:\n"
+"\n"
+"Lokale: {{booking_objects}}\n"
+"Dato: {{booking_date}}\n"
+"Navn: {{user_name}}\n"
+"Email: {{user_email}}\n"
+"Telefon: {{user_phone}}\n"
+"Beskrivelse: {{booking_description}}\n"
+"\n"
+"Vennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen."
 msgstr ""
 
 #: inc/Service/Notification/NotificationTemplateService.php:182
