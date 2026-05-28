@@ -5,6 +5,7 @@
  * Usage:
  * php bin/demo-data.php generate
  * php bin/demo-data.php clear
+ * php bin/demo-data.php wizard
  */
 
 // Bootstrap WordPress
@@ -96,6 +97,23 @@ if ($action === 'users') {
     }
     echo "Success: Generated $count demo subscriber users.\n";
     exit(0);
+}
+
+if ($action === 'wizard') {
+    echo "Running Setup Wizard to create starter data...\n";
+    if (class_exists('\SnippenBooking\Admin\SetupWizard')) {
+        $result = \SnippenBooking\Admin\SetupWizard::create_starter_setup();
+        if ($result['success']) {
+            echo "Success: Starter data created successfully.\n";
+            exit(0);
+        } else {
+            echo "Error creating starter data: " . $result['message'] . "\n";
+            exit(1);
+        }
+    } else {
+        echo "Error: SnippenBooking\Admin\SetupWizard not found. Please activate the plugin first.\n";
+        exit(1);
+    }
 }
 
 if ($action === 'generate') {
@@ -246,5 +264,5 @@ if ($action === 'generate') {
     exit(0);
 }
 
-echo "Unknown action: $action. Use 'generate' or 'clear'.\n";
+echo "Unknown action: $action. Use 'generate', 'clear', 'users', or 'wizard'.\n";
 exit(1);
