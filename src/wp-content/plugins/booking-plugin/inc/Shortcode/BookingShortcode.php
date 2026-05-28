@@ -134,17 +134,17 @@ class BookingShortcode {
 
 						<div class="form-group">
 							<label for="name"><?php esc_html_e( 'Navn på beboer', 'snippen-booking' ); ?></label>
-							<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_name ); ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+							<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_name ); ?>" autocomplete="name" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
 							<label for="email"><?php esc_html_e( 'E-post', 'snippen-booking' ); ?></label>
-							<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_email ); ?>" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+							<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_email ); ?>" autocomplete="email" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
 						</div>
 						
 						<div class="form-group">
 							<label for="phone"><?php esc_html_e( 'Telefon', 'snippen-booking' ); ?></label>
-							<input type="tel" name="phone" id="phone" placeholder="+47..." value="<?php echo esc_attr( $user_phone ); ?>" readonly required>
+							<input type="tel" name="phone" id="phone" placeholder="+47..." value="<?php echo esc_attr( $user_phone ); ?>" autocomplete="tel" readonly required>
 							<?php if ( $is_logged_in && empty( $user_phone ) && ! Capabilities::can_manage_bookings() ) : ?>
 								<p class="field-error-msg" style="color: #d63638; font-size: 0.85em; margin-top: 5px;"><?php esc_html_e( 'Mangler telefonnummer på din profil. Kontakt administrator.', 'snippen-booking' ); ?></p>
 							<?php endif; ?>

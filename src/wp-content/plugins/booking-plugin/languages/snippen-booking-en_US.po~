@@ -1,360 +1,330 @@
-# Copyright (C) 2026 Snippen
-# This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Snippen Booking 1.15.0\n"
+"Project-Id-Version: Snippen Booking 1.7.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
+"POT-Creation-Date: 2026-05-28T16:40:52+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-28T16:43:24+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: snippen-booking\n"
 
 #. Plugin Name of the plugin
-#: booking-plugin.php
-#: inc/Admin/AdminLoader.php:53
-#: inc/Admin/AdminLoader.php:54
+#: booking-plugin.php inc/Admin/AdminLoader.php:53 inc/Admin/AdminLoader.php:54
 msgid "Snippen Booking"
-msgstr ""
+msgstr "Snippen Booking"
 
 #. Description of the plugin
 #: booking-plugin.php
 msgid "Booking plugin for Snippen community house."
-msgstr ""
+msgstr "Booking plugin for Snippen community house."
 
 #. Author of the plugin
 #: booking-plugin.php
 msgid "Snippen"
-msgstr ""
+msgstr "Snippen"
 
-#: inc/Admin/AdminLoader.php:63
-#: inc/Admin/AdminLoader.php:64
-#: inc/Admin/AdminLoader.php:267
-#: inc/Admin/Pages/UserBookingsPage.php:35
+#: inc/Admin/AdminLoader.php:63 inc/Admin/AdminLoader.php:64
+#: inc/Admin/AdminLoader.php:267 inc/Admin/Pages/UserBookingsPage.php:35
 #: inc/Shortcode/BookingListShortcode.php:138
 msgid "Mine Bookinger"
-msgstr ""
+msgstr "My Bookings"
 
-#: inc/Admin/AdminLoader.php:74
-#: inc/Admin/AdminLoader.php:75
+#: inc/Admin/AdminLoader.php:74 inc/Admin/AdminLoader.php:75
 #: inc/Admin/AdminLoader.php:303
 msgid "Hjelp / Manual"
-msgstr ""
+msgstr "Help / Manual"
 
-#: inc/Admin/AdminLoader.php:83
-#: inc/Admin/AdminLoader.php:84
+#: inc/Admin/AdminLoader.php:83 inc/Admin/AdminLoader.php:84
 msgid "Oversikt"
-msgstr ""
+msgstr "Overview"
 
-#: inc/Admin/AdminLoader.php:92
-#: inc/Admin/AdminLoader.php:93
-#: inc/Admin/AdminLoader.php:227
-#: inc/Admin/Pages/BookingObjectsPage.php:50
-#: inc/Admin/Pages/BookingsPage.php:167
-#: inc/Admin/Pages/PricingPage.php:206
+#: inc/Admin/AdminLoader.php:92 inc/Admin/AdminLoader.php:93
+#: inc/Admin/AdminLoader.php:227 inc/Admin/Pages/BookingObjectsPage.php:50
+#: inc/Admin/Pages/BookingsPage.php:167 inc/Admin/Pages/PricingPage.php:206
 #: inc/Admin/Pages/UserBookingsPage.php:93
 msgid "Lokaler"
-msgstr ""
+msgstr "Venues"
 
-#: inc/Admin/AdminLoader.php:101
-#: inc/Admin/AdminLoader.php:102
-#: inc/Admin/AdminLoader.php:241
-#: inc/Admin/Pages/TimeSlotsPage.php:51
+#: inc/Admin/AdminLoader.php:101 inc/Admin/AdminLoader.php:102
+#: inc/Admin/AdminLoader.php:241 inc/Admin/Pages/TimeSlotsPage.php:51
 msgid "Tidsluker"
-msgstr ""
+msgstr "Time Slots"
 
-#: inc/Admin/AdminLoader.php:110
-#: inc/Admin/AdminLoader.php:111
-#: inc/Admin/AdminLoader.php:255
-#: inc/Admin/Pages/PricingPage.php:64
+#: inc/Admin/AdminLoader.php:110 inc/Admin/AdminLoader.php:111
+#: inc/Admin/AdminLoader.php:255 inc/Admin/Pages/PricingPage.php:64
 msgid "Prisregler"
-msgstr ""
+msgstr "Pricing Rules"
 
-#: inc/Admin/AdminLoader.php:119
-#: inc/Admin/AdminLoader.php:120
-#: inc/Admin/AdminLoader.php:279
-#: inc/Admin/Pages/SettingsPage.php:35
+#: inc/Admin/AdminLoader.php:119 inc/Admin/AdminLoader.php:120
+#: inc/Admin/AdminLoader.php:279 inc/Admin/Pages/SettingsPage.php:35
 msgid "Innstillinger"
-msgstr ""
+msgstr "Settings"
 
-#: inc/Admin/AdminLoader.php:131
-#: inc/Admin/AdminLoader.php:132
-#: inc/Admin/AdminLoader.php:291
-#: inc/Admin/Pages/ImportPage.php:53
+#: inc/Admin/AdminLoader.php:131 inc/Admin/AdminLoader.php:132
+#: inc/Admin/AdminLoader.php:291 inc/Admin/Pages/ImportPage.php:53
 msgid "Beboer Import"
-msgstr ""
+msgstr "Resident Import"
 
 #: inc/Admin/AdminLoader.php:197
 msgid "Er du sikker på at du vil slette dette?"
-msgstr ""
+msgstr "Are you sure you want to delete this?"
 
-#: inc/Admin/AdminLoader.php:198
-#: inc/Assets/AssetLoader.php:57
+#: inc/Admin/AdminLoader.php:198 inc/Assets/AssetLoader.php:57
 msgid "Vil du virkelig avbryte denne bookingen?"
-msgstr ""
+msgstr "Do you really want to cancel this booking?"
 
-#: inc/Admin/AdminLoader.php:199
-#: inc/Assets/AssetLoader.php:58
+#: inc/Admin/AdminLoader.php:199 inc/Assets/AssetLoader.php:58
 #: inc/Shortcode/AccountConfirmationShortcode.php:42
 msgid "Det oppsto en feil. Prøv igjen."
-msgstr ""
+msgstr "An error occurred. Please try again."
 
 #: inc/Admin/AdminLoader.php:213
 msgid "Bookinger"
-msgstr ""
+msgstr "Bookings"
 
-#: inc/Admin/AdminLoader.php:213
-#: inc/Admin/AdminLoader.php:227
-#: inc/Admin/AdminLoader.php:241
-#: inc/Admin/AdminLoader.php:255
-#: inc/Admin/AdminLoader.php:267
-#: inc/Admin/AdminLoader.php:279
-#: inc/Admin/AdminLoader.php:291
-#: inc/Admin/AdminLoader.php:303
+#: inc/Admin/AdminLoader.php:213 inc/Admin/AdminLoader.php:227
+#: inc/Admin/AdminLoader.php:241 inc/Admin/AdminLoader.php:255
+#: inc/Admin/AdminLoader.php:267 inc/Admin/AdminLoader.php:279
+#: inc/Admin/AdminLoader.php:291 inc/Admin/AdminLoader.php:303
 msgid "Under utvikling..."
-msgstr ""
+msgstr "Under development..."
 
 #: inc/Admin/Pages/BookingObjectsPage.php:25
 msgid "Lokale lagret."
-msgstr ""
+msgstr "Venue saved."
 
 #: inc/Admin/Pages/BookingObjectsPage.php:27
 msgid "Lokale oppdatert."
-msgstr ""
+msgstr "Venue updated."
 
 #: inc/Admin/Pages/BookingObjectsPage.php:29
 msgid "Lokale slettet."
-msgstr ""
+msgstr "Venue deleted."
 
 #: inc/Admin/Pages/BookingObjectsPage.php:52
 msgid "Legg til nytt lokale"
-msgstr ""
+msgstr "Add New Venue"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:55
 msgid "Rediger lokale"
-msgstr ""
+msgstr "Edit Venue"
 
-#: inc/Admin/Pages/BookingObjectsPage.php:62
-#: inc/Admin/Pages/PricingPage.php:76
+#: inc/Admin/Pages/BookingObjectsPage.php:62 inc/Admin/Pages/PricingPage.php:76
 #: inc/Admin/Pages/TimeSlotsPage.php:63
 msgid "Legg til ny"
-msgstr ""
+msgstr "Add New"
 
-#: inc/Admin/Pages/BookingObjectsPage.php:64
-#: inc/Admin/Pages/PricingPage.php:78
+#: inc/Admin/Pages/BookingObjectsPage.php:64 inc/Admin/Pages/PricingPage.php:78
 #: inc/Admin/Pages/TimeSlotsPage.php:65
 msgid "Tilbake til oversikt"
-msgstr ""
+msgstr "Back to Overview"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:156
-#: inc/Admin/Pages/PricingPage.php:205
-#: inc/Admin/Pages/TimeSlotsPage.php:153
+#: inc/Admin/Pages/PricingPage.php:205 inc/Admin/Pages/TimeSlotsPage.php:153
 #: inc/Plugin.php:258
 msgid "Navn"
-msgstr ""
+msgstr "Name"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:157
-#: inc/Admin/Pages/BookingObjectsPage.php:207
-#: inc/Plugin.php:264
+#: inc/Admin/Pages/BookingObjectsPage.php:207 inc/Plugin.php:264
 msgid "Beskrivelse"
-msgstr ""
+msgstr "Description"
 
-#: inc/Admin/Pages/BookingObjectsPage.php:158
-#: inc/Plugin.php:261
+#: inc/Admin/Pages/BookingObjectsPage.php:158 inc/Plugin.php:261
 msgid "Dørkode"
-msgstr ""
+msgstr "Door Code"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:159
-#: inc/Admin/Pages/BookingsPage.php:170
-#: inc/Admin/Pages/PricingPage.php:211
+#: inc/Admin/Pages/BookingsPage.php:170 inc/Admin/Pages/PricingPage.php:211
 #: inc/Admin/Pages/TimeSlotsPage.php:157
 #: inc/Admin/Pages/UserBookingsPage.php:96
 msgid "Handlinger"
-msgstr ""
+msgstr "Actions"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:164
 msgid "Ingen lokaler funnet."
-msgstr ""
+msgstr "No venues found."
 
 #: inc/Admin/Pages/BookingObjectsPage.php:175
-#: inc/Admin/Pages/PricingPage.php:270
-#: inc/Admin/Pages/TimeSlotsPage.php:174
+#: inc/Admin/Pages/PricingPage.php:270 inc/Admin/Pages/TimeSlotsPage.php:174
 msgid "Rediger"
-msgstr ""
+msgstr "Edit"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:176
-#: inc/Admin/Pages/PricingPage.php:271
-#: inc/Admin/Pages/TimeSlotsPage.php:175
+#: inc/Admin/Pages/PricingPage.php:271 inc/Admin/Pages/TimeSlotsPage.php:175
 msgid "Slett"
-msgstr ""
+msgstr "Delete"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:202
 msgid "Navn på lokale"
-msgstr ""
+msgstr "Venue Name"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:212
 msgid "Gjeldende dørkode"
-msgstr ""
+msgstr "Current door code"
 
 #: inc/Admin/Pages/BookingObjectsPage.php:214
-msgid "Denne koden vil automatisk bli synkronisert til brukernes bookinger når bookingtiden nærmer seg."
+msgid ""
+"Denne koden vil automatisk bli synkronisert til brukernes bookinger når "
+"bookingtiden nærmer seg."
 msgstr ""
+"This code will be automatically synced to the users' bookings when the "
+"booking time approaches."
 
 #: inc/Admin/Pages/BookingObjectsPage.php:218
 msgid "Lagre lokale"
-msgstr ""
+msgstr "Save Venue"
 
 #: inc/Admin/Pages/BookingsPage.php:38
 msgid "Booking Oversikt"
-msgstr ""
+msgstr "Booking Overview"
 
 #: inc/Admin/Pages/BookingsPage.php:66
 msgid "Hurtiglenker til bookingsider:"
-msgstr ""
+msgstr "Quick links to booking pages:"
 
-#: inc/Admin/Pages/BookingsPage.php:95
-#: inc/Admin/Pages/UserBookingsPage.php:49
+#: inc/Admin/Pages/BookingsPage.php:95 inc/Admin/Pages/UserBookingsPage.php:49
 msgid "Alle statuser"
-msgstr ""
+msgstr "All Statuses"
 
 #: inc/Admin/Pages/BookingsPage.php:96
 msgid "Venter på godkjenning"
-msgstr ""
+msgstr "Pending Approval"
 
-#: inc/Admin/Pages/BookingsPage.php:97
-#: inc/Admin/Pages/BookingsPage.php:267
+#: inc/Admin/Pages/BookingsPage.php:97 inc/Admin/Pages/BookingsPage.php:267
 #: inc/Admin/Pages/UserBookingsPage.php:51
-#: inc/Admin/Pages/UserBookingsPage.php:198
-#: inc/Admin/UserProfile.php:76
-#: inc/Api/BookingActionsApi.php:77
-#: inc/Plugin.php:230
+#: inc/Admin/Pages/UserBookingsPage.php:198 inc/Admin/UserProfile.php:76
+#: inc/Api/BookingActionsApi.php:77 inc/Plugin.php:230
 #: inc/Shortcode/BookingListShortcode.php:206
 msgid "Bekreftet"
-msgstr ""
+msgstr "Confirmed"
 
-#: inc/Admin/Pages/BookingsPage.php:98
-#: inc/Admin/Pages/BookingsPage.php:268
+#: inc/Admin/Pages/BookingsPage.php:98 inc/Admin/Pages/BookingsPage.php:268
 #: inc/Admin/Pages/UserBookingsPage.php:52
-#: inc/Admin/Pages/UserBookingsPage.php:199
-#: inc/Api/BookingActionsApi.php:78
-#: inc/Plugin.php:233
-#: inc/Shortcode/BookingListShortcode.php:209
+#: inc/Admin/Pages/UserBookingsPage.php:199 inc/Api/BookingActionsApi.php:78
+#: inc/Plugin.php:233 inc/Shortcode/BookingListShortcode.php:209
 msgid "Avbrutt"
-msgstr ""
+msgstr "Cancelled"
 
 #: inc/Admin/Pages/BookingsPage.php:103
 msgid "Alle lokaler"
-msgstr ""
+msgstr "All Venues"
 
 #: inc/Admin/Pages/BookingsPage.php:110
 msgid "Søk i navn/e-post..."
-msgstr ""
+msgstr "Search name/email..."
 
 #: inc/Admin/Pages/BookingsPage.php:111
 msgid "Søk"
-msgstr ""
+msgstr "Search"
 
 #: inc/Admin/Pages/BookingsPage.php:115
 msgid "Vis historikk / eldre bookinger"
-msgstr ""
+msgstr "Show history / past bookings"
 
-#: inc/Admin/Pages/BookingsPage.php:165
-#: inc/Admin/Pages/UserBookingsPage.php:92
+#: inc/Admin/Pages/BookingsPage.php:165 inc/Admin/Pages/UserBookingsPage.php:92
 msgid "Dato / Tid"
-msgstr ""
+msgstr "Date / Time"
 
 #: inc/Admin/Pages/BookingsPage.php:166
 msgid "Kunde"
-msgstr ""
+msgstr "Customer"
 
-#: inc/Admin/Pages/BookingsPage.php:168
-#: inc/Admin/Pages/PricingPage.php:208
-#: inc/Admin/Pages/UserBookingsPage.php:94
-#: inc/Plugin.php:267
+#: inc/Admin/Pages/BookingsPage.php:168 inc/Admin/Pages/PricingPage.php:208
+#: inc/Admin/Pages/UserBookingsPage.php:94 inc/Plugin.php:267
 msgid "Pris"
-msgstr ""
+msgstr "Price"
 
-#: inc/Admin/Pages/BookingsPage.php:169
-#: inc/Admin/Pages/UserBookingsPage.php:95
+#: inc/Admin/Pages/BookingsPage.php:169 inc/Admin/Pages/UserBookingsPage.php:95
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: inc/Admin/Pages/BookingsPage.php:175
 msgid "Ingen bookinger funnet."
-msgstr ""
+msgstr "No bookings found."
 
 #: inc/Admin/Pages/BookingsPage.php:228
 #: inc/Admin/Pages/UserBookingsPage.php:154
 msgid "Vis detaljer"
-msgstr ""
+msgstr "View Details"
 
 #: inc/Admin/Pages/BookingsPage.php:242
 msgid "Godkjenn"
-msgstr ""
+msgstr "Approve"
 
 #: inc/Admin/Pages/BookingsPage.php:245
 #: inc/Admin/Pages/UserBookingsPage.php:167
 msgid "Avbryt"
-msgstr ""
+msgstr "Cancel"
 
 #: inc/Admin/Pages/BookingsPage.php:254
 msgid "Kontaktinfo:"
-msgstr ""
+msgstr "Contact Info:"
 
 #: inc/Admin/Pages/BookingsPage.php:255
 #: inc/Admin/Pages/UserBookingsPage.php:185
 msgid "Lokale(r):"
-msgstr ""
+msgstr "Venue(s):"
 
 #: inc/Admin/Pages/BookingsPage.php:256
 msgid "Beskrivelse/Notater:"
-msgstr ""
+msgstr "Description/Notes:"
 
 #: inc/Admin/Pages/BookingsPage.php:257
 #: inc/Admin/Pages/UserBookingsPage.php:187
 msgid "Booket den:"
-msgstr ""
+msgstr "Booked on:"
 
-#: inc/Admin/Pages/BookingsPage.php:266
-#: inc/Admin/Pages/UserBookingsPage.php:50
-#: inc/Admin/Pages/UserBookingsPage.php:197
-#: inc/Api/BookingActionsApi.php:76
-#: inc/Plugin.php:227
-#: inc/Shortcode/BookingListShortcode.php:203
+#: inc/Admin/Pages/BookingsPage.php:266 inc/Admin/Pages/UserBookingsPage.php:50
+#: inc/Admin/Pages/UserBookingsPage.php:197 inc/Api/BookingActionsApi.php:76
+#: inc/Plugin.php:227 inc/Shortcode/BookingListShortcode.php:203
 msgid "Venter"
-msgstr ""
+msgstr "Pending"
 
 #: inc/Admin/Pages/HelpPage.php:16
 msgid "Brukermanual & Hjelp"
-msgstr ""
+msgstr "User Manual & Help"
 
 #: inc/Admin/Pages/HelpPage.php:17
-msgid "Velkommen til Snippen Booking. Her finner du informasjon om hvordan du setter opp og bruker systemet."
+msgid ""
+"Velkommen til Snippen Booking. Her finner du informasjon om hvordan du "
+"setter opp og bruker systemet."
 msgstr ""
+"Welcome to Snippen Booking. Here you will find information on how to set up "
+"and use the system."
 
 #: inc/Admin/Pages/HelpPage.php:24
 msgid "Hurtigstart (TL;DR)"
-msgstr ""
+msgstr "Quick Start (TL;DR)"
 
 #: inc/Admin/Pages/HelpPage.php:26
-msgid "Den raskeste måten å komme i gang på er å bruke Setup Wizard (veiviseren). Den oppretter standard lokaler, tidsluker og priser som du senere kan tilpasse."
+msgid ""
+"Den raskeste måten å komme i gang på er å bruke Setup Wizard (veiviseren). "
+"Den oppretter standard lokaler, tidsluker og priser som du senere kan "
+"tilpasse."
 msgstr ""
+"The fastest way to get started is by using the Setup Wizard. It creates "
+"default venues, time slots, and prices that you can customize later."
 
 #: inc/Admin/Pages/HelpPage.php:27
 msgid "VIKTIG:"
-msgstr ""
+msgstr "IMPORTANT:"
 
 #: inc/Admin/Pages/HelpPage.php:27
-msgid "For å se resten av booking-menyene (som Oversikt, Lokaler, etc.), må du gi deg selv tilgangen \"Booking Administrator\" på din egen brukerprofil under \"Brukere\" i WordPress."
+msgid ""
+"For å se resten av booking-menyene (som Oversikt, Lokaler, etc.), må du gi "
+"deg selv tilgangen \"Booking Administrator\" på din egen brukerprofil under "
+"\"Brukere\" i WordPress."
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:29
 msgid "Kjør Setup Wizard"
-msgstr ""
+msgstr "Run Setup Wizard"
 
 #: inc/Admin/Pages/HelpPage.php:29
 msgid "Gå til \"Setup Wizard\" for å generere et ferdig oppsett."
@@ -362,241 +332,314 @@ msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:30
 msgid "Legg inn booking-skjema"
-msgstr ""
+msgstr "Add Booking Form"
 
 #: inc/Admin/Pages/HelpPage.php:30
-msgid "Legg til shortcoden [snippen_booking] på en side for å la brukere booke."
-msgstr ""
+msgid ""
+"Legg til shortcoden [snippen_booking] på en side for å la brukere booke."
+msgstr "Add the shortcode [snippen_booking] to a page to allow users to book."
 
 #: inc/Admin/Pages/HelpPage.php:31
 msgid "Brukertilgang"
-msgstr ""
+msgstr "User Access"
 
 #: inc/Admin/Pages/HelpPage.php:31
-msgid "Legg til shortcoden [snippen_account_confirmation] på en egen side slik at beboere kan bekrefte kontoen sin."
+msgid ""
+"Legg til shortcoden [snippen_account_confirmation] på en egen side slik at "
+"beboere kan bekrefte kontoen sin."
 msgstr ""
+"Add the shortcode [snippen_account_confirmation] to a separate page so "
+"residents can confirm their account."
 
 #: inc/Admin/Pages/HelpPage.php:38
 msgid "Bruk av Shortcodes"
-msgstr ""
+msgstr "Using Shortcodes"
 
 #: inc/Admin/Pages/HelpPage.php:40
-msgid "Systemet bruker shortcodes for å vise innhold for brukerne. Disse plasseres på vanlige WordPress-sider."
+msgid ""
+"Systemet bruker shortcodes for å vise innhold for brukerne. Disse plasseres "
+"på vanlige WordPress-sider."
 msgstr ""
+"The system uses shortcodes to display content to users. These are placed on "
+"regular WordPress pages."
 
 #: inc/Admin/Pages/HelpPage.php:42
 msgid "1. Bookingskjema:"
-msgstr ""
+msgstr "1. Booking Form:"
 
 #: inc/Admin/Pages/HelpPage.php:44
-msgid "Denne viser kalender og skjema for booking. Hvis du vil begrense skjemaet til ett bestemt lokale, kan du bruke object_id:"
+msgid ""
+"Denne viser kalender og skjema for booking. Hvis du vil begrense skjemaet "
+"til ett bestemt lokale, kan du bruke object_id:"
 msgstr ""
+"This displays the calendar and booking form. If you want to limit the form "
+"to a specific venue, you can use object_id:"
 
 #: inc/Admin/Pages/HelpPage.php:46
 msgid "2. Brukeraktivering:"
-msgstr ""
+msgstr "2. User Activation:"
 
 #: inc/Admin/Pages/HelpPage.php:48
-msgid "Brukes på en side der importerte brukere/beboere kan skrive inn telefonnummeret sitt for å motta en SMS-kode, og dermed aktivere kontoen sin for booking."
+msgid ""
+"Brukes på en side der importerte brukere/beboere kan skrive inn "
+"telefonnummeret sitt for å motta en SMS-kode, og dermed aktivere kontoen sin "
+"for booking."
 msgstr ""
+"Used on a page where imported users/residents can enter their phone number "
+"to receive an SMS code, thereby activating their account for booking."
 
 #: inc/Admin/Pages/HelpPage.php:54
 msgid "Hva Setup Wizard (veiviseren) installerer"
-msgstr ""
+msgstr "What the Setup Wizard Installs"
 
 #: inc/Admin/Pages/HelpPage.php:56
-msgid "Hvis du har kjørt veiviseren (Setup Wizard), er det automatisk opprettet demodata for å hjelpe deg i gang. Dette inkluderer:"
+msgid ""
+"Hvis du har kjørt veiviseren (Setup Wizard), er det automatisk opprettet "
+"demodata for å hjelpe deg i gang. Dette inkluderer:"
 msgstr ""
+"If you have run the Setup Wizard, demo data is automatically created to help "
+"you get started. This includes:"
 
 #: inc/Admin/Pages/HelpPage.php:58
 msgid "Eksempellokaler"
-msgstr ""
+msgstr "Example Venues"
 
 #: inc/Admin/Pages/HelpPage.php:59
 msgid "Standard tidsluker (f.eks. dag-, kvelds- og helgeleie)"
-msgstr ""
+msgstr "Default time slots (e.g., day, evening, and weekend rentals)"
 
 #: inc/Admin/Pages/HelpPage.php:60
 msgid "Standard prisregler"
-msgstr ""
+msgstr "Default pricing rules"
 
 #: inc/Admin/Pages/HelpPage.php:62
-msgid "Dette er kun for demonstrasjon. Du kan trygt redigere eller slette disse dataene for å tilpasse ditt eget oppsett."
+msgid ""
+"Dette er kun for demonstrasjon. Du kan trygt redigere eller slette disse "
+"dataene for å tilpasse ditt eget oppsett."
 msgstr ""
+"This is for demonstration only. You can safely edit or delete this data to "
+"customize your own setup."
 
 #: inc/Admin/Pages/HelpPage.php:68
 msgid "Slik fungerer det (kjernekonsepter)"
-msgstr ""
+msgstr "How It Works (Core Concepts)"
 
 #: inc/Admin/Pages/HelpPage.php:70
 msgid "Snippen Booking bygger på følgende konsepter:"
-msgstr ""
+msgstr "Snippen Booking is built on the following concepts:"
 
-#: inc/Admin/Pages/HelpPage.php:72
-#: inc/Shortcode/BookingListShortcode.php:230
+#: inc/Admin/Pages/HelpPage.php:72 inc/Shortcode/BookingListShortcode.php:230
 msgid "Lokaler:"
-msgstr ""
+msgstr "Venues:"
 
 #: inc/Admin/Pages/HelpPage.php:72
 msgid "Det fysiske rommet eller ressursen som kan bookes."
-msgstr ""
+msgstr "The physical room or resource that can be booked."
 
 #: inc/Admin/Pages/HelpPage.php:73
 msgid "Tidsluker:"
-msgstr ""
+msgstr "Time Slots:"
 
 #: inc/Admin/Pages/HelpPage.php:73
 msgid "Definerer nøyaktig når, og hvor lenge, et lokale kan bookes."
-msgstr ""
+msgstr "Defines exactly when and for how long a venue can be booked."
 
 #: inc/Admin/Pages/HelpPage.php:74
 msgid "Prisregler:"
-msgstr ""
+msgstr "Pricing Rules:"
 
 #: inc/Admin/Pages/HelpPage.php:74
 msgid "Regler som bestemmer kostnaden basert på tidsluke, dag og lokale."
-msgstr ""
+msgstr "Rules that determine the cost based on time slot, day, and venue."
 
 #: inc/Admin/Pages/HelpPage.php:75
 msgid "Bookinger:"
-msgstr ""
+msgstr "Bookings:"
 
 #: inc/Admin/Pages/HelpPage.php:75
 msgid "Selve reservasjonen som brukeren oppretter."
-msgstr ""
+msgstr "The actual reservation created by the user."
 
 #: inc/Admin/Pages/HelpPage.php:82
 msgid "Rettigheter og tilgang"
-msgstr ""
+msgstr "Permissions and Access"
 
 #: inc/Admin/Pages/HelpPage.php:84
 msgid "VIKTIG FOR ADMINISTRATORER:"
-msgstr ""
+msgstr "IMPORTANT FOR ADMINISTRATORS:"
 
 #: inc/Admin/Pages/HelpPage.php:84
-msgid "Selv om du er WordPress Administrator, MÅ du manuelt huke av for \"Booking Administrator\" inne på din egen brukerprofil (under \"Brukere\") for å få tilgang til oppsett og administrering av bookinger."
+msgid ""
+"Selv om du er WordPress Administrator, MÅ du manuelt huke av for \"Booking "
+"Administrator\" inne på din egen brukerprofil (under \"Brukere\") for å få "
+"tilgang til oppsett og administrering av bookinger."
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:85
-msgid "Det er to hovedtyper brukere med tilgang til administrasjon av bookinger:"
-msgstr ""
+msgid ""
+"Det er to hovedtyper brukere med tilgang til administrasjon av bookinger:"
+msgstr "There are two main types of users with access to manage bookings:"
 
 #: inc/Admin/Pages/HelpPage.php:87
 msgid "WordPress Administrator:"
-msgstr ""
+msgstr "WordPress Administrator:"
 
 #: inc/Admin/Pages/HelpPage.php:87
 msgid "Har full tilgang til alt."
-msgstr ""
+msgstr "Has full access to everything."
 
 #: inc/Admin/Pages/HelpPage.php:88
 msgid "Brukere med egenskapen \"manage_snippen_bookings\":"
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:88
-msgid "Kan administrere bookinger og motta varsler, men trenger ikke være fulle WordPress-administratorer. Dette gis via brukerprofilen."
+msgid ""
+"Kan administrere bookinger og motta varsler, men trenger ikke være fulle "
+"WordPress-administratorer. Dette gis via brukerprofilen."
 msgstr ""
+"Can manage bookings and receive notifications, but do not need to be full "
+"WordPress administrators. This is granted via the user profile."
 
 #: inc/Admin/Pages/HelpPage.php:90
-msgid "Vanlige brukere som bare skal bestille et lokale trenger IKKE admin-tilgang. De gjør alt på forsiden (via shortcode)."
+msgid ""
+"Vanlige brukere som bare skal bestille et lokale trenger IKKE admin-tilgang. "
+"De gjør alt på forsiden (via shortcode)."
 msgstr ""
+"Regular users who just need to book a venue DO NOT need admin access. They "
+"do everything on the front end (via shortcode)."
 
 #: inc/Admin/Pages/HelpPage.php:96
 msgid "Tidsluker (Time Slots) og Vasketid"
-msgstr ""
+msgstr "Time Slots and Cleaning Time"
 
 #: inc/Admin/Pages/HelpPage.php:98
-msgid "Når du oppretter en tidsluke, definerer du start- og sluttidspunkt, samt eventuelle timer til vask/rydding før og etter. Vasketiden legger beslag på lokalet og forhindrer andre bookinger i den perioden."
+msgid ""
+"Når du oppretter en tidsluke, definerer du start- og sluttidspunkt, samt "
+"eventuelle timer til vask/rydding før og etter. Vasketiden legger beslag på "
+"lokalet og forhindrer andre bookinger i den perioden."
 msgstr ""
+"When creating a time slot, you define the start and end times, as well as "
+"any hours for cleaning/tidying before and after. Cleaning time occupies the "
+"venue and prevents other bookings during that period."
 
 #: inc/Admin/Pages/HelpPage.php:99
 msgid "Konsekvenser av vasketid (eksempel):"
-msgstr ""
+msgstr "Consequences of cleaning time (example):"
 
 #: inc/Admin/Pages/HelpPage.php:101
-msgid "Hvis du har en dagleie fra 08:00 - 16:00, og angir \"2 timer vask etterpå\", vil lokalet være sperret frem til kl. 18:00."
+msgid ""
+"Hvis du har en dagleie fra 08:00 - 16:00, og angir \"2 timer vask etterpå\", "
+"vil lokalet være sperret frem til kl. 18:00."
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:102
-msgid "Dette betyr at en kveldsleie som starter kl. 16:00 eller 17:00 VIL VÆRE UTILGJENGELIG samme dag."
+msgid ""
+"Dette betyr at en kveldsleie som starter kl. 16:00 eller 17:00 VIL VÆRE "
+"UTILGJENGELIG samme dag."
 msgstr ""
+"This means that an evening rental starting at 16:00 or 17:00 WILL BE "
+"UNAVAILABLE the same day."
 
 #: inc/Admin/Pages/HelpPage.php:103
 msgid "Neste tilgjengelige tidsluke kan tidligst starte kl. 18:00."
-msgstr ""
+msgstr "The next available time slot can start no earlier than 18:00."
 
 #: inc/Admin/Pages/HelpPage.php:105
-msgid "Luker vil ikke la seg overstyre dersom det oppstår kollisjon i tidspunktene (inkludert vasketid), med mindre du eksplisitt tillater overlapping for delte arrangementer."
+msgid ""
+"Luker vil ikke la seg overstyre dersom det oppstår kollisjon i tidspunktene "
+"(inkludert vasketid), med mindre du eksplisitt tillater overlapping for "
+"delte arrangementer."
 msgstr ""
+"Slots will not be overridden if there is a collision in times (including "
+"cleaning time), unless you explicitly allow overlapping for shared events."
 
 #: inc/Admin/Pages/HelpPage.php:111
 msgid "Prisregler og Prioritet"
-msgstr ""
+msgstr "Pricing Rules and Priority"
 
 #: inc/Admin/Pages/HelpPage.php:113
-msgid "Prisregler styrer hva det koster å booke, basert på ukedag, tidsluke og lokale."
+msgid ""
+"Prisregler styrer hva det koster å booke, basert på ukedag, tidsluke og "
+"lokale."
 msgstr ""
+"Pricing rules control the cost of booking based on weekday, time slot, and "
+"venue."
 
 #: inc/Admin/Pages/HelpPage.php:115
 msgid "Prioritet:"
-msgstr ""
+msgstr "Priority:"
 
 #: inc/Admin/Pages/HelpPage.php:115
-msgid "Hvis to regler gjelder for samme dag (f.eks. en generell pris og en spesifikk helligdagspris), er det \"Priority\"-feltet som avgjør hvilken som vinner. Et HØYERE tall trumfer et lavere tall. (For eksempel vil en regel med prioritet 10 overstyre en regel med prioritet 0)."
+msgid ""
+"Hvis to regler gjelder for samme dag (f.eks. en generell pris og en "
+"spesifikk helligdagspris), er det \"Priority\"-feltet som avgjør hvilken som "
+"vinner. Et HØYERE tall trumfer et lavere tall. (For eksempel vil en regel "
+"med prioritet 10 overstyre en regel med prioritet 0)."
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:116
 msgid "Flere lokaler (Multi-object):"
-msgstr ""
+msgstr "Multiple venues (Multi-object):"
 
 #: inc/Admin/Pages/HelpPage.php:116
-msgid "Husk at dersom du tillater leie av flere lokaler samtidig (f.eks. \"Leie hele bygget\"), MÅ du opprette egne prisregler som gjelder for akkurat denne kombinasjonen av lokaler. Hvis ikke vil ikke systemet vite hva kombinasjonen koster."
+msgid ""
+"Husk at dersom du tillater leie av flere lokaler samtidig (f.eks. \"Leie "
+"hele bygget\"), MÅ du opprette egne prisregler som gjelder for akkurat denne "
+"kombinasjonen av lokaler. Hvis ikke vil ikke systemet vite hva kombinasjonen "
+"koster."
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:123
 msgid "Kombinasjon av flere lokaler (Multi-object)"
-msgstr ""
+msgstr "Combining multiple venues (Multi-object)"
 
 #: inc/Admin/Pages/HelpPage.php:125
-msgid "Du kan tillate at brukere booker flere lokaler i samme slengen ved å sette inn en shortcode med flere ID-er:"
+msgid ""
+"Du kan tillate at brukere booker flere lokaler i samme slengen ved å sette "
+"inn en shortcode med flere ID-er:"
 msgstr ""
+"You can allow users to book multiple venues at once by inserting a shortcode "
+"with multiple IDs:"
 
 #: inc/Admin/Pages/HelpPage.php:127
 msgid "Viktige forutsetninger (Implikasjoner i oppsettet):"
-msgstr ""
+msgstr "Important prerequisites (Implications for setup):"
 
 #: inc/Admin/Pages/HelpPage.php:129
-msgid "Tidsluken du ønsker å tilby MÅ ha krysset av for \"Tillat delt booking (Shared booking)\". Kun da kan den gjelde over flere uavhengige lokaler samtidig."
+msgid ""
+"Tidsluken du ønsker å tilby MÅ ha krysset av for \"Tillat delt booking "
+"(Shared booking)\". Kun da kan den gjelde over flere uavhengige lokaler "
+"samtidig."
 msgstr ""
 
 #: inc/Admin/Pages/HelpPage.php:130
-msgid "Du må som nevnt over ha opprettet en egen \"Prisregel\" i systemet der BEGGE lokalene er krysset av, slik at systemet vet totalprisen for kombinasjonen."
+msgid ""
+"Du må som nevnt over ha opprettet en egen \"Prisregel\" i systemet der BEGGE "
+"lokalene er krysset av, slik at systemet vet totalprisen for kombinasjonen."
 msgstr ""
 
-#: inc/Admin/Pages/ImportPage.php:32
-#: inc/Api/BookingActionsApi.php:33
-#: inc/Api/BookingActionsApi.php:38
-#: inc/Api/UserApi.php:32
+#: inc/Admin/Pages/ImportPage.php:32 inc/Api/BookingActionsApi.php:33
+#: inc/Api/BookingActionsApi.php:38 inc/Api/UserApi.php:32
 msgid "Ingen tilgang."
-msgstr ""
+msgstr "No access."
 
 #: inc/Admin/Pages/ImportPage.php:64
 msgid "Importresultat"
-msgstr ""
+msgstr "Import Result"
 
 #: inc/Admin/Pages/ImportPage.php:65
 #, php-format
 msgid "%d beboere ble vellykket importert/oppdatert."
-msgstr ""
+msgstr "%d residents were successfully imported/updated."
 
 #: inc/Admin/Pages/ImportPage.php:66
 #, php-format
 msgid "%d beboere ble merket som slettet (ikke lenger i importen)."
-msgstr ""
+msgstr "%d residents were marked as deleted (no longer in import)."
 
 #: inc/Admin/Pages/ImportPage.php:70
 msgid "Logger og feilmeldinger:"
-msgstr ""
+msgstr "Logs and error messages:"
 
 #: inc/Admin/Pages/ImportPage.php:94
 msgid "Velg Importmetode"
@@ -604,208 +647,224 @@ msgstr ""
 
 #: inc/Admin/Pages/ImportPage.php:110
 msgid "Start Import"
-msgstr ""
+msgstr "Start Import"
 
 #: inc/Admin/Pages/ImportPage.php:120
 msgid "Behandler import..."
-msgstr ""
+msgstr "Processing import..."
 
 #: inc/Admin/Pages/ImportPage.php:121
-msgid "Vennligst vent mens vi synkroniserer og oppdaterer beboerlisten. Dette kan ta noen sekunder."
+msgid ""
+"Vennligst vent mens vi synkroniserer og oppdaterer beboerlisten. Dette kan "
+"ta noen sekunder."
 msgstr ""
+"Please wait while we synchronize and update the resident list. This may take "
+"a few seconds."
 
 #: inc/Admin/Pages/ImportPage.php:122
 msgid "Lukk eller oppdater ikke dette vinduet"
-msgstr ""
+msgstr "Do not close or refresh this window"
 
 #: inc/Admin/Pages/ImportPage.php:220
 #, php-format
-msgid "WARNING: Administrator '%s' er ikke i import-listen, og slettes ikke automatisk."
+msgid ""
+"WARNING: Administrator '%s' er ikke i import-listen, og slettes ikke "
+"automatisk."
 msgstr ""
 
 #: inc/Admin/Pages/PricingPage.php:39
 msgid "Prisregel lagret."
-msgstr ""
+msgstr "Pricing rule saved."
 
 #: inc/Admin/Pages/PricingPage.php:41
 msgid "Prisregel oppdatert."
-msgstr ""
+msgstr "Pricing rule updated."
 
 #: inc/Admin/Pages/PricingPage.php:43
 msgid "Prisregel slettet."
-msgstr ""
+msgstr "Pricing rule deleted."
 
 #: inc/Admin/Pages/PricingPage.php:66
 msgid "Legg til ny prisregel"
-msgstr ""
+msgstr "Add New Pricing Rule"
 
 #: inc/Admin/Pages/PricingPage.php:69
 msgid "Rediger prisregel"
-msgstr ""
+msgstr "Edit Pricing Rule"
 
 #: inc/Admin/Pages/PricingPage.php:117
 msgid "Du må velge minst ett lokale."
-msgstr ""
+msgstr "You must select at least one venue."
 
-#: inc/Admin/Pages/PricingPage.php:207
-#: inc/Admin/Pages/PricingPage.php:325
+#: inc/Admin/Pages/PricingPage.php:207 inc/Admin/Pages/PricingPage.php:325
 msgid "Tidsluke"
-msgstr ""
+msgstr "Time Slot"
 
-#: inc/Admin/Pages/PricingPage.php:209
-#: inc/Admin/Pages/PricingPage.php:338
+#: inc/Admin/Pages/PricingPage.php:209 inc/Admin/Pages/PricingPage.php:338
 msgid "Prioritet"
-msgstr ""
+msgstr "Priority"
 
 #: inc/Admin/Pages/PricingPage.php:210
 msgid "Betingelser"
-msgstr ""
+msgstr "Conditions"
 
 #: inc/Admin/Pages/PricingPage.php:216
 msgid "Ingen prisregler funnet."
-msgstr ""
+msgstr "No pricing rules found."
 
 #: inc/Admin/Pages/PricingPage.php:237
 msgid "Helligdag"
-msgstr ""
+msgstr "Holiday"
 
 #: inc/Admin/Pages/PricingPage.php:312
 msgid "Navn på prisregel"
-msgstr ""
+msgstr "Pricing Rule Name"
 
 #: inc/Admin/Pages/PricingPage.php:313
 msgid "F.eks. Helgepris Festsalen"
-msgstr ""
+msgstr "E.g., Weekend Price Festsalen"
 
 #: inc/Admin/Pages/PricingPage.php:317
 msgid "Gjelder for følgende lokaler:"
-msgstr ""
+msgstr "Applies to the following venues:"
 
 #: inc/Admin/Pages/PricingPage.php:327
 msgid "Velg tidsluke..."
-msgstr ""
+msgstr "Select time slot..."
 
 #: inc/Admin/Pages/PricingPage.php:336
 msgid "Pris (kr)"
-msgstr ""
+msgstr "Price (NOK)"
 
 #: inc/Admin/Pages/PricingPage.php:341
-msgid "Høyere prioritet (f.eks. 100) overstyrer lavere (f.eks. 10). Bruk høy prioritet for spesielle datoer."
+msgid ""
+"Høyere prioritet (f.eks. 100) overstyrer lavere (f.eks. 10). Bruk høy "
+"prioritet for spesielle datoer."
 msgstr ""
+"Higher priority (e.g., 100) overrides lower (e.g., 10). Use high priority "
+"for special dates."
 
 #: inc/Admin/Pages/PricingPage.php:343
 msgid "Betingelser (Valgfritt)"
-msgstr ""
+msgstr "Conditions (Optional)"
 
 #: inc/Admin/Pages/PricingPage.php:346
 msgid "Ukedager"
-msgstr ""
+msgstr "Days of the week"
 
 #: inc/Admin/Pages/PricingPage.php:364
 msgid "Startdato (YYYY-MM-DD)"
-msgstr ""
+msgstr "Start Date (YYYY-MM-DD)"
 
 #: inc/Admin/Pages/PricingPage.php:366
 msgid "Sluttdato (YYYY-MM-DD)"
-msgstr ""
+msgstr "End Date (YYYY-MM-DD)"
 
 #: inc/Admin/Pages/PricingPage.php:371
 msgid "Gjelder kun helligdager"
-msgstr ""
+msgstr "Applies only to holidays"
 
 #: inc/Admin/Pages/PricingPage.php:375
 msgid "Lagre prisregel"
-msgstr ""
+msgstr "Save Pricing Rule"
 
 #: inc/Admin/Pages/SettingsPage.php:104
 msgid "Innstillinger lagret."
-msgstr ""
+msgstr "Settings saved."
 
 #: inc/Admin/Pages/SettingsPage.php:127
 msgid "Varslingskanaler"
-msgstr ""
+msgstr "Notification Channels"
 
 #: inc/Admin/Pages/SettingsPage.php:132
 msgid "SMS Sandbox / Utviklingsmodus (Ruter all SMS via E-post fallback)"
-msgstr ""
+msgstr "SMS Sandbox / Development Mode (Routes all SMS via Email fallback)"
 
 #: inc/Admin/Pages/SettingsPage.php:134
-msgid "Aktiver dette under utvikling eller testing for å rute all SMS-utsending til e-post-fallback, slik at du sparer API-kostnader."
+msgid ""
+"Aktiver dette under utvikling eller testing for å rute all SMS-utsending til "
+"e-post-fallback, slik at du sparer API-kostnader."
 msgstr ""
+"Enable this during development or testing to route all SMS sending to email "
+"fallback, saving API costs."
 
 #: inc/Admin/Pages/SettingsPage.php:138
 msgid "Kontoaktivering (Bruker)"
-msgstr ""
+msgstr "Account Activation (User)"
 
-#: inc/Admin/Pages/SettingsPage.php:140
-#: inc/Admin/Pages/SettingsPage.php:149
+#: inc/Admin/Pages/SettingsPage.php:140 inc/Admin/Pages/SettingsPage.php:149
 #: inc/Admin/Pages/SettingsPage.php:158
 #: inc/Service/Notification/EmailProvider.php:30
 msgid "Kun E-post"
-msgstr ""
+msgstr "Email Only"
 
-#: inc/Admin/Pages/SettingsPage.php:141
-#: inc/Admin/Pages/SettingsPage.php:150
+#: inc/Admin/Pages/SettingsPage.php:141 inc/Admin/Pages/SettingsPage.php:150
 #: inc/Admin/Pages/SettingsPage.php:159
 msgid "SMS (med e-post fallback)"
-msgstr ""
+msgstr "SMS (with email fallback)"
 
 #: inc/Admin/Pages/SettingsPage.php:143
 msgid "Hvordan engangskoder for kontoaktivering skal sendes til beboere."
-msgstr ""
+msgstr "How one-time codes for account activation should be sent to residents."
 
 #: inc/Admin/Pages/SettingsPage.php:147
 msgid "Bookingbekreftelse (Kunde)"
-msgstr ""
+msgstr "Booking Confirmation (Customer)"
 
 #: inc/Admin/Pages/SettingsPage.php:152
 msgid "Mottakere av bookingforespørsler vil motta bekreftelse via valgt kanal."
 msgstr ""
+"Recipients of booking requests will receive confirmation via the selected "
+"channel."
 
 #: inc/Admin/Pages/SettingsPage.php:156
 msgid "Varsel om ny booking (Admin)"
-msgstr ""
+msgstr "New Booking Notification (Admin)"
 
 #: inc/Admin/Pages/SettingsPage.php:161
 msgid "Hvordan bookingansvarlige varsles når en ny forespørsel sendes inn."
-msgstr ""
+msgstr "How booking managers are notified when a new request is submitted."
 
 #: inc/Admin/Pages/SettingsPage.php:165
 msgid "Varslingstilbyder (Transport)"
-msgstr ""
+msgstr "Notification Provider (Transport)"
 
 #: inc/Admin/Pages/SettingsPage.php:166
-msgid "Velg hvilken leverandør som skal utføre transporten når SMS-kanalen er i bruk."
+msgid ""
+"Velg hvilken leverandør som skal utføre transporten når SMS-kanalen er i "
+"bruk."
 msgstr ""
+"Select which provider should handle the transport when the SMS channel is in "
+"use."
 
 #: inc/Admin/Pages/SettingsPage.php:174
 msgid "Konfigurert"
-msgstr ""
+msgstr "Configured"
 
 #: inc/Admin/Pages/SettingsPage.php:174
 msgid "Mangler oppsett"
-msgstr ""
+msgstr "Missing Setup"
 
 #: inc/Admin/Pages/SettingsPage.php:194
 #, php-format
 msgid "Innstillinger for %s"
-msgstr ""
+msgstr "Settings for %s"
 
 #: inc/Admin/Pages/SettingsPage.php:198
 msgid "Ingen innstillinger påkrevet for denne tilbyderen."
-msgstr ""
+msgstr "No settings required for this provider."
 
 #: inc/Admin/Pages/SettingsPage.php:245
 msgid "Dørkode Innstillinger"
-msgstr ""
+msgstr "Door Code Settings"
 
 #: inc/Admin/Pages/SettingsPage.php:248
 msgid "Vis dørkode x timer før booking start"
-msgstr ""
+msgstr "Show door code x hours before booking start"
 
 #: inc/Admin/Pages/SettingsPage.php:253
 msgid "Vis dørkode y timer etter booking slutt"
-msgstr ""
+msgstr "Show door code y hours after booking end"
 
 #: inc/Admin/Pages/SettingsPage.php:259
 msgid "Booking og Vilkår"
@@ -828,454 +887,464 @@ msgid "Behold data ved avinstallering"
 msgstr ""
 
 #: inc/Admin/Pages/SettingsPage.php:274
-msgid "Hvis dette ikke er krysset av, vil all data (tabeller, innstillinger og brukermeta) knyttet til Snippen Booking bli slettet når pluginen slettes fra WordPress."
+msgid ""
+"Hvis dette ikke er krysset av, vil all data (tabeller, innstillinger og "
+"brukermeta) knyttet til Snippen Booking bli slettet når pluginen slettes fra "
+"WordPress."
 msgstr ""
 
 #: inc/Admin/Pages/SettingsPage.php:279
 msgid "Lagre innstillinger"
-msgstr ""
+msgstr "Save Settings"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:26
 msgid "Tidsluke lagret."
-msgstr ""
+msgstr "Time slot saved."
 
 #: inc/Admin/Pages/TimeSlotsPage.php:28
 msgid "Tidsluke oppdatert."
-msgstr ""
+msgstr "Time slot updated."
 
 #: inc/Admin/Pages/TimeSlotsPage.php:30
 msgid "Tidsluke slettet."
-msgstr ""
+msgstr "Time slot deleted."
 
 #: inc/Admin/Pages/TimeSlotsPage.php:53
 msgid "Legg til ny tidsluke"
-msgstr ""
+msgstr "Add New Time Slot"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:56
 msgid "Rediger tidsluke"
-msgstr ""
+msgstr "Edit Time Slot"
 
-#: inc/Admin/Pages/TimeSlotsPage.php:154
-#: inc/Plugin.php:257
+#: inc/Admin/Pages/TimeSlotsPage.php:154 inc/Plugin.php:257
 msgid "Tid"
-msgstr ""
+msgstr "Time"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:155
 msgid "Vask (t)"
-msgstr ""
+msgstr "Cleaning (h)"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:156
 msgid "Felles?"
-msgstr ""
+msgstr "Shared?"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:162
 msgid "Ingen tidsluker funnet."
-msgstr ""
+msgstr "No time slots found."
 
 #: inc/Admin/Pages/TimeSlotsPage.php:201
 msgid "Navn på tidsluke"
-msgstr ""
+msgstr "Time Slot Name"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:202
 msgid "F.eks. Hele dagen"
-msgstr ""
+msgstr "E.g., All day"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:206
 msgid "Starttid (HH:MM)"
-msgstr ""
+msgstr "Start Time (HH:MM)"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:208
 msgid "Sluttid (HH:MM)"
-msgstr ""
+msgstr "End Time (HH:MM)"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:213
 msgid "Vasketid (timer)"
-msgstr ""
+msgstr "Cleaning time (hours)"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:215
 msgid "Antall timer rommet er utilgjengelig etter sluttid."
-msgstr ""
+msgstr "Number of hours the room is unavailable after the end time."
 
 #: inc/Admin/Pages/TimeSlotsPage.php:219
 msgid "Tillat fellesbooking (Hele området)"
-msgstr ""
+msgstr "Allow shared booking (Entire area)"
 
 #: inc/Admin/Pages/TimeSlotsPage.php:223
 msgid "Lagre tidsluke"
-msgstr ""
+msgstr "Save Time Slot"
 
 #: inc/Admin/Pages/UserBookingsPage.php:101
 msgid "Du har ingen bookinger."
-msgstr ""
+msgstr "You have no bookings."
 
-#: inc/Admin/Pages/UserBookingsPage.php:177
-#: inc/Assets/AssetLoader.php:59
-#: inc/Plugin.php:250
-#: inc/Shortcode/BookingListShortcode.php:194
+#: inc/Admin/Pages/UserBookingsPage.php:177 inc/Assets/AssetLoader.php:59
+#: inc/Plugin.php:250 inc/Shortcode/BookingListShortcode.php:194
 msgid "Ikke satt"
-msgstr ""
+msgstr "Not set"
 
-#: inc/Admin/Pages/UserBookingsPage.php:179
-#: inc/Plugin.php:252
+#: inc/Admin/Pages/UserBookingsPage.php:179 inc/Plugin.php:252
 #: inc/Shortcode/BookingListShortcode.php:196
 msgid "<Koden er ikke tilgjengelig før nærmere booking start>"
-msgstr ""
+msgstr "<Code is not available until closer to booking start>"
 
 #: inc/Admin/Pages/UserBookingsPage.php:186
 #: inc/Service/Notification/NotificationManager.php:219
 #: inc/Shortcode/BookingListShortcode.php:240
 msgid "Beskrivelse:"
-msgstr ""
+msgstr "Description:"
 
 #: inc/Admin/Pages/UserBookingsPage.php:188
 #: inc/Shortcode/BookingListShortcode.php:251
 msgid "Dørkode:"
-msgstr ""
+msgstr "Door Code:"
 
-#: inc/Admin/SetupWizardPage.php:20
-#: inc/Admin/SetupWizardPage.php:21
+#: inc/Admin/SetupWizardPage.php:20 inc/Admin/SetupWizardPage.php:21
 msgid "Setup Wizard"
-msgstr ""
+msgstr "Setup Wizard"
 
 #: inc/Admin/SetupWizardPage.php:44
 msgid "Setup wizard skipped"
-msgstr ""
+msgstr "Setup wizard skipped"
 
 #: inc/Admin/SetupWizardPage.php:53
 msgid "Snippen Booking Setup Wizard"
-msgstr ""
+msgstr "Snippen Booking Setup Wizard"
 
 #: inc/Admin/SetupWizardPage.php:64
 msgid "Setup Already Completed"
-msgstr ""
+msgstr "Setup Already Completed"
 
 #: inc/Admin/SetupWizardPage.php:65
-msgid "Your plugin is already configured with booking objects, time slots, and pricing. You can re-run the wizard if you need to recreate the starter setup."
+msgid ""
+"Your plugin is already configured with booking objects, time slots, and "
+"pricing. You can re-run the wizard if you need to recreate the starter setup."
 msgstr ""
+"Your plugin is already configured with booking objects, time slots, and "
+"pricing. You can re-run the wizard if you need to recreate the starter setup."
 
 #: inc/Admin/SetupWizardPage.php:70
 msgid "This will reset the wizard. Are you sure?"
-msgstr ""
+msgstr "This will reset the wizard. Are you sure?"
 
 #: inc/Admin/SetupWizardPage.php:71
 msgid "Re-run Setup Wizard"
-msgstr ""
+msgstr "Re-run Setup Wizard"
 
 #: inc/Admin/SetupWizardPage.php:78
 msgid "Setup Completed"
-msgstr ""
+msgstr "Setup Completed"
 
 #: inc/Admin/SetupWizardPage.php:79
-msgid "Your plugin already has booking configuration. You can manage it in the admin settings."
+msgid ""
+"Your plugin already has booking configuration. You can manage it in the "
+"admin settings."
 msgstr ""
+"Your plugin already has booking configuration. You can manage it in the "
+"admin settings."
 
 #: inc/Admin/SetupWizardPage.php:84
 msgid "Welcome to Snippen Booking"
-msgstr ""
+msgstr "Welcome to Snippen Booking"
 
 #: inc/Admin/SetupWizardPage.php:85
-msgid "This setup wizard will help you configure the plugin with a starter setup including booking objects, time slots, and pricing."
+msgid ""
+"This setup wizard will help you configure the plugin with a starter setup "
+"including booking objects, time slots, and pricing."
 msgstr ""
+"This setup wizard will help you configure the plugin with a starter setup "
+"including booking objects, time slots, and pricing."
 
 #: inc/Admin/SetupWizardPage.php:87
 msgid "What you can do:"
-msgstr ""
+msgstr "What you can do:"
 
 #: inc/Admin/SetupWizardPage.php:89
 msgid "Create booking objects (e.g., rooms, venues)"
-msgstr ""
+msgstr "Create booking objects (e.g., rooms, venues)"
 
 #: inc/Admin/SetupWizardPage.php:90
 msgid "Set up time slots for availability"
-msgstr ""
+msgstr "Set up time slots for availability"
 
 #: inc/Admin/SetupWizardPage.php:91
 msgid "Configure pricing models"
-msgstr ""
+msgstr "Configure pricing models"
 
 #: inc/Admin/SetupWizardPage.php:94
 msgid "You can also skip this wizard and configure everything manually later."
-msgstr ""
+msgstr "You can also skip this wizard and configure everything manually later."
 
 #: inc/Admin/SetupWizardPage.php:101
 msgid "Create Starter Setup"
-msgstr ""
+msgstr "Create Starter Setup"
 
 #: inc/Admin/SetupWizardPage.php:105
 msgid "Skip for Now"
-msgstr ""
+msgstr "Skip for Now"
 
 #: inc/Admin/SetupWizardPage.php:114
 msgid "About Starter Setup"
-msgstr ""
+msgstr "About Starter Setup"
 
 #: inc/Admin/SetupWizardPage.php:115
 msgid "The starter setup includes:"
-msgstr ""
+msgstr "The starter setup includes:"
 
 #: inc/Admin/SetupWizardPage.php:117
 msgid "2 sample booking objects: Festsalen and Peisestuen"
-msgstr ""
+msgstr "2 sample booking objects: Festsalen and Peisestuen"
 
 #: inc/Admin/SetupWizardPage.php:118
 msgid "3 time slots: Hele dagen, Formiddag, Ettermiddag"
-msgstr ""
+msgstr "3 time slots: All day, Morning, Afternoon"
 
 #: inc/Admin/SetupWizardPage.php:119
 msgid "Pricing for weekdays, weekends, and holidays"
-msgstr ""
+msgstr "Pricing for weekdays, weekends, and holidays"
 
 #: inc/Admin/SetupWizardPage.php:121
 msgid "You can edit or delete these entries later from the plugin settings."
-msgstr ""
+msgstr "You can edit or delete these entries later from the plugin settings."
 
 #: inc/Admin/UserProfile.php:51
 msgid "Snippen Booking Informasjon"
-msgstr ""
+msgstr "Snippen Booking Information"
 
 #: inc/Admin/UserProfile.php:54
 msgid "Booking administrator"
-msgstr ""
+msgstr "Booking administrator"
 
 #: inc/Admin/UserProfile.php:58
 msgid "Can manage bookings and receive booking notifications."
-msgstr ""
+msgstr "Can manage bookings and receive booking notifications."
 
 #: inc/Admin/UserProfile.php:63
 #: inc/Shortcode/AccountConfirmationShortcode.php:72
 msgid "Telefonnummer"
-msgstr ""
+msgstr "Phone number"
 
 #: inc/Admin/UserProfile.php:66
-msgid "Bruk E.164-format (f.eks. +4799887766). Dette nummeret brukes i bookingskjemaet og kan kun endres av administrator."
+msgid ""
+"Bruk E.164-format (f.eks. +4799887766). Dette nummeret brukes i "
+"bookingskjemaet og kan kun endres av administrator."
 msgstr ""
+"Use E.164 format (e.g., +4799887766). This number is used in the booking "
+"form and can only be changed by the administrator."
 
 #: inc/Admin/UserProfile.php:70
 msgid "Kontostatus"
-msgstr ""
+msgstr "Account Status"
 
 #: inc/Admin/UserProfile.php:78
 msgid "Ikke bekreftet"
-msgstr ""
+msgstr "Not confirmed"
 
 #: inc/Admin/UserProfile.php:80
 msgid "Marker som bekreftet manuelt"
-msgstr ""
+msgstr "Mark as confirmed manually"
 
 #: inc/Admin/UserProfile.php:86
 msgid "Slettet beboer"
-msgstr ""
+msgstr "Deleted resident"
 
 #: inc/Admin/UserProfile.php:90
 msgid "Marker som slettet (kan ikke logge inn eller booke)"
-msgstr ""
+msgstr "Mark as deleted (cannot log in or book)"
 
 #: inc/Admin/UserProfile.php:116
 msgid "Ugyldig telefonnummer. Må være et gyldig norsk nummer."
-msgstr ""
+msgstr "Invalid phone number. Must be a valid Norwegian number."
 
 #: inc/Admin/UserProfile.php:118
 msgid "Dette telefonnummeret er allerede i bruk av en annen bruker."
-msgstr ""
+msgstr "This phone number is already in use by another user."
 
 #: inc/Admin/UserProfile.php:199
 msgid "Slettede beboere"
-msgstr ""
+msgstr "Deleted residents"
 
 #: inc/Api/AvailabilityApi.php:49
 msgid "Manglende påkrevde parametere"
-msgstr ""
+msgstr "Missing required parameters"
 
 #: inc/Api/BookingActionsApi.php:43
 msgid "Ugyldig forespørsel."
-msgstr ""
+msgstr "Invalid request."
 
 #: inc/Api/BookingActionsApi.php:61
 msgid "Status oppdatert."
-msgstr ""
+msgstr "Status updated."
 
 #: inc/Api/BookingActionsApi.php:67
 msgid "Kunne ikke oppdatere status."
-msgstr ""
+msgstr "Could not update status."
 
 #: inc/Api/BookingApi.php:30
 msgid "Security check failed"
-msgstr ""
+msgstr "Security check failed"
 
 #: inc/Api/BookingApi.php:34
 msgid "Du må være innlogget for å booke."
-msgstr ""
+msgstr "You must be logged in to book."
 
-#: inc/Api/BookingApi.php:57
-#: inc/Api/UserApi.php:133
+#: inc/Api/BookingApi.php:57 inc/Api/UserApi.php:133
 msgid "Mangler nødvendige felt."
-msgstr ""
+msgstr "Missing required fields."
 
 #: inc/Api/BookingApi.php:64
+#, fuzzy
 msgid "Du må akseptere vilkårene for å kunne booke."
-msgstr ""
+msgstr "You must be logged in to book."
 
 #: inc/Api/BookingApi.php:85
 msgid "En eller flere tidsluker er ikke lenger tilgjengelig."
-msgstr ""
+msgstr "One or more time slots are no longer available."
 
 #: inc/Api/BookingApi.php:105
 msgid "Ugyldig bruker."
-msgstr ""
+msgstr "Invalid user."
 
 #: inc/Api/BookingApi.php:109
 msgid "Kontoen din er slettet eller deaktivert. Kontakt administrator."
-msgstr ""
+msgstr "Your account is deleted or deactivated. Contact administrator."
 
 #: inc/Api/BookingApi.php:116
-msgid "Brukeren mangler telefonnummer på sin profil. Vennligst kontakt administrator."
+msgid ""
+"Brukeren mangler telefonnummer på sin profil. Vennligst kontakt "
+"administrator."
 msgstr ""
+"The user is missing a phone number on their profile. Please contact the "
+"administrator."
 
 #: inc/Api/BookingApi.php:134
 msgid "Denne tidsluken tillater ikke booking av flere lokaler samtidig."
 msgstr ""
+"This time slot does not allow booking multiple venues at the same time."
 
 #: inc/Api/BookingApi.php:167
 msgid "Kunne ikke lagre booking. Vennligst prøv igjen."
-msgstr ""
+msgstr "Could not save booking. Please try again."
 
 #: inc/Api/BookingApi.php:193
 msgid "Bookingforespørsel sendt! Vi kontakter deg snart."
-msgstr ""
+msgstr "Booking request sent! We will contact you soon."
 
 #: inc/Api/BookingApi.php:199
 msgid "Kunne ikke lagre alle bookinger. Vennligst prøv igjen."
-msgstr ""
+msgstr "Could not save all bookings. Please try again."
 
 #: inc/Api/UserApi.php:71
 msgid "Telefonnummer mangler."
-msgstr ""
+msgstr "Phone number is missing."
 
 #: inc/Api/UserApi.php:77
 msgid "Ugyldig telefonnummer. Kun norske nummer er støttet."
-msgstr ""
+msgstr "Invalid phone number. Only Norwegian numbers are supported."
 
 #: inc/Api/UserApi.php:90
 msgid "Fant ingen beboer med dette telefonnummeret. Kontakt administrator."
-msgstr ""
+msgstr "Found no resident with this phone number. Contact administrator."
 
 #: inc/Api/UserApi.php:96
 msgid "Denne beboeren er slettet eller deaktivert. Kontakt administrator."
-msgstr ""
+msgstr "This resident is deleted or deactivated. Contact administrator."
 
 #: inc/Api/UserApi.php:102
 msgid "Kontoen er allerede bekreftet. Vennligst logg inn."
-msgstr ""
+msgstr "Account is already confirmed. Please log in."
 
 #: inc/Api/UserApi.php:109
 msgid "Bekreftelseskode er sendt på SMS."
-msgstr ""
+msgstr "Verification code sent via SMS."
 
 #: inc/Api/UserApi.php:109
 msgid "Bekreftelseskode er sendt på e-post."
-msgstr ""
+msgstr "Verification code sent via email."
 
 #: inc/Api/UserApi.php:116
 msgid "Kunne ikke sende SMS. Kontakt administrator."
-msgstr ""
+msgstr "Could not send SMS. Contact administrator."
 
 #: inc/Api/UserApi.php:116
 msgid "Kunne ikke sende e-post. Kontakt administrator."
-msgstr ""
+msgstr "Could not send email. Contact administrator."
 
 #: inc/Api/UserApi.php:139
 msgid "Ugyldig eller utløpt kode."
-msgstr ""
+msgstr "Invalid or expired code."
 
 #: inc/Api/UserApi.php:148
 msgid "Din konto er nå bekreftet! Du kan nå logge inn."
-msgstr ""
+msgstr "Your account is now confirmed! You can now log in."
 
 #: inc/Assets/AssetLoader.php:46
 msgid "Oppdaterer tilgjengelighet..."
-msgstr ""
+msgstr "Updating availability..."
 
 #: inc/Assets/AssetLoader.php:47
 msgid "Kunne ikke laste kalender."
-msgstr ""
+msgstr "Could not load calendar."
 
 #: inc/Assets/AssetLoader.php:48
 msgid "Blokkert av utvasktid"
-msgstr ""
+msgstr "Blocked by cleaning time"
 
 #: inc/Assets/AssetLoader.php:49
 msgid "Uke"
-msgstr ""
+msgstr "Week"
 
 #: inc/Assets/AssetLoader.php:50
 msgid "Sender forespørsel..."
-msgstr ""
+msgstr "Sending request..."
 
 #: inc/Assets/AssetLoader.php:51
 msgid "Noe gikk galt."
-msgstr ""
+msgstr "Something went wrong."
 
 #: inc/Assets/AssetLoader.php:52
 msgid "Tilkoblingsfeil."
-msgstr ""
+msgstr "Connection error."
 
 #: inc/Assets/AssetLoader.php:53
 msgid "Prøv igjen"
-msgstr ""
+msgstr "Try again"
 
 #: inc/Assets/AssetLoader.php:54
 msgid "Ingen beboere funnet."
-msgstr ""
+msgstr "No residents found."
 
 #: inc/Assets/AssetLoader.php:55
 msgid "Mangler tlf"
-msgstr ""
+msgstr "Missing phone"
 
 #: inc/Assets/AssetLoader.php:56
 msgid "Denne brukeren mangler telefonnummer og kan ikke booke."
-msgstr ""
-
-#: inc/Assets/AssetLoader.php:60
-msgid "Vilkår for leie"
-msgstr ""
+msgstr "This user is missing a phone number and cannot book."
 
 #: inc/Assets/AssetLoader.php:61
-msgid "Vennligst kryss av i boksen for å gå videre."
-msgstr ""
+msgid "Man"
+msgstr "Mon"
+
+#: inc/Assets/AssetLoader.php:62
+msgid "Tir"
+msgstr "Tue"
 
 #: inc/Assets/AssetLoader.php:63
-msgid "Man"
-msgstr ""
+msgid "Ons"
+msgstr "Wed"
 
 #: inc/Assets/AssetLoader.php:64
-msgid "Tir"
-msgstr ""
+msgid "Tor"
+msgstr "Thu"
 
 #: inc/Assets/AssetLoader.php:65
-msgid "Ons"
-msgstr ""
+msgid "Fre"
+msgstr "Fri"
 
 #: inc/Assets/AssetLoader.php:66
-msgid "Tor"
-msgstr ""
+msgid "Lør"
+msgstr "Sat"
 
 #: inc/Assets/AssetLoader.php:67
-msgid "Fre"
-msgstr ""
-
-#: inc/Assets/AssetLoader.php:68
-msgid "Lør"
-msgstr ""
-
-#: inc/Assets/AssetLoader.php:69
 msgid "Søn"
-msgstr ""
+msgstr "Sun"
 
-#: inc/Database/Install.php:140
-#: inc/Database/Migrations/Migration_1_12_0.php:22
+#: inc/Database/Install.php:140 inc/Database/Migrations/Migration_1_12_0.php:22
 #: inc/Database/Migrations/Migration_1_12_0.php:44
 msgid "Snippen Beboer"
-msgstr ""
+msgstr "Snippen Resident"
 
 #: inc/Helper/Security.php:35
 msgid "Security check failed. Please reload the page and try again."
@@ -1283,19 +1352,21 @@ msgstr ""
 
 #: inc/Import/Provider/SimpleTextResidentImportProvider.php:29
 msgid "Linje-for-linje (Navn, E-post, Telefon - Lookahead)"
-msgstr ""
+msgstr "Line-by-line (Name, Email, Phone - Lookahead)"
 
 #: inc/Import/Provider/SimpleTextResidentImportProvider.php:36
-msgid "3 påfølgende linjer per beboer (1: Navn, 2: E-post, 3: Telefon). Linjer som inneholder nøyaktig \"Reservert\" ignoreres."
+msgid ""
+"3 påfølgende linjer per beboer (1: Navn, 2: E-post, 3: Telefon). Linjer som "
+"inneholder nøyaktig \"Reservert\" ignoreres."
 msgstr ""
 
 #: inc/Import/Provider/SimpleTextResidentImportProvider.php:44
 msgid "Lim inn beboerdata"
-msgstr ""
+msgstr "Paste resident data"
 
 #: inc/Import/Provider/TsvResidentImportProvider.php:29
 msgid "Tabulator-separert (TSV / Tabell-kopi fra ABBL)"
-msgstr ""
+msgstr "Tab-separated (TSV / Table-copy from ABBL)"
 
 #: inc/Import/Provider/TsvResidentImportProvider.php:36
 msgid "Kopier tabell direkte fra Excel eller ABBL."
@@ -1307,196 +1378,204 @@ msgstr ""
 
 #: inc/Import/Provider/TsvResidentImportProvider.php:47
 msgid "name,email,phone"
-msgstr ""
+msgstr "name,email,phone"
 
 #: inc/Import/Provider/TsvResidentImportProvider.php:48
-msgid "Definer rekkefølgen på kolonnene i tabellen (kommaseparert). Støttede felter: name, email, phone, address, unit"
+msgid ""
+"Definer rekkefølgen på kolonnene i tabellen (kommaseparert). Støttede "
+"felter: name, email, phone, address, unit"
 msgstr ""
+"Define the column order in the table (comma-separated). Supported fields: "
+"name, email, phone, address, unit"
 
 #: inc/Import/Provider/TsvResidentImportProvider.php:52
 msgid "Lim inn TSV-data"
 msgstr ""
 
 #: inc/Plugin.php:103
-msgid "Kontoen din er slettet eller deaktivert. Vennligst kontakt administrator."
+msgid ""
+"Kontoen din er slettet eller deaktivert. Vennligst kontakt administrator."
 msgstr ""
+"Your account is deleted or deactivated. Please contact the administrator."
 
 #: inc/Plugin.php:186
 msgid "Booking ikke funnet"
-msgstr ""
+msgstr "Booking not found"
 
 #: inc/Plugin.php:187
 msgid "Forespurt booking ble ikke funnet eller har blitt slettet."
-msgstr ""
+msgstr "Requested booking was not found or has been deleted."
 
 #: inc/Plugin.php:195
 msgid "Logg inn kreves"
-msgstr ""
+msgstr "Login required"
 
 #: inc/Plugin.php:196
 msgid "Du må logge inn for å se denne bookingen."
-msgstr ""
+msgstr "You must log in to view this booking."
 
-#: inc/Plugin.php:197
-#: inc/Shortcode/BookingListShortcode.php:70
+#: inc/Plugin.php:197 inc/Shortcode/BookingListShortcode.php:70
 #: inc/Shortcode/BookingListShortcode.php:95
 #: inc/Shortcode/BookingShortcode.php:99
 msgid "Logg inn"
-msgstr ""
+msgstr "Log in"
 
 #: inc/Plugin.php:207
 msgid "Ingen tilgang"
-msgstr ""
+msgstr "No access"
 
 #: inc/Plugin.php:208
 msgid "Du har ikke tilgang til å se denne bookingen."
-msgstr ""
+msgstr "You do not have access to view this booking."
 
-#: inc/Plugin.php:241
-#: inc/Shortcode/BookingShortcode.php:187
+#: inc/Plugin.php:241 inc/Shortcode/BookingShortcode.php:187
 msgid "Bookingdetaljer"
-msgstr ""
+msgstr "Booking Details"
 
 #: inc/Plugin.php:255
 msgid "Lokale(r)"
-msgstr ""
+msgstr "Venue(s)"
 
 #: inc/Plugin.php:256
 msgid "Dato"
-msgstr ""
+msgstr "Date"
 
-#: inc/Plugin.php:259
-#: inc/Shortcode/BookingShortcode.php:141
+#: inc/Plugin.php:259 inc/Shortcode/BookingShortcode.php:141
 msgid "E-post"
-msgstr ""
+msgstr "Email"
 
-#: inc/Plugin.php:260
-#: inc/Shortcode/BookingShortcode.php:146
+#: inc/Plugin.php:260 inc/Shortcode/BookingShortcode.php:146
 msgid "Telefon"
-msgstr ""
+msgstr "Phone"
 
 #: inc/Plugin.php:268
 msgid "Booket den"
-msgstr ""
+msgstr "Booked on"
 
 #: inc/Service/AccountConfirmationService.php:90
 msgid "Passordet må være minst 8 tegn langt."
-msgstr ""
+msgstr "Password must be at least 8 characters long."
 
 #: inc/Service/Notification/EmailProvider.php:42
 msgid "Aktiver e-post via SMTP"
-msgstr ""
+msgstr "Enable email via SMTP"
 
 #: inc/Service/Notification/EmailProvider.php:49
 msgid "SMTP Vert (Host)"
-msgstr ""
+msgstr "SMTP Host"
 
 #: inc/Service/Notification/EmailProvider.php:56
 msgid "SMTP Port"
-msgstr ""
+msgstr "SMTP Port"
 
 #: inc/Service/Notification/EmailProvider.php:63
 msgid "SMTP Brukernavn"
-msgstr ""
+msgstr "SMTP Username"
 
 #: inc/Service/Notification/EmailProvider.php:70
 msgid "SMTP Passord"
-msgstr ""
+msgstr "SMTP Password"
 
 #: inc/Service/Notification/EmailProvider.php:77
 msgid "Kryptering (Encryption)"
-msgstr ""
+msgstr "Encryption"
 
 #: inc/Service/Notification/EmailProvider.php:81
 msgid "Ingen"
-msgstr ""
+msgstr "None"
 
 #: inc/Service/Notification/EmailProvider.php:82
 msgid "SSL"
-msgstr ""
+msgstr "SSL"
 
 #: inc/Service/Notification/EmailProvider.php:83
 msgid "TLS"
-msgstr ""
+msgstr "TLS"
 
 #: inc/Service/Notification/EmailProvider.php:89
 msgid "Avsender E-post (From Email)"
-msgstr ""
+msgstr "From Email"
 
 #: inc/Service/Notification/EmailProvider.php:96
 msgid "Avsender Navn (From Name)"
-msgstr ""
+msgstr "From Name"
 
 #: inc/Service/Notification/KeySmsProvider.php:30
 msgid "KeySMS"
-msgstr ""
+msgstr "KeySMS"
 
 #: inc/Service/Notification/KeySmsProvider.php:42
 msgid "KeySMS Brukernavn"
-msgstr ""
+msgstr "KeySMS Username"
 
 #: inc/Service/Notification/KeySmsProvider.php:49
 msgid "KeySMS API-nøkkel (Secret)"
-msgstr ""
+msgstr "KeySMS API Key (Secret)"
 
 #: inc/Service/Notification/KeySmsProvider.php:52
 msgid "Finn din API-nøkkel i kontrollpanelet hos keysms.no."
-msgstr ""
+msgstr "Find your API key in the control panel at keysms.no."
 
 #: inc/Service/Notification/KeySmsProvider.php:56
 msgid "Avsender"
-msgstr ""
+msgstr "Sender"
 
 #: inc/Service/Notification/KeySmsProvider.php:59
 msgid "Maks 11 tegn. Dette vises som avsender på mottakerens telefon."
 msgstr ""
+"Max 11 characters. This is displayed as the sender on the recipient's phone."
 
 #: inc/Service/Notification/NotificationManager.php:132
 #, php-format
-msgid "Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter."
+msgid ""
+"Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 "
+"minutter."
 msgstr ""
+"Your verification code for Snippen Booking is: %s. The code is valid for 15 "
+"minutes."
 
 #: inc/Service/Notification/NotificationManager.php:156
 msgid "Bekreftelseskode for Snippen Booking"
-msgstr ""
+msgstr "Verification Code for Snippen Booking"
 
 #: inc/Service/Notification/NotificationManager.php:212
 #, php-format
 msgid "Ny Bookingforespørsel - %s"
-msgstr ""
+msgstr "New Booking Request - %s"
 
 #: inc/Service/Notification/NotificationManager.php:213
 msgid "Ny bookingforespørsel mottatt:"
-msgstr ""
+msgstr "New booking request received:"
 
 #: inc/Service/Notification/NotificationManager.php:214
 msgid "Lokale:"
-msgstr ""
+msgstr "Venue:"
 
 #: inc/Service/Notification/NotificationManager.php:215
 msgid "Dato:"
-msgstr ""
+msgstr "Date:"
 
 #: inc/Service/Notification/NotificationManager.php:216
 msgid "Navn:"
-msgstr ""
+msgstr "Name:"
 
 #: inc/Service/Notification/NotificationManager.php:217
 msgid "Email:"
-msgstr ""
+msgstr "Email:"
 
 #: inc/Service/Notification/NotificationManager.php:218
 msgid "Telefon:"
-msgstr ""
+msgstr "Phone:"
 
 #: inc/Service/Notification/NotificationManager.php:232
 #, php-format
 msgid "Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s"
 msgstr ""
+"Thank you for your booking request for %1$s on %2$s. View details: %3$s"
 
 #: inc/Service/Notification/NotificationManager.php:256
 msgid "Bekreftelse på din bookingforespørsel"
-msgstr ""
+msgstr "Confirmation of your booking request"
 
 #: inc/Service/Notification/NotificationManager.php:258
 #, php-format
@@ -1505,188 +1584,200 @@ msgid ""
 "\n"
 "Du kan se detaljer om din booking her: %3$s"
 msgstr ""
+"Thank you for your booking request for %1$s on %2$s.\n"
+"\n"
+"You can view details about your booking here: %3$s"
 
 #. translators: %s: User phone number.
 #: inc/Service/PhoneAuthenticationService.php:75
 #, php-format
-msgid "<strong>Feil</strong>: Passordet du skrev inn for telefonnummeret %s er ikke riktig."
+msgid ""
+"<strong>Feil</strong>: Passordet du skrev inn for telefonnummeret %s er ikke "
+"riktig."
 msgstr ""
 
 #: inc/Service/PhoneAuthenticationService.php:77
+#, fuzzy
 msgid "Mistet passordet ditt?"
-msgstr ""
+msgstr "Your password"
 
 #: inc/Service/PhoneAuthenticationService.php:127
 #: inc/Shortcode/BookingListShortcode.php:78
 msgid "Brukernavn, e-post eller telefonnummer"
-msgstr ""
+msgstr "Username, email or phone number"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:43
 msgid "Din konto er nå bekreftet! Du blir videresendt til innlogging."
-msgstr ""
+msgstr "Your account is now confirmed! You will be redirected to login."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:44
 msgid "Vennligst skriv inn telefonnummer."
-msgstr ""
+msgstr "Please enter phone number."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:45
 msgid "Sender..."
-msgstr ""
+msgstr "Sending..."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:46
 msgid "Vennligst fyll ut alle felt."
-msgstr ""
+msgstr "Please fill out all fields."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:47
 msgid "Passordene er ikke like."
-msgstr ""
+msgstr "Passwords do not match."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:48
 msgid "Passordet må være minst 8 tegn."
-msgstr ""
+msgstr "Password must be at least 8 characters."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:49
 msgid "Verifiserer..."
-msgstr ""
+msgstr "Verifying..."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:50
 #: inc/Shortcode/AccountConfirmationShortcode.php:76
 msgid "Send kode"
-msgstr ""
+msgstr "Send Code"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:51
 #: inc/Shortcode/AccountConfirmationShortcode.php:110
 msgid "Bekreft og lagre passord"
-msgstr ""
+msgstr "Confirm and Save Password"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:61
 msgid "Bekreft din konto"
-msgstr ""
+msgstr "Confirm your account"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:65
 msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på SMS."
-msgstr ""
+msgstr "Enter your phone number to receive a verification code via SMS."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:67
 msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post."
-msgstr ""
+msgstr "Enter your phone number to receive a verification code via email."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:81
 msgid "Skriv inn kode"
-msgstr ""
+msgstr "Enter Code"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:85
 msgid "Vi har sendt en 6-sifret kode til ditt telefonnummer."
-msgstr ""
+msgstr "We have sent a 6-digit code to your phone number."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:87
 msgid "Vi har sendt en 6-sifret kode til din e-post."
-msgstr ""
+msgstr "We have sent a 6-digit code to your email."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:94
 msgid "Bekreftelseskode"
-msgstr ""
+msgstr "Verification Code"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:99
 msgid "Velg nytt passord"
-msgstr ""
+msgstr "Choose new password"
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:101
 msgid "Minst 8 tegn."
-msgstr ""
+msgstr "At least 8 characters."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:105
 msgid "Gjenta passord"
-msgstr ""
+msgstr "Repeat password"
 
 #: inc/Shortcode/BookingListShortcode.php:71
 msgid "Logg inn med din beboerkonto for å se dine bookinger."
-msgstr ""
+msgstr "Log in with your resident account to view your bookings."
 
 #: inc/Shortcode/BookingListShortcode.php:79
 #: inc/Shortcode/BookingShortcode.php:142
 msgid "navn@eksempel.no"
-msgstr ""
+msgstr "name@example.com"
 
 #: inc/Shortcode/BookingListShortcode.php:83
 msgid "Passord"
-msgstr ""
+msgstr "Password"
 
 #: inc/Shortcode/BookingListShortcode.php:84
 msgid "Ditt passord"
-msgstr ""
+msgstr "Your password"
 
 #: inc/Shortcode/BookingListShortcode.php:90
 msgid "Husk meg"
-msgstr ""
+msgstr "Remember me"
 
 #: inc/Shortcode/BookingListShortcode.php:148
 msgid "Du har ingen registrerte bookinger."
-msgstr ""
+msgstr "You have no registered bookings."
 
 #: inc/Shortcode/BookingListShortcode.php:246
 msgid "Pris:"
-msgstr ""
+msgstr "Price:"
 
 #: inc/Shortcode/BookingListShortcode.php:267
 #: inc/Shortcode/BookingListShortcode.php:268
 msgid "Avbryt booking"
-msgstr ""
+msgstr "Cancel booking"
 
 #: inc/Shortcode/BookingShortcode.php:41
 msgid "Ugyldig objekt-ID."
-msgstr ""
+msgstr "Invalid object ID."
 
 #: inc/Shortcode/BookingShortcode.php:49
 msgid "Booking-objekt(er) ikke funnet."
-msgstr ""
+msgstr "Booking object(s) not found."
 
 #: inc/Shortcode/BookingShortcode.php:88
 msgid "Mer info &rarr;"
-msgstr ""
+msgstr "More info &rarr;"
 
 #: inc/Shortcode/BookingShortcode.php:98
-msgid "Du må være beboer og innlogget for å kunne booke. Kalenderen under viser kun tilgjengelighet."
+msgid ""
+"Du må være beboer og innlogget for å kunne booke. Kalenderen under viser kun "
+"tilgjengelighet."
 msgstr ""
+"You must be a resident and logged in to book. The calendar below only shows "
+"availability."
 
 #: inc/Shortcode/BookingShortcode.php:104
 msgid "Laster kalender..."
-msgstr ""
+msgstr "Loading calendar..."
 
 #: inc/Shortcode/BookingShortcode.php:126
 msgid "Søk etter beboer (Admin)"
-msgstr ""
+msgstr "Search for resident (Admin)"
 
 #: inc/Shortcode/BookingShortcode.php:128
 msgid "Begynn å skrive navn eller e-post..."
-msgstr ""
+msgstr "Start typing name or email..."
 
 #: inc/Shortcode/BookingShortcode.php:131
 msgid "La feltet være tomt for å booke i ditt eget navn."
-msgstr ""
+msgstr "Leave the field empty to book in your own name."
 
 #: inc/Shortcode/BookingShortcode.php:136
 msgid "Navn på beboer"
-msgstr ""
+msgstr "Resident name"
 
 #: inc/Shortcode/BookingShortcode.php:137
 msgid "Fullt navn"
-msgstr ""
+msgstr "Full name"
 
 #: inc/Shortcode/BookingShortcode.php:149
 msgid "Mangler telefonnummer på din profil. Kontakt administrator."
-msgstr ""
+msgstr "Missing phone number on your profile. Contact administrator."
 
 #: inc/Shortcode/BookingShortcode.php:154
 msgid "Beskrivelse av arrangement (valgfritt)"
-msgstr ""
+msgstr "Event description (optional)"
 
 #: inc/Shortcode/BookingShortcode.php:155
 msgid "F.eks. Bursdag, møte, etc."
-msgstr ""
+msgstr "E.g., Birthday, meeting, etc."
 
 #: inc/Shortcode/BookingShortcode.php:166
-msgid "Jeg har lest og satt meg inn i reglene for leie av Snippen grendehus, og aksepterer"
+msgid ""
+"Jeg har lest og satt meg inn i reglene for leie av Snippen grendehus, og "
+"aksepterer"
 msgstr ""
 
 #: inc/Shortcode/BookingShortcode.php:167

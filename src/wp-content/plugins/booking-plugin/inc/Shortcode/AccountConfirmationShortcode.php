@@ -70,7 +70,7 @@ class AccountConfirmationShortcode {
 				</p>
 				<div class="snippen-form-group">
 					<label for="snippen_phone_confirm"><?php esc_html_e( 'Telefonnummer', 'snippen-booking' ); ?></label>
-					<input type="tel" id="snippen_phone_confirm" placeholder="+47XXXXXXXX" class="regular-text">
+					<input type="tel" id="snippen_phone_confirm" placeholder="+47XXXXXXXX" class="regular-text" autocomplete="tel">
 				</div>
 				<button type="button" id="snippen-request-code" class="snippen-btn snippen-btn-primary">
 					<?php esc_html_e( 'Send kode', 'snippen-booking' ); ?>
@@ -97,13 +97,13 @@ class AccountConfirmationShortcode {
 
 				<div class="snippen-form-group">
 					<label for="snippen_new_password"><?php esc_html_e( 'Velg nytt passord', 'snippen-booking' ); ?></label>
-					<input type="password" id="snippen_new_password" class="regular-text">
+					<input type="password" id="snippen_new_password" class="regular-text" autocomplete="new-password">
 					<p class="description"><?php esc_html_e( 'Minst 8 tegn.', 'snippen-booking' ); ?></p>
 				</div>
 
 				<div class="snippen-form-group">
 					<label for="snippen_confirm_password"><?php esc_html_e( 'Gjenta passord', 'snippen-booking' ); ?></label>
-					<input type="password" id="snippen_confirm_password" class="regular-text">
+					<input type="password" id="snippen_confirm_password" class="regular-text" autocomplete="new-password">
 				</div>
 
 				<button type="button" id="snippen-verify-code" class="snippen-btn snippen-btn-primary">

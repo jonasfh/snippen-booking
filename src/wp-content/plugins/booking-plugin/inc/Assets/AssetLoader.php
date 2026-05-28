@@ -57,6 +57,8 @@ class AssetLoader {
 					'confirmCancel'        => __( 'Vil du virkelig avbryte denne bookingen?', 'snippen-booking' ),
 					'errorTryAgain'        => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
 					'notSet'               => __( 'Ikke satt', 'snippen-booking' ),
+					'termsTitle'           => __( 'Vilkår for leie', 'snippen-booking' ),
+					'termsRequired'        => __( 'Vennligst kryss av i boksen for å gå videre.', 'snippen-booking' ),
 					'weekdays'             => array(
 						__( 'Man', 'snippen-booking' ),
 						__( 'Tir', 'snippen-booking' ),

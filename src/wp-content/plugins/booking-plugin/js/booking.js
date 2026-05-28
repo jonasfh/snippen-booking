@@ -670,6 +670,17 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // Handle form submit custom validity
+    var $acceptTerms = $('#accept_terms');
+    if ($acceptTerms.length) {
+        $acceptTerms[0].oninvalid = function(e) {
+            e.target.setCustomValidity(snippenBookingAjax.strings.termsRequired || 'Vennligst kryss av i boksen for å gå videre.');
+        };
+        $acceptTerms[0].oninput = function(e) {
+            e.target.setCustomValidity('');
+        };
+    }
+
     // Initialize
     init();
 });
