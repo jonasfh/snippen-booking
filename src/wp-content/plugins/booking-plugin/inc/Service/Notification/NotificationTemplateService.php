@@ -22,7 +22,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -95,6 +95,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Ny Bookingforespørsel - {{booking_objects}}', 'snippen-booking' ),
 					'body'    => __( "Ny bookingforespørsel mottatt:\n\nLokale: {{booking_objects}}\nDato: {{booking_date}}\nNavn: {{user_name}}\nEmail: {{user_email}}\nTelefon: {{user_phone}}\nBeskrivelse: {{booking_description}}\n\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen.", 'snippen-booking' ),
+				),
+			),
+			'password_reset' => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'For å tilbakestille passordet ditt, trykk på denne lenken: {{reset_link}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Tilbakestill passord', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nNoen har bedt om å tilbakestille passordet for din konto.\n\nHvis dette var en feiltakelse, kan du se bort fra denne e-posten.\n\nFor å tilbakestille passordet ditt, trykk på denne lenken:\n{{reset_link}}", 'snippen-booking' ),
 				),
 			),
 		);
@@ -195,6 +205,10 @@ class NotificationTemplateService {
 				'booking_objects'    => __( 'Booked venue names', 'snippen-booking' ),
 				'booking_date'       => __( 'Booking date', 'snippen-booking' ),
 				'booking_description' => __( 'Booking description/notes', 'snippen-booking' ),
+			),
+			'password_reset'       => array(
+				'user_name'          => __( 'Recipient user name', 'snippen-booking' ),
+				'reset_link'         => __( 'Password reset URL', 'snippen-booking' ),
 			),
 		);
 

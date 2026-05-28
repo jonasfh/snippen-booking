@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.17.0] - 2026-05-28
+### Added
+- Feature (#90): Implemented password reset via SMS. Users who log in using their phone number will now receive a password reset link via SMS instead of email.
+- Added `password_reset` event type to Notification Templates, allowing customization of both SMS and Email password reset messages.
+
+
 ## [1.16.0] - 2026-05-29
 ### Added
 - Feature (#84): Support SMS and Email channels with default templates
