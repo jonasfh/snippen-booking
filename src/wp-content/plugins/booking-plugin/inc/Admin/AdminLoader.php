@@ -123,6 +123,15 @@ class AdminLoader {
 			array( self::class, 'render_settings_page' )
 		);
 
+		$templates_hook = add_submenu_page(
+			'snippen-booking',
+			__( 'Varslingsmaler', 'snippen-booking' ),
+			__( 'Varslingsmaler', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-templates',
+			array( self::class, 'render_templates_page' )
+		);
+
 		// Setup Wizard
 		SetupWizardPage::register();
 
@@ -143,6 +152,9 @@ class AdminLoader {
 		}
 		if ( $pricing_hook ) {
 			add_action( 'load-' . $pricing_hook, array( self::class, 'handle_pricing_page_save' ) );
+		}
+		if ( $templates_hook ) {
+			add_action( 'load-' . $templates_hook, array( self::class, 'handle_templates_page_save' ) );
 		}
 	}
 
@@ -173,6 +185,17 @@ class AdminLoader {
 		if ( class_exists( 'SnippenBooking\Admin\Pages\PricingPage' ) ) {
 			self::$pricing_page_instance = new \SnippenBooking\Admin\Pages\PricingPage();
 			self::$pricing_page_instance->handle_request();
+		}
+	}
+
+	/**
+	 * Handle Templates Page save early (before headers)
+	 */
+	public static function handle_templates_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\NotificationTemplatesPage' ) ) {
+			// Instance should handle request early
+			$page = new \SnippenBooking\Admin\Pages\NotificationTemplatesPage();
+			$page->handle_request();
 		}
 	}
 
@@ -277,6 +300,18 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Innstillinger', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render Templates Page
+	 */
+	public static function render_templates_page() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\NotificationTemplatesPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\NotificationTemplatesPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'Varslingsmaler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
