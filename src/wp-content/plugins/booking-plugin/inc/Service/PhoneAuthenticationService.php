@@ -90,14 +90,16 @@ class PhoneAuthenticationService {
 	 * Retrieve user data by phone number for password reset
 	 *
 	 * @param \WP_User|false|null $user_data WP_User object or false.
-	 * @param string              $user_login The user login provided.
+	 * @param \WP_Error           $errors    WP_Error object containing any errors.
 	 * @return \WP_User|false|null
 	 */
-	public static function reset_password_by_phone( $user_data, $user_login ) {
+	public static function reset_password_by_phone( $user_data, $errors ) {
 		// If user already found, return
 		if ( $user_data ) {
 			return $user_data;
 		}
+
+		$user_login = isset( $_POST['user_login'] ) ? sanitize_text_field( wp_unslash( $_POST['user_login'] ) ) : '';
 
 		$normalized_phone = PhoneHelper::normalize_phone( $user_login );
 		if ( $normalized_phone ) {
