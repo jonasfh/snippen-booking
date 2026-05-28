@@ -59,21 +59,25 @@ class PhoneAuthenticationTest extends TestCase {
 	}
 
 	public function test_reset_password_by_phone_success() {
-		$user = PhoneAuthenticationService::reset_password_by_phone( false, '90011223' );
+		$_POST['user_login'] = '90011223';
+		$user = PhoneAuthenticationService::reset_password_by_phone( false, new \WP_Error() );
 		$this->assertInstanceOf( \WP_User::class, $user );
 		$this->assertEquals( $this->user_id, $user->ID );
+		unset( $_POST['user_login'] );
 	}
 
 	public function test_reset_password_by_phone_invalid_number() {
-		$result = PhoneAuthenticationService::reset_password_by_phone( false, '1234' );
-		
+		$_POST['user_login'] = '1234';
+		$result = PhoneAuthenticationService::reset_password_by_phone( false, new \WP_Error() );
 		$this->assertFalse( $result );
+		unset( $_POST['user_login'] );
 	}
 
 	public function test_reset_password_by_phone_not_found() {
-		$result = PhoneAuthenticationService::reset_password_by_phone( false, '99988777' );
-		
+		$_POST['user_login'] = '99988777';
+		$result = PhoneAuthenticationService::reset_password_by_phone( false, new \WP_Error() );
 		$this->assertFalse( $result );
+		unset( $_POST['user_login'] );
 	}
 
 	public function test_filter_password_reset_title() {
