@@ -76,12 +76,12 @@ class BookingListShortcode {
 				
 				<div class="form-group">
 					<label for="user_login"><?php esc_html_e( 'Brukernavn, e-post eller telefonnummer', 'snippen-booking' ); ?></label>
-					<input type="text" name="log" id="user_login" class="input" value="" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" />
+					<input type="text" name="log" id="user_login" class="input" value="" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" autocomplete="username" />
 				</div>
 				
 				<div class="form-group">
 					<label for="user_pass"><?php esc_html_e( 'Passord', 'snippen-booking' ); ?></label>
-					<input type="password" name="pwd" id="user_pass" class="input" value="" required placeholder="<?php esc_attr_e( 'Ditt passord', 'snippen-booking' ); ?>" />
+					<input type="password" name="pwd" id="user_pass" class="input" value="" required placeholder="<?php esc_attr_e( 'Ditt passord', 'snippen-booking' ); ?>" autocomplete="current-password" />
 				</div>
 				
 				<div class="form-row-remember">
