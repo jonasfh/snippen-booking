@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Snippen Booking 1.7.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
-"POT-Creation-Date: 2026-05-28T16:43:24+00:00\n"
+"POT-Creation-Date: 2026-05-28T16:57:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1786,8 +1786,12 @@ msgstr "E.g., Birthday, meeting, etc."
 msgid ""
 "Jeg har lest og satt meg inn i reglene for leie av Snippen grendehus, og "
 "aksepterer"
-msgstr ""
+msgstr "I have read and familiarized myself with the rules for renting Snippen community house, and accept"
 
 #: inc/Shortcode/BookingShortcode.php:167
 msgid "disse vilkårene"
-msgstr ""
+msgstr "these terms"
+
+#: inc/Shortcode/BookingShortcode.php:175
+msgid "Send bookingforespørsel"
+msgstr "Send booking request"

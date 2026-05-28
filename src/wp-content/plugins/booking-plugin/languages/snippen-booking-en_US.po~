@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Snippen Booking 1.7.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/booking-plugin\n"
-"POT-Creation-Date: 2026-05-28T16:40:52+00:00\n"
+"POT-Creation-Date: 2026-05-28T16:43:24+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1313,31 +1313,39 @@ msgstr "Missing phone"
 msgid "Denne brukeren mangler telefonnummer og kan ikke booke."
 msgstr "This user is missing a phone number and cannot book."
 
+#: inc/Assets/AssetLoader.php:60
+msgid "Vilkår for leie"
+msgstr ""
+
 #: inc/Assets/AssetLoader.php:61
+msgid "Vennligst kryss av i boksen for å gå videre."
+msgstr "Please check this box if you want to proceed."
+
+#: inc/Assets/AssetLoader.php:63
 msgid "Man"
 msgstr "Mon"
 
-#: inc/Assets/AssetLoader.php:62
+#: inc/Assets/AssetLoader.php:64
 msgid "Tir"
 msgstr "Tue"
 
-#: inc/Assets/AssetLoader.php:63
+#: inc/Assets/AssetLoader.php:65
 msgid "Ons"
 msgstr "Wed"
 
-#: inc/Assets/AssetLoader.php:64
+#: inc/Assets/AssetLoader.php:66
 msgid "Tor"
 msgstr "Thu"
 
-#: inc/Assets/AssetLoader.php:65
+#: inc/Assets/AssetLoader.php:67
 msgid "Fre"
 msgstr "Fri"
 
-#: inc/Assets/AssetLoader.php:66
+#: inc/Assets/AssetLoader.php:68
 msgid "Lør"
 msgstr "Sat"
 
-#: inc/Assets/AssetLoader.php:67
+#: inc/Assets/AssetLoader.php:69
 msgid "Søn"
 msgstr "Sun"
 
