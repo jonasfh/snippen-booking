@@ -374,7 +374,8 @@ jQuery(document).ready(function ($) {
             email: $('#email').val(),
             phone: $('#phone').val(),
             description: $('#description').val(),
-            user_id: $('#selected-user-id').val()
+            user_id: $('#selected-user-id').val(),
+            accept_terms: $('#accept_terms').length ? ($('#accept_terms').is(':checked') ? 1 : 0) : 1
         };
 
         $.ajax({

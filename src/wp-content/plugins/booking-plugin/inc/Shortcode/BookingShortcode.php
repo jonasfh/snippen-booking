@@ -172,7 +172,7 @@ class BookingShortcode {
 					</div>
 
 					<button type="submit" class="booking-submit" <?php echo ( $is_logged_in && empty( $user_phone ) && ! Capabilities::can_manage_bookings() ) ? 'disabled' : ''; ?>>
-						Send bookingforespørsel
+						<?php esc_html_e( 'Send bookingforespørsel', 'snippen-booking' ); ?>
 					</button>
 				</form>
 				<div id="booking-response" style="display: none;"></div>
