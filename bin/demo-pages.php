@@ -95,5 +95,22 @@ $new_page = array(
 wp_insert_post( $new_page );
 echo "Created: $page_title\n";
 
+// 4. Create Terms page
+$page_title = 'Booking Demo - Vilkår for leie';
+$page_content = "<h2>Vilkår for leie av Snippen grendehus</h2>\n\n<p>Dette er eksempelvilkår for demonstrasjonsformål.</p>\n\n<ul>\n<li>Leietaker er ansvarlig for rydding og vask etter bruk.</li>\n<li>Søppel skal kastes i riktig container.</li>\n<li>Arrangementet skal avsluttes innen kl. 23:00.</li>\n<li>Ved skade på inventar kan leietaker holdes økonomisk ansvarlig.</li>\n</ul>";
+
+$new_page = array(
+    'post_type'    => 'page',
+    'post_title'   => $page_title,
+    'post_content' => $page_content,
+    'post_status'  => 'publish',
+    'post_author'  => 1,
+);
+$terms_post_id = wp_insert_post( $new_page );
+if ( $terms_post_id && ! is_wp_error( $terms_post_id ) ) {
+    update_option( 'snippen_terms_url', get_permalink( $terms_post_id ) );
+}
+echo "Created: $page_title\n";
+
 echo "Success: Demo pages generated.\n";
 exit(0);

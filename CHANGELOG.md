@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.15.0] - 2026-05-28
+### Added
+- Feature (#88): Require acceptance of rental terms upon booking. Added a new setting for the terms URL and a mandatory checkbox in the booking form.
+
 ## [1.13.3] - 2026-05-25
 
 ### Fixed
