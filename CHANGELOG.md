@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.18.0] - 2026-05-31
+### Added
+- Feature (#93): Added advanced filtering and sorting for Pricing Rules (Prisregler) in the admin dashboard.
+- Built a reusable `admin-table-filter.js` component for easy extension to other admin tables.
+- Added Jest and JSDOM to the project for JavaScript unit testing, and added tests for the new filter component.
+
 ## [1.17.1] - 2026-05-28
 ### Fixed
 - **Password Reset**: Fixed an issue where the password reset link was not displayed on the login form for users logging in with their phone number.

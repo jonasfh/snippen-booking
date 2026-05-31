@@ -209,6 +209,7 @@ class AdminLoader {
 
 		wp_enqueue_style( 'snippen-booking-admin', plugins_url( 'css/admin.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );
 		wp_enqueue_script( 'snippen-booking-admin', plugins_url( 'js/admin.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), '1.1.0', true );
+		wp_enqueue_script( 'snippen-booking-admin-filter', plugins_url( 'js/admin-table-filter.js', dirname( __DIR__, 1 ) ), array(), '1.0.0', true );
 
 		wp_localize_script(
 			'snippen-booking-admin',
@@ -220,6 +221,13 @@ class AdminLoader {
 					'confirmDelete' => __( 'Er du sikker på at du vil slette dette?', 'snippen-booking' ),
 					'confirmCancel' => __( 'Vil du virkelig avbryte denne bookingen?', 'snippen-booking' ),
 					'error'         => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
+					'resetFilters'  => __( 'Rens alle filtre', 'snippen-booking' ),
+					'showing'       => __( 'Viser', 'snippen-booking' ),
+					'of'            => __( 'av', 'snippen-booking' ),
+					'rows'          => __( 'rader', 'snippen-booking' ),
+					'min'           => __( 'Min', 'snippen-booking' ),
+					'max'           => __( 'Maks', 'snippen-booking' ),
+					'all'           => __( 'Alle', 'snippen-booking' ),
 				),
 			)
 		);
