@@ -199,15 +199,15 @@ class PricingPage {
             ORDER BY p.priority DESC, p.name ASC"
 		);
 
-		echo '<div class="snippen-card">';
-		echo '<table class="snippen-list-table">';
+		echo '<div class="snippen-card" id="snippen-pricing-list">';
+		echo '<table class="snippen-list-table snippen-filterable-table" id="pricing-rules-table">';
 		echo '<thead><tr>';
-		echo '<th>' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Pris', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Betingelser', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="multiselect" data-sort-type="string">' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="multiselect" data-sort-type="string">' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Pris', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Betingelser', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';

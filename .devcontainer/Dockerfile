@@ -3,7 +3,8 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies and default PHP (8.3 on Ubuntu 24.04)
-RUN apt-get update && apt-get install -y \
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get update && apt-get install -y \
     curl \
     git \
     unzip \
@@ -24,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     apache2 \
     libapache2-mod-php \
     vim \
+    nodejs \
     && a2enmod rewrite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
