@@ -84,6 +84,9 @@ composer test:unit
 # Run only integration tests
 composer test:integration
 
+# Run JavaScript tests (Jest)
+npm run test:js
+
 # Code style check
 composer lint
 
