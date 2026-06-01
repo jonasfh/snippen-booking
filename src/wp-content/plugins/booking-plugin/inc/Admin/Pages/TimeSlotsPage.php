@@ -84,14 +84,14 @@ class TimeSlotsPage {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_time_slots';
 
-		$id                 = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name               = sanitize_text_field( $_POST['name'] );
-		$description        = sanitize_textarea_field( $_POST['description'] );
-		$start_time         = sanitize_text_field( $_POST['start_time'] );
-		$end_time           = sanitize_text_field( $_POST['end_time'] );
-		$cleanup_hours      = intval( $_POST['cleanup_hours'] );
-		$allow_multi_object = isset( $_POST['allow_multi_object'] ) ? 1 : 0;
-		$day_of_week        = isset( $_POST['days_of_week'] ) ? implode( ',', array_map( 'intval', $_POST['days_of_week'] ) ) : null;
+		$id            = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name          = sanitize_text_field( $_POST['name'] );
+		$description   = sanitize_textarea_field( $_POST['description'] );
+		$start_time    = sanitize_text_field( $_POST['start_time'] );
+		$end_time      = sanitize_text_field( $_POST['end_time'] );
+		$cleanup_hours = intval( $_POST['cleanup_hours'] );
+		$object_ids    = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
+		$day_of_week   = isset( $_POST['days_of_week'] ) ? implode( ',', array_map( 'intval', $_POST['days_of_week'] ) ) : null;
 		if ( $day_of_week === '' ) {
 			$day_of_week = null;
 		}
@@ -100,29 +100,48 @@ class TimeSlotsPage {
 		$is_holiday = isset( $_POST['is_holiday'] ) ? 1 : 0;
 
 		$data = array(
-			'name'               => $name,
-			'description'        => $description,
-			'start_time'         => $start_time,
-			'end_time'           => $end_time,
-			'cleanup_hours'      => $cleanup_hours,
-			'allow_multi_object' => $allow_multi_object,
-			'days_of_week'       => $day_of_week,
-			'date_start'         => $start_date,
-			'date_end'           => $end_date,
-			'is_holiday'         => $is_holiday,
-			'modified_at'        => current_time( 'mysql' ),
+			'name'          => $name,
+			'description'   => $description,
+			'start_time'    => $start_time,
+			'end_time'      => $end_time,
+			'cleanup_hours' => $cleanup_hours,
+			'days_of_week'  => $day_of_week,
+			'date_start'    => $start_date,
+			'date_end'      => $end_date,
+			'is_holiday'    => $is_holiday,
+			'modified_at'   => current_time( 'mysql' ),
 		);
 
 		if ( $id > 0 ) {
 			$wpdb->update( $table, $data, array( 'id' => $id ) );
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&action=edit&id=' . $id . '&message=updated' ) );
-			exit;
+			$slot_id      = $id;
+			$redirect_msg = 'updated';
 		} else {
 			$data['created_at'] = current_time( 'mysql' );
 			$wpdb->insert( $table, $data );
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&message=created' ) );
-			exit;
+			$slot_id      = $wpdb->insert_id;
+			$redirect_msg = 'created';
 		}
+
+		// Update booking objects junction
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+		$wpdb->query( $wpdb->prepare( "DELETE FROM $table_time_slot_objects WHERE time_slot_id = %d", $slot_id ) );
+		foreach ( $object_ids as $obj_id ) {
+			$wpdb->insert(
+				$table_time_slot_objects,
+				array(
+					'time_slot_id'      => $slot_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+		}
+
+		if ( $redirect_msg === 'updated' ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&action=edit&id=' . $id . '&message=updated' ) );
+		} else {
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-slots&message=created' ) );
+		}
+		exit;
 	}
 
 	/**
@@ -150,10 +169,13 @@ class TimeSlotsPage {
 		global $wpdb;
 		$table_slots = $wpdb->prefix . 'snippen_time_slots';
 
-		// Query slots
-		$query = "SELECT s.* 
+		// Query slots with object names grouped
+		$query = "SELECT s.*, GROUP_CONCAT(bo.name SEPARATOR ', ') as object_names 
                   FROM $table_slots s 
+                  LEFT JOIN {$wpdb->prefix}snippen_time_slot_booking_objects tso ON s.id = tso.time_slot_id
+                  LEFT JOIN {$wpdb->prefix}snippen_booking_objects bo ON tso.booking_object_id = bo.id
                   WHERE s.deleted_at IS NULL 
+                  GROUP BY s.id
                   ORDER BY s.start_time ASC";
 
 		$slots = $wpdb->get_results( $query );
@@ -162,9 +184,9 @@ class TimeSlotsPage {
 		echo '<table class="snippen-list-table snippen-filterable-table" id="slots-table">';
 		echo '<thead><tr>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Rom', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Tid', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Vask (t)', 'snippen-booking' ) . '</th>';
-		echo '<th data-filter-type="multiselect" data-sort-type="string">' . esc_html__( 'Felles?', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Betingelser', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
@@ -206,9 +228,9 @@ class TimeSlotsPage {
 
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $slot->name ) . '</a></strong></td>';
+				echo '<td>' . esc_html( $slot->object_names ?: '-' ) . '</td>';
 				echo '<td>' . esc_html( substr( $slot->start_time, 0, 5 ) . ' - ' . substr( $slot->end_time, 0, 5 ) ) . '</td>';
 				echo '<td>' . esc_html( $slot->cleanup_hours ) . '</td>';
-				echo '<td>' . ( $slot->allow_multi_object ? '<span class="dashicons dashicons-yes-alt" style="color:var(--success-color)">Ja</span>' : 'Nei' ) . '</td>';
 				echo '<td><small>' . esc_html( implode( ' | ', $conditions ) ?: '-' ) . '</small></td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
@@ -256,8 +278,22 @@ class TimeSlotsPage {
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
-		echo '<label><input type="checkbox" name="allow_multi_object" value="1" ' . checked( $slot ? $slot->allow_multi_object : 0, 1, false ) . '> ' . esc_html__( 'Tillat fellesbooking (Hele området)', 'snippen-booking' ) . '</label>';
-		echo '</div>';
+		echo '<label>' . esc_html__( 'Rom', 'snippen-booking' ) . '</label>';
+		echo '<div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">';
+
+		$objects          = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
+		$selected_objects = array();
+		if ( $id > 0 ) {
+			$selected_objects = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM {$wpdb->prefix}snippen_time_slot_booking_objects WHERE time_slot_id = %d", $id ) );
+		}
+
+		foreach ( $objects as $obj ) {
+			echo '<label style="font-weight:normal;">';
+			echo '<input type="checkbox" name="booking_objects[]" value="' . esc_attr( $obj->id ) . '" ' . checked( in_array( $obj->id, $selected_objects ), true, false ) . '> ';
+			echo esc_html( $obj->name );
+			echo '</label>';
+		}
+		echo '</div></div>';
 
 		echo '<hr><h3 style="margin-top:25px;">' . esc_html__( 'Betingelser (Valgfritt)', 'snippen-booking' ) . '</h3>';
 

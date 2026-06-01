@@ -18,70 +18,29 @@ class PricingService {
 	public function getPrice( $objectIds, $slotIds, $date = null ) {
 		global $wpdb;
 
-		if ( empty( $objectIds ) ) {
+		if ( empty( $slotIds ) ) {
 			return 0;
-		}
-		if ( ! $date ) {
-			$date = date( 'Y-m-d' );
 		}
 
 		if ( ! is_array( $slotIds ) ) {
 			$slotIds = array( $slotIds );
 		}
-		$slotIds = array_map( 'intval', $slotIds );
-
-		$table_prices        = $wpdb->prefix . 'snippen_prices';
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
-
-		$object_count   = count( $objectIds );
-		$obj_in_clause  = implode( ',', array_fill( 0, $object_count, '%d' ) );
+		$slotIds        = array_map( 'intval', $slotIds );
 		$slot_in_clause = implode( ',', array_fill( 0, count( $slotIds ), '%d' ) );
 
-		$params = array_merge( array( $object_count ), $slotIds, $objectIds, array( $object_count ) );
-
-		// Find prices that match EXACTLY or by NAME if multi-object
-		// First, get the names of the requested slots
-		$slot_names       = $wpdb->get_col( "SELECT name FROM {$wpdb->prefix}snippen_time_slots WHERE id IN (" . implode( ',', $slotIds ) . ')' );
-		$slot_name_clause = '';
-		if ( ! empty( $slot_names ) ) {
-			$name_placeholders = implode( ',', array_fill( 0, count( $slot_names ), '%s' ) );
-			$slot_name_clause  = "OR p.slot_id IN (SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE name IN ($name_placeholders))";
-			$params            = array_merge( array( $object_count ), $slotIds, $slot_names, $objectIds, array( $object_count ) );
-		}
+		$table_prices = $wpdb->prefix . 'snippen_prices';
 
 		$query = $wpdb->prepare(
 			"SELECT p.* 
              FROM $table_prices p
-             JOIN (
-                SELECT price_id 
-                FROM $table_price_objects 
-                GROUP BY price_id 
-                HAVING COUNT(*) = %d
-             ) count_check ON p.id = count_check.price_id
-             WHERE (p.slot_id IN ($slot_in_clause) $slot_name_clause)
-             AND p.id IN (
-                SELECT price_id 
-                FROM $table_price_objects 
-                WHERE booking_object_id IN ($obj_in_clause)
-                GROUP BY price_id 
-                HAVING COUNT(*) = %d
-             )",
-			...$params
+             WHERE p.slot_id IN ($slot_in_clause)",
+			...$slotIds
 		);
 
 		$prices = $wpdb->get_results( $query );
 
 		if ( empty( $prices ) ) {
-			if ( count( $objectIds ) > 1 ) {
-				$total_sum = 0;
-				foreach ( $objectIds as $obj_id ) {
-					$individual_price = $this->getPrice( array( $obj_id ), $slotIds, $date );
-					if ( $individual_price !== null ) {
-						$total_sum += $individual_price;
-					}
-				}
-				return $total_sum > 0 ? $total_sum : null;
-			}
+
 			return null;
 		}
 

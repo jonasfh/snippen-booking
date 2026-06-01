@@ -122,18 +122,11 @@ class BookingApi {
 		$first_slot_id = reset( $slots_to_book );
 		$slot_info     = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT name, allow_multi_object FROM $table_slots WHERE id = %d",
+				"SELECT name FROM $table_slots WHERE id = %d",
 				$first_slot_id
 			)
 		);
 		$slot_name     = $slot_info ? $slot_info->name : '';
-
-		// RESTRICTION: For multi-object bookings, only allow slots flagged as such
-		if ( count( $slots_to_book ) > 1 ) {
-			if ( ! $slot_info || ! $slot_info->allow_multi_object ) {
-				wp_send_json_error( array( 'message' => __( 'Denne tidsluken tillater ikke booking av flere lokaler samtidig.', 'snippen-booking' ) ) );
-			}
-		}
 
 		// Calculate price
 		$pricing_service = new PricingService();

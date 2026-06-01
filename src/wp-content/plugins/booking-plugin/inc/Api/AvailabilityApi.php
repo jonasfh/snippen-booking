@@ -58,23 +58,32 @@ class AvailabilityApi {
 		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 
-		// Get slots globally
-		$all_slots = $wpdb->get_results(
-			"SELECT id, name, description, start_time, end_time, cleanup_hours, allow_multi_object, days_of_week, is_holiday, date_start, date_end 
-             FROM $table_slots 
-             WHERE deleted_at IS NULL"
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+		$obj_count               = count( $object_ids );
+		$obj_in_clause           = implode( ',', array_fill( 0, $obj_count, '%d' ) );
+
+		// Get slots that are linked to EXACTLY the requested objects
+		$slots = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT s.id, s.name, s.description, s.start_time, s.end_time, s.cleanup_hours, s.days_of_week, s.is_holiday, s.date_start, s.date_end 
+                 FROM $table_slots s
+                 JOIN (
+                    SELECT time_slot_id 
+                    FROM $table_time_slot_objects 
+                    WHERE booking_object_id IN ($obj_in_clause)
+                    GROUP BY time_slot_id 
+                    HAVING COUNT(booking_object_id) = %d
+                 ) tso ON s.id = tso.time_slot_id
+                 WHERE s.deleted_at IS NULL
+                 AND s.id IN (
+                    SELECT time_slot_id
+                    FROM $table_time_slot_objects
+                    GROUP BY time_slot_id
+                    HAVING COUNT(booking_object_id) = %d
+                 )",
+				...array_merge( $object_ids, array( $obj_count, $obj_count ) )
+			)
 		);
-
-		$slots           = array();
-		$is_multi_object = count( $object_ids ) > 1;
-
-		foreach ( $all_slots as $slot ) {
-			// RESTRICTION: For multi-object bookings, only allow slots flagged as such
-			if ( $is_multi_object && ! (int) $slot->allow_multi_object ) {
-				continue;
-			}
-			$slots[] = $slot;
-		}
 
 		// Get all bookings for the range with slot details (for UI display)
 		$query_args            = array_merge( $object_ids, array( $start_date, $end_date ) );

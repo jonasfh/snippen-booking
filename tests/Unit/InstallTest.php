@@ -64,7 +64,7 @@ class InstallTest extends TestCase {
         $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_prices" );
         $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_bookings" );
         $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_bookings_booking_objects" );
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_price_booking_objects" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_time_slot_booking_objects" );
 
         // Call activate
         Install::activate();
