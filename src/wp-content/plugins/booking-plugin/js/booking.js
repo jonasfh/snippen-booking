@@ -198,7 +198,7 @@ jQuery(document).ready(function ($) {
                 var slotIds = String(slot.id).split(',').map(Number);
                 
                 // If the slot is not applicable for this day, don't render it at all
-                if (!dayApplicable.includes(slot.id)) {
+                if (!dayApplicable.includes(Number(slot.id))) {
                     return;
                 }
 

@@ -91,13 +91,10 @@ class TimeSlotsPage {
 		$end_time      = sanitize_text_field( $_POST['end_time'] );
 		$cleanup_hours = intval( $_POST['cleanup_hours'] );
 		$object_ids    = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
-		$day_of_week   = isset( $_POST['days_of_week'] ) ? implode( ',', array_map( 'intval', $_POST['days_of_week'] ) ) : null;
-		if ( $day_of_week === '' ) {
-			$day_of_week = null;
-		}
+		$days_of_week  = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
+		$days_of_week  = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
 		$start_date = ! empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
 		$end_date   = ! empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
-		$is_holiday = isset( $_POST['is_holiday'] ) ? 1 : 0;
 
 		$data = array(
 			'name'          => $name,
@@ -105,10 +102,9 @@ class TimeSlotsPage {
 			'start_time'    => $start_time,
 			'end_time'      => $end_time,
 			'cleanup_hours' => $cleanup_hours,
-			'days_of_week'  => $day_of_week,
+			'days_of_week'  => $days_of_week,
 			'date_start'    => $start_date,
 			'date_end'      => $end_date,
-			'is_holiday'    => $is_holiday,
 			'modified_at'   => current_time( 'mysql' ),
 		);
 
@@ -200,9 +196,6 @@ class TimeSlotsPage {
 				$delete_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-slots&action=delete&id=' . $slot->id ), 'delete_slot_' . $slot->id );
 
 				$conditions = array();
-				if ( $slot->is_holiday ) {
-					$conditions[] = __( 'Helligdag', 'snippen-booking' );
-				}
 				if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
 					$days          = array(
 						1 => 'Man',
@@ -212,6 +205,7 @@ class TimeSlotsPage {
 						5 => 'Fre',
 						6 => 'Lør',
 						0 => 'Søn',
+						7 => 'Helligdag',
 					);
 					$selected_days = explode( ',', $slot->days_of_week );
 					$day_labels    = array();
@@ -298,32 +292,31 @@ class TimeSlotsPage {
 		echo '<hr><h3 style="margin-top:25px;">' . esc_html__( 'Betingelser (Valgfritt)', 'snippen-booking' ) . '</h3>';
 
 		echo '<div class="snippen-form-group">';
-		echo '<label>' . esc_html__( 'Ukedager', 'snippen-booking' ) . '</label>';
-		echo '<div style="display:flex; gap:15px; margin-top:5px;">';
-		$days          = array(
-			1 => 'Man',
-			2 => 'Tir',
-			3 => 'Ons',
-			4 => 'Tor',
-			5 => 'Fre',
-			6 => 'Lør',
-			0 => 'Søn',
+		echo '<label>' . esc_html__( 'Gyldige dager', 'snippen-booking' ) . '</label>';
+		echo '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:5px;">';
+		$days = array(
+			'1' => __( 'Mandag', 'snippen-booking' ),
+			'2' => __( 'Tirsdag', 'snippen-booking' ),
+			'3' => __( 'Onsdag', 'snippen-booking' ),
+			'4' => __( 'Torsdag', 'snippen-booking' ),
+			'5' => __( 'Fredag', 'snippen-booking' ),
+			'6' => __( 'Lørdag', 'snippen-booking' ),
+			'0' => __( 'Søndag', 'snippen-booking' ),
+			'7' => __( 'Helligdag', 'snippen-booking' ),
 		);
 		$selected_days = $slot && $slot->days_of_week !== null ? explode( ',', $slot->days_of_week ) : array();
 		foreach ( $days as $val => $label ) {
 			echo '<label style="font-weight:normal;"><input type="checkbox" name="days_of_week[]" value="' . esc_attr( $val ) . '" ' . checked( in_array( (string) $val, $selected_days ), true, false ) . '> ' . esc_html( $label ) . '</label>';
 		}
-		echo '</div></div>';
+		echo '</div>';
+		echo '<p class="description">' . esc_html__( 'La alle stå tomme hvis tidsluken gjelder uansett ukedag.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
 		echo '<div><label for="start_date">' . esc_html__( 'Startdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';
 		echo '<input type="date" name="start_date" id="start_date" value="' . esc_attr( $slot ? $slot->date_start : '' ) . '"></div>';
 		echo '<div><label for="end_date">' . esc_html__( 'Sluttdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';
 		echo '<input type="date" name="end_date" id="end_date" value="' . esc_attr( $slot ? $slot->date_end : '' ) . '"></div>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group">';
-		echo '<label><input type="checkbox" name="is_holiday" value="1" ' . checked( $slot ? $slot->is_holiday : 0, 1, false ) . '> ' . esc_html__( 'Gjelder kun helligdager', 'snippen-booking' ) . '</label>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-actions">';

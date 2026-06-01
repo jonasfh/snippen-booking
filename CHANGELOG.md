@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.0] - 2026-06-01
+### Fixed
+- Fikset en feil i `js/booking.js` som gjorde at ingen tidsluker ble vist i kalenderen (feil type-sjekk for slot.id).
+- Lagt til `Migration_1_21_0` for å rette opp feil navn på tidsluker som ble med over fra forrige versjon.
+
+### Changed
+- Fjernet den separate "Gjelder kun helligdager"-bryteren i backend, og byttet dette ut med "Helligdag" som et av valgene i listen over ukedager (`days_of_week`). Dette tillater å merke tidsluker for både helg og helligdag, osv.
+
 ## [1.20.0] - 2026-06-01
 ### Added
 - Innførte koblingstabell `snippen_time_slot_booking_objects` for å koble tidsluker direkte til spesifikke booking-objekter (f.eks. "Festsalen" eller "Peisestuen").
