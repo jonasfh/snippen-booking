@@ -42,7 +42,6 @@ class Install {
             start_time TIME DEFAULT '00:00:00',
             end_time TIME DEFAULT '23:59:59',
             cleanup_hours INT DEFAULT 0,
-            allow_multi_object TINYINT(1) DEFAULT 0,
             days_of_week VARCHAR(20) DEFAULT NULL,
             is_holiday TINYINT(1) DEFAULT 0,
             date_start DATE DEFAULT NULL,
@@ -113,18 +112,18 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_prices );
 
-		// Price booking objects junction table
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
-		$sql_price_objects   = "CREATE TABLE $table_price_objects (
+		// Time slot booking objects junction table
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+		$sql_time_slot_objects   = "CREATE TABLE $table_time_slot_objects (
             id INT NOT NULL AUTO_INCREMENT,
-            price_id INT NOT NULL,
+            time_slot_id INT NOT NULL,
             booking_object_id INT NOT NULL,
             PRIMARY KEY  (id),
-            KEY price_id (price_id),
+            KEY time_slot_id (time_slot_id),
             KEY booking_object_id (booking_object_id),
-            UNIQUE KEY unique_price_object (price_id, booking_object_id)
+            UNIQUE KEY unique_time_slot_object (time_slot_id, booking_object_id)
         ) $charset_collate;";
-		dbDelta( $sql_price_objects );
+		dbDelta( $sql_time_slot_objects );
 
 		// Run migrations
 		MigrationManager::run();

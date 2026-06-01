@@ -43,9 +43,9 @@ class AvailabilityServiceTest extends TestCase {
         global $wpdb;
         $date = '2026-06-01'; // Monday
 
-        $slot_formiddag = $this->getSlotId('Formiddag (Hverdag)');
-        $slot_hele_dagen = $this->getSlotId('Hele dagen (Hverdag)');
-        $slot_ettermiddag = $this->getSlotId('Ettermiddag (Hverdag)');
+        $slot_formiddag = $this->getSlotId('Festsalen - Formiddag (Hverdag)');
+        $slot_hele_dagen = $this->getSlotId('Festsalen - Hele dagen (Hverdag)');
+        $slot_ettermiddag = $this->getSlotId('Festsalen - Ettermiddag (Hverdag)');
         
         // Book "Formiddag"
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
@@ -78,9 +78,9 @@ class AvailabilityServiceTest extends TestCase {
         $day1 = '2026-07-01'; // Wednesday
         $day2 = '2026-07-02'; // Thursday
 
-        $slot_hele_dagen = $this->getSlotId('Hele dagen (Hverdag)');
-        $slot_formiddag = $this->getSlotId('Formiddag (Hverdag)');
-        $slot_ettermiddag = $this->getSlotId('Ettermiddag (Hverdag)');
+        $slot_hele_dagen = $this->getSlotId('Festsalen - Hele dagen (Hverdag)');
+        $slot_formiddag = $this->getSlotId('Festsalen - Formiddag (Hverdag)');
+        $slot_ettermiddag = $this->getSlotId('Festsalen - Ettermiddag (Hverdag)');
         
         // Book "Hele dagen" on Day 1
         // Window: 00:00 - 23:00 + 13h cleanup = Occupied until Day 2 12:00
@@ -111,8 +111,8 @@ class AvailabilityServiceTest extends TestCase {
         $day1 = '2026-08-01'; // Saturday
         $day2 = '2026-08-02'; // Sunday
 
-        $slot_ettermiddag = $this->getSlotId('Ettermiddag (Helg)');
-        $slot_formiddag = $this->getSlotId('Formiddag (Helg)');
+        $slot_ettermiddag = $this->getSlotId('Festsalen - Ettermiddag (Helg)');
+        $slot_formiddag = $this->getSlotId('Festsalen - Formiddag (Helg)');
         
         // Book "Ettermiddag" (16:00-23:00) on Day 1
         // 9h cleanup = Occupied until Day 2 08:00
@@ -139,11 +139,12 @@ class AvailabilityServiceTest extends TestCase {
         global $wpdb;
         $date = '2026-09-01'; // Tuesday
 
-        $slot_formiddag = $this->getSlotId('Formiddag (Hverdag)');
+        $slot_formiddag_obj1 = $this->getSlotId('Festsalen - Formiddag (Hverdag)');
+        $slot_formiddag_obj2 = $this->getSlotId('Peisestuen - Formiddag (Hverdag)');
         
         // Book "Formiddag" on Object 1
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'slot_id' => $slot_formiddag,
+            'slot_id' => $slot_formiddag_obj1,
             'booking_date' => $date,
             'customer_name' => 'Obj1 User',
             'customer_email' => 'obj1@example.com'
@@ -155,6 +156,6 @@ class AvailabilityServiceTest extends TestCase {
         ]);
 
         // Object 2 should still be available
-        $this->assertTrue($this->service->isSlotAvailable(2, $date, $slot_formiddag), 'Object 2 should be available even if Object 1 is booked');
+        $this->assertTrue($this->service->isSlotAvailable(2, $date, $slot_formiddag_obj2), 'Object 2 should be available even if Object 1 is booked');
     }
 }

@@ -26,7 +26,7 @@ class ActivationTest extends TestCase {
         global $wpdb;
 
         $table_slots = $wpdb->prefix . 'snippen_time_slots';
-        $exists = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table_slots WHERE name LIKE %s", 'Hele dagen%' ) );
+        $exists = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table_slots WHERE name LIKE %s", '%Hele dagen%' ) );
 
         $this->assertGreaterThan( 0, $exists );
     }

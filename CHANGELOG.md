@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.0] - 2026-06-01
+### Added
+- Innførte koblingstabell `snippen_time_slot_booking_objects` for å koble tidsluker direkte til spesifikke booking-objekter (f.eks. "Festsalen" eller "Peisestuen").
+- Oppdaterte oppsettsveiviseren (SetupWizard) til å opprette unike tidsluker per rom/kombinasjon (totalt 21 start-luker i stedet for 9).
+
+### Changed
+- Fjernet funksjonalitet for `allow_multi_object` fra tidsluker. Tidsluker er nå konfigurert med checkboxes for valg av spesifikke rom i Admin UI.
+- Fjernet koblingstabellen `snippen_price_booking_objects`. Pris er nå utelukkende knyttet til en tidsluke, noe som forenkler priskalkulering og fjerner tvetydighet.
+- Oppdaterte AvailabilityService og PricingService til å reflektere den nye direktekoblingen mellom rom og tidsluker.
+- Forbedret Admin UI for tidsluker (viser nå rom direkte i tabellen).
+- Forenklet Admin UI for prisregler ved å fjerne visning og valg av rom, siden pris følger tidsluken.
+
 ## [1.19.0] - 2026-06-01
 ### Changed
 - Feature (#95): Refactored availability rules from prices to time slots.
@@ -316,7 +328,12 @@
 - Enable AI agents to solve GitHub issues directly.
 - Added GitHub CLI (`gh`) to devcontainer.
 - Updated `AGENTS.md` and `DEV_README.md` with GitHub issue workflow.
-All notable changes to this project will be documented in this file.
+
+## [1.1.7] - 2026-05-15
+### Added
+- **My Bookings Page**: New admin page for users to view their own bookings and details.
+- **Self-Cancellation**: Enabled users to cancel their own bookings directly from the "Mine Bookinger" page.
+- **Security**: Implemented ownership verification for AJAX booking actions to prevent unauthorized cancellations.
 
 ## [1.14.0] - 2026-05-27
 ### Added

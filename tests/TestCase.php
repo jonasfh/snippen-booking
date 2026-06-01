@@ -30,7 +30,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
             $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects");
             $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
             $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_price_booking_objects");
+            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
             
             if ($this->requires_seed_data) {
                 \SnippenBooking\Admin\SetupWizard::create_starter_setup();

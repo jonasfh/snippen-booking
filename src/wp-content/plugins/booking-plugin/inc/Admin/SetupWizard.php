@@ -49,10 +49,10 @@ class SetupWizard {
 			);
 		}
 
-		$table_objects       = $wpdb->prefix . 'snippen_booking_objects';
-		$table_slots         = $wpdb->prefix . 'snippen_time_slots';
-		$table_prices        = $wpdb->prefix . 'snippen_prices';
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+		$table_objects           = $wpdb->prefix . 'snippen_booking_objects';
+		$table_slots             = $wpdb->prefix . 'snippen_time_slots';
+		$table_prices            = $wpdb->prefix . 'snippen_prices';
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
 
 		// 1. Create booking objects
 		$wpdb->insert(
@@ -76,12 +76,11 @@ class SetupWizard {
 		// 2. Create global time slots (now with availability rules)
 		$base_slots = array(
 			array(
-				'name'               => 'Hele dagen',
-				'description'        => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
-				'start_time'         => '11:00:00',
-				'end_time'           => '23:00:00',
-				'cleanup_hours'      => 12,
-				'allow_multi_object' => 1,
+				'name'          => 'Hele dagen',
+				'description'   => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
+				'start_time'    => '11:00:00',
+				'end_time'      => '23:00:00',
+				'cleanup_hours' => 12,
 			),
 			array(
 				'name'          => 'Formiddag',
@@ -129,68 +128,74 @@ class SetupWizard {
 			),
 		);
 
+		// Room combinations
+		$combinations = array(
+			array(
+				'name_prefix' => 'Festsalen',
+				'object_ids'  => array( $festsalen_id ),
+				'price_mult'  => 1,
+			),
+			array(
+				'name_prefix' => 'Peisestuen',
+				'object_ids'  => array( $peisestuen_id ),
+				'price_mult'  => 1,
+			),
+		);
+
+		// Add combination for both if 'Hele dagen'
+		$combo_both = array(
+			'name_prefix' => 'Hele området',
+			'object_ids'  => array( $festsalen_id, $peisestuen_id ),
+			'price_mult'  => 2,
+		);
+
 		foreach ( $base_slots as $base_slot ) {
 			foreach ( $slot_variations as $var ) {
-				$slot_name = $base_slot['name'] . ' ' . $var['suffix'];
-
-				$slot_data = array_merge(
-					$base_slot,
-					array(
-						'name'         => $slot_name,
-						'days_of_week' => $var['days_of_week'],
-						'is_holiday'   => $var['is_holiday'],
-					)
-				);
-
-				$wpdb->insert( $table_slots, $slot_data );
-				$slot_id = $wpdb->insert_id;
-
 				$base_price = $base_prices[ $base_slot['name'] ] ?? 1000;
-				$price      = $base_price * $var['price_mult'];
+				$var_price  = $base_price * $var['price_mult'];
 
-				// Individual prices for each object
-				foreach ( $objects as $obj ) {
-					$wpdb->insert(
-						$table_prices,
-						array(
-							'name'     => $obj->name . ' - ' . $slot_name,
-							'price'    => $price,
-							'slot_id'  => $slot_id,
-							'priority' => $var['is_holiday'] ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
-						)
-					);
-					$price_id = $wpdb->insert_id;
-					$wpdb->insert(
-						$table_price_objects,
-						array(
-							'price_id'          => $price_id,
-							'booking_object_id' => $obj->id,
-						)
-					);
+				$current_combinations = $combinations;
+				if ( $base_slot['name'] === 'Hele dagen' ) {
+					$current_combinations[] = $combo_both;
 				}
 
-				// Combined price (Hele området) for 'Hele dagen' slots
-				if ( $base_slot['name'] === 'Hele dagen' ) {
-					$combined_price = 2000 * $var['price_mult'];
-					$wpdb->insert(
-						$table_prices,
+				foreach ( $current_combinations as $combo ) {
+					$slot_name = $combo['name_prefix'] . ' - ' . $base_slot['name'] . ' ' . $var['suffix'];
+
+					$slot_data = array_merge(
+						$base_slot,
 						array(
-							'name'     => 'Hele området - ' . $slot_name,
-							'price'    => $combined_price,
-							'slot_id'  => $slot_id,
-							'priority' => $var['is_holiday'] ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
+							'name'         => $slot_name,
+							'days_of_week' => $var['days_of_week'],
+							'is_holiday'   => $var['is_holiday'],
 						)
 					);
-					$combined_price_id = $wpdb->insert_id;
-					foreach ( $objects as $obj ) {
+
+					$wpdb->insert( $table_slots, $slot_data );
+					$slot_id = $wpdb->insert_id;
+
+					// Link slot to objects
+					foreach ( $combo['object_ids'] as $obj_id ) {
 						$wpdb->insert(
-							$table_price_objects,
+							$table_time_slot_objects,
 							array(
-								'price_id'          => $combined_price_id,
-								'booking_object_id' => $obj->id,
+								'time_slot_id'      => $slot_id,
+								'booking_object_id' => $obj_id,
 							)
 						);
 					}
+
+					// Insert price for this slot
+					$final_price = $var_price * $combo['price_mult'];
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'     => $slot_name,
+							'price'    => $final_price,
+							'slot_id'  => $slot_id,
+							'priority' => $var['is_holiday'] ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
+						)
+					);
 				}
 			}
 		}

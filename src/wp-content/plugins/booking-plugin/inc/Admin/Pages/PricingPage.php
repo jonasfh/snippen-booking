@@ -95,8 +95,7 @@ class PricingPage {
 		}
 
 		global $wpdb;
-		$table_prices        = $wpdb->prefix . 'snippen_prices';
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+		$table_prices = $wpdb->prefix . 'snippen_prices';
 
 		$id       = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
 		$name     = sanitize_text_field( $_POST['name'] );
@@ -121,18 +120,6 @@ class PricingPage {
 			$message_key = 'created';
 		}
 
-		// Update objects junction
-		$wpdb->delete( $table_price_objects, array( 'price_id' => $id ) );
-		foreach ( $object_ids as $obj_id ) {
-			$wpdb->insert(
-				$table_price_objects,
-				array(
-					'price_id'          => $id,
-					'booking_object_id' => $obj_id,
-				)
-			);
-		}
-
 		if ( $message_key === 'created' ) {
 			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&message=created' ) );
 		} else {
@@ -146,10 +133,8 @@ class PricingPage {
 	 */
 	private function delete_price( $id ) {
 		global $wpdb;
-		$table_prices        = $wpdb->prefix . 'snippen_prices';
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+		$table_prices = $wpdb->prefix . 'snippen_prices';
 
-		$wpdb->delete( $table_price_objects, array( 'price_id' => $id ) );
 		$wpdb->delete( $table_prices, array( 'id' => $id ) );
 		wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&message=deleted' ) );
 		exit;
@@ -167,10 +152,8 @@ class PricingPage {
 	 */
 	private function render_list() {
 		global $wpdb;
-		$table_prices        = $wpdb->prefix . 'snippen_prices';
-		$table_slots         = $wpdb->prefix . 'snippen_time_slots';
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
-		$table_objects       = $wpdb->prefix . 'snippen_booking_objects';
+		$table_prices = $wpdb->prefix . 'snippen_prices';
+		$table_slots  = $wpdb->prefix . 'snippen_time_slots';
 
 		$rules = $wpdb->get_results(
 			"
@@ -184,7 +167,6 @@ class PricingPage {
 		echo '<table class="snippen-list-table snippen-filterable-table" id="pricing-rules-table">';
 		echo '<thead><tr>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
-		echo '<th data-filter-type="multiselect" data-sort-type="string">' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="multiselect" data-sort-type="string">' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Pris', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</th>';
@@ -193,25 +175,15 @@ class PricingPage {
 		echo '<tbody>';
 
 		if ( empty( $rules ) ) {
-			echo '<tr><td colspan="7">' . esc_html__( 'Ingen prisregler funnet.', 'snippen-booking' ) . '</td></tr>';
+			echo '<tr><td colspan="6">' . esc_html__( 'Ingen prisregler funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $rules as $rule ) {
 				$edit_url   = admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $rule->id );
 				$delete_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-pricing&action=delete&id=' . $rule->id ), 'delete_price_' . $rule->id );
-
-				// Get linked objects
-				$objs        = $wpdb->get_col(
-					$wpdb->prepare(
-						"
-                    SELECT o.name 
-                    FROM $table_price_objects po 
-                    JOIN $table_objects o ON po.booking_object_id = o.id 
-                    WHERE po.price_id = %d",
-						$rule->id
-					)
-				);
-				$object_list = implode( ', ', $objs );
-
+				echo '<tr>';
+				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
+				echo '<td>' . esc_html( $rule->slot_name ) . '</td>';
+				echo '<td>' . esc_html( $rule->price ) . ' kr</td>';
 				echo '<td>' . esc_html( $rule->priority ) . '</td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
@@ -229,27 +201,22 @@ class PricingPage {
 	 */
 	private function render_form( $id = 0 ) {
 		global $wpdb;
-		$table_prices        = $wpdb->prefix . 'snippen_prices';
-		$table_slots         = $wpdb->prefix . 'snippen_time_slots';
-		$table_objects       = $wpdb->prefix . 'snippen_booking_objects';
-		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
+		$table_prices = $wpdb->prefix . 'snippen_prices';
+		$table_slots  = $wpdb->prefix . 'snippen_time_slots';
 
-		$rule             = null;
-		$selected_objects = array();
+		$rule = null;
 
 		if ( $id > 0 ) {
-			$rule             = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_prices WHERE id = %d", $id ) );
-			$selected_objects = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM $table_price_objects WHERE price_id = %d", $id ) );
+			$rule = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_prices WHERE id = %d", $id ) );
 		}
 
-		$all_slots   = $wpdb->get_results(
+		$all_slots = $wpdb->get_results(
 			"
             SELECT s.id, s.name, s.start_time 
             FROM $table_slots s 
             WHERE s.deleted_at IS NULL 
             ORDER BY s.start_time ASC"
 		);
-		$all_objects = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
 
 		echo '<div class="snippen-card"><form method="post" action="">';
 		wp_nonce_field( 'snippen_save_price', 'snippen_price_nonce' );
@@ -259,14 +226,6 @@ class PricingPage {
 		echo '<label for="name">' . esc_html__( 'Navn på prisregel', 'snippen-booking' ) . '</label>';
 		echo '<input type="text" name="name" id="name" value="' . esc_attr( $rule ? $rule->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Helgepris Festsalen', 'snippen-booking' ) . '">';
 		echo '</div>';
-
-		echo '<div class="snippen-form-group">';
-		echo '<label>' . esc_html__( 'Gjelder for følgende lokaler:', 'snippen-booking' ) . '</label>';
-		echo '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-top:10px; background:#f1f5f9; padding:15px; border-radius:8px;">';
-		foreach ( $all_objects as $obj ) {
-			echo '<label style="font-weight:normal;"><input type="checkbox" name="object_ids[]" value="' . esc_attr( $obj->id ) . '" ' . checked( in_array( $obj->id, $selected_objects ), true, false ) . '> ' . esc_html( $obj->name ) . '</label>';
-		}
-		echo '</div></div>';
 
 		echo '<div class="snippen-form-group">';
 		echo '<label for="slot_id">' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</label>';
