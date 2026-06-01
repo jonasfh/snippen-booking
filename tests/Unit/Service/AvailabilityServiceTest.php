@@ -31,16 +31,25 @@ class AvailabilityServiceTest extends TestCase {
         $wpdb->query("DELETE FROM " . $wpdb->prefix . "snippen_bookings");
     }
 
+    private function getSlotId($name) {
+        global $wpdb;
+        return (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE name = %s LIMIT 1", $name));
+    }
+
     /**
      * Test simple same-day overlap
      */
     public function test_same_day_overlap() {
         global $wpdb;
-        $date = '2026-06-01';
+        $date = '2026-06-01'; // Monday
+
+        $slot_formiddag = $this->getSlotId('Formiddag (Hverdag)');
+        $slot_hele_dagen = $this->getSlotId('Hele dagen (Hverdag)');
+        $slot_ettermiddag = $this->getSlotId('Ettermiddag (Hverdag)');
         
-        // Book "Formiddag" (Slot 2)
+        // Book "Formiddag"
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'slot_id' => 2,
+            'slot_id' => $slot_formiddag,
             'booking_date' => $date,
             'customer_name' => 'John Doe',
             'customer_email' => 'john@example.com'
@@ -52,13 +61,13 @@ class AvailabilityServiceTest extends TestCase {
         ]);
 
         // 1. Same slot should be unavailable
-        $this->assertFalse($this->service->isSlotAvailable($this->objectId, $date, 2), 'Same slot should be unavailable');
+        $this->assertFalse($this->service->isSlotAvailable($this->objectId, $date, $slot_formiddag), 'Same slot should be unavailable');
         
-        // 2. Overlapping slot "Hele dagen" (Slot 1) should be unavailable
-        $this->assertFalse($this->service->isSlotAvailable($this->objectId, $date, 1), 'Hele dagen should be unavailable due to overlap');
+        // 2. Overlapping slot "Hele dagen" should be unavailable
+        $this->assertFalse($this->service->isSlotAvailable($this->objectId, $date, $slot_hele_dagen), 'Hele dagen should be unavailable due to overlap');
         
-        // 3. Non-overlapping slot "Ettermiddag" (Slot 3) should be available
-        $this->assertTrue($this->service->isSlotAvailable($this->objectId, $date, 3), 'Ettermiddag should be available');
+        // 3. Non-overlapping slot "Ettermiddag" should be available
+        $this->assertTrue($this->service->isSlotAvailable($this->objectId, $date, $slot_ettermiddag), 'Ettermiddag should be available');
     }
 
     /**
@@ -66,13 +75,17 @@ class AvailabilityServiceTest extends TestCase {
      */
     public function test_cleanup_extension_overlap() {
         global $wpdb;
-        $day1 = '2026-07-01';
-        $day2 = '2026-07-02';
+        $day1 = '2026-07-01'; // Wednesday
+        $day2 = '2026-07-02'; // Thursday
+
+        $slot_hele_dagen = $this->getSlotId('Hele dagen (Hverdag)');
+        $slot_formiddag = $this->getSlotId('Formiddag (Hverdag)');
+        $slot_ettermiddag = $this->getSlotId('Ettermiddag (Hverdag)');
         
-        // Book "Hele dagen" (Slot 1) on Day 1
+        // Book "Hele dagen" on Day 1
         // Window: 00:00 - 23:00 + 13h cleanup = Occupied until Day 2 12:00
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'slot_id' => 1,
+            'slot_id' => $slot_hele_dagen,
             'booking_date' => $day1,
             'customer_name' => 'Occupant',
             'customer_email' => 'occ@example.com'
@@ -83,11 +96,11 @@ class AvailabilityServiceTest extends TestCase {
             'booking_object_id' => $this->objectId
         ]);
 
-        // 1. "Formiddag" (Slot 2, starts 08:00) on Day 2 should be unavailable
-        $this->assertFalse($this->service->isSlotAvailable($this->objectId, $day2, 2), 'Formiddag should be blocked by yesterday cleanup');
+        // 1. "Formiddag" (starts 08:00) on Day 2 should be unavailable
+        $this->assertFalse($this->service->isSlotAvailable($this->objectId, $day2, $slot_formiddag), 'Formiddag should be blocked by yesterday cleanup');
         
-        // 2. "Ettermiddag" (Slot 3, starts 16:00) on Day 2 should be available
-        $this->assertTrue($this->service->isSlotAvailable($this->objectId, $day2, 3), 'Ettermiddag should be free after cleanup finishes at 12:00');
+        // 2. "Ettermiddag" (starts 16:00) on Day 2 should be available
+        $this->assertTrue($this->service->isSlotAvailable($this->objectId, $day2, $slot_ettermiddag), 'Ettermiddag should be free after cleanup finishes at 12:00');
     }
 
     /**
@@ -95,13 +108,16 @@ class AvailabilityServiceTest extends TestCase {
      */
     public function test_ettermiddag_cleanup_overlap() {
         global $wpdb;
-        $day1 = '2026-08-01';
-        $day2 = '2026-08-02';
+        $day1 = '2026-08-01'; // Saturday
+        $day2 = '2026-08-02'; // Sunday
+
+        $slot_ettermiddag = $this->getSlotId('Ettermiddag (Helg)');
+        $slot_formiddag = $this->getSlotId('Formiddag (Helg)');
         
-        // Book "Ettermiddag" (Slot 3, 16:00-23:00) on Day 1
+        // Book "Ettermiddag" (16:00-23:00) on Day 1
         // 9h cleanup = Occupied until Day 2 08:00
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'slot_id' => 3,
+            'slot_id' => $slot_ettermiddag,
             'booking_date' => $day1,
             'customer_name' => 'Late Night',
             'customer_email' => 'late@example.com'
@@ -112,9 +128,8 @@ class AvailabilityServiceTest extends TestCase {
             'booking_object_id' => $this->objectId
         ]);
 
-        // "Formiddag" (Slot 2, starts 08:00) on Day 2 should be available (exact edge case)
-        // Interval [08:00, 16:00] vs [..., 08:00]. 08:00 < 08:00 is FALSE. No overlap.
-        $this->assertTrue($this->service->isSlotAvailable($this->objectId, $day2, 2), 'Formiddag should be available as cleanup ends exactly at its start');
+        // "Formiddag" (starts 08:00) on Day 2 should be available (exact edge case)
+        $this->assertTrue($this->service->isSlotAvailable($this->objectId, $day2, $slot_formiddag), 'Formiddag should be available as cleanup ends exactly at its start');
     }
 
     /**
@@ -122,11 +137,13 @@ class AvailabilityServiceTest extends TestCase {
      */
     public function test_object_isolation() {
         global $wpdb;
-        $date = '2026-09-01';
+        $date = '2026-09-01'; // Tuesday
+
+        $slot_formiddag = $this->getSlotId('Formiddag (Hverdag)');
         
         // Book "Formiddag" on Object 1
         $wpdb->insert($wpdb->prefix . "snippen_bookings", [
-            'slot_id' => 2,
+            'slot_id' => $slot_formiddag,
             'booking_date' => $date,
             'customer_name' => 'Obj1 User',
             'customer_email' => 'obj1@example.com'
@@ -137,7 +154,7 @@ class AvailabilityServiceTest extends TestCase {
             'booking_object_id' => 1
         ]);
 
-        // Slot 2 is global "Formiddag" (based on seed logic)
-        $this->assertTrue($this->service->isSlotAvailable(2, $date, 2), 'Object 2 should be available even if Object 1 is booked');
+        // Object 2 should still be available
+        $this->assertTrue($this->service->isSlotAvailable(2, $date, $slot_formiddag), 'Object 2 should be available even if Object 1 is booked');
     }
 }

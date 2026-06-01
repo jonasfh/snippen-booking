@@ -30,10 +30,6 @@ class PricingService {
 		}
 		$slotIds = array_map( 'intval', $slotIds );
 
-		$holiday_service = new HolidayService();
-		$is_holiday      = $holiday_service->isHoliday( $date );
-		$day_of_week     = date( 'w', strtotime( $date ) ); // 0 (Sun) to 6 (Sat)
-
 		$table_prices        = $wpdb->prefix . 'snippen_prices';
 		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
 
@@ -94,27 +90,6 @@ class PricingService {
 		$max_priority = -1;
 
 		foreach ( $prices as $p ) {
-			// Check holiday
-			if ( $p->is_holiday && ! $is_holiday ) {
-				continue;
-			}
-
-			// Check days of week
-			if ( $p->days_of_week !== null && $p->days_of_week !== '' ) {
-				$allowed_days = explode( ',', $p->days_of_week );
-				if ( ! in_array( (string) $day_of_week, $allowed_days ) ) {
-					continue;
-				}
-			}
-
-			// Check date range
-			if ( $p->date_start && $date < $p->date_start ) {
-				continue;
-			}
-			if ( $p->date_end && $date > $p->date_end ) {
-				continue;
-			}
-
 			// If we are here, the price is a candidate
 			if ( (int) $p->priority > $max_priority ) {
 				$max_priority = (int) $p->priority;

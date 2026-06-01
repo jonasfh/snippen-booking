@@ -155,10 +155,10 @@ class BookingShortcode {
 							<textarea name="description" id="description" rows="3" placeholder="<?php esc_attr_e( 'F.eks. Bursdag, møte, etc.', 'snippen-booking' ); ?>"></textarea>
 						</div>
 						
-						<?php 
+						<?php
 						$terms_url = get_option( 'snippen_terms_url', '' );
-						if ( ! empty( $terms_url ) ) : 
-						?>
+						if ( ! empty( $terms_url ) ) :
+							?>
 						<div class="form-group full-width terms-acceptance">
 							<label for="accept_terms">
 								<input type="checkbox" name="accept_terms" id="accept_terms" required>

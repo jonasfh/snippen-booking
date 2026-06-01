@@ -60,7 +60,7 @@ class AvailabilityApi {
 
 		// Get slots globally
 		$all_slots = $wpdb->get_results(
-			"SELECT id, name, description, start_time, end_time, cleanup_hours, allow_multi_object 
+			"SELECT id, name, description, start_time, end_time, cleanup_hours, allow_multi_object, days_of_week, is_holiday, date_start, date_end 
              FROM $table_slots 
              WHERE deleted_at IS NULL"
 		);
@@ -138,21 +138,49 @@ class AvailabilityApi {
 			}
 		}
 
-		// Calculate prices for each slot on each day
-		$pricing_service = new PricingService();
-		$prices_by_date  = array();
+		// Calculate prices and applicability for each slot on each day
+		$pricing_service  = new PricingService();
+		$holiday_service  = new \SnippenBooking\Service\HolidayService();
+		$prices_by_date   = array();
+		$applicable_slots = array();
 
 		$current = new \DateTime( $start_date );
 		$last    = new \DateTime( $end_date );
 
 		while ( $current <= $last ) {
-			$date_str                    = $current->format( 'Y-m-d' );
-			$prices_by_date[ $date_str ] = array();
+			$date_str                      = $current->format( 'Y-m-d' );
+			$prices_by_date[ $date_str ]   = array();
+			$applicable_slots[ $date_str ] = array();
+
+			$is_holiday  = $holiday_service->isHoliday( $date_str );
+			$day_of_week = date( 'w', strtotime( $date_str ) );
 
 			foreach ( $slots as $slot ) {
-				$price = $pricing_service->getPrice( $object_ids, array( $slot->id ), $date_str );
-				if ( $price !== null ) {
-					$prices_by_date[ $date_str ][ $slot->name ] = $price;
+				// Check slot availability rules
+				$match = true;
+				if ( $slot->is_holiday && ! $is_holiday ) {
+					$match = false;
+				}
+				if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
+					$allowed_days = explode( ',', $slot->days_of_week );
+					if ( ! in_array( (string) $day_of_week, $allowed_days ) ) {
+						$match = false;
+					}
+				}
+				if ( $slot->date_start && $date_str < $slot->date_start ) {
+					$match = false;
+				}
+				if ( $slot->date_end && $date_str > $slot->date_end ) {
+					$match = false;
+				}
+
+				if ( $match ) {
+					$applicable_slots[ $date_str ][] = (int) $slot->id;
+
+					$price = $pricing_service->getPrice( $object_ids, array( $slot->id ), $date_str );
+					if ( $price !== null ) {
+						$prices_by_date[ $date_str ][ $slot->name ] = $price;
+					}
 				}
 			}
 			$current->modify( '+1 day' );
@@ -160,11 +188,12 @@ class AvailabilityApi {
 
 		wp_send_json_success(
 			array(
-				'slots'       => $slots,
-				'booked'      => $booked_details,
-				'unavailable' => $unavailable_slots,
-				'prices'      => $prices_by_date,
-				'offset_days' => $offset_days,
+				'slots'            => $slots,
+				'booked'           => $booked_details,
+				'unavailable'      => $unavailable_slots,
+				'applicable_slots' => $applicable_slots,
+				'prices'           => $prices_by_date,
+				'offset_days'      => $offset_days,
 			)
 		);
 	}
