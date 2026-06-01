@@ -154,17 +154,12 @@ if ($action === 'generate') {
         $subscriber_users = get_users(['role' => 'snippen_resident', 'fields' => ['ID', 'display_name', 'user_email']]);
         $default_admin = get_users(['role' => 'administrator', 'number' => 1, 'fields' => ['ID', 'display_name', 'user_email']])[0];
 
-        // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele dagen")
+        // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele området")
         if (rand(1, 10) <= 2) {
-            // Pick a random slot name (e.g. "Hele dagen")
-            $slot_names = ['Hele dagen', 'Formiddag', 'Ettermiddag'];
-            $target_name = $slot_names[array_rand($slot_names)];
-            
-            // Find global slot ID by name
-            $slot = $wpdb->get_row($wpdb->prepare(
-                "SELECT id FROM $table_slots WHERE name = %s AND allow_multi_object = 1 AND deleted_at IS NULL",
-                $target_name
-            ));
+            // Find global slot ID for all objects
+            $slot = $wpdb->get_row(
+                "SELECT id, name FROM $table_slots WHERE name LIKE 'Hele området%' AND deleted_at IS NULL ORDER BY RAND() LIMIT 1"
+            );
             
             if ($slot) {
                 $all_available = true;
@@ -193,7 +188,7 @@ if ($action === 'generate') {
                         'customer_email' => $user->user_email,
                         'customer_phone' => $phone,
                         'price' => $price,
-                        'description' => 'Demo: Booket begge lokaler (' . $target_name . ')'
+                        'description' => 'Demo: Booket hele området (' . $slot->name . ')'
                     ));
                     
                     $booking_id = $wpdb->insert_id;
@@ -216,7 +211,13 @@ if ($action === 'generate') {
         foreach ($objects as $obj) {
             // 30% chance of bookings for this object on this day
             if (rand(1, 10) <= 3) {
-                $slots = $wpdb->get_results("SELECT id, name FROM $table_slots WHERE deleted_at IS NULL");
+                $table_tso = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+                $slots = $wpdb->get_results($wpdb->prepare(
+                    "SELECT t.id, t.name FROM $table_slots t 
+                     JOIN $table_tso tso ON t.id = tso.time_slot_id 
+                     WHERE t.deleted_at IS NULL AND tso.booking_object_id = %d",
+                    $obj->id
+                ));
                 
                 if (empty($slots)) continue;
 
