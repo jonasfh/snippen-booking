@@ -151,11 +151,11 @@ class PhoneAuthenticationService {
 			'reset_link' => '',
 		);
 		$rendered         = $template_service->render_template( 'password_reset', 'email', $context );
-		
+
 		if ( ! empty( $rendered['subject'] ) ) {
 			return $rendered['subject'];
 		}
-		
+
 		return $title;
 	}
 
@@ -172,10 +172,10 @@ class PhoneAuthenticationService {
 		$template_service     = new \SnippenBooking\Service\Notification\NotificationTemplateService();
 		$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
 
-		// $user_login here might have been redefined by WP core to the actual user_login. 
+		// $user_login here might have been redefined by WP core to the actual user_login.
 		// We use network_site_url because wp-login.php uses this.
 		$reset_link = network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user_login ), 'login' );
-		
+
 		$context = array(
 			'user_name'  => $user_data->display_name ?: $user_data->user_login,
 			'reset_link' => $reset_link,
@@ -186,7 +186,7 @@ class PhoneAuthenticationService {
 		$normalized_phone = PhoneHelper::normalize_phone( $posted_login );
 
 		if ( $normalized_phone && $normalized_phone === get_user_meta( $user_data->ID, 'snippen_phone', true ) ) {
-			// Request was made via phone. 
+			// Request was made via phone.
 			$route = $notification_manager->get_channel_route( \SnippenBooking\Service\Notification\NotificationManager::TYPE_PASSWORD_RESET );
 
 			if ( 'sms' === $route ) {
@@ -212,7 +212,7 @@ class PhoneAuthenticationService {
 
 		// If requested via email (or SMS failed), use the email template.
 		$email_rendered = $template_service->render_template( 'password_reset', 'email', $context );
-		
+
 		if ( ! empty( $email_rendered['body'] ) ) {
 			return $email_rendered['body'];
 		}

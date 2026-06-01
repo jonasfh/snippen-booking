@@ -47,12 +47,12 @@ class NotificationTemplateService {
 		$custom     = get_option( $option_key );
 
 		if ( $custom && is_array( $custom ) ) {
-			$merged = array_merge( $this->get_default_template( $event_type, $channel ), $custom );
+			$merged               = array_merge( $this->get_default_template( $event_type, $channel ), $custom );
 			$merged['is_default'] = false;
 			return $merged;
 		}
 
-		$default = $this->get_default_template( $event_type, $channel );
+		$default               = $this->get_default_template( $event_type, $channel );
 		$default['is_default'] = true;
 
 		return $default;
@@ -67,7 +67,7 @@ class NotificationTemplateService {
 	 */
 	public function get_default_template( string $event_type, string $channel ): array {
 		$defaults = array(
-			'user_activation' => array(
+			'user_activation'      => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Din bekreftelseskode for Snippen Booking er: {{confirmation_code}}. Koden er gyldig i 15 minutter.', 'snippen-booking' ),
@@ -87,7 +87,7 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				),
 			),
-			'admin_booking' => array(
+			'admin_booking'        => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Ny bookingforespørsel for {{booking_objects}} den {{booking_date}} fra {{user_name}}.', 'snippen-booking' ),
@@ -97,7 +97,7 @@ class NotificationTemplateService {
 					'body'    => __( "Ny bookingforespørsel mottatt:\n\nLokale: {{booking_objects}}\nDato: {{booking_date}}\nNavn: {{user_name}}\nEmail: {{user_email}}\nTelefon: {{user_phone}}\nBeskrivelse: {{booking_description}}\n\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen.", 'snippen-booking' ),
 				),
 			),
-			'password_reset' => array(
+			'password_reset'       => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'For å tilbakestille passordet ditt, trykk på denne lenken: {{reset_link}}', 'snippen-booking' ),
@@ -109,7 +109,10 @@ class NotificationTemplateService {
 			),
 		);
 
-		return $defaults[ $event_type ][ $channel ] ?? array( 'subject' => '', 'body' => '' );
+		return $defaults[ $event_type ][ $channel ] ?? array(
+			'subject' => '',
+			'body'    => '',
+		);
 	}
 
 	/**
@@ -189,26 +192,26 @@ class NotificationTemplateService {
 	public function get_available_placeholders( string $event_type ): array {
 		$placeholders = array(
 			'user_activation'      => array(
-				'user_name'          => __( 'Recipient user name', 'snippen-booking' ),
-				'confirmation_code'  => __( '6-digit confirmation code', 'snippen-booking' ),
+				'user_name'         => __( 'Recipient user name', 'snippen-booking' ),
+				'confirmation_code' => __( '6-digit confirmation code', 'snippen-booking' ),
 			),
 			'booking_confirmation' => array(
-				'user_name'          => __( 'Booking customer name', 'snippen-booking' ),
-				'booking_objects'    => __( 'Booked venue names', 'snippen-booking' ),
-				'booking_date'       => __( 'Booking date', 'snippen-booking' ),
-				'booking_url'        => __( 'Booking details URL', 'snippen-booking' ),
+				'user_name'       => __( 'Booking customer name', 'snippen-booking' ),
+				'booking_objects' => __( 'Booked venue names', 'snippen-booking' ),
+				'booking_date'    => __( 'Booking date', 'snippen-booking' ),
+				'booking_url'     => __( 'Booking details URL', 'snippen-booking' ),
 			),
 			'admin_booking'        => array(
-				'user_name'          => __( 'Booking customer name', 'snippen-booking' ),
-				'user_email'         => __( 'Booking customer email', 'snippen-booking' ),
-				'user_phone'         => __( 'Booking customer phone', 'snippen-booking' ),
-				'booking_objects'    => __( 'Booked venue names', 'snippen-booking' ),
-				'booking_date'       => __( 'Booking date', 'snippen-booking' ),
+				'user_name'           => __( 'Booking customer name', 'snippen-booking' ),
+				'user_email'          => __( 'Booking customer email', 'snippen-booking' ),
+				'user_phone'          => __( 'Booking customer phone', 'snippen-booking' ),
+				'booking_objects'     => __( 'Booked venue names', 'snippen-booking' ),
+				'booking_date'        => __( 'Booking date', 'snippen-booking' ),
 				'booking_description' => __( 'Booking description/notes', 'snippen-booking' ),
 			),
 			'password_reset'       => array(
-				'user_name'          => __( 'Recipient user name', 'snippen-booking' ),
-				'reset_link'         => __( 'Password reset URL', 'snippen-booking' ),
+				'user_name'  => __( 'Recipient user name', 'snippen-booking' ),
+				'reset_link' => __( 'Password reset URL', 'snippen-booking' ),
 			),
 		);
 

@@ -155,6 +155,7 @@ jQuery(document).ready(function ($) {
         var slots = data.slots;
         var booked = data.booked;
         var unavailable = data.unavailable || {};
+        var applicableSlots = data.applicable_slots || {};
         var prices = data.prices || {};
         var offsetDays = data.offset_days;
 
@@ -191,10 +192,16 @@ jQuery(document).ready(function ($) {
 
             var dayBookings = booked[dateStr] || [];
             var dayUnavailable = unavailable[dateStr] || [];
+            var dayApplicable = applicableSlots[dateStr] || [];
 
             slots.forEach(function (slot) {
                 var slotIds = String(slot.id).split(',').map(Number);
                 
+                // If the slot is not applicable for this day, don't render it at all
+                if (!dayApplicable.includes(slot.id)) {
+                    return;
+                }
+
                 var existing = dayBookings.find(b => 
                     b.slot_name === slot.name && 
                     b.start_time === slot.start_time && 

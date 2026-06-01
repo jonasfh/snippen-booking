@@ -67,7 +67,7 @@ class SetupWizardTest extends TestCase {
 
 		// Verify time slots were created
 		$slots = $wpdb->get_results( "SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE deleted_at IS NULL" );
-		$this->assertCount( 3, $slots );
+		$this->assertCount( 9, $slots );
 	}
 
 	public function testCreateStarterSetupCreatesPricing() {

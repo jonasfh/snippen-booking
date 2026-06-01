@@ -118,6 +118,8 @@ class PhoneAuthenticationTest extends TestCase {
 		update_option( 'snippen_active_notification_provider', 'mock_sms' );
 		update_option( 'snippen_sms_sandbox_mode', 'no' );
 		
+		update_option( 'snippen_route_password_reset', 'sms' );
+		
 		$result = PhoneAuthenticationService::filter_password_reset_message( 'Default Message', 'testkey', 'test_user', $user_data );
 		
 		// Should return false because SMS was sent, aborting email

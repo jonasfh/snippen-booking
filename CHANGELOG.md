@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.0] - 2026-06-01
+### Changed
+- Feature (#95): Refactored availability rules from prices to time slots.
+- Added database migration `Migration_1_19_0` to support the new schema.
+- Updated pricing service and time slots UI to reflect new availability data structure.
+
 ## [1.18.0] - 2026-05-31
 ### Added
 - Feature (#93): Added advanced filtering and sorting for Pricing Rules (Prisregler) in the admin dashboard.

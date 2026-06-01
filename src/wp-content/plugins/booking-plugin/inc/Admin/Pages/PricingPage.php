@@ -98,36 +98,17 @@ class PricingPage {
 		$table_prices        = $wpdb->prefix . 'snippen_prices';
 		$table_price_objects = $wpdb->prefix . 'snippen_price_booking_objects';
 
-		$id          = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name        = sanitize_text_field( $_POST['name'] );
-		$slot_id     = intval( $_POST['slot_id'] );
-		$price       = floatval( $_POST['price'] );
-		$priority    = intval( $_POST['priority'] );
-		$day_of_week = isset( $_POST['days_of_week'] ) ? implode( ',', array_map( 'intval', $_POST['days_of_week'] ) ) : null;
-		if ( $day_of_week === '' ) {
-			$day_of_week = null;
-		}
-
-		$start_date = ! empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
-		$end_date   = ! empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
-		$is_holiday = isset( $_POST['is_holiday'] ) ? 1 : 0;
-		$object_ids = isset( $_POST['object_ids'] ) ? array_map( 'intval', $_POST['object_ids'] ) : array();
-
-		if ( empty( $object_ids ) ) {
-			$this->errors[] = __( 'Du må velge minst ett lokale.', 'snippen-booking' );
-			return;
-		}
-
-		$data = array(
-			'name'         => $name,
-			'slot_id'      => $slot_id,
-			'price'        => $price,
-			'priority'     => $priority,
-			'days_of_week' => $day_of_week,
-			'date_start'   => $start_date,
-			'date_end'     => $end_date,
-			'is_holiday'   => $is_holiday,
-			'modified_at'  => current_time( 'mysql' ),
+		$id       = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name     = sanitize_text_field( $_POST['name'] );
+		$slot_id  = intval( $_POST['slot_id'] );
+		$price    = floatval( $_POST['price'] );
+		$priority = intval( $_POST['priority'] );
+		$data     = array(
+			'name'        => $name,
+			'slot_id'     => $slot_id,
+			'price'       => $price,
+			'priority'    => $priority,
+			'modified_at' => current_time( 'mysql' ),
 		);
 
 		if ( $id > 0 ) {
@@ -207,7 +188,6 @@ class PricingPage {
 		echo '<th data-filter-type="multiselect" data-sort-type="string">' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Pris', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</th>';
-		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Betingelser', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
@@ -232,40 +212,7 @@ class PricingPage {
 				);
 				$object_list = implode( ', ', $objs );
 
-				$conditions = array();
-				if ( $rule->is_holiday ) {
-					$conditions[] = __( 'Helligdag', 'snippen-booking' );
-				}
-				if ( $rule->days_of_week !== null && $rule->days_of_week !== '' ) {
-					$days          = array(
-						1 => 'Man',
-						2 => 'Tir',
-						3 => 'Ons',
-						4 => 'Tor',
-						5 => 'Fre',
-						6 => 'Lør',
-						0 => 'Søn',
-					);
-					$selected_days = explode( ',', $rule->days_of_week );
-					$day_labels    = array();
-					foreach ( $selected_days as $d ) {
-						if ( isset( $days[ $d ] ) ) {
-							$day_labels[] = $days[ $d ];
-						}
-					}
-					$conditions[] = implode( ',', $day_labels );
-				}
-				if ( $rule->date_start ) {
-					$conditions[] = substr( $rule->date_start, 5 ) . ' til ' . substr( $rule->date_end, 5 );
-				}
-
-				echo '<tr>';
-				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
-				echo '<td><small>' . esc_html( $object_list ) . '</small></td>';
-				echo '<td>' . esc_html( $rule->slot_name ) . '</td>';
-				echo '<td>' . esc_html( number_format( $rule->price, 0, ',', ' ' ) ) . ',-</td>';
 				echo '<td>' . esc_html( $rule->priority ) . '</td>';
-				echo '<td><small>' . esc_html( implode( ' | ', $conditions ) ?: '-' ) . '</small></td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
 				echo '<a href="' . esc_url( $delete_url ) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Slett', 'snippen-booking' ) . '</a>';
@@ -338,38 +285,7 @@ class PricingPage {
 		echo '<div><label for="priority">' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="priority" id="priority" value="' . esc_attr( $rule ? $rule->priority : 10 ) . '" style="max-width:100px;"></div>';
 		echo '</div>';
-		echo '<p class="description">' . esc_html__( 'Høyere prioritet (f.eks. 100) overstyrer lavere (f.eks. 10). Bruk høy prioritet for spesielle datoer.', 'snippen-booking' ) . '</p>';
-
-		echo '<hr><h3 style="margin-top:25px;">' . esc_html__( 'Betingelser (Valgfritt)', 'snippen-booking' ) . '</h3>';
-
-		echo '<div class="snippen-form-group">';
-		echo '<label>' . esc_html__( 'Ukedager', 'snippen-booking' ) . '</label>';
-		echo '<div style="display:flex; gap:15px; margin-top:5px;">';
-		$days          = array(
-			1 => 'Man',
-			2 => 'Tir',
-			3 => 'Ons',
-			4 => 'Tor',
-			5 => 'Fre',
-			6 => 'Lør',
-			0 => 'Søn',
-		);
-		$selected_days = $rule && $rule->days_of_week !== null ? explode( ',', $rule->days_of_week ) : array();
-		foreach ( $days as $val => $label ) {
-			echo '<label style="font-weight:normal;"><input type="checkbox" name="days_of_week[]" value="' . esc_attr( $val ) . '" ' . checked( in_array( (string) $val, $selected_days ), true, false ) . '> ' . esc_html( $label ) . '</label>';
-		}
-		echo '</div></div>';
-
-		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
-		echo '<div><label for="start_date">' . esc_html__( 'Startdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';
-		echo '<input type="date" name="start_date" id="start_date" value="' . esc_attr( $rule ? $rule->date_start : '' ) . '"></div>';
-		echo '<div><label for="end_date">' . esc_html__( 'Sluttdato (YYYY-MM-DD)', 'snippen-booking' ) . '</label>';
-		echo '<input type="date" name="end_date" id="end_date" value="' . esc_attr( $rule ? $rule->date_end : '' ) . '"></div>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group">';
-		echo '<label><input type="checkbox" name="is_holiday" value="1" ' . checked( $rule ? $rule->is_holiday : 0, 1, false ) . '> ' . esc_html__( 'Gjelder kun helligdager', 'snippen-booking' ) . '</label>';
-		echo '</div>';
+		echo '<p class="description">' . esc_html__( 'Høyere prioritet (f.eks. 100) overstyrer lavere (f.eks. 10). Bruk høy prioritet for spesielle regler.', 'snippen-booking' ) . '</p>';
 
 		echo '<div class="snippen-form-actions" style="margin-top:30px;">';
 		echo '<button type="submit" class="snippen-btn snippen-btn-primary">' . esc_html__( 'Lagre prisregel', 'snippen-booking' ) . '</button>';
