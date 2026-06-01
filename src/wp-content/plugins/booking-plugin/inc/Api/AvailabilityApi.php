@@ -65,7 +65,7 @@ class AvailabilityApi {
 		// Get slots that are linked to EXACTLY the requested objects
 		$slots = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT s.id, s.name, s.description, s.start_time, s.end_time, s.cleanup_hours, s.days_of_week, s.is_holiday, s.date_start, s.date_end 
+				"SELECT s.id, s.name, s.description, s.start_time, s.end_time, s.cleanup_hours, s.days_of_week, s.date_start, s.date_end 
                  FROM $table_slots s
                  JOIN (
                     SELECT time_slot_id 
@@ -196,15 +196,15 @@ class AvailabilityApi {
 			$current->modify( '+1 day' );
 		}
 
-		wp_send_json_success(
-			array(
-				'slots'            => $slots,
-				'booked'           => $booked_details,
-				'unavailable'      => $unavailable_slots,
-				'applicable_slots' => $applicable_slots,
-				'prices'           => $prices_by_date,
-				'offset_days'      => $offset_days,
-			)
+		$response_data = array(
+			'slots'            => $slots,
+			'booked'           => $booked_details,
+			'unavailable'      => $unavailable_slots,
+			'applicable_slots' => $applicable_slots,
+			'prices'           => $prices_by_date,
+			'offset_days'      => $offset_days,
 		);
+
+		wp_send_json_success( $response_data );
 	}
 }
