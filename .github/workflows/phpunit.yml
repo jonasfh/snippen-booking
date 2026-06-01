@@ -37,8 +37,15 @@ jobs:
         extensions: mysqli, mbstring, xml
         tools: composer:v2, wp-cli
 
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
     - name: Install dependencies
-      run: composer install --no-progress
+      run: |
+        composer install --no-progress
+        npm ci
 
     - name: Setup WordPress
       run: |
@@ -58,8 +65,19 @@ jobs:
         echo "### PHPUnit Test Results 🧪" >> $GITHUB_STEP_SUMMARY
         # Run PHPUnit tests
         if composer test; then
-          echo "✅ Alle tester passerte!" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Alle PHP-tester passerte!" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Noen tester feilet. Se detaljer i loggen over." >> $GITHUB_STEP_SUMMARY
+          echo "❌ Noen PHP-tester feilet. Se detaljer i loggen over." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+    - name: Run JS tests
+      run: |
+        echo "### JS Test Results 🧪" >> $GITHUB_STEP_SUMMARY
+        # Run Jest tests
+        if npm run test:js; then
+          echo "✅ Alle JS-tester passerte!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Noen JS-tester feilet. Se detaljer i loggen over." >> $GITHUB_STEP_SUMMARY
           exit 1
         fi
