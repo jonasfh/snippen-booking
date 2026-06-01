@@ -111,19 +111,16 @@ class SetupWizard {
 			array(
 				'suffix'       => '(Hverdag)',
 				'days_of_week' => '1,2,3,4',
-				'is_holiday'   => 0,
 				'price_mult'   => 1,
 			),
 			array(
 				'suffix'       => '(Helg)',
 				'days_of_week' => '5,6,0',
-				'is_holiday'   => 0,
 				'price_mult'   => 2,
 			),
 			array(
 				'suffix'       => '(Helligdager og høytider)',
-				'days_of_week' => null,
-				'is_holiday'   => 1,
+				'days_of_week' => '7',
 				'price_mult'   => 2,
 			),
 		);
@@ -167,7 +164,6 @@ class SetupWizard {
 						array(
 							'name'         => $slot_name,
 							'days_of_week' => $var['days_of_week'],
-							'is_holiday'   => $var['is_holiday'],
 						)
 					);
 
@@ -193,7 +189,7 @@ class SetupWizard {
 							'name'     => $slot_name,
 							'price'    => $final_price,
 							'slot_id'  => $slot_id,
-							'priority' => $var['is_holiday'] ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
+							'priority' => ( strpos($var['days_of_week'], '7') !== false ) ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
 						)
 					);
 				}
