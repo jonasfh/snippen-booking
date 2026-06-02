@@ -119,6 +119,14 @@ class SmsFallbackTest extends TestCase {
 		);
 		$slot_id = $wpdb->insert_id;
 
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_time_slot_booking_objects',
+			array(
+				'time_slot_id'      => $slot_id,
+				'booking_object_id' => $obj_id,
+			)
+		);
+
 		// 3. Create test user and set them as logged in.
 		$username   = 'booker_' . time() . '_' . wp_rand( 0, 999 );
 		$user_email = $username . '@example.com';
