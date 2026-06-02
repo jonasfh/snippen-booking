@@ -284,10 +284,14 @@ class PricingPage {
 			if (filterInput) {
 				filterInput.addEventListener('input', function(e) {
 					var term = e.target.value.toLowerCase();
+					// Convert term to a regex: escape all special chars except '*', then replace '*' with '.*'
+					var regexTerm = term.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+					var regex = new RegExp(regexTerm);
+
 					var items = document.querySelectorAll('.snippen-timeslot-item');
 					items.forEach(function(item) {
 						var searchData = item.getAttribute('data-search');
-						if (searchData.indexOf(term) > -1) {
+						if (regex.test(searchData)) {
 							item.style.display = '';
 						} else {
 							item.style.display = 'none';
