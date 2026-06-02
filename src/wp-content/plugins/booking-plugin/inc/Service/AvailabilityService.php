@@ -46,7 +46,8 @@ class AvailabilityService {
              JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
              WHERE bbo.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
-             AND b.deleted_at IS NULL",
+             AND b.deleted_at IS NULL
+             AND b.status != 'cancelled'",
 				$objectId,
 				$buffer_start,
 				$buffer_end
@@ -105,7 +106,8 @@ class AvailabilityService {
              JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
              WHERE bbo.booking_object_id = %d 
              AND b.booking_date BETWEEN %s AND %s 
-             AND b.deleted_at IS NULL",
+             AND b.deleted_at IS NULL
+             AND b.status != 'cancelled'",
 				$objectId,
 				$buffer_start,
 				$buffer_end
