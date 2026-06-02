@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.1] - 2026-06-02
+### Fixed
+- Feature (#97): Kansellerte bookinger blokkerer ikke lenger tilgjengelighet for tidsluker.
+
 ## [1.22.0] - 2026-06-02
 ### Changed
 - Changed relationship between Prices and Time Slots from 1-to-1 to 1-to-Many.

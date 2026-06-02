@@ -160,6 +160,33 @@ class AvailabilityServiceTest extends TestCase {
 	}
 
 	/**
+	 * Test that cancelled bookings do not block slots
+	 */
+	public function test_cancelled_booking_does_not_block_slot() {
+		global $wpdb;
+		$date = '2026-10-01'; // Thursday
+
+		$slot_formiddag = $this->getSlotId('Festsalen - Formiddag (Hverdag)');
+
+		// Book "Formiddag" and mark as cancelled
+		$wpdb->insert($wpdb->prefix . "snippen_bookings", [
+			'slot_id' => $slot_formiddag,
+			'booking_date' => $date,
+			'customer_name' => 'Cancelled User',
+			'customer_email' => 'cancelled@example.com',
+			'status' => 'cancelled'
+		]);
+		$booking_id = $wpdb->insert_id;
+		$wpdb->insert($wpdb->prefix . "snippen_bookings_booking_objects", [
+			'booking_id' => $booking_id,
+			'booking_object_id' => $this->objectId
+		]);
+
+		// Slot should be available
+		$this->assertTrue($this->service->isSlotAvailable($this->objectId, $date, $slot_formiddag), 'Slot should be available if the booking is cancelled');
+	}
+
+	/**
 	 * Test that holiday logic correctly ignores normal weekdays and only applies '7'
 	 */
 	public function test_christmas_eve_holiday_logic() {
