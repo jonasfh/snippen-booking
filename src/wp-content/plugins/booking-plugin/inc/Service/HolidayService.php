@@ -23,8 +23,10 @@ class HolidayService {
 			'01-01', // Nyttårsdag.
 			'05-01', // 1. mai.
 			'05-17', // 17. mai.
+			'12-24', // Julaften (treated as holiday for booking purposes).
 			'12-25', // 1. juledag.
 			'12-26', // 2. juledag.
+			'12-31', // Nyttårsaften (treated as holiday for booking purposes).
 		);
 
 		if ( in_array( $md, $fixed, true ) ) {
