@@ -97,14 +97,14 @@ class PricingPage {
 		global $wpdb;
 		$table_prices = $wpdb->prefix . 'snippen_prices';
 
-		$id       = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name     = sanitize_text_field( $_POST['name'] );
-		$slot_id  = intval( $_POST['slot_id'] );
-		$price    = floatval( $_POST['price'] );
-		$priority = intval( $_POST['priority'] );
-		$data     = array(
+		$id         = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name       = sanitize_text_field( $_POST['name'] );
+		$price      = floatval( $_POST['price'] );
+		$priority   = intval( $_POST['priority'] );
+		$time_slots = isset( $_POST['time_slots'] ) && is_array( $_POST['time_slots'] ) ? array_map( 'intval', $_POST['time_slots'] ) : array();
+
+		$data = array(
 			'name'        => $name,
-			'slot_id'     => $slot_id,
 			'price'       => $price,
 			'priority'    => $priority,
 			'modified_at' => current_time( 'mysql' ),
@@ -118,6 +118,13 @@ class PricingPage {
 			$wpdb->insert( $table_prices, $data );
 			$id          = $wpdb->insert_id;
 			$message_key = 'created';
+		}
+
+		$table_slots = $wpdb->prefix . 'snippen_time_slots';
+		$wpdb->update( $table_slots, array( 'price_id' => null ), array( 'price_id' => $id ) );
+		if ( ! empty( $time_slots ) ) {
+			$slot_in = implode( ',', $time_slots );
+			$wpdb->query( $wpdb->prepare( "UPDATE $table_slots SET price_id = %d WHERE id IN ($slot_in)", $id ) );
 		}
 
 		if ( $message_key === 'created' ) {
@@ -157,9 +164,10 @@ class PricingPage {
 
 		$rules = $wpdb->get_results(
 			"
-            SELECT p.*, s.name as slot_name 
+            SELECT p.*, GROUP_CONCAT(s.name SEPARATOR '<br>') as slot_names 
             FROM $table_prices p 
-            JOIN $table_slots s ON p.slot_id = s.id 
+            LEFT JOIN $table_slots s ON p.id = s.price_id 
+            GROUP BY p.id
             ORDER BY p.priority DESC, p.name ASC"
 		);
 
@@ -182,7 +190,7 @@ class PricingPage {
 				$delete_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-pricing&action=delete&id=' . $rule->id ), 'delete_price_' . $rule->id );
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
-				echo '<td>' . esc_html( $rule->slot_name ) . '</td>';
+				echo '<td>' . wp_kses_post( $rule->slot_names ) . '</td>';
 				echo '<td>' . esc_html( $rule->price ) . ' kr</td>';
 				echo '<td>' . esc_html( $rule->priority ) . '</td>';
 				echo '<td style="text-align:right;">';
@@ -227,15 +235,30 @@ class PricingPage {
 		echo '<input type="text" name="name" id="name" value="' . esc_attr( $rule ? $rule->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Helgepris Festsalen', 'snippen-booking' ) . '">';
 		echo '</div>';
 
-		echo '<div class="snippen-form-group">';
-		echo '<label for="slot_id">' . esc_html__( 'Tidsluke', 'snippen-booking' ) . '</label>';
-		echo '<select name="slot_id" id="slot_id" required>';
-		echo '<option value="">' . esc_html__( 'Velg tidsluke...', 'snippen-booking' ) . '</option>';
-
-		foreach ( $all_slots as $s ) {
-			echo '<option value="' . esc_attr( $s->id ) . '" ' . selected( $rule ? $rule->slot_id : 0, $s->id, false ) . '>' . esc_html( $s->name ) . ' (' . substr( $s->start_time, 0, 5 ) . ')</option>';
+		$selected_slots = array();
+		if ( $id > 0 ) {
+			$selected_slots = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $table_slots WHERE price_id = %d", $id ) );
 		}
-		echo '</select>';
+
+		echo '<div class="snippen-form-group">';
+		echo '<label>' . esc_html__( 'Tidsluker', 'snippen-booking' ) . '</label>';
+		echo '<div style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 4px;">';
+
+		if ( empty( $all_slots ) ) {
+			echo '<p>' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</p>';
+		} else {
+			foreach ( $all_slots as $s ) {
+				$checked = in_array( $s->id, $selected_slots ) ? 'checked' : '';
+				echo '<div style="margin-bottom: 5px;">';
+				echo '<label style="font-weight: normal; display: flex; align-items: center; gap: 8px;">';
+				echo '<input type="checkbox" name="time_slots[]" value="' . esc_attr( $s->id ) . '" ' . $checked . '>';
+				echo esc_html( $s->name ) . ' (' . substr( $s->start_time, 0, 5 ) . ')';
+				echo '</label>';
+				echo '</div>';
+			}
+		}
+		
+		echo '</div>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';

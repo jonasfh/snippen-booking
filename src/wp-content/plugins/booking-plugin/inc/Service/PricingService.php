@@ -30,10 +30,13 @@ class PricingService {
 
 		$table_prices = $wpdb->prefix . 'snippen_prices';
 
+		$table_slots  = $wpdb->prefix . 'snippen_time_slots';
+
 		$query = $wpdb->prepare(
 			"SELECT p.* 
              FROM $table_prices p
-             WHERE p.slot_id IN ($slot_in_clause)",
+             JOIN $table_slots s ON s.price_id = p.id
+             WHERE s.id IN ($slot_in_clause)",
 			...$slotIds
 		);
 
