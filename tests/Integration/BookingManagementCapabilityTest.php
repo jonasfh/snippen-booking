@@ -276,6 +276,12 @@ class BookingManagementCapabilityTest extends TestCase {
 		} catch ( \Exception $e ) {}
 		ob_get_clean();
 
+		// Trigger scheduled background notifications
+		$booking = $wpdb->get_row("SELECT id, uuid FROM {$wpdb->prefix}snippen_bookings ORDER BY id DESC LIMIT 1");
+		if ( $booking ) {
+			do_action( 'snippen_booking_send_notifications', $booking->id, $booking->uuid );
+		}
+
 		$this->assertNotEmpty( self::$intercepted_emails );
 		$recipient_emails = [];
 		foreach ( self::$intercepted_emails as $email ) {

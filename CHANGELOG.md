@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.5] - 2026-06-02
+### Fixed
+- Fikset et problem hvor treg SMTP-tilkobling for e-postutsending førte til at booking-forespørsler (AJAX) fikk timeout (Tilkoblingsfeil). Utsendelse av e-post og SMS er nå asynkron.
+
 ## [1.22.4] - 2026-06-02
 ### Changed
 - Feature (#102): Oppdatert rekkefølge og default valg i admin-menyen slik at "Oversikt" er standard for booking-administratorer og "Hjelp / Manual" plasseres nederst. For vanlige innloggede brukere uten booking-administrator tilgang er "Hjelp / Manual" fortsatt standard.

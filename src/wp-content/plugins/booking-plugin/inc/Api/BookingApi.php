@@ -65,6 +65,8 @@ class BookingApi {
 			}
 		}
 
+		error_log( 'Booking API: Validering fullført. Sjekker tilgjengelighet for dato ' . $booking_date );
+
 		// Check if available (using advanced overlap detection) for all requested slots
 		$availability_service = new \SnippenBooking\Service\AvailabilityService();
 		$slots_to_book        = array();
@@ -138,6 +140,8 @@ class BookingApi {
 			wp_send_json_error( array( 'message' => __( 'Kontoen din er slettet eller deaktivert. Kontakt administrator.', 'snippen-booking' ) ) );
 		}
 
+		error_log( 'Booking API: Tilgjengelighet og bruker verifisert for bruker ID ' . $booking_user_id );
+
 		// Fetch phone from user meta securely (cannot be changed by user in form)
 		$customer_phone = get_user_meta( $booking_user_id, 'snippen_phone', true );
 
@@ -186,10 +190,12 @@ class BookingApi {
 		$booking_inserted = $wpdb->insert( $table_bookings, $booking_data );
 
 		if ( ! $booking_inserted ) {
+			error_log( 'Booking API: Kunne ikke sette inn booking i databasen for uuid ' . $uuid );
 			wp_send_json_error( array( 'message' => __( 'Kunne ikke lagre booking. Vennligst prøv igjen.', 'snippen-booking' ) ) );
 		}
 
 		$booking_id    = $wpdb->insert_id;
+		error_log( 'Booking API: Booking lagret i databasen med ID ' . $booking_id );
 		$success_count = 0;
 
 		// Insert relationships in junction table
@@ -207,8 +213,14 @@ class BookingApi {
 		}
 
 		if ( $success_count == count( $booking_object_ids ) ) {
-			$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
-			$notification_manager->send_booking_notifications( $booking_id, $uuid );
+			error_log( 'Booking API: Relasjoner opprettet. Planlegger asynkron utsendelse av varsler for booking ID ' . $booking_id );
+			
+			// Dispatch notifications asynchronously to prevent timeouts
+			if ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
+				wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
+			}
+			
+			error_log( 'Booking API: Varsler planlagt. Booking fullført for ID ' . $booking_id );
 
 			wp_send_json_success(
 				array(

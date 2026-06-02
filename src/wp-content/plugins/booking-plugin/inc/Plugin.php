@@ -58,6 +58,9 @@ class Plugin {
 		// Render single booking popup in footer if booking_uuid query param is present
 		add_action( 'wp_footer', array( __CLASS__, 'render_booking_popup' ) );
 
+		// Asynchronous notification sending
+		add_action( 'snippen_booking_send_notifications', array( __CLASS__, 'handle_background_notifications' ), 10, 2 );
+
 		// SMTP fallback / configuration hooks.
 		if ( 'yes' === get_option( 'snippen_smtp_enabled', 'no' ) ) {
 			add_action( 'phpmailer_init', array( __CLASS__, 'configure_smtp' ) );
@@ -77,6 +80,17 @@ class Plugin {
 
 		// Intercept snippen_bare requests to serve bare pages for modals
 		add_action( 'template_redirect', array( __CLASS__, 'handle_bare_template' ) );
+	}
+
+	/**
+	 * Handle background notifications sending
+	 *
+	 * @param int    $booking_id The booking ID.
+	 * @param string $uuid       The booking UUID.
+	 */
+	public static function handle_background_notifications( $booking_id, $uuid ) {
+		$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+		$notification_manager->send_booking_notifications( $booking_id, $uuid );
 	}
 
 	/**
