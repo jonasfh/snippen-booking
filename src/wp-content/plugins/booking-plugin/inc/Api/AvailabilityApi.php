@@ -169,9 +169,10 @@ class AvailabilityApi {
 				$match = true;
 				if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
 					$allowed_days = explode( ',', $slot->days_of_week );
-					$is_day_match = in_array( (string) $day_of_week, $allowed_days );
-					if ( $is_holiday && in_array( '7', $allowed_days ) ) {
-						$is_day_match = true;
+					if ( $is_holiday ) {
+						$is_day_match = in_array( '7', $allowed_days );
+					} else {
+						$is_day_match = in_array( (string) $day_of_week, $allowed_days );
 					}
 					if ( ! $is_day_match ) {
 						$match = false;
