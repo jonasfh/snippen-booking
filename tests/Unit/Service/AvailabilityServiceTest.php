@@ -156,6 +156,74 @@ class AvailabilityServiceTest extends TestCase {
         ]);
 
         // Object 2 should still be available
-        $this->assertTrue($this->service->isSlotAvailable(2, $date, $slot_formiddag_obj2), 'Object 2 should be available even if Object 1 is booked');
-    }
+		$this->assertTrue($this->service->isSlotAvailable(2, $date, $slot_formiddag_obj2), 'Object 2 should be available even if Object 1 is booked');
+	}
+
+	/**
+	 * Test that holiday logic correctly ignores normal weekdays and only applies '7'
+	 */
+	public function test_christmas_eve_holiday_logic() {
+		// Christmas Eve 2026 is a Thursday (day 4), but it's a holiday (is_holiday = true)
+		$date_str = '2026-12-24';
+		$is_holiday = true;
+
+		// 1. Slot with ONLY weekdays (1,2,3,4) should NOT match on Christmas Eve
+		$weekday_slot = (object) [
+			'id' => 1,
+			'days_of_week' => '1,2,3,4',
+			'date_start' => null,
+			'date_end' => null
+		];
+		$this->assertFalse(
+			$this->service->isSlotApplicable($weekday_slot, $date_str, $is_holiday),
+			'Weekday slot should NOT be applicable on a holiday even if it falls on a Thursday'
+		);
+
+		// 2. Slot with ONLY holidays (7) SHOULD match on Christmas Eve
+		$holiday_slot = (object) [
+			'id' => 2,
+			'days_of_week' => '7',
+			'date_start' => null,
+			'date_end' => null
+		];
+		$this->assertTrue(
+			$this->service->isSlotApplicable($holiday_slot, $date_str, $is_holiday),
+			'Holiday slot SHOULD be applicable on a holiday'
+		);
+
+		// 3. Slot with both weekdays and holidays (1,2,3,4,7) SHOULD match on Christmas Eve
+		$mixed_slot = (object) [
+			'id' => 3,
+			'days_of_week' => '1,2,3,4,7',
+			'date_start' => null,
+			'date_end' => null
+		];
+		$this->assertTrue(
+			$this->service->isSlotApplicable($mixed_slot, $date_str, $is_holiday),
+			'Mixed slot SHOULD be applicable on a holiday if 7 is included'
+		);
+
+		// 4. Test date_start filtering
+		$future_slot = (object) [
+			'id' => 4,
+			'days_of_week' => '7',
+			'date_start' => '2027-01-01',
+			'date_end' => null
+		];
+		$this->assertFalse(
+			$this->service->isSlotApplicable($future_slot, $date_str, $is_holiday),
+			'Slot with future date_start should NOT be applicable'
+		);
+
+		// 5. Normal Thursday (not a holiday)
+		$normal_thursday = '2026-12-10'; // A regular Thursday
+		$this->assertTrue(
+			$this->service->isSlotApplicable($weekday_slot, $normal_thursday, false),
+			'Weekday slot SHOULD be applicable on a regular Thursday'
+		);
+		$this->assertFalse(
+			$this->service->isSlotApplicable($holiday_slot, $normal_thursday, false),
+			'Holiday slot should NOT be applicable on a regular Thursday'
+		);
+	}
 }
