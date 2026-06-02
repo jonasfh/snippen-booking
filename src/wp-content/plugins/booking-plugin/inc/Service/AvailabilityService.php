@@ -177,4 +177,40 @@ class AvailabilityService {
 	private function isOverlapping( $win1, $win2 ) {
 		return ( $win1['start'] < $win2['end'] ) && ( $win2['start'] < $win1['end'] );
 	}
+
+	/**
+	 * Check if a time slot is applicable for a given date
+	 *
+	 * @param object $slot DB slot object (needs days_of_week, date_start, date_end)
+	 * @param string $date_str YYYY-MM-DD
+	 * @param bool   $is_holiday
+	 * @return bool
+	 */
+	public function isSlotApplicable( $slot, $date_str, $is_holiday ) {
+		$match = true;
+		$day_of_week = date( 'w', strtotime( $date_str ) );
+
+		if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
+			$allowed_days = explode( ',', $slot->days_of_week );
+			if ( $is_holiday ) {
+				$is_day_match = in_array( '7', $allowed_days );
+			} else {
+				$is_day_match = in_array( (string) $day_of_week, $allowed_days );
+			}
+
+			if ( ! $is_day_match ) {
+				$match = false;
+			}
+		}
+
+		if ( !empty($slot->date_start) && $date_str < $slot->date_start ) {
+			$match = false;
+		}
+
+		if ( !empty($slot->date_end) && $date_str > $slot->date_end ) {
+			$match = false;
+		}
+
+		return $match;
+	}
 }

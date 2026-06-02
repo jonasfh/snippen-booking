@@ -65,13 +65,13 @@ class AvailabilityApi {
 		// Get slots that are linked to EXACTLY the requested objects
 		$slots = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT s.id, s.name, s.description, s.start_time, s.end_time, s.cleanup_hours, s.days_of_week, s.date_start, s.date_end 
+				"SELECT s.id, s.name, s.description, s.start_time, s.end_time, s.cleanup_hours, s.days_of_week, s.date_start, s.date_end
                  FROM $table_slots s
                  JOIN (
-                    SELECT time_slot_id 
-                    FROM $table_time_slot_objects 
+                    SELECT time_slot_id
+                    FROM $table_time_slot_objects
                     WHERE booking_object_id IN ($obj_in_clause)
-                    GROUP BY time_slot_id 
+                    GROUP BY time_slot_id
                     HAVING COUNT(booking_object_id) = %d
                  ) tso ON s.id = tso.time_slot_id
                  WHERE s.deleted_at IS NULL
@@ -104,7 +104,7 @@ class AvailabilityApi {
              FROM $table_bookings b
              JOIN $table_slots s ON b.slot_id = s.id
              WHERE b.id IN (SELECT booking_id FROM $table_booking_objects WHERE booking_object_id IN ($in_clause))
-             AND b.booking_date BETWEEN %s AND %s 
+             AND b.booking_date BETWEEN %s AND %s
              AND b.deleted_at IS NULL",
 				...$query_args
 			)
@@ -166,24 +166,7 @@ class AvailabilityApi {
 
 			foreach ( $slots as $slot ) {
 				// Check slot availability rules
-				$match = true;
-				if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
-					$allowed_days = explode( ',', $slot->days_of_week );
-					if ( $is_holiday ) {
-						$is_day_match = in_array( '7', $allowed_days );
-					} else {
-						$is_day_match = in_array( (string) $day_of_week, $allowed_days );
-					}
-					if ( ! $is_day_match ) {
-						$match = false;
-					}
-				}
-				if ( $slot->date_start && $date_str < $slot->date_start ) {
-					$match = false;
-				}
-				if ( $slot->date_end && $date_str > $slot->date_end ) {
-					$match = false;
-				}
+				$match = $availability_service->isSlotApplicable( $slot, $date_str, $is_holiday );
 
 				if ( $match ) {
 					$applicable_slots[ $date_str ][] = (int) $slot->id;
