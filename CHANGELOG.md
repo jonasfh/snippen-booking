@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.2] - 2026-06-02
+### Fixed
+- Feature (#99): Fikset en feil i API-et og demo-data scriptet hvor bookinger med kombinasjons-tidsluker (f.eks. "Hele området") kunne bli lagret med kun ett enkelt booking-lokale, noe som skapte feil i administrasjonsvisningen.
+
 ## [1.22.1] - 2026-06-02
 ### Fixed
 - Feature (#97): Kansellerte bookinger blokkerer ikke lenger tilgjengelighet for tidsluker.

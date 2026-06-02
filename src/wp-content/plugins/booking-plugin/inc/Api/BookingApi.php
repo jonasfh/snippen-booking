@@ -69,12 +69,20 @@ class BookingApi {
 		$availability_service = new \SnippenBooking\Service\AvailabilityService();
 		$slots_to_book        = array();
 
+		// Fetch the objects linked to the requested slots from the database
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+		
 		// Match slot IDs to their respective booking objects
 		foreach ( $booking_object_ids as $obj_id ) {
 			$matched_slot_id = 0;
 			// Find which of the submitted slot_ids belongs to this object
 			foreach ( $slot_ids as $sid ) {
-				$slot_check = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE id = %d", $sid ) );
+				$slot_check = $wpdb->get_var( 
+					$wpdb->prepare( 
+						"SELECT time_slot_id FROM $table_time_slot_objects WHERE time_slot_id = %d AND booking_object_id = %d", 
+						$sid, $obj_id 
+					) 
+				);
 				if ( $slot_check ) {
 					$matched_slot_id = $sid;
 					break;
@@ -85,6 +93,27 @@ class BookingApi {
 				wp_send_json_error( array( 'message' => __( 'En eller flere tidsluker er ikke lenger tilgjengelig.', 'snippen-booking' ) ) );
 			}
 			$slots_to_book[ $obj_id ] = $matched_slot_id;
+		}
+
+		// Strictly validate that the requested booking_object_ids exactly match the required objects for the chosen slots.
+		// We cannot allow a multi-object slot (e.g. "Hele området") to be booked for only one of its objects.
+		$unique_slots = array_unique( array_values( $slots_to_book ) );
+		foreach ( $unique_slots as $sid ) {
+			$required_objects = $wpdb->get_col(
+				$wpdb->prepare( "SELECT booking_object_id FROM $table_time_slot_objects WHERE time_slot_id = %d", $sid )
+			);
+			$required_objects = array_map( 'intval', $required_objects );
+			
+			// Find which of our requested objects are assigned to this slot
+			$requested_for_this_slot = array_keys( $slots_to_book, $sid );
+			
+			// Compare arrays regardless of order
+			sort($required_objects);
+			sort($requested_for_this_slot);
+			
+			if ( $required_objects !== $requested_for_this_slot ) {
+				wp_send_json_error( array( 'message' => __( 'Tidsluken stemmer ikke overens med de valgte lokalene. Vennligst last inn siden på nytt.', 'snippen-booking' ) ) );
+			}
 		}
 
 		// Process booking data

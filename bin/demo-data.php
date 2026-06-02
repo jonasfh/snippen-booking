@@ -215,7 +215,13 @@ if ($action === 'generate') {
                 $slots = $wpdb->get_results($wpdb->prepare(
                     "SELECT t.id, t.name FROM $table_slots t 
                      JOIN $table_tso tso ON t.id = tso.time_slot_id 
-                     WHERE t.deleted_at IS NULL AND tso.booking_object_id = %d",
+                     WHERE t.deleted_at IS NULL 
+                     AND tso.booking_object_id = %d
+                     AND t.id IN (
+                         SELECT time_slot_id FROM $table_tso 
+                         GROUP BY time_slot_id 
+                         HAVING COUNT(booking_object_id) = 1
+                     )",
                     $obj->id
                 ));
                 
