@@ -45,10 +45,12 @@ class Install {
             days_of_week VARCHAR(50) DEFAULT NULL,
             date_start DATE DEFAULT NULL,
             date_end DATE DEFAULT NULL,
+            price_id INT DEFAULT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
-            PRIMARY KEY  (id)
+            PRIMARY KEY  (id),
+            KEY price_id (price_id)
         ) $charset_collate;";
 		dbDelta( $sql_slots );
 
@@ -101,12 +103,10 @@ class Install {
             name VARCHAR(100) NOT NULL,
             description TEXT,
             price DECIMAL(10,2) NOT NULL,
-            slot_id INT NOT NULL,
             priority INT DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
-            KEY slot_id (slot_id),
             KEY priority (priority)
         ) $charset_collate;";
 		dbDelta( $sql_prices );

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.0] - 2026-06-02
+### Changed
+- Changed relationship between Prices and Time Slots from 1-to-1 to 1-to-Many.
+- Updated database schema to move `price_id` to `wp_snippen_time_slots` table.
+- Revamped Pricing admin page UI to support assigning a single price to multiple time slots via checkboxes.
+- Added "Tilknyttet Pris" column and "Uten pris" filter to Time Slots admin page.
+- Added Julaften and Nyttårsaften as holidays for booking purposes.
+
 ## [1.21.0] - 2026-06-01
 ### Fixed
 - Fikset en feil i `js/booking.js` som gjorde at ingen tidsluker ble vist i kalenderen (feil type-sjekk for slot.id).

@@ -159,11 +159,24 @@ class SetupWizard {
 				foreach ( $current_combinations as $combo ) {
 					$slot_name = $combo['name_prefix'] . ' - ' . $base_slot['name'] . ' ' . $var['suffix'];
 
+					// Insert price for this slot
+					$final_price = $var_price * $combo['price_mult'];
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'     => $slot_name,
+							'price'    => $final_price,
+							'priority' => ( strpos($var['days_of_week'], '7') !== false ) ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
+						)
+					);
+					$price_id = $wpdb->insert_id;
+
 					$slot_data = array_merge(
 						$base_slot,
 						array(
 							'name'         => $slot_name,
 							'days_of_week' => $var['days_of_week'],
+							'price_id'     => $price_id,
 						)
 					);
 
@@ -180,18 +193,6 @@ class SetupWizard {
 							)
 						);
 					}
-
-					// Insert price for this slot
-					$final_price = $var_price * $combo['price_mult'];
-					$wpdb->insert(
-						$table_prices,
-						array(
-							'name'     => $slot_name,
-							'price'    => $final_price,
-							'slot_id'  => $slot_id,
-							'priority' => ( strpos($var['days_of_week'], '7') !== false ) ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
-						)
-					);
 				}
 			}
 		}

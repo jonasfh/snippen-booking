@@ -11,9 +11,9 @@ class TimeSlotsPage {
 	 * Render the page
 	 */
 	public function render() {
-		$action        = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : 'list';
-		$id            = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
-		$object_filter = isset( $_GET['object_id'] ) ? intval( $_GET['object_id'] ) : 0;
+		$action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : 'list';
+		$filter = isset( $_GET['filter'] ) ? sanitize_text_field( $_GET['filter'] ) : '';
+		$id     = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
 
 		echo '<div class="snippen-booking-admin-wrap">';
 
@@ -37,7 +37,7 @@ class TimeSlotsPage {
 				$this->render_form( $id );
 				break;
 			default:
-				$this->render_list( $object_filter );
+				$this->render_list( $filter );
 				break;
 		}
 
@@ -161,20 +161,32 @@ class TimeSlotsPage {
 	/**
 	 * Render list table
 	 */
-	private function render_list( $object_filter = 0 ) {
+	private function render_list( $filter = '' ) {
 		global $wpdb;
 		$table_slots = $wpdb->prefix . 'snippen_time_slots';
 
 		// Query slots with object names grouped
-		$query = "SELECT s.*, GROUP_CONCAT(bo.name SEPARATOR ', ') as object_names 
+		$query = "SELECT s.*, p.name as price_name, GROUP_CONCAT(bo.name SEPARATOR ', ') as object_names 
                   FROM $table_slots s 
                   LEFT JOIN {$wpdb->prefix}snippen_time_slot_booking_objects tso ON s.id = tso.time_slot_id
                   LEFT JOIN {$wpdb->prefix}snippen_booking_objects bo ON tso.booking_object_id = bo.id
-                  WHERE s.deleted_at IS NULL 
-                  GROUP BY s.id
-                  ORDER BY s.start_time ASC";
+                  LEFT JOIN {$wpdb->prefix}snippen_prices p ON s.price_id = p.id
+                  WHERE s.deleted_at IS NULL ";
+
+		if ( $filter === 'no_price' ) {
+			$query .= " AND s.price_id IS NULL ";
+		}
+
+		$query .= " GROUP BY s.id ORDER BY s.start_time ASC";
 
 		$slots = $wpdb->get_results( $query );
+
+		echo '<div style="margin-bottom: 15px;">';
+		$active_all = $filter !== 'no_price' ? 'nav-tab-active' : '';
+		$active_no_price = $filter === 'no_price' ? 'nav-tab-active' : '';
+		echo '<a href="?page=snippen-booking-slots" class="nav-tab ' . esc_attr( $active_all ) . '">' . esc_html__('Alle', 'snippen-booking') . '</a>';
+		echo '<a href="?page=snippen-booking-slots&filter=no_price" class="nav-tab ' . esc_attr( $active_no_price ) . '">' . esc_html__('Uten pris', 'snippen-booking') . '</a>';
+		echo '</div>';
 
 		echo '<div class="snippen-card">';
 		echo '<table class="snippen-list-table snippen-filterable-table" id="slots-table">';
@@ -184,6 +196,7 @@ class TimeSlotsPage {
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Tid', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Vask (t)', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Betingelser', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Tilknyttet Pris', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
@@ -226,6 +239,7 @@ class TimeSlotsPage {
 				echo '<td>' . esc_html( substr( $slot->start_time, 0, 5 ) . ' - ' . substr( $slot->end_time, 0, 5 ) ) . '</td>';
 				echo '<td>' . esc_html( $slot->cleanup_hours ) . '</td>';
 				echo '<td><small>' . esc_html( implode( ' | ', $conditions ) ?: '-' ) . '</small></td>';
+				echo '<td>' . esc_html( $slot->price_name ?: '-' ) . '</td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
 				echo '<a href="' . esc_url( $delete_url ) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Slett', 'snippen-booking' ) . '</a>';
