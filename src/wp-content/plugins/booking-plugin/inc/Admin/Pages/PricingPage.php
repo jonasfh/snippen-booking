@@ -242,14 +242,15 @@ class PricingPage {
 
 		echo '<div class="snippen-form-group">';
 		echo '<label>' . esc_html__( 'Tidsluker', 'snippen-booking' ) . '</label>';
-		echo '<div style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 4px;">';
+		echo '<input type="text" id="snippen-timeslot-filter" placeholder="' . esc_attr__( 'Søk i tidsluker...', 'snippen-booking' ) . '" style="width: 100%; margin-bottom: 10px; max-width: 400px; display: block;" autocomplete="off">';
+		echo '<div id="snippen-timeslot-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; border-radius: 4px;">';
 
 		if ( empty( $all_slots ) ) {
 			echo '<p>' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</p>';
 		} else {
 			foreach ( $all_slots as $s ) {
 				$checked = in_array( $s->id, $selected_slots ) ? 'checked' : '';
-				echo '<div style="margin-bottom: 5px;">';
+				echo '<div class="snippen-timeslot-item" style="margin-bottom: 5px;" data-search="' . esc_attr( strtolower( $s->name ) ) . '">';
 				echo '<label style="font-weight: normal; display: flex; align-items: center; gap: 8px;">';
 				echo '<input type="checkbox" name="time_slots[]" value="' . esc_attr( $s->id ) . '" ' . $checked . '>';
 				echo esc_html( $s->name ) . ' (' . substr( $s->start_time, 0, 5 ) . ')';
@@ -274,5 +275,28 @@ class PricingPage {
 		echo '</div>';
 
 		echo '</form></div>';
+
+		// Script for filtering
+		?>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var filterInput = document.getElementById('snippen-timeslot-filter');
+			if (filterInput) {
+				filterInput.addEventListener('input', function(e) {
+					var term = e.target.value.toLowerCase();
+					var items = document.querySelectorAll('.snippen-timeslot-item');
+					items.forEach(function(item) {
+						var searchData = item.getAttribute('data-search');
+						if (searchData.indexOf(term) > -1) {
+							item.style.display = '';
+						} else {
+							item.style.display = 'none';
+						}
+					});
+				});
+			}
+		});
+		</script>
+		<?php
 	}
 }
