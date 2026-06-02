@@ -49,12 +49,14 @@ class AdminLoader {
 	 * Add admin menu and submenus
 	 */
 	public static function add_admin_menu() {
+		$is_booking_admin = current_user_can( Capabilities::MANAGE_BOOKINGS );
+
 		add_menu_page(
 			__( 'Snippen Booking', 'snippen-booking' ),
 			__( 'Snippen Booking', 'snippen-booking' ),
 			'view_snippen_booking_menu',
 			'snippen-booking',
-			array( self::class, 'render_help_page' ),
+			$is_booking_admin ? array( self::class, 'render_bookings_page' ) : array( self::class, 'render_help_page' ),
 			'dashicons-calendar-alt',
 			25
 		);
@@ -69,23 +71,25 @@ class AdminLoader {
 			26
 		);
 
-		add_submenu_page(
-			'snippen-booking',
-			__( 'Hjelp / Manual', 'snippen-booking' ),
-			__( 'Hjelp / Manual', 'snippen-booking' ),
-			'view_snippen_booking_manual',
-			'snippen-booking',
-			array( self::class, 'render_help_page' )
-		);
-
-		add_submenu_page(
-			'snippen-booking',
-			__( 'Oversikt', 'snippen-booking' ),
-			__( 'Oversikt', 'snippen-booking' ),
-			Capabilities::MANAGE_BOOKINGS,
-			'snippen-booking-oversikt',
-			array( self::class, 'render_bookings_page' )
-		);
+		if ( ! $is_booking_admin ) {
+			add_submenu_page(
+				'snippen-booking',
+				__( 'Hjelp / Manual', 'snippen-booking' ),
+				__( 'Hjelp / Manual', 'snippen-booking' ),
+				'view_snippen_booking_manual',
+				'snippen-booking',
+				array( self::class, 'render_help_page' )
+			);
+		} else {
+			add_submenu_page(
+				'snippen-booking',
+				__( 'Oversikt', 'snippen-booking' ),
+				__( 'Oversikt', 'snippen-booking' ),
+				Capabilities::MANAGE_BOOKINGS,
+				'snippen-booking',
+				array( self::class, 'render_bookings_page' )
+			);
+		}
 
 		$objects_hook = add_submenu_page(
 			'snippen-booking',
@@ -143,6 +147,17 @@ class AdminLoader {
 			'snippen-booking-import',
 			array( self::class, 'render_import_page' )
 		);
+
+		if ( $is_booking_admin ) {
+			add_submenu_page(
+				'snippen-booking',
+				__( 'Hjelp / Manual', 'snippen-booking' ),
+				__( 'Hjelp / Manual', 'snippen-booking' ),
+				'view_snippen_booking_manual',
+				'snippen-booking-help',
+				array( self::class, 'render_help_page' )
+			);
+		}
 
 		if ( $objects_hook ) {
 			add_action( 'load-' . $objects_hook, array( self::class, 'handle_objects_page_save' ) );

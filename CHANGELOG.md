@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.4] - 2026-06-02
+### Changed
+- Feature (#102): Oppdatert rekkefølge og default valg i admin-menyen slik at "Oversikt" er standard for booking-administratorer og "Hjelp / Manual" plasseres nederst. For vanlige innloggede brukere uten booking-administrator tilgang er "Hjelp / Manual" fortsatt standard.
+
 ## [1.22.3] - 2026-06-02
 ### Changed
 - Slettet output som skaper støy i loggene når bruker blar i kalenderen.
