@@ -162,6 +162,12 @@ class SmsFallbackTest extends TestCase {
 		}
 		ob_get_clean();
 
+		// Trigger scheduled background notifications
+		$booking = $wpdb->get_row("SELECT id, uuid FROM {$wpdb->prefix}snippen_bookings ORDER BY id DESC LIMIT 1");
+		if ( $booking ) {
+			do_action( 'snippen_booking_send_notifications', $booking->id, $booking->uuid );
+		}
+
 		// 6. Assert emails were sent.
 		// There should be 2 emails: 1 to admin_email (notification of booking request) and 1 to customer (fallback booking details).
 		$customer_mail = null;
