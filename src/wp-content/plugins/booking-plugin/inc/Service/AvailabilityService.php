@@ -59,15 +59,6 @@ class AvailabilityService {
 
 			$overlap = $this->isOverlapping( $proposed_window, $booked_window );
 			if ( $overlap ) {
-				error_log(
-					sprintf(
-						'OVERLAP DETECTED: Proposed [%s - %s] vs Booked [%s - %s]',
-						$proposed_window['start']->format( 'Y-m-d H:i:s' ),
-						$proposed_window['end']->format( 'Y-m-d H:i:s' ),
-						$booked_window['start']->format( 'Y-m-d H:i:s' ),
-						$booked_window['end']->format( 'Y-m-d H:i:s' )
-					)
-				);
 				return false;
 			}
 		}
@@ -131,17 +122,6 @@ class AvailabilityService {
 
 					$overlap = $this->isOverlapping( $proposed_window, $booked_window );
 					if ( $overlap ) {
-						error_log(
-							sprintf(
-								'OVERLAP DETECTED (bulk): Slot %d on %s. Proposed [%s - %s] vs Booked [%s - %s]',
-								$slot->id,
-								$date_str,
-								$proposed_window['start']->format( 'Y-m-d H:i:s' ),
-								$proposed_window['end']->format( 'Y-m-d H:i:s' ),
-								$booked_window['start']->format( 'Y-m-d H:i:s' ),
-								$booked_window['end']->format( 'Y-m-d H:i:s' )
-							)
-						);
 						$unavailable[ $date_str ][] = (int) $slot->id;
 						break; // Already unavailable, no need to check other bookings
 					}
