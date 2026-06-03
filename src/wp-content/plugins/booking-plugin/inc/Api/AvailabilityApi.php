@@ -105,7 +105,8 @@ class AvailabilityApi {
              JOIN $table_slots s ON b.slot_id = s.id
              WHERE b.id IN (SELECT booking_id FROM $table_booking_objects WHERE booking_object_id IN ($in_clause))
              AND b.booking_date BETWEEN %s AND %s
-             AND b.deleted_at IS NULL",
+             AND b.deleted_at IS NULL
+             AND b.status != 'cancelled'",
 				...$query_args
 			)
 		);

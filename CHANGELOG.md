@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.6] - 2026-06-02
+### Changed
+- Kansellerte (avbrutte) bookinger skjules nå som standard i kalenderen, i "Booking Oversikt" og i "Mine Bookinger" (med mindre man spesifikt filtrerer på dem i admin-panelet).
+
 ## [1.22.5] - 2026-06-02
 ### Fixed
 - Fikset et problem hvor treg SMTP-tilkobling for e-postutsending førte til at booking-forespørsler (AJAX) fikk timeout (Tilkoblingsfeil). Utsendelse av e-post og SMS er nå asynkron.
