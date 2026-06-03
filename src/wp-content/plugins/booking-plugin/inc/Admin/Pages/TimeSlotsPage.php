@@ -202,7 +202,7 @@ class TimeSlotsPage {
 		echo '<tbody>';
 
 		if ( empty( $slots ) ) {
-			echo '<tr><td colspan="5">' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</td></tr>';
+			echo '<tr><td colspan="7">' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $slots as $slot ) {
 				$edit_url   = admin_url( 'admin.php?page=snippen-booking-slots&action=edit&id=' . $slot->id );
@@ -271,6 +271,31 @@ class TimeSlotsPage {
 		echo '<label for="name">' . esc_html__( 'Navn på tidsluke', 'snippen-booking' ) . '</label>';
 		echo '<input type="text" name="name" id="name" value="' . esc_attr( $slot ? $slot->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Hele dagen', 'snippen-booking' ) . '">';
 		echo '</div>';
+
+		if ( $id > 0 ) {
+			$price_info = '';
+			if ( $slot && $slot->price_id ) {
+				$price_row = $wpdb->get_row( $wpdb->prepare( "SELECT id, name, price FROM {$wpdb->prefix}snippen_prices WHERE id = %d", $slot->price_id ) );
+				if ( $price_row ) {
+					$edit_price_url = admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $price_row->id );
+					$price_info = sprintf(
+						'<strong><a href="%s">%s</a></strong> (%s kr)',
+						esc_url( $edit_price_url ),
+						esc_html( $price_row->name ),
+						esc_html( number_format( $price_row->price, 0, ',', ' ' ) )
+					);
+				}
+			}
+
+			echo '<div class="snippen-form-group">';
+			echo '<label>' . esc_html__( 'Tilknyttet pris', 'snippen-booking' ) . '</label>';
+			if ( ! empty( $price_info ) ) {
+				echo '<p style="margin: 5px 0 0 0; font-size: 14px;">' . $price_info . '</p>';
+			} else {
+				echo '<p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">' . esc_html__( 'Ingen pris tilknyttet.', 'snippen-booking' ) . '</p>';
+			}
+			echo '</div>';
+		}
 
 		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
 		echo '<div><label for="start_time">' . esc_html__( 'Starttid (HH:MM)', 'snippen-booking' ) . '</label>';
