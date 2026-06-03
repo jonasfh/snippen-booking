@@ -1,5 +1,11 @@
 # Changelog
 
+
+## [1.22.10] - 2026-06-03
+### Added
+- Feature (#114): Viser nå tilknyttet pris i redigeringsvisningen for tidsluker som en skrivebeskyttet (read-only) tekst med en lenke direkte til den tilhørende prisregelen.
+- Fikset colspan i tidsluketabellen når det ikke finnes noen tidsluker (endret fra 5 til 7).
+
 ## [1.22.9] - 2026-06-03
 ### Fixed
 - Fixed booking filters permission error ("Sorry, you are not allowed to access this page") on the overview page (#116) by correcting the form's page slug parameter from `snippen-booking-oversikt` to the registered `snippen-booking`.
