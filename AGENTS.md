@@ -147,7 +147,9 @@ wp plugin list --allow-root
 
 ## GitHub Issue Workflow
 
-When an agent is asked to solve a specific GitHub issue, the following workflow **MUST** be followed:
+All changes made to the project MUST be based on a GitHub issue. If a task or instruction is given without an associated issue, the agent MUST first create a GitHub issue containing the details of the work to be done (using `gh issue create`) before starting execution.
+
+Once a GitHub issue is identified or created, the following workflow **MUST** be followed:
 
 1.  **Preparation**:
     - Start in the `main` branch.
