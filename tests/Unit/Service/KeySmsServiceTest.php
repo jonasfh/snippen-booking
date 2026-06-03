@@ -16,6 +16,11 @@ use SnippenBooking\Service\KeySmsService;
 class KeySmsServiceTest extends TestCase {
 
 	/**
+	 * Whether the test requires database setup and seed data.
+	 */
+	protected $requires_db = false;
+
+	/**
 	 * Set up test environment
 	 */
 	protected function setUp(): void {

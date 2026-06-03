@@ -16,6 +16,11 @@ use SnippenBooking\Service\HolidayService;
 class HolidayServiceTest extends TestCase {
 
 	/**
+	 * Whether the test requires database setup and seed data.
+	 */
+	protected $requires_db = false;
+
+	/**
 	 * Test fixed holidays
 	 */
 	public function test_fixed_holidays() {

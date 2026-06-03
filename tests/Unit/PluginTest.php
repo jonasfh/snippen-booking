@@ -11,6 +11,11 @@ use SnippenBooking\Plugin;
 class PluginTest extends TestCase {
 
     /**
+     * Whether the test requires database setup and seed data.
+     */
+    protected $requires_db = false;
+
+    /**
      * Test that class has init method
      */
     public function testClassHasInitMethod() {

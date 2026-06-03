@@ -11,6 +11,11 @@ use SnippenBooking\Api\BookingApi;
 class BookingApiTest extends TestCase {
 
     /**
+     * Whether the test requires database setup and seed data.
+     */
+    protected $requires_db = false;
+
+    /**
      * Test that class has register method
      */
     public function testClassHasRegisterMethod() {
