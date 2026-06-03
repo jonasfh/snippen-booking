@@ -18,6 +18,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
     protected $requires_seed_data = true;
 
     /**
+     * Track if database has been seeded for the current test suite session.
+     */
+    protected static $db_seeded = false;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void {
@@ -27,19 +32,47 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
         // Prevent translations from loading during tests to keep original Norwegian strings for assertions
         unload_textdomain('snippen-booking');
         
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+        
         if ($this->requires_db && isset($wpdb)) {
-            $wpdb->query("DELETE FROM {$wpdb->users} WHERE ID > 1");
-            $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE user_id > 1");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
-            
             if ($this->requires_seed_data) {
-                \SnippenBooking\Admin\SetupWizard::create_starter_setup();
+                // If tables are empty, force re-seeding regardless of the static flag
+                if (self::$db_seeded) {
+                    $slots_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_time_slots");
+                    if ($slots_count === 0) {
+                        self::$db_seeded = false;
+                    }
+                }
+
+                if (!self::$db_seeded) {
+                    $wpdb->query("DELETE FROM {$wpdb->users} WHERE ID > 1");
+                    $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE user_id > 1");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
+                    
+                    \SnippenBooking\Admin\SetupWizard::create_starter_setup();
+                    self::$db_seeded = true;
+                }
+            } else {
+                $wpdb->query("DELETE FROM {$wpdb->users} WHERE ID > 1");
+                $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE user_id > 1");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
+                
+                self::$db_seeded = false;
             }
+            
+            $wpdb->query("START TRANSACTION");
         }
     }
 
@@ -47,6 +80,13 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
      * Tear down test environment
      */
     protected function tearDown(): void {
+        global $wpdb;
+        if ($this->requires_db && isset($wpdb)) {
+            $wpdb->query("ROLLBACK");
+        }
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
         parent::tearDown();
     }
 }

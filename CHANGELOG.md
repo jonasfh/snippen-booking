@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.8] - 2026-06-03
+### Changed
+- Feature (#107): Optimalisert kjøring av integrasjonstester ved å ta i bruk databasetransaksjoner (`START TRANSACTION` / `ROLLBACK`). Dette reduserer kjøretiden for integrasjonstestene fra over ett minutt til under 10 sekunder (85% forbedring).
+
 ## [1.22.7] - 2026-06-03
 ### Changed
 - Feature (#106): Lagt til `$requires_db` flagg i `TestCase` for å unngå unødvendig databasetømming og populering i enhetstester som ikke krever det. Dette reduserer kjøretiden for enhetstester med 50%.

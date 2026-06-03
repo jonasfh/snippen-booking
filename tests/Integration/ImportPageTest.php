@@ -277,6 +277,12 @@ ola@nordmann.no
 		$_GET['deleted_residents'] = '1';
 		
 		// Mock WP_User_Query and current screen
+		if ( ! class_exists( 'WP_Screen' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';
+		}
+		if ( ! function_exists( 'set_current_screen' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/screen.php';
+		}
 		set_current_screen( 'users' );
 		
 		$query = new \WP_User_Query( array(

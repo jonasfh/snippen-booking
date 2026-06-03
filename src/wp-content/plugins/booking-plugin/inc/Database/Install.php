@@ -14,6 +14,15 @@ class Install {
 	 */
 	public static function activate() {
 		global $wpdb;
+
+		// If running in tests and tables already exist, skip to prevent implicit commits from DDL statements
+		if ( defined( 'SNIPPEN_BOOKING_TESTS_DIR' ) ) {
+			$table_bookings = $wpdb->prefix . 'snippen_bookings';
+			if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_bookings'" ) === $table_bookings ) {
+				return;
+			}
+		}
+
 		$charset_collate = $wpdb->get_charset_collate();
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
