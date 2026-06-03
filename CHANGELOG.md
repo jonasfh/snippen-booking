@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [1.22.11] - 2026-06-03
+### Added
+- Feature (#118): Lagt til detaljert feilsøkingslogging (verbose debug logging) i `KeySmsService` for å gjøre det enklere å spore og diagnostisere feil ved utsendelse av SMS på produksjonsservere.
+
 ## [1.22.10] - 2026-06-03
 ### Added
 - Feature (#114): Viser nå tilknyttet pris i redigeringsvisningen for tidsluker som en skrivebeskyttet (read-only) tekst med en lenke direkte til den tilhørende prisregelen.
