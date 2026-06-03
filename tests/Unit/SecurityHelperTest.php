@@ -11,6 +11,11 @@ use SnippenBooking\Helper\Security;
 class SecurityHelperTest extends TestCase {
 
 	/**
+	 * Whether the test requires database setup and seed data.
+	 */
+	protected $requires_db = false;
+
+	/**
 	 * Test esc_like escapes percent wildcards
 	 */
 	public function testEscLikeEscapesPercent() {

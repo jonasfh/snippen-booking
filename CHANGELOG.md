@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.7] - 2026-06-03
+### Changed
+- Feature (#106): Lagt til `$requires_db` flagg i `TestCase` for å unngå unødvendig databasetømming og populering i enhetstester som ikke krever det. Dette reduserer kjøretiden for enhetstester med 50%.
+
 ## [1.22.6] - 2026-06-02
 ### Changed
 - Kansellerte (avbrutte) bookinger skjules nå som standard i kalenderen, i "Booking Oversikt" og i "Mine Bookinger" (med mindre man spesifikt filtrerer på dem i admin-panelet).

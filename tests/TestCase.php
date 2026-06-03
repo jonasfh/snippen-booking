@@ -8,6 +8,11 @@ namespace SnippenBooking\Tests;
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
     /**
+     * Whether the test requires database setup and seed data.
+     */
+    protected $requires_db = true;
+
+    /**
      * Whether to create seed data before each test.
      */
     protected $requires_seed_data = true;
@@ -22,7 +27,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
         // Prevent translations from loading during tests to keep original Norwegian strings for assertions
         unload_textdomain('snippen-booking');
         
-        if (isset($wpdb)) {
+        if ($this->requires_db && isset($wpdb)) {
             $wpdb->query("DELETE FROM {$wpdb->users} WHERE ID > 1");
             $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE user_id > 1");
             $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings");

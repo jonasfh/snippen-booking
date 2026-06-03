@@ -11,6 +11,11 @@ use SnippenBooking\Api\AvailabilityApi;
 class AvailabilityApiTest extends TestCase {
 
     /**
+     * Whether the test requires database setup and seed data.
+     */
+    protected $requires_db = false;
+
+    /**
      * Test that get_availability requires facility parameter
      */
     public function testGetAvailabilityRequiresFacility() {

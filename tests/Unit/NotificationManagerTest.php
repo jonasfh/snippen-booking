@@ -18,6 +18,11 @@ use SnippenBooking\Service\Notification\KeySmsProvider;
 class NotificationManagerTest extends TestCase {
 
 	/**
+	 * Whether the test requires database setup and seed data.
+	 */
+	protected $requires_db = false;
+
+	/**
 	 * Test provider discovery and defaults.
 	 */
 	public function testGetProviders() {
