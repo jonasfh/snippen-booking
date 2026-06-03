@@ -213,14 +213,21 @@ class BookingApi {
 		}
 
 		if ( $success_count == count( $booking_object_ids ) ) {
-			error_log( 'Booking API: Relasjoner opprettet. Planlegger asynkron utsendelse av varsler for booking ID ' . $booking_id );
-			
-			// Dispatch notifications asynchronously to prevent timeouts
-			if ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
-				wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
+			$dispatch_method = get_option( 'snippen_notification_dispatch_method', 'async' );
+
+			if ( 'sync' === $dispatch_method ) {
+				error_log( 'Booking API: Relasjoner opprettet. Sender varsler synkront (direkte) for booking ID ' . $booking_id );
+				$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+				$notification_manager->send_booking_notifications( $booking_id, $uuid );
+				error_log( 'Booking API: Synkron utsendelse fullført for ID ' . $booking_id );
+			} else {
+				error_log( 'Booking API: Relasjoner opprettet. Planlegger asynkron utsendelse av varsler for booking ID ' . $booking_id );
+				// Dispatch notifications asynchronously to prevent timeouts
+				if ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
+					wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
+				}
+				error_log( 'Booking API: Varsler planlagt. Booking fullført for ID ' . $booking_id );
 			}
-			
-			error_log( 'Booking API: Varsler planlagt. Booking fullført for ID ' . $booking_id );
 
 			wp_send_json_success(
 				array(
