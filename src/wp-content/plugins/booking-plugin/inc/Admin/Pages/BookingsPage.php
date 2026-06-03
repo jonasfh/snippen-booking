@@ -134,6 +134,9 @@ class BookingsPage {
 
 		if ( $status ) {
 			$query .= $wpdb->prepare( ' AND b.status = %s', $status );
+		} else {
+			// By default, do not show cancelled bookings in the overview unless specifically requested
+			$query .= " AND b.status != 'cancelled'";
 		}
 
 		if ( $obj_id > 0 ) {
