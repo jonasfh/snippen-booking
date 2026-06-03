@@ -175,6 +175,7 @@ class NotificationManager {
 	 * @return bool True if customer notification succeeds, false otherwise.
 	 */
 	public function send_booking_notifications( int $booking_id, string $uuid ): bool {
+		error_log( sprintf( 'NotificationManager: Preparing notifications for booking ID %d, UUID %s', $booking_id, $uuid ) );
 		global $wpdb;
 
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
@@ -183,6 +184,7 @@ class NotificationManager {
 
 		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_bookings WHERE id = %d", $booking_id ) );
 		if ( ! $booking ) {
+			error_log( sprintf( 'NotificationManager Error: Booking ID %d not found.', $booking_id ) );
 			return false;
 		}
 
@@ -197,6 +199,7 @@ class NotificationManager {
 			)
 		);
 		$object_names = implode( ' og ', $objs );
+		error_log( sprintf( 'NotificationManager: Booking objects: %s', $object_names ) );
 
 		$email_provider = $this->get_provider( 'email' );
 
@@ -214,6 +217,7 @@ class NotificationManager {
 				$admin_emails[] = $admin->user_email;
 			}
 		}
+		error_log( sprintf( 'NotificationManager: Admin notification route: %s. Active admins found: %d (%s)', $admin_route, count( $admin_emails ), implode( ', ', $admin_emails ) ) );
 
 		if ( ! empty( $admin_emails ) && $email_provider instanceof EmailProviderInterface ) {
 			$subject  = sprintf( __( 'Ny Bookingforespørsel - %s', 'snippen-booking' ), $object_names );
@@ -226,13 +230,22 @@ class NotificationManager {
 			$message .= __( 'Beskrivelse:', 'snippen-booking' ) . ' ' . $booking->description . "\n";
 
 			foreach ( $admin_emails as $admin_email ) {
-				$email_provider->send_email( $admin_email, $subject, $message );
+				try {
+					error_log( sprintf( 'NotificationManager: Sending admin email to %s...', $admin_email ) );
+					$email_provider->send_email( $admin_email, $subject, $message );
+					error_log( sprintf( 'NotificationManager: Admin email call finished for %s', $admin_email ) );
+				} catch ( \Exception $e ) {
+					error_log( 'NotificationManager Exception during admin email send: ' . $e->getMessage() );
+				} catch ( \Throwable $t ) {
+					error_log( 'NotificationManager Throwable during admin email send: ' . $t->getMessage() );
+				}
 			}
 		}
 
 		// 2. Send customer confirmation
 		$customer_route = $this->get_channel_route( self::TYPE_BOOKING_CONFIRMATION );
 		$sms_link       = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
+		error_log( sprintf( 'NotificationManager: Customer notification route: %s. Phone: %s', $customer_route, $booking->customer_phone ) );
 
 		if ( 'sms' === $customer_route && ! empty( $booking->customer_phone ) ) {
 			$sms_message = sprintf(
@@ -247,9 +260,12 @@ class NotificationManager {
 			} else {
 				$provider_id = $this->get_active_provider_id();
 				$provider    = $this->get_provider( $provider_id );
+				error_log( sprintf( 'NotificationManager: Active SMS provider: %s. Configured: %s', $provider_id, $provider && $provider->is_configured() ? 'yes' : 'no' ) );
 
 				if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
+					error_log( sprintf( 'NotificationManager: Sending SMS to %s...', $booking->customer_phone ) );
 					$success = $provider->send_sms( $booking->customer_phone, $sms_message );
+					error_log( sprintf( 'NotificationManager: SMS send call returned %s', $success ? 'true' : 'false' ) );
 					if ( $success ) {
 						return true;
 					}
@@ -275,9 +291,19 @@ class NotificationManager {
 					$recipient = $user->user_email;
 				}
 			}
+			error_log( sprintf( 'NotificationManager: Attempting customer email fallback to recipient %s', $recipient ?: 'not set' ) );
 
 			if ( ! empty( $recipient ) ) {
-				return $email_provider->send_email( $recipient, $subject, $mail_message );
+				try {
+					error_log( sprintf( 'NotificationManager: Sending customer email fallback to %s...', $recipient ) );
+					$result = $email_provider->send_email( $recipient, $subject, $mail_message );
+					error_log( sprintf( 'NotificationManager: Customer email call finished with result: %s', $result ? 'true' : 'false' ) );
+					return $result;
+				} catch ( \Exception $e ) {
+					error_log( 'NotificationManager Exception during customer email fallback: ' . $e->getMessage() );
+				} catch ( \Throwable $t ) {
+					error_log( 'NotificationManager Throwable during customer email fallback: ' . $t->getMessage() );
+				}
 			}
 		}
 

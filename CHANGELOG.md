@@ -1,6 +1,14 @@
 # Changelog
 
 
+## [1.23.0] - 2026-06-04
+### Added
+- Feature (#123): Implementerte synkron utsendelse av SMS/e-post via en dedikert "Booking Hjelper" (Booking Assistant) i administrasjonsgrensesnittet.
+
+## [1.22.13] - 2026-06-03
+### Added
+- Feature (#120): Lagt til detaljert logging i `EmailProvider` og `NotificationManager` for å kunne spore nøyaktig hvor den synkrone utsendelsen stopper eller henger på produksjonsservere.
+
 ## [1.22.12] - 2026-06-03
 ### Added
 - Feature (#120): Lagt til valg for utsendelsesmetode i Innstillinger. Tillater å velge mellom asynkron (WP-Cron) og synkron (direkte i AJAX-kallet) utsendelse av booking-varsler for å omgå loopback/WP-Cron problemer på delte webhotell (f.eks. ProISP).
