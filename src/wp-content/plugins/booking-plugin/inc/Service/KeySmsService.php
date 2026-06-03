@@ -57,6 +57,8 @@ class KeySmsService implements SmsServiceInterface {
 	 * @return bool True on success, false on failure.
 	 */
 	public function send( string $to, string $message ): bool {
+		error_log( sprintf( 'KeySmsService: Starting send process to %s. Username: %s. Sender: %s', $to, $this->username ?: 'not set', $this->sender ?: 'not set' ) );
+
 		if ( empty( $this->api_key ) || empty( $this->username ) ) {
 			error_log( 'KeySMS Error: API Key or Username is missing.' );
 			return false;
@@ -77,7 +79,10 @@ class KeySmsService implements SmsServiceInterface {
 		}
 
 		$payload_json = wp_json_encode( $payload );
-		$signature    = md5( $payload_json . $this->api_key );
+		error_log( 'KeySmsService: Generated payload JSON: ' . $payload_json );
+
+		$signature = md5( $payload_json . $this->api_key );
+		error_log( 'KeySmsService: Generated md5 signature: ' . $signature );
 
 		$body = array(
 			'payload'   => $payload_json,
@@ -94,27 +99,31 @@ class KeySmsService implements SmsServiceInterface {
 			'data_format' => 'body',
 		);
 
+		error_log( 'KeySmsService: Sending POST request to ' . $this->endpoint . ' with args: ' . wp_json_encode( $args ) );
+
 		$response = wp_remote_post( $this->endpoint, $args );
 
 		if ( is_wp_error( $response ) ) {
-			error_log( 'KeySMS Error: ' . $response->get_error_message() );
+			error_log( 'KeySMS Error (WP_Error): ' . $response->get_error_message() );
 			return false;
 		}
 
 		$code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		error_log( sprintf( 'KeySmsService: Received HTTP status code %d. Response body: %s', $code, $response_body ) );
 
 		if ( $code < 200 || $code >= 300 ) {
-			$error_body = wp_remote_retrieve_body( $response );
-			error_log( "KeySMS Error: Received HTTP $code. Response: $error_body" );
+			error_log( "KeySMS Error: Received HTTP $code. Response: $response_body" );
 			return false;
 		}
 
-		$response_data = json_decode( wp_remote_retrieve_body( $response ), true );
+		$response_data = json_decode( $response_body, true );
 		if ( ! empty( $response_data ) && isset( $response_data['ok'] ) && ! $response_data['ok'] ) {
 			error_log( 'KeySMS API Error: ' . wp_json_encode( $response_data ) );
 			return false;
 		}
 
+		error_log( 'KeySmsService: SMS successfully dispatched.' );
 		return true;
 	}
 }
