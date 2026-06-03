@@ -26,6 +26,7 @@ class SettingsPageTest extends TestCase {
 		delete_option( 'snippen_smtp_encryption' );
 		delete_option( 'snippen_smtp_from_email' );
 		delete_option( 'snippen_smtp_from_name' );
+		delete_option( 'snippen_notification_dispatch_method' );
 		parent::tearDown();
 	}
 
@@ -48,6 +49,7 @@ class SettingsPageTest extends TestCase {
 		$this->assertStringContainsString( 'name="snippen_smtp_encryption"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_from_email"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_from_name"', $output );
+		$this->assertStringContainsString( 'name="snippen_notification_dispatch_method"', $output );
 	}
 
 	/**
@@ -64,6 +66,7 @@ class SettingsPageTest extends TestCase {
 		$_POST['snippen_smtp_encryption'] = 'ssl';
 		$_POST['snippen_smtp_from_email'] = 'testfrom@example.com';
 		$_POST['snippen_smtp_from_name'] = 'Test Sender';
+		$_POST['snippen_notification_dispatch_method'] = 'sync';
 
 		$page = new SettingsPage();
 
@@ -83,6 +86,7 @@ class SettingsPageTest extends TestCase {
 		$this->assertEquals( 'ssl', get_option( 'snippen_smtp_encryption' ) );
 		$this->assertEquals( 'testfrom@example.com', get_option( 'snippen_smtp_from_email' ) );
 		$this->assertEquals( 'Test Sender', get_option( 'snippen_smtp_from_name' ) );
+		$this->assertEquals( 'sync', get_option( 'snippen_notification_dispatch_method' ) );
 	}
 
 	/**

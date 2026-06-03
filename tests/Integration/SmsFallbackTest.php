@@ -187,4 +187,84 @@ class SmsFallbackTest extends TestCase {
 		// Cleanup.
 		wp_delete_user( $user_id );
 	}
+
+	/**
+	 * Test that booking confirmation is dispatched synchronously when dispatch method is set to sync.
+	 */
+	public function testBookingConfirmationSynchronousDispatch() {
+		global $wpdb;
+
+		// 1. Set dispatch method to sync and disable SMS.
+		update_option( 'snippen_notification_dispatch_method', 'sync' );
+		update_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+
+		// 2. Create booking objects and time slot.
+		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', array( 'name' => 'Sync Room' ) );
+		$obj_id = $wpdb->insert_id;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_time_slots',
+			array(
+				'name'              => 'Hele dagen Sync',
+				'start_time'        => '10:00:00',
+				'end_time'          => '22:00:00',
+				'cleanup_hours'     => 0,
+			)
+		);
+		$slot_id = $wpdb->insert_id;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_time_slot_booking_objects',
+			array(
+				'time_slot_id'      => $slot_id,
+				'booking_object_id' => $obj_id,
+			)
+		);
+
+		// 3. Create test user and set them as logged in.
+		$username   = 'syncbooker_' . time() . '_' . wp_rand( 0, 999 );
+		$user_email = $username . '@example.com';
+		$user_id    = wp_create_user( $username, 'password123', $user_email );
+
+		update_user_meta( $user_id, 'snippen_phone', '+4792222222' );
+		wp_set_current_user( $user_id );
+
+		// 4. Setup booking submission request parameters.
+		$_POST['nonce']             = wp_create_nonce( 'snippen_booking_nonce' );
+		$_POST['booking_object_id'] = array( $obj_id );
+		$_POST['event_date']        = '2026-06-16';
+		$_POST['slot_id']           = (string) $slot_id;
+		$_POST['name']              = 'Sync Customer';
+		$_POST['email']             = 'sync_customer@example.com';
+		$_POST['description']       = 'Need sync to work!';
+		$_POST['accept_terms']      = '1';
+
+		// 5. Submit booking and catch AJAX termination exception.
+		ob_start();
+		try {
+			BookingApi::submit_booking();
+		} catch ( \Exception $e ) {
+			// Catch AJAX termination/wp_die.
+		} catch ( \Throwable $t ) {
+			// Catch other throwables if any.
+		}
+		ob_get_clean();
+
+		// 6. Assert emails were sent immediately, without manual action dispatch.
+		$customer_mail = null;
+		foreach ( self::$sent_mails as $mail ) {
+			if ( 'sync_customer@example.com' === $mail['to'] ) {
+				$customer_mail = $mail;
+				break;
+			}
+		}
+
+		$this->assertNotNull( $customer_mail, 'Customer should have received a confirmation email synchronously.' );
+		$this->assertEquals( 'Bekreftelse på din bookingforespørsel', $customer_mail['subject'] );
+		$this->assertStringContainsString( 'Sync Room', $customer_mail['message'] );
+
+		// Clean up.
+		delete_option( 'snippen_notification_dispatch_method' );
+		wp_delete_user( $user_id );
+	}
 }

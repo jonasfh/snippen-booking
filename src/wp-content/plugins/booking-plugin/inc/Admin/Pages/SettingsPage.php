@@ -51,15 +51,17 @@ class SettingsPage {
 		update_option( 'snippen_door_code_hours_after', $door_code_hours_after );
 
 		// Save routing options
-		$route_user = sanitize_text_field( $_POST['snippen_route_user_activation'] ?? 'email' );
-		$route_book = sanitize_text_field( $_POST['snippen_route_booking_confirmation'] ?? 'email' );
-		$route_adm  = sanitize_text_field( $_POST['snippen_route_admin_booking'] ?? 'email' );
-		$route_pw   = sanitize_text_field( $_POST['snippen_route_password_reset'] ?? 'email' );
+		$route_user      = sanitize_text_field( $_POST['snippen_route_user_activation'] ?? 'email' );
+		$route_book      = sanitize_text_field( $_POST['snippen_route_booking_confirmation'] ?? 'email' );
+		$route_adm       = sanitize_text_field( $_POST['snippen_route_admin_booking'] ?? 'email' );
+		$route_pw        = sanitize_text_field( $_POST['snippen_route_password_reset'] ?? 'email' );
+		$dispatch_method = sanitize_text_field( $_POST['snippen_notification_dispatch_method'] ?? 'async' );
 
 		update_option( 'snippen_route_user_activation', $route_user );
 		update_option( 'snippen_route_booking_confirmation', $route_book );
 		update_option( 'snippen_route_admin_booking', $route_adm );
 		update_option( 'snippen_route_password_reset', $route_pw );
+		update_option( 'snippen_notification_dispatch_method', $dispatch_method );
 
 		// Save terms URL
 		$terms_url = isset( $_POST['snippen_terms_url'] ) ? esc_url_raw( $_POST['snippen_terms_url'] ) : '';
@@ -117,6 +119,7 @@ class SettingsPage {
 		$providers          = $manager->get_providers();
 		$active_provider_id = $manager->get_active_provider_id();
 		$sandbox_mode       = $manager->is_sandbox_mode();
+		$dispatch_method    = get_option( 'snippen_notification_dispatch_method', 'async' );
 
 		$route_user = $manager->get_channel_route( NotificationManager::TYPE_USER_ACTIVATION );
 		$route_book = $manager->get_channel_route( NotificationManager::TYPE_BOOKING_CONFIRMATION );
@@ -134,7 +137,16 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_sms_sandbox_mode" value="yes" ' . checked( $sandbox_mode, true, false ) . ' style="margin:0;">';
 		echo esc_html__( 'SMS Sandbox / Utviklingsmodus (Ruter all SMS via E-post fallback)', 'snippen-booking' );
 		echo '</label>';
-		echo '<p class="description" style="margin: 4px 0 0 24px;">' . esc_html__( 'Aktiver dette under utvikling eller testing for å rute all SMS-utsending til e-post-fallback, slik at du sparer API-kostnader.', 'snippen-booking' ) . '</p>';
+		echo '<p class="description" style="margin: 4px 0 0 24px;">' . esc_html__( 'Aktiver dette under utvikling eller testing for å rute all SMS-utsending to e-post-fallback, slik at du sparer API-kostnader.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group">';
+		echo '<label for="snippen_notification_dispatch_method">' . esc_html__( 'Utsendelsesmetode', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_notification_dispatch_method" id="snippen_notification_dispatch_method" style="max-width:300px;">';
+		echo '<option value="async" ' . selected( $dispatch_method, 'async', false ) . '>' . esc_html__( 'Asynkron (via WP-Cron - anbefalt)', 'snippen-booking' ) . '</option>';
+		echo '<option value="sync" ' . selected( $dispatch_method, 'sync', false ) . '>' . esc_html__( 'Synkron (Send direkte ved booking)', 'snippen-booking' ) . '</option>';
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'Asynkron utsendelse forhindrer treghet for kunden hvis eksterne tjenester (SMTP/SMS) svarer tregt, men krever at WP-Cron fungerer på serveren. Velg Synkron hvis WP-Cron er sperret eller ustabil på webhotellet.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';

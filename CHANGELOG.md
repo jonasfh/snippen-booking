@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [1.22.12] - 2026-06-03
+### Added
+- Feature (#120): Lagt til valg for utsendelsesmetode i Innstillinger. Tillater å velge mellom asynkron (WP-Cron) og synkron (direkte i AJAX-kallet) utsendelse av booking-varsler for å omgå loopback/WP-Cron problemer på delte webhotell (f.eks. ProISP).
+
 ## [1.22.11] - 2026-06-03
 ### Added
 - Feature (#118): Lagt til detaljert feilsøkingslogging (verbose debug logging) i `KeySmsService` for å gjøre det enklere å spore og diagnostisere feil ved utsendelse av SMS på produksjonsservere.
