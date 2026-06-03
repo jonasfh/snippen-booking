@@ -157,11 +157,16 @@ if ($action === 'generate') {
         // Multi-object booking chance (20%) - Book all objects for a single slot (e.g. "Hele området")
         if (rand(1, 10) <= 2) {
             // Find global slot ID for all objects
-            $slot = $wpdb->get_row(
-                "SELECT id, name FROM $table_slots WHERE name LIKE 'Hele området%' AND deleted_at IS NULL ORDER BY RAND() LIMIT 1"
+            $potential_slots = $wpdb->get_results(
+                "SELECT id, name, days_of_week, date_start, date_end FROM $table_slots WHERE name LIKE 'Hele området%' AND deleted_at IS NULL"
             );
+            $applicable_slots = array_filter($potential_slots, function($s) use ($service, $date_str) {
+                return $service->isSlotApplicable($s, $date_str, false);
+            });
             
-            if ($slot) {
+            if (!empty($applicable_slots)) {
+                $slot = $applicable_slots[array_rand($applicable_slots)];
+                
                 $all_available = true;
                 foreach ($objects as $obj) {
                     if (!$service->isSlotAvailable($obj->id, $date_str, $slot->id)) {
@@ -213,17 +218,21 @@ if ($action === 'generate') {
             if (rand(1, 10) <= 3) {
                 $table_tso = $wpdb->prefix . 'snippen_time_slot_booking_objects';
                 $slots = $wpdb->get_results($wpdb->prepare(
-                    "SELECT t.id, t.name FROM $table_slots t 
+                    "SELECT t.id, t.name, t.days_of_week, t.date_start, t.date_end FROM $table_slots t 
                      JOIN $table_tso tso ON t.id = tso.time_slot_id 
                      WHERE t.deleted_at IS NULL 
                      AND tso.booking_object_id = %d
                      AND t.id IN (
-                         SELECT time_slot_id FROM $table_tso 
-                         GROUP BY time_slot_id 
-                         HAVING COUNT(booking_object_id) = 1
+                          SELECT time_slot_id FROM $table_tso 
+                          GROUP BY time_slot_id 
+                          HAVING COUNT(booking_object_id) = 1
                      )",
                     $obj->id
                 ));
+                
+                $slots = array_filter($slots, function($s) use ($service, $date_str) {
+                    return $service->isSlotApplicable($s, $date_str, false);
+                });
                 
                 if (empty($slots)) continue;
 
