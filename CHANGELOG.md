@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.22.9] - 2026-06-03
+### Fixed
+- Fixed booking filters permission error ("Sorry, you are not allowed to access this page") on the overview page (#116) by correcting the form's page slug parameter from `snippen-booking-oversikt` to the registered `snippen-booking`.
+
 ## [1.22.8] - 2026-06-03
 ### Changed
 - Feature (#107): Optimalisert kjøring av integrasjonstester ved å ta i bruk databasetransaksjoner (`START TRANSACTION` / `ROLLBACK`). Dette reduserer kjøretiden for integrasjonstestene fra over ett minutt til under 10 sekunder (85% forbedring).

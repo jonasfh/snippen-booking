@@ -56,7 +56,7 @@ class BookingsPageTest extends TestCase {
         $output = ob_get_clean();
 
         // 4. Assertions
-        $this->assertStringContainsString( 'Hurtiglenker til bookingsider:', $output );
+        $this->assertStringContainsString( __( 'Hurtiglenker til bookingsider:', 'snippen-booking' ), $output );
         $this->assertStringContainsString( 'Test Booking Page X', $output );
         $this->assertStringContainsString( get_permalink( $page_id ), $output );
     }
@@ -78,5 +78,24 @@ class BookingsPageTest extends TestCase {
         $output = ob_get_clean();
 
         $this->assertEmpty( $output );
+    }
+
+    /**
+     * Test that render_filters outputs the correct hidden page parameter slug
+     */
+    public function test_render_filters_page_parameter() {
+        $bookings_page = new BookingsPage();
+        
+        $reflection = new \ReflectionClass( BookingsPage::class );
+        $method = $reflection->getMethod( 'render_filters' );
+        $method->setAccessible( true );
+
+        ob_start();
+        // Arguments: status, obj_id, s, show_all
+        $method->invoke( $bookings_page, '', 0, '', false );
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString( '<input type="hidden" name="page" value="snippen-booking">', $output );
+        $this->assertStringNotContainsString( 'value="snippen-booking-oversikt"', $output );
     }
 }
