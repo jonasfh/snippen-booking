@@ -61,10 +61,12 @@ class SettingsPage {
 
 		// Save Active Toggles per channel and type
 		update_option( 'snippen_email_booking_confirmation_enabled', isset( $_POST['snippen_email_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_email_admin_booking_enabled', isset( $_POST['snippen_email_admin_booking_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_user_activation_enabled', isset( $_POST['snippen_email_user_activation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_password_reset_enabled', isset( $_POST['snippen_email_password_reset_enabled'] ) ? 'yes' : 'no' );
 
 		update_option( 'snippen_sms_booking_confirmation_enabled', isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_sms_admin_booking_enabled', isset( $_POST['snippen_sms_admin_booking_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_user_activation_enabled', isset( $_POST['snippen_sms_user_activation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_password_reset_enabled', isset( $_POST['snippen_sms_password_reset_enabled'] ) ? 'yes' : 'no' );
 
@@ -103,10 +105,12 @@ class SettingsPage {
 		$preserve_data          = get_option( 'snippen_preserve_data_on_uninstall', 'no' );
 
 		$email_booking    = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
+		$email_admin      = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
 		$email_activation = get_option( 'snippen_email_user_activation_enabled', 'yes' );
 		$email_password   = get_option( 'snippen_email_password_reset_enabled', 'yes' );
 
 		$sms_booking    = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		$sms_admin      = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
 		$sms_activation = get_option( 'snippen_sms_user_activation_enabled', 'no' );
 		$sms_password   = get_option( 'snippen_sms_password_reset_enabled', 'no' );
 
@@ -134,6 +138,10 @@ class SettingsPage {
 		echo esc_html__( 'Send bookingbekreftelse til kunde på e-post', 'snippen-booking' );
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
+		echo '<input type="checkbox" name="snippen_email_admin_booking_enabled" value="yes" ' . checked( $email_admin, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om ny booking til administratorer på e-post', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_user_activation_enabled" value="yes" ' . checked( $email_activation, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send kontoregistreringskode på e-post', 'snippen-booking' );
 		echo '</label>';
@@ -158,6 +166,10 @@ class SettingsPage {
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_booking_confirmation_enabled" value="yes" ' . checked( $sms_booking, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send bookingbekreftelse til kunde på SMS', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
+		echo '<input type="checkbox" name="snippen_sms_admin_booking_enabled" value="yes" ' . checked( $sms_admin, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om ny booking til administratorer på SMS', 'snippen-booking' );
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_user_activation_enabled" value="yes" ' . checked( $sms_activation, 'yes', false ) . ' style="margin:0;">';
