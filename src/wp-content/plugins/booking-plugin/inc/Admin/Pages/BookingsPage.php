@@ -253,11 +253,18 @@ class BookingsPage {
 		// Details Row (Hidden)
 		echo '<tr class="snippen-details-row" id="details-' . esc_attr( $booking->id ) . '" style="display:none; background:#f8fafc;">';
 		echo '<td colspan="7" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
-		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:30px;">';
+		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:30px;">';
 		echo '<div><strong>' . esc_html__( 'Kontaktinfo:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->customer_phone ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse/Notater:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Booket den:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->created_at ) . '</div>';
+		echo '<div class="booking-assistant-actions" data-id="' . esc_attr( $booking->id ) . '" data-uuid="' . esc_attr( $booking->uuid ) . '">';
+		echo '<strong>' . esc_html__( 'Booking-hjelper:', 'snippen-booking' ) . '</strong><br>';
+		echo '<button class="button snippen-btn-dispatch" data-channel="email_customer" style="margin-top:6px; margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'E-post til kunde', 'snippen-booking' ) . '</button>';
+		echo '<button class="button snippen-btn-dispatch" data-channel="sms_customer" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-phone" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'SMS til kunde', 'snippen-booking' ) . '</button>';
+		echo '<button class="button snippen-btn-dispatch" data-channel="email_admin" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'Varsel til admin', 'snippen-booking' ) . '</button>';
+		echo '<div class="assistant-feedback" style="margin-top:6px; font-size:11px; font-weight:600; min-height:15px;"></div>';
+		echo '</div>';
 		echo '</div></td></tr>';
 	}
 
