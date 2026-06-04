@@ -67,6 +67,37 @@
                 $btn.prop('disabled', false).css('opacity', '1');
             });
         });
+
+        // AJAX Notification Manual Dispatch
+        $('.bookings-table').on('click', '.snippen-btn-dispatch', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const $container = $btn.closest('.booking-assistant-actions');
+            const id = $container.data('id');
+            const channel = $btn.data('channel');
+            const $feedback = $container.find('.assistant-feedback');
+
+            $feedback.text('').css('color', 'inherit');
+            $container.find('.snippen-btn-dispatch').prop('disabled', true).css('opacity', '0.5');
+            $feedback.html('<span class="spinner is-active" style="float:none; margin:0 4px 0 0; vertical-align:middle; display:inline-block; visibility:visible;"></span> ' + (typeof snippenAdmin !== 'undefined' && snippenAdmin.strings.sending ? snippenAdmin.strings.sending : 'Sender...'));
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_dispatch_notification_manually',
+                nonce: snippenAdmin.nonce,
+                id: id,
+                channel: channel
+            }, function(response) {
+                if (response.success) {
+                    $feedback.text(response.data.message).css('color', '#15803d');
+                } else {
+                    $feedback.text(response.data.message || 'Sending feilet.').css('color', '#b91c1c');
+                }
+            }).fail(function() {
+                $feedback.text('En ukjent feil oppstod.').css('color', '#b91c1c');
+            }).always(function() {
+                $container.find('.snippen-btn-dispatch').prop('disabled', false).css('opacity', '1');
+            });
+        });
     });
 
 })(jQuery);

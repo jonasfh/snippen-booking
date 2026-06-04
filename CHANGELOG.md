@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [1.23.1] - 2026-06-04
+### Added
+- Feature (#123): Fullførte implementeringen av Booking-hjelperen (Booking Assistant) i administrasjonsgrensesnittet med knapper for manuell utsendelse av e-post til kunde, SMS til kunde og varsel til admin, komplett med tilhørende integrasjonstester.
+
 ## [1.23.0] - 2026-06-04
 ### Added
 - Feature (#123): Implementerte synkron utsendelse av SMS/e-post via en dedikert "Booking Hjelper" (Booking Assistant) i administrasjonsgrensesnittet.
