@@ -60,7 +60,7 @@ class SmsFallbackTest extends TestCase {
 	 */
 	public function testAccountConfirmationEmailFallback() {
 		// 1. Disable SMS confirmation.
-		update_option( 'snippen_sms_account_confirmation_enabled', 'no' );
+		update_option( 'snippen_keysms_notifications_enabled', 'no' );
 
 		// 2. Create test user.
 		$username   = 'fallbacktest_' . time() . '_' . wp_rand( 0, 999 );
@@ -102,7 +102,7 @@ class SmsFallbackTest extends TestCase {
 		global $wpdb;
 
 		// 1. Disable SMS booking confirmation.
-		update_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		update_option( 'snippen_keysms_notifications_enabled', 'no' );
 
 		// 2. Create booking objects and time slot.
 		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', array( 'name' => 'Fallback Room' ) );
@@ -196,7 +196,7 @@ class SmsFallbackTest extends TestCase {
 
 		// 1. Set dispatch method to sync and disable SMS.
 		update_option( 'snippen_notification_dispatch_method', 'sync' );
-		update_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		update_option( 'snippen_keysms_notifications_enabled', 'no' );
 
 		// 2. Create booking objects and time slot.
 		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', array( 'name' => 'Sync Room' ) );

@@ -187,25 +187,20 @@ class PhoneAuthenticationService {
 
 		if ( $normalized_phone && $normalized_phone === get_user_meta( $user_data->ID, 'snippen_phone', true ) ) {
 			// Request was made via phone.
-			$route = $notification_manager->get_channel_route( \SnippenBooking\Service\Notification\NotificationManager::TYPE_PASSWORD_RESET );
+			$sms_active = 'yes' === get_option( 'snippen_keysms_notifications_enabled', 'no' );
 
-			if ( 'sms' === $route ) {
+			if ( $sms_active ) {
 				$rendered = $template_service->render_template( 'password_reset', 'sms', $context );
+				$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
+				$provider    = $notification_manager->get_provider( $provider_id );
 
-				if ( $notification_manager->is_sandbox_mode() ) {
-					error_log( sprintf( 'PhoneAuth [SANDBOX MODE]: Bypassed SMS password reset to %s.', $normalized_phone ) );
-				} else {
-					$provider_id = $notification_manager->get_active_provider_id();
-					$provider    = $notification_manager->get_provider( $provider_id );
-
-					if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
-						$success = $provider->send_sms( $normalized_phone, $rendered['body'] );
-						if ( $success ) {
-							// Return false to abort WordPress sending the default email.
-							return false;
-						}
-						error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
+				if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
+					$success = $provider->send_sms( $normalized_phone, $rendered['body'] );
+					if ( $success ) {
+						// Return false to abort WordPress sending the default email.
+						return false;
 					}
+					error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
 				}
 			}
 		}

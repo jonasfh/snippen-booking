@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.2] - 2026-06-04
+### Changed
+- Refactor (#123): Refaktorert innstillingssiden (Settings UI) til et ryddig, fanebasert grensesnitt (E-post, KeySMS, Generelt) med egne "Aktiv"-valg for varslingskanaler.
+- Refactor (#123): Forenklet varslingsrutingen slik at SMS (KeySMS) foretrekkes hvis den er aktivert og kunden har telefonnummer registrert, med automatisk fallback til e-post.
+- Refactor (#123): Fjernet SMS Sandbox-modus og tilhørende innstillinger/logging.
 
 ## [1.23.1] - 2026-06-04
 ### Added

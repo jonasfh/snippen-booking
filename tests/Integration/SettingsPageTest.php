@@ -40,7 +40,7 @@ class SettingsPageTest extends TestCase {
 		$page->render();
 		$output = ob_get_clean();
 
-		$this->assertStringContainsString( 'Innstillinger for Kun E-post', $output );
+		$this->assertStringContainsString( 'E-post-varsler', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_enabled"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_host"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_port"', $output );
@@ -58,6 +58,8 @@ class SettingsPageTest extends TestCase {
 	public function test_settings_page_saves_smtp_options() {
 		// Create a mock POST request
 		$_POST['snippen_settings_nonce'] = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_email_notifications_enabled'] = 'yes';
+		$_POST['snippen_keysms_notifications_enabled'] = 'yes';
 		$_POST['snippen_smtp_enabled'] = 'yes';
 		$_POST['snippen_smtp_host'] = 'smtp.example.com';
 		$_POST['snippen_smtp_port'] = '465';
@@ -78,6 +80,8 @@ class SettingsPageTest extends TestCase {
 		$_POST = array();
 
 		// Assert options are updated in database
+		$this->assertEquals( 'yes', get_option( 'snippen_email_notifications_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_keysms_notifications_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_smtp_enabled' ) );
 		$this->assertEquals( 'smtp.example.com', get_option( 'snippen_smtp_host' ) );
 		$this->assertEquals( 465, get_option( 'snippen_smtp_port' ) );
