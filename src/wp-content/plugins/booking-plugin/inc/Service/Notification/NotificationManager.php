@@ -78,33 +78,35 @@ class NotificationManager {
 		}
 
 		$message = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
-		$sms_active = 'yes' === get_option( 'snippen_keysms_notifications_enabled', 'no' );
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_user_activation_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_user_activation_enabled', 'yes' );
+
+		$sms_sent   = false;
+		$email_sent = false;
 
 		// 1. Process SMS transport if active and configured
-		if ( $sms_active && ! empty( $phone ) ) {
+		if ( $sms_enabled && ! empty( $phone ) ) {
 			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
 			$provider    = $this->get_provider( $provider_id );
 
 			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
-				$success = $provider->send_sms( $phone, $message );
-				if ( $success ) {
-					return true;
+				$sms_sent = $provider->send_sms( $phone, $message );
+				if ( ! $sms_sent ) {
+					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s.', $provider_id ) );
 				}
-				error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s. Attempting email fallback.', $provider_id ) );
 			}
 		}
 
 		// 2. Email fallback or direct Email transport.
-		$email_active = 'yes' === get_option( 'snippen_email_notifications_enabled', 'yes' );
-		if ( $email_active ) {
+		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
 			$email_provider = $this->get_provider( 'email' );
 			if ( $email_provider instanceof EmailProviderInterface && ! empty( $user->user_email ) ) {
-				$subject = __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
-				return $email_provider->send_email( $user->user_email, $subject, $message );
+				$subject    = __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
+				$email_sent = $email_provider->send_email( $user->user_email, $subject, $message );
 			}
 		}
 
-		return false;
+		return $sms_sent || $email_sent;
 	}
 
 	/**
@@ -141,11 +143,12 @@ class NotificationManager {
 		$object_names = implode( ' og ', $objs );
 		error_log( sprintf( 'NotificationManager: Booking objects: %s', $object_names ) );
 
-		$email_active   = 'yes' === get_option( 'snippen_email_notifications_enabled', 'yes' );
+		$sms_enabled    = 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		$email_enabled  = 'yes' === get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 		$email_provider = $this->get_provider( 'email' );
 
 		// 1. Send admin notification alerts (always email if active)
-		if ( $email_active && $email_provider instanceof EmailProviderInterface ) {
+		if ( $email_enabled && $email_provider instanceof EmailProviderInterface ) {
 			$admin_users = get_users(
 				array(
 					'capability' => Capabilities::MANAGE_BOOKINGS,
@@ -185,10 +188,11 @@ class NotificationManager {
 		}
 
 		// 2. Send customer confirmation
-		$sms_active = 'yes' === get_option( 'snippen_keysms_notifications_enabled', 'no' );
 		$sms_link   = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
+		$sms_sent   = false;
+		$email_sent = false;
 
-		if ( $sms_active && ! empty( $booking->customer_phone ) ) {
+		if ( $sms_enabled && ! empty( $booking->customer_phone ) ) {
 			$sms_message = sprintf(
 				__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),
 				$object_names,
@@ -202,48 +206,48 @@ class NotificationManager {
 
 			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
 				error_log( sprintf( 'NotificationManager: Sending SMS to %s...', $booking->customer_phone ) );
-				$success = $provider->send_sms( $booking->customer_phone, $sms_message );
-				error_log( sprintf( 'NotificationManager: SMS send call returned %s', $success ? 'true' : 'false' ) );
-				if ( $success ) {
-					return true;
+				$sms_sent = $provider->send_sms( $booking->customer_phone, $sms_message );
+				error_log( sprintf( 'NotificationManager: SMS send call returned %s', $sms_sent ? 'true' : 'false' ) );
+				if ( ! $sms_sent ) {
+					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s.', $provider_id ) );
 				}
-				error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s. Attempting email fallback.', $provider_id ) );
 			}
 		}
 
 		// Customer Email Fallback/Direct
-		if ( $email_active && $email_provider instanceof EmailProviderInterface ) {
-			$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
-			$mail_message = sprintf(
-				__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
-				$object_names,
-				$booking->booking_date,
-				$sms_link
-			);
+		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
+				$mail_message = sprintf(
+					__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
+					$object_names,
+					$booking->booking_date,
+					$sms_link
+				);
 
-			$recipient = $booking->customer_email;
-			if ( empty( $recipient ) ) {
-				$user = get_userdata( $booking->user_id );
-				if ( $user ) {
-					$recipient = $user->user_email;
+				$recipient = $booking->customer_email;
+				if ( empty( $recipient ) ) {
+					$user = get_userdata( $booking->user_id );
+					if ( $user ) {
+						$recipient = $user->user_email;
+					}
 				}
-			}
-			error_log( sprintf( 'NotificationManager: Attempting customer email fallback/direct to recipient %s', $recipient ?: 'not set' ) );
+				error_log( sprintf( 'NotificationManager: Attempting customer email fallback/direct to recipient %s', $recipient ?: 'not set' ) );
 
-			if ( ! empty( $recipient ) ) {
-				try {
-					error_log( sprintf( 'NotificationManager: Sending customer email fallback/direct to %s...', $recipient ) );
-					$result = $email_provider->send_email( $recipient, $subject, $mail_message );
-					error_log( sprintf( 'NotificationManager: Customer email call finished with result: %s', $result ? 'true' : 'false' ) );
-					return $result;
-				} catch ( \Exception $e ) {
-					error_log( 'NotificationManager Exception during customer email fallback: ' . $e->getMessage() );
-				} catch ( \Throwable $t ) {
-					error_log( 'NotificationManager Throwable during customer email fallback: ' . $t->getMessage() );
+				if ( ! empty( $recipient ) ) {
+					try {
+						error_log( sprintf( 'NotificationManager: Sending customer email fallback/direct to %s...', $recipient ) );
+						$email_sent = $email_provider->send_email( $recipient, $subject, $mail_message );
+						error_log( sprintf( 'NotificationManager: Customer email call finished with result: %s', $email_sent ? 'true' : 'false' ) );
+					} catch ( \Exception $e ) {
+						error_log( 'NotificationManager Exception during customer email fallback: ' . $e->getMessage() );
+					} catch ( \Throwable $t ) {
+						error_log( 'NotificationManager Throwable during customer email fallback: ' . $t->getMessage() );
+					}
 				}
 			}
 		}
 
-		return false;
+		return $sms_sent || $email_sent;
 	}
 }

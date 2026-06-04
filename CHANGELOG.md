@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.23.3] - 2026-06-04
+### Added
+- Feature (#123): Lagt til egne avhukingsbokser (checkboxes) for hver enkelt varslingstype (bookingbekreftelse, kontoregistrering, tilbakestilling av passord) under henholdsvis E-post og KeySMS. Gjør det mulig å sende varsler til både e-post og SMS samtidig.
+
 ## [1.23.2] - 2026-06-04
 ### Changed
 - Refactor (#123): Refaktorert innstillingssiden (Settings UI) til et ryddig, fanebasert grensesnitt (E-post, KeySMS, Generelt) med egne "Aktiv"-valg for varslingskanaler.
