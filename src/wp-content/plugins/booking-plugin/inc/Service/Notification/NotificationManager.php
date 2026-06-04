@@ -143,18 +143,22 @@ class NotificationManager {
 		$object_names = implode( ' og ', $objs );
 		error_log( sprintf( 'NotificationManager: Booking objects: %s', $object_names ) );
 
-		$sms_enabled    = 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
-		$email_enabled  = 'yes' === get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
+		$sms_enabled       = 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		$email_enabled     = 'yes' === get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
+		$email_admin       = 'yes' === get_option( 'snippen_email_admin_booking_enabled', 'yes' );
+		$sms_admin_enabled = 'yes' === get_option( 'snippen_sms_admin_booking_enabled', 'no' );
+
 		$email_provider = $this->get_provider( 'email' );
 
-		// 1. Send admin notification alerts (always email if active)
-		if ( $email_enabled && $email_provider instanceof EmailProviderInterface ) {
-			$admin_users = get_users(
-				array(
-					'capability' => Capabilities::MANAGE_BOOKINGS,
-				)
-			);
+		// Retrieve all admin users
+		$admin_users = get_users(
+			array(
+				'capability' => Capabilities::MANAGE_BOOKINGS,
+			)
+		);
 
+		// 1. Send admin notification email alerts
+		if ( $email_admin && $email_provider instanceof EmailProviderInterface && ! empty( $admin_users ) ) {
 			$admin_emails = array();
 			foreach ( $admin_users as $admin ) {
 				if ( ! empty( $admin->user_email ) ) {
@@ -182,6 +186,44 @@ class NotificationManager {
 						error_log( 'NotificationManager Exception during admin email send: ' . $e->getMessage() );
 					} catch ( \Throwable $t ) {
 						error_log( 'NotificationManager Throwable during admin email send: ' . $t->getMessage() );
+					}
+				}
+			}
+		}
+
+		// 2. Send admin notification SMS alerts
+		if ( $sms_admin_enabled && ! empty( $admin_users ) ) {
+			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$sms_provider = $this->get_provider( $provider_id );
+
+			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				$admin_phones = array();
+				foreach ( $admin_users as $admin ) {
+					$admin_phone = get_user_meta( $admin->ID, 'snippen_phone', true );
+					if ( ! empty( $admin_phone ) ) {
+						$admin_phones[] = $admin_phone;
+					}
+				}
+				error_log( sprintf( 'NotificationManager: Active admins found for SMS alert: %d (%s)', count( $admin_phones ), implode( ', ', $admin_phones ) ) );
+
+				if ( ! empty( $admin_phones ) ) {
+					$admin_sms_message = sprintf(
+						__( 'Ny bookingforespørsel mottatt for %1$s den %2$s. Kunde: %3$s (%4$s)', 'snippen-booking' ),
+						$object_names,
+						$booking->booking_date,
+						$booking->customer_name,
+						$booking->customer_phone ?: $booking->customer_email
+					);
+
+					foreach ( $admin_phones as $admin_phone ) {
+						try {
+							error_log( sprintf( 'NotificationManager: Sending admin SMS to %s...', $admin_phone ) );
+							$sms_provider->send_sms( $admin_phone, $admin_sms_message );
+						} catch ( \Exception $e ) {
+							error_log( 'NotificationManager Exception during admin SMS send: ' . $e->getMessage() );
+						} catch ( \Throwable $t ) {
+							error_log( 'NotificationManager Throwable during admin SMS send: ' . $t->getMessage() );
+						}
 					}
 				}
 			}

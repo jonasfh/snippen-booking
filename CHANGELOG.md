@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.23.4] - 2026-06-04
+### Added
+- Feature (#123): Lagt til egne avhukingsbokser (checkboxes) for varsling til administratorer om nye bookinger på både E-post og KeySMS (SMS).
+
 ## [1.23.3] - 2026-06-04
 ### Added
 - Feature (#123): Lagt til egne avhukingsbokser (checkboxes) for hver enkelt varslingstype (bookingbekreftelse, kontoregistrering, tilbakestilling av passord) under henholdsvis E-post og KeySMS. Gjør det mulig å sende varsler til både e-post og SMS samtidig.

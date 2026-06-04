@@ -59,9 +59,11 @@ class SettingsPageTest extends TestCase {
 		// Create a mock POST request
 		$_POST['snippen_settings_nonce'] = wp_create_nonce( 'snippen_save_settings' );
 		$_POST['snippen_email_booking_confirmation_enabled'] = 'yes';
+		$_POST['snippen_email_admin_booking_enabled'] = 'yes';
 		$_POST['snippen_email_user_activation_enabled'] = 'yes';
 		$_POST['snippen_email_password_reset_enabled'] = 'yes';
 		$_POST['snippen_sms_booking_confirmation_enabled'] = 'yes';
+		$_POST['snippen_sms_admin_booking_enabled'] = 'yes';
 		$_POST['snippen_sms_user_activation_enabled'] = 'yes';
 		$_POST['snippen_sms_password_reset_enabled'] = 'yes';
 		$_POST['snippen_smtp_enabled'] = 'yes';
@@ -85,9 +87,11 @@ class SettingsPageTest extends TestCase {
 
 		// Assert options are updated in database
 		$this->assertEquals( 'yes', get_option( 'snippen_email_booking_confirmation_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_email_admin_booking_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_email_user_activation_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_email_password_reset_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_sms_booking_confirmation_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_sms_admin_booking_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_sms_user_activation_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_sms_password_reset_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_smtp_enabled' ) );
