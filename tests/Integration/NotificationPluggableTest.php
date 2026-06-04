@@ -74,7 +74,7 @@ class NotificationPluggableTest extends TestCase {
 
 		// 1. Configure settings to use Mock SMS
 		update_option( 'snippen_active_notification_provider', 'mock_sms' );
-		update_option( 'snippen_keysms_notifications_enabled', 'yes' );
+		update_option( 'snippen_sms_booking_confirmation_enabled', 'yes' );
 
 		// 2. Setup mock booking
 		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', array( 'name' => 'Room A' ) );

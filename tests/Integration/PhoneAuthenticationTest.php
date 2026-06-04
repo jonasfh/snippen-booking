@@ -116,7 +116,8 @@ class PhoneAuthenticationTest extends TestCase {
 		};
 		add_filter( 'snippen_booking_notification_providers', $add_mock );
 		update_option( 'snippen_active_notification_provider', 'mock_sms' );
-		update_option( 'snippen_keysms_notifications_enabled', 'yes' );
+		update_option( 'snippen_sms_password_reset_enabled', 'yes' );
+		update_option( 'snippen_email_password_reset_enabled', 'no' );
 		
 		$result = PhoneAuthenticationService::filter_password_reset_message( 'Default Message', 'testkey', 'test_user', $user_data );
 		

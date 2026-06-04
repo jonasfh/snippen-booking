@@ -185,33 +185,36 @@ class PhoneAuthenticationService {
 		$posted_login     = isset( $_POST['user_login'] ) ? sanitize_text_field( wp_unslash( $_POST['user_login'] ) ) : '';
 		$normalized_phone = PhoneHelper::normalize_phone( $posted_login );
 
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_password_reset_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_password_reset_enabled', 'yes' );
+		$sms_sent      = false;
+
 		if ( $normalized_phone && $normalized_phone === get_user_meta( $user_data->ID, 'snippen_phone', true ) ) {
 			// Request was made via phone.
-			$sms_active = 'yes' === get_option( 'snippen_keysms_notifications_enabled', 'no' );
-
-			if ( $sms_active ) {
-				$rendered = $template_service->render_template( 'password_reset', 'sms', $context );
+			if ( $sms_enabled ) {
+				$rendered    = $template_service->render_template( 'password_reset', 'sms', $context );
 				$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
 				$provider    = $notification_manager->get_provider( $provider_id );
 
 				if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
-					$success = $provider->send_sms( $normalized_phone, $rendered['body'] );
-					if ( $success ) {
-						// Return false to abort WordPress sending the default email.
-						return false;
+					$sms_sent = $provider->send_sms( $normalized_phone, $rendered['body'] );
+					if ( ! $sms_sent ) {
+						error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
 					}
-					error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
 				}
 			}
 		}
 
-		// If requested via email (or SMS failed), use the email template.
-		$email_rendered = $template_service->render_template( 'password_reset', 'email', $context );
-
-		if ( ! empty( $email_rendered['body'] ) ) {
-			return $email_rendered['body'];
+		// If email is enabled, OR if SMS was attempted but failed, send/return email message
+		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
+			$email_rendered = $template_service->render_template( 'password_reset', 'email', $context );
+			if ( ! empty( $email_rendered['body'] ) ) {
+				return $email_rendered['body'];
+			}
+			return $message;
 		}
 
-		return $message;
+		// If email is disabled and SMS succeeded, return false to prevent WP from sending the email
+		return false;
 	}
 }
