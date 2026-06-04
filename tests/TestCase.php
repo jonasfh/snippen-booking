@@ -36,6 +36,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
             wp_cache_flush();
         }
         
+        update_option( 'snippen_enable_door_code', 'yes' );
         
         // Globally prevent wp_mail from dispatching actual emails during tests
         add_filter( 'pre_wp_mail', array( $this, 'global_prevent_wp_mail' ), 5, 2 );
@@ -93,6 +94,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
          if (function_exists('wp_cache_flush')) {
              wp_cache_flush();
          }
+         delete_option( 'snippen_enable_door_code' );
          remove_filter( 'pre_wp_mail', array( $this, 'global_prevent_wp_mail' ), 5 );
          remove_filter( 'pre_http_request', array( $this, 'global_mock_http_requests' ), 5 );
          parent::tearDown();

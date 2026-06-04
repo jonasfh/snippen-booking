@@ -167,4 +167,46 @@ class SettingsPageTest extends TestCase {
 		$this->assertEquals( 'original@wp.com', Plugin::get_mail_from( 'original@wp.com' ) );
 		$this->assertEquals( 'Original WordPress Name', Plugin::get_mail_from_name( 'Original WordPress Name' ) );
 	}
+
+	/**
+	 * Test that the settings page renders the door code toggle.
+	 */
+	public function test_settings_page_renders_door_code_toggle() {
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'name="snippen_enable_door_code"', $output );
+		$this->assertStringContainsString( 'Aktiver dørkode-system', $output );
+	}
+
+	/**
+	 * Test saving the enable door code option.
+	 */
+	public function test_settings_page_saves_door_code_toggle() {
+		$_POST['snippen_settings_nonce'] = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_enable_door_code'] = 'yes';
+		$_POST['snippen_door_code_hours_before'] = '12';
+		$_POST['snippen_door_code_hours_after'] = '4';
+
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		ob_get_clean();
+
+		$_POST = array();
+
+		$this->assertEquals( 'yes', get_option( 'snippen_enable_door_code' ) );
+		$this->assertEquals( 12, get_option( 'snippen_door_code_hours_before' ) );
+		$this->assertEquals( 4, get_option( 'snippen_door_code_hours_after' ) );
+
+		// Clean up
+		delete_option( 'snippen_enable_door_code' );
+		delete_option( 'snippen_door_code_hours_before' );
+		delete_option( 'snippen_door_code_hours_after' );
+	}
 }
+

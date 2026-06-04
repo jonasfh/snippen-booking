@@ -257,4 +257,81 @@ class DoorCodeIntegrationTest extends TestCase {
 		$this->assertStringContainsString( 'Dørkode:', $output_out );
 		$this->assertStringContainsString( '&lt;Koden er ikke tilgjengelig før nærmere booking start&gt;', $output_out );
 	}
+
+	/**
+	 * Test that door code fields and values are NOT rendered when door code system is disabled
+	 */
+	public function test_door_code_not_rendered_when_disabled() {
+		global $wpdb;
+
+		// Disable door code system
+		update_option( 'snippen_enable_door_code', 'no' );
+
+		// 1. Check popup details
+		$uuid = wp_generate_uuid4();
+		$mysql_now = current_time( 'mysql' );
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'           => $uuid,
+				'user_id'        => 1,
+				'slot_id'        => 1,
+				'booking_date'   => date( 'Y-m-d', strtotime( $mysql_now . ' + 1 hours' ) ),
+				'customer_name'  => 'John Doe',
+				'customer_email' => 'john@doe.com',
+				'status'         => 'confirmed',
+				'door_code'      => '9999',
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings_booking_objects',
+			array(
+				'booking_id'        => $booking_id,
+				'booking_object_id' => $this->objectId,
+			)
+		);
+
+		// Fake logged in user as admin
+		$admin_id = wp_insert_user( array(
+			'user_login' => 'admin_door_code_disabled_test',
+			'user_pass'  => 'password',
+			'role'       => 'administrator',
+		) );
+		wp_set_current_user( $admin_id );
+		$_GET['booking_uuid'] = $uuid;
+
+		ob_start();
+		Plugin::render_booking_popup();
+		$popup_output = ob_get_clean();
+
+		$this->assertStringNotContainsString( 'Dørkode', $popup_output );
+
+		// 2. Check user bookings row details
+		$booking = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT b.*, s.name as slot_name, s.start_time, s.end_time 
+				 FROM {$wpdb->prefix}snippen_bookings b
+				 JOIN {$wpdb->prefix}snippen_time_slots s ON b.slot_id = s.id
+				 WHERE b.id = %d",
+				$booking_id
+			)
+		);
+		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 1 hours' ) );
+		$booking->start_time   = date( 'H:i:s', strtotime( $mysql_now . ' + 1 hours' ) );
+		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' + 4 hours' ) );
+
+		$user_bookings_page = new UserBookingsPage();
+		$reflection = new \ReflectionClass( UserBookingsPage::class );
+		$method = $reflection->getMethod( 'render_booking_row' );
+		$method->setAccessible( true );
+
+		ob_start();
+		$method->invoke( $user_bookings_page, $booking );
+		$row_output = ob_get_clean();
+
+		$this->assertStringNotContainsString( 'Dørkode:', $row_output );
+		$this->assertStringNotContainsString( '9999', $row_output );
+	}
 }
+

@@ -8,6 +8,15 @@ namespace SnippenBooking\Service;
 class DoorCodeService {
 
 	/**
+	 * Check if door code system is enabled
+	 *
+	 * @return bool
+	 */
+	public static function is_enabled() {
+		return 'yes' === get_option( 'snippen_enable_door_code', 'no' );
+	}
+
+	/**
 	 * Get configured x hours before booking start
 	 */
 	public static function get_hours_before() {
@@ -28,6 +37,10 @@ class DoorCodeService {
 	 * @return bool
 	 */
 	public static function is_in_window( $booking ) {
+		if ( ! self::is_enabled() ) {
+			return false;
+		}
+
 		if ( ! isset( $booking->booking_date ) || ! isset( $booking->start_time ) || ! isset( $booking->end_time ) ) {
 			return false;
 		}
@@ -58,6 +71,12 @@ class DoorCodeService {
 	public static function update_approaching_bookings_door_codes() {
 		global $wpdb;
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+
+		if ( ! self::is_enabled() ) {
+			$wpdb->query( "UPDATE $table_bookings SET door_code = NULL WHERE door_code IS NOT NULL" );
+			return;
+		}
+
 		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
 
 		// Fetch all pending or confirmed bookings that are active
@@ -83,6 +102,18 @@ class DoorCodeService {
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
 		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		if ( ! self::is_enabled() ) {
+			if ( ! empty( $booking->door_code ) ) {
+				$wpdb->update(
+					$table_bookings,
+					array( 'door_code' => null ),
+					array( 'id' => $booking->id )
+				);
+				$booking->door_code = null;
+			}
+			return;
+		}
 
 		if ( self::is_in_window( $booking ) && in_array( $booking->status, array( 'pending', 'confirmed' ), true ) ) {
 			// Find door codes from associated booking objects
@@ -128,6 +159,10 @@ class DoorCodeService {
 	 * @param string $new_door_code
 	 */
 	public static function handle_object_door_code_change( $booking_object_id, $new_door_code ) {
+		if ( ! self::is_enabled() ) {
+			return;
+		}
+
 		global $wpdb;
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
