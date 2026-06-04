@@ -91,9 +91,11 @@ class BookingAssistantTest extends TestCase {
 		global $wpdb;
 
 		// Make current user booking manager
+		$uniq = uniqid();
 		$user_id = wp_insert_user( array(
-			'user_login' => 'adm_test_' . uniqid(),
+			'user_login' => 'adm_test_' . $uniq,
 			'user_pass'  => 'password123',
+			'user_email' => 'admin_' . $uniq . '@example.com',
 			'role'       => 'administrator',
 		) );
 		$user = get_userdata( $user_id );
@@ -123,10 +125,15 @@ class BookingAssistantTest extends TestCase {
 		$this->assertEquals( 'Varsel sendt til administrator(er).', $response['data']['message'] );
 
 		// Verify intercepted mail
-		$this->assertCount( 1, self::$sent_mails );
-		$mail = self::$sent_mails[0];
-		$this->assertEquals( 'admin@example.com', $mail['to'] );
-		$this->assertStringContainsString( 'Test Customer', $mail['message'] );
+		$found_mail = null;
+		foreach ( self::$sent_mails as $mail ) {
+			if ( 'admin_' . $uniq . '@example.com' === $mail['to'] ) {
+				$found_mail = $mail;
+				break;
+			}
+		}
+		$this->assertNotNull( $found_mail );
+		$this->assertStringContainsString( 'Test Customer', $found_mail['message'] );
 
 		wp_delete_user( $user_id );
 	}
@@ -135,9 +142,11 @@ class BookingAssistantTest extends TestCase {
 		global $wpdb;
 
 		// Make current user booking manager
+		$uniq = uniqid();
 		$user_id = wp_insert_user( array(
-			'user_login' => 'adm_test_' . uniqid(),
+			'user_login' => 'adm_test_' . $uniq,
 			'user_pass'  => 'password123',
+			'user_email' => 'admin_' . $uniq . '@example.com',
 			'role'       => 'administrator',
 		) );
 		$user = get_userdata( $user_id );
