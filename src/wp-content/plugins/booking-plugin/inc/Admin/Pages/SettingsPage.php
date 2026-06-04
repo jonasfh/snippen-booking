@@ -45,10 +45,16 @@ class SettingsPage {
 		}
 
 		// Save General Settings
+		$enable_door_code = isset( $_POST['snippen_enable_door_code'] ) ? 'yes' : 'no';
+		update_option( 'snippen_enable_door_code', $enable_door_code );
+
 		$door_code_hours_before = isset( $_POST['snippen_door_code_hours_before'] ) ? intval( $_POST['snippen_door_code_hours_before'] ) : 24;
 		$door_code_hours_after  = isset( $_POST['snippen_door_code_hours_after'] ) ? intval( $_POST['snippen_door_code_hours_after'] ) : 2;
 		update_option( 'snippen_door_code_hours_before', $door_code_hours_before );
 		update_option( 'snippen_door_code_hours_after', $door_code_hours_after );
+
+		// Run sync/clear door codes immediately when settings are saved
+		\SnippenBooking\Service\DoorCodeService::update_approaching_bookings_door_codes();
 
 		$dispatch_method = sanitize_text_field( $_POST['snippen_notification_dispatch_method'] ?? 'async' );
 		update_option( 'snippen_notification_dispatch_method', $dispatch_method );
@@ -98,6 +104,7 @@ class SettingsPage {
 	 * Render the form
 	 */
 	private function render_form() {
+		$enable_door_code       = get_option( 'snippen_enable_door_code', 'no' );
 		$door_code_hours_before = get_option( 'snippen_door_code_hours_before', 24 );
 		$door_code_hours_after  = get_option( 'snippen_door_code_hours_after', 2 );
 		$dispatch_method        = get_option( 'snippen_notification_dispatch_method', 'async' );
@@ -202,6 +209,15 @@ class SettingsPage {
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_enable_door_code" id="snippen_enable_door_code" value="yes" ' . checked( $enable_door_code, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Aktiver dørkode-system', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Aktiver integrasjon med dørkoder for bookingobjekter og bookinger.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div id="snippen-door-code-hours-settings" style="' . ( 'yes' === $enable_door_code ? '' : 'display:none;' ) . '">';
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
 		echo '<label for="snippen_door_code_hours_before" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Vis dørkode x timer før booking start', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="snippen_door_code_hours_before" id="snippen_door_code_hours_before" value="' . esc_attr( $door_code_hours_before ) . '" class="small-text" min="0">';
 		echo '</div>';
@@ -209,6 +225,7 @@ class SettingsPage {
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
 		echo '<label for="snippen_door_code_hours_after" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Vis dørkode y timer etter booking slutt', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="snippen_door_code_hours_after" id="snippen_door_code_hours_after" value="' . esc_attr( $door_code_hours_after ) . '" class="small-text" min="0">';
+		echo '</div>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
@@ -234,7 +251,7 @@ class SettingsPage {
 
 		echo '</form></div>';
 
-		// Tab switcher script
+		// Tab switcher & toggle script
 		echo '<script>
 		jQuery(document).ready(function($) {
 			$(".nav-tab-wrapper a").on("click", function(e) {
@@ -243,6 +260,13 @@ class SettingsPage {
 				$(this).addClass("nav-tab-active");
 				$(".tab-content").hide();
 				$("#tab-" + $(this).data("tab")).show();
+			});
+			$("#snippen_enable_door_code").on("change", function() {
+				if ($(this).is(":checked")) {
+					$("#snippen-door-code-hours-settings").show();
+				} else {
+					$("#snippen-door-code-hours-settings").hide();
+				}
 			});
 		});
 		</script>';

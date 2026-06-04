@@ -149,19 +149,23 @@ class BookingObjectsPage {
 		global $wpdb;
 		$table   = $wpdb->prefix . 'snippen_booking_objects';
 		$objects = $wpdb->get_results( "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY name ASC" );
+		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
 
 		echo '<div class="snippen-card">';
 		echo '<table class="snippen-list-table">';
 		echo '<thead><tr>';
 		echo '<th>' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
 		echo '<th>' . esc_html__( 'Beskrivelse', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Dørkode', 'snippen-booking' ) . '</th>';
+		if ( $door_code_enabled ) {
+			echo '<th>' . esc_html__( 'Dørkode', 'snippen-booking' ) . '</th>';
+		}
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
 
 		if ( empty( $objects ) ) {
-			echo '<tr><td colspan="4">' . esc_html__( 'Ingen lokaler funnet.', 'snippen-booking' ) . '</td></tr>';
+			$colspan = $door_code_enabled ? 4 : 3;
+			echo '<tr><td colspan="' . $colspan . '">' . esc_html__( 'Ingen lokaler funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $objects as $obj ) {
 				$edit_url   = admin_url( 'admin.php?page=snippen-booking-objects&action=edit&id=' . $obj->id );
@@ -170,7 +174,9 @@ class BookingObjectsPage {
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $obj->name ) . '</a></strong></td>';
 				echo '<td>' . esc_html( wp_trim_words( $obj->description, 10 ) ) . '</td>';
-				echo '<td>' . esc_html( $obj->door_code ?: '-' ) . '</td>';
+				if ( $door_code_enabled ) {
+					echo '<td>' . esc_html( $obj->door_code ?: '-' ) . '</td>';
+				}
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
 				echo '<a href="' . esc_url( $delete_url ) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Slett', 'snippen-booking' ) . '</a>';
@@ -208,11 +214,13 @@ class BookingObjectsPage {
 		echo '<textarea name="description" id="description" rows="5" class="large-text">' . esc_textarea( $object ? $object->description : '' ) . '</textarea>';
 		echo '</div>';
 
-		echo '<div class="snippen-form-group">';
-		echo '<label for="door_code">' . esc_html__( 'Gjeldende dørkode', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="door_code" id="door_code" value="' . esc_attr( $object ? $object->door_code : '' ) . '" class="regular-text">';
-		echo '<p class="description">' . esc_html__( 'Denne koden vil automatisk bli synkronisert til brukernes bookinger når bookingtiden nærmer seg.', 'snippen-booking' ) . '</p>';
-		echo '</div>';
+		if ( \SnippenBooking\Service\DoorCodeService::is_enabled() ) {
+			echo '<div class="snippen-form-group">';
+			echo '<label for="door_code">' . esc_html__( 'Gjeldende dørkode', 'snippen-booking' ) . '</label>';
+			echo '<input type="text" name="door_code" id="door_code" value="' . esc_attr( $object ? $object->door_code : '' ) . '" class="regular-text">';
+			echo '<p class="description">' . esc_html__( 'Denne koden vil automatisk bli synkronisert til brukernes bookinger når bookingtiden nærmer seg.', 'snippen-booking' ) . '</p>';
+			echo '</div>';
+		}
 
 		echo '<div class="snippen-form-actions">';
 		echo '<button type="submit" class="snippen-btn snippen-btn-primary">' . esc_html__( 'Lagre lokale', 'snippen-booking' ) . '</button>';

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.2] - 2026-06-04
+### Added
+- Feature (#125): Lagt til avhukingsboks i innstillinger under fanen Generelt for å aktivere eller deaktivere dørkode-systemet.
+- Feature (#125): Skjult dørkoder og tilhørende innstillinger/skjemaer fra alle administrative og offentlige visninger (SettingsPage, BookingObjectsPage, Plugin popup, UserBookingsPage, BookingListShortcode) dersom systemet er deaktivert.
+
 ## [1.23.1] - 2026-06-04
 ### Added
 - Feature (#123): Lagt til egne avhukingsbokser (checkboxes) for varsling til administratorer om nye bookinger på både E-post og KeySMS (SMS).

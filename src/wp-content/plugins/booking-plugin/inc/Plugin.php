@@ -257,13 +257,16 @@ class Plugin {
 
 				echo '<div class="snippen-booking-details-grid">';
 
-				\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
+				$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
+				if ( $door_code_enabled ) {
+					\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
 
-				$door_code_display = '';
-				if ( \SnippenBooking\Service\DoorCodeService::is_in_window( $booking ) ) {
-					$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
-				} else {
-					$door_code_display = '<span style="color:#64748b; font-style:italic;">' . esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' ) . '</span>';
+					$door_code_display = '';
+					if ( \SnippenBooking\Service\DoorCodeService::is_in_window( $booking ) ) {
+						$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
+					} else {
+						$door_code_display = '<span style="color:#64748b; font-style:italic;">' . esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' ) . '</span>';
+					}
 				}
 
 				echo '<div class="detail-item"><strong>' . esc_html__( 'Lokale(r)', 'snippen-booking' ) . ':</strong><span>' . esc_html( $object_names ) . '</span></div>';
@@ -272,7 +275,9 @@ class Plugin {
 				echo '<div class="detail-item"><strong>' . esc_html__( 'Navn', 'snippen-booking' ) . ':</strong><span>' . esc_html( $booking->customer_name ) . '</span></div>';
 				echo '<div class="detail-item"><strong>' . esc_html__( 'E-post', 'snippen-booking' ) . ':</strong><span>' . esc_html( $booking->customer_email ) . '</span></div>';
 				echo '<div class="detail-item"><strong>' . esc_html__( 'Telefon', 'snippen-booking' ) . ':</strong><span>' . esc_html( $booking->customer_phone ?: '-' ) . '</span></div>';
-				echo '<div class="detail-item"><strong>' . esc_html__( 'Dørkode', 'snippen-booking' ) . ':</strong><span>' . $door_code_display . '</span></div>';
+				if ( $door_code_enabled ) {
+					echo '<div class="detail-item"><strong>' . esc_html__( 'Dørkode', 'snippen-booking' ) . ':</strong><span>' . wp_kses_post( $door_code_display ) . '</span></div>';
+				}
 
 				if ( ! empty( $booking->description ) ) {
 					echo '<div class="detail-item full-width"><strong>' . esc_html__( 'Beskrivelse', 'snippen-booking' ) . ':</strong><span class="detail-desc">' . esc_html( $booking->description ) . '</span></div>';

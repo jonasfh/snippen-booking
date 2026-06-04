@@ -187,16 +187,20 @@ class BookingListShortcode {
 			)
 		);
 		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
 		// Synchronize/get door code.
-		\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
-		$door_code_active = \SnippenBooking\Service\DoorCodeService::is_in_window( $booking );
-
+		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
+		$door_code_active  = false;
 		$door_code_display = '';
-		if ( $door_code_active ) {
-			$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
-		} else {
-			$door_code_display = esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' );
+
+		if ( $door_code_enabled ) {
+			\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
+			$door_code_active = \SnippenBooking\Service\DoorCodeService::is_in_window( $booking );
+
+			if ( $door_code_active ) {
+				$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
+			} else {
+				$door_code_display = esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' );
+			}
 		}
 
 		$status_class = 'snippen-status-' . $booking->status;
@@ -250,16 +254,19 @@ class BookingListShortcode {
 					<span class="value price"><?php echo esc_html( number_format( $booking->price, 0, ',', ' ' ) ); ?>,-</span>
 				</div>
 
-				<div class="detail-row door-code-row <?php echo $door_code_active ? 'active-code' : 'hidden-code'; ?>">
-					<span class="label"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></span>
-					<span class="value door-code">
-						<?php if ( $door_code_active ) : ?>
-							<span class="lock-icon">🔓</span> <strong><?php echo esc_html( $door_code_display ); ?></strong>
-						<?php else : ?>
-							<span class="lock-icon">🔒</span> <span class="code-unavailable"><?php echo esc_html( $door_code_display ); ?></span>
-						<?php endif; ?>
-					</span>
-				</div>
+				<?php if ( $door_code_enabled ) : ?>
+					<div class="detail-row door-code-row <?php echo $door_code_active ? 'active-code' : 'hidden-code'; ?>">
+						<span class="label"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></span>
+						<span class="value door-code">
+							<?php if ( $door_code_active ) : ?>
+								<span class="lock-icon">🔓</span> <strong><?php echo esc_html( $door_code_display ); ?></strong>
+							<?php else : ?>
+								<span class="lock-icon">🔒</span> <span class="code-unavailable"><?php echo esc_html( $door_code_display ); ?></span>
+							<?php endif; ?>
+						</span>
+					</div>
+				<?php endif; ?>
+			</div>
 			</div>
 
 			<div class="card-header-spacer"></div>
