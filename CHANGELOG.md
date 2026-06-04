@@ -1,21 +1,12 @@
 # Changelog
 
-## [1.23.4] - 2026-06-04
+## [1.23.1] - 2026-06-04
 ### Added
 - Feature (#123): Lagt til egne avhukingsbokser (checkboxes) for varsling til administratorer om nye bookinger på både E-post og KeySMS (SMS).
-
-## [1.23.3] - 2026-06-04
-### Added
 - Feature (#123): Lagt til egne avhukingsbokser (checkboxes) for hver enkelt varslingstype (bookingbekreftelse, kontoregistrering, tilbakestilling av passord) under henholdsvis E-post og KeySMS. Gjør det mulig å sende varsler til både e-post og SMS samtidig.
-
-## [1.23.2] - 2026-06-04
-### Changed
 - Refactor (#123): Refaktorert innstillingssiden (Settings UI) til et ryddig, fanebasert grensesnitt (E-post, KeySMS, Generelt) med egne "Aktiv"-valg for varslingskanaler.
 - Refactor (#123): Forenklet varslingsrutingen slik at SMS (KeySMS) foretrekkes hvis den er aktivert og kunden har telefonnummer registrert, med automatisk fallback til e-post.
 - Refactor (#123): Fjernet SMS Sandbox-modus og tilhørende innstillinger/logging.
-
-## [1.23.1] - 2026-06-04
-### Added
 - Feature (#123): Fullførte implementeringen av Booking-hjelperen (Booking Assistant) i administrasjonsgrensesnittet med knapper for manuell utsendelse av e-post til kunde, SMS til kunde og varsel til admin, komplett med tilhørende integrasjonstester.
 
 ## [1.23.0] - 2026-06-04
