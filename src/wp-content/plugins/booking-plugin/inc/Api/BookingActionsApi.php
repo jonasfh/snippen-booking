@@ -196,7 +196,7 @@ class BookingActionsApi {
 				$sms_link
 			);
 
-			$provider_id = $notification_manager->get_active_provider_id();
+			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
 			$provider    = $notification_manager->get_provider( $provider_id );
 
 			if ( ! $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface || ! $provider->is_configured() ) {
