@@ -89,6 +89,8 @@ if (count($objects) > 1) {
     $post_id = wp_insert_post( $new_page );
     if ( $post_id && ! is_wp_error( $post_id ) ) {
         wp_set_object_terms( $post_id, 'snippen-booking', 'post_tag' );
+        update_option( 'show_on_front', 'page' );
+        update_option( 'page_on_front', $post_id );
     }
     echo "Created: $page_title\n";
 }
