@@ -2,64 +2,90 @@
 
 namespace SnippenBooking\Service;
 
+use SnippenBooking\Database\Repository\BookingBlockRepository;
+use SnippenBooking\Database\Repository\BookingRepository;
+
 /**
- * Service for calculating availability and detecting overlaps
+ * Service for calculating availability and detecting overlaps for booking blocks
  */
 class AvailabilityService {
 
 	/**
-	 * Check if a specific slot is available for a given date and object
+	 * @var BookingBlockRepository
+	 */
+	private $block_repository;
+
+	/**
+	 * @var BookingRepository
+	 */
+	private $booking_repository;
+
+	public function __construct() {
+		$this->block_repository   = new BookingBlockRepository();
+		$this->booking_repository = new BookingRepository();
+	}
+
+	/**
+	 * Check if a single block is available for a given date and object.
 	 *
 	 * @param int    $objectId
 	 * @param string $date YYYY-MM-DD
-	 * @param int    $slotId
+	 * @param int    $blockId
 	 * @return bool
 	 */
-	public function isSlotAvailable( $objectId, $date, $slotId ) {
-		global $wpdb;
+	public function isBlockAvailable( $objectId, $date, $blockId ) {
+		return $this->areBlocksAvailable( $objectId, $date, array( $blockId ) );
+	}
 
-		$table_slots = $wpdb->prefix . 'snippen_time_slots';
-		$slot        = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM $table_slots WHERE id = %d",
-				$slotId
-			)
-		);
-
-		if ( ! $slot ) {
-			return false;
+	/**
+	 * Check if a set of blocks are available for a given date and object.
+	 *
+	 * @param int    $objectId
+	 * @param string $date YYYY-MM-DD
+	 * @param array  $blockIds
+	 * @return bool
+	 */
+	public function areBlocksAvailable( $objectId, $date, array $blockIds ) {
+		if ( empty( $blockIds ) ) {
+			return true;
 		}
 
-		$proposed_window = $this->calculateWindow( $date, $slot->start_time, $slot->end_time, $slot->cleanup_hours );
+		$proposed_blocks = $this->block_repository->find_by_ids( $blockIds );
+		if ( count( $proposed_blocks ) !== count( $blockIds ) ) {
+			return false; // Some requested blocks do not exist
+		}
 
-		// Fetch bookings that could possibly overlap (2 days before to 2 days after)
-		$table_bookings = $wpdb->prefix . 'snippen_bookings';
-		$buffer_start   = date( 'Y-m-d', strtotime( $date . ' - 2 days' ) );
-		$buffer_end     = date( 'Y-m-d', strtotime( $date . ' + 2 days' ) );
+		// Fetch existing bookings for this object and date
+		$existing_bookings = $this->booking_repository->find_by_object_and_date_range( $objectId, $date, $date );
 
-		$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
-		$existing_bookings     = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT b.booking_date, s.start_time, s.end_time, s.cleanup_hours 
-             FROM $table_bookings b
-             JOIN $table_slots s ON b.slot_id = s.id
-             JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
-             WHERE bbo.booking_object_id = %d 
-             AND b.booking_date BETWEEN %s AND %s 
-             AND b.deleted_at IS NULL
-             AND b.status != 'cancelled'",
-				$objectId,
-				$buffer_start,
-				$buffer_end
-			)
-		);
+		foreach ( $proposed_blocks as $proposed ) {
+			$proposed_start = new \DateTime( $date . ' ' . $proposed->start_time );
+			$proposed_end   = new \DateTime( $date . ' ' . $proposed->end_time );
 
-		foreach ( $existing_bookings as $booking ) {
-			$booked_window = $this->calculateWindow( $booking->booking_date, $booking->start_time, $booking->end_time, $booking->cleanup_hours );
+			// Adjust end time if block wraps past midnight (e.g., end_time is less than start_time)
+			if ( $proposed_end <= $proposed_start ) {
+				$proposed_end->modify( '+1 day' );
+			}
 
-			$overlap = $this->isOverlapping( $proposed_window, $booked_window );
-			if ( $overlap ) {
-				return false;
+			// Subtract 1 second to avoid edge-to-edge overlap conflicts (e.g., 08:00-09:00 and 09:00-10:00)
+			$proposed_end->modify( '-1 second' );
+
+			foreach ( $existing_bookings as $booking ) {
+				$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
+				foreach ( $booked_blocks as $booked ) {
+					$booked_start = new \DateTime( $date . ' ' . $booked->start_time );
+					$booked_end   = new \DateTime( $date . ' ' . $booked->end_time );
+
+					if ( $booked_end <= $booked_start ) {
+						$booked_end->modify( '+1 day' );
+					}
+					$booked_end->modify( '-1 second' );
+
+					// Overlap condition: (start1 < end2) && (start2 < end1)
+					if ( ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end ) ) {
+						return false; // Time conflict
+					}
+				}
 			}
 		}
 
@@ -67,43 +93,16 @@ class AvailabilityService {
 	}
 
 	/**
-	 * Get a list of unavailable slots for a date range
-	 * Returns an array keyed by date, containing arrays of slot IDs
+	 * Get a list of unavailable block IDs for a date range.
 	 *
 	 * @param int    $objectId
 	 * @param string $startDate YYYY-MM-DD
 	 * @param string $endDate YYYY-MM-DD
-	 * @return array
+	 * @return array Array of block IDs indexed by date string
 	 */
-	public function getUnavailableSlots( $objectId, $startDate, $endDate ) {
-		global $wpdb;
-		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
-		$table_bookings = $wpdb->prefix . 'snippen_bookings';
-
-		$all_slots = $wpdb->get_results(
-			"SELECT * FROM $table_slots WHERE deleted_at IS NULL"
-		);
-
-		// Fetch all bookings that could affect this range (including those from before and after)
-		$buffer_start = date( 'Y-m-d', strtotime( $startDate . ' - 2 days' ) );
-		$buffer_end   = date( 'Y-m-d', strtotime( $endDate . ' + 2 days' ) );
-
-		$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
-		$existing_bookings     = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT b.booking_date, b.slot_id, s.start_time, s.end_time, s.cleanup_hours 
-             FROM $table_bookings b
-             JOIN $table_slots s ON b.slot_id = s.id
-             JOIN $table_booking_objects bbo ON b.id = bbo.booking_id
-             WHERE bbo.booking_object_id = %d 
-             AND b.booking_date BETWEEN %s AND %s 
-             AND b.deleted_at IS NULL
-             AND b.status != 'cancelled'",
-				$objectId,
-				$buffer_start,
-				$buffer_end
-			)
-		);
+	public function getUnavailableBlocks( $objectId, $startDate, $endDate ) {
+		$all_blocks = $this->block_repository->find_all();
+		$bookings   = $this->booking_repository->find_by_object_and_date_range( $objectId, $startDate, $endDate );
 
 		$unavailable = array();
 
@@ -114,19 +113,47 @@ class AvailabilityService {
 			$date_str                 = $current->format( 'Y-m-d' );
 			$unavailable[ $date_str ] = array();
 
-			foreach ( $all_slots as $slot ) {
-				$proposed_window = $this->calculateWindow( $date_str, $slot->start_time, $slot->end_time, $slot->cleanup_hours );
+			// Filter bookings for this day
+			$day_bookings = array_filter(
+				$bookings,
+				function ( $b ) use ( $date_str ) {
+					return $b->booking_date === $date_str;
+				}
+			);
 
-				foreach ( $existing_bookings as $booking ) {
-					$booked_window = $this->calculateWindow( $booking->booking_date, $booking->start_time, $booking->end_time, $booking->cleanup_hours );
+			foreach ( $all_blocks as $proposed ) {
+				$proposed_start = new \DateTime( $date_str . ' ' . $proposed->start_time );
+				$proposed_end   = new \DateTime( $date_str . ' ' . $proposed->end_time );
 
-					$overlap = $this->isOverlapping( $proposed_window, $booked_window );
-					if ( $overlap ) {
-						$unavailable[ $date_str ][] = (int) $slot->id;
-						break; // Already unavailable, no need to check other bookings
+				if ( $proposed_end <= $proposed_start ) {
+					$proposed_end->modify( '+1 day' );
+				}
+				$proposed_end->modify( '-1 second' );
+
+				$has_overlap = false;
+				foreach ( $day_bookings as $booking ) {
+					$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
+					foreach ( $booked_blocks as $booked ) {
+						$booked_start = new \DateTime( $date_str . ' ' . $booked->start_time );
+						$booked_end   = new \DateTime( $date_str . ' ' . $booked->end_time );
+
+						if ( $booked_end <= $booked_start ) {
+							$booked_end->modify( '+1 day' );
+						}
+						$booked_end->modify( '-1 second' );
+
+						if ( ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end ) ) {
+							$has_overlap = true;
+							break 2;
+						}
 					}
 				}
+
+				if ( $has_overlap ) {
+					$unavailable[ $date_str ][] = (int) $proposed->id;
+				}
 			}
+
 			$current->modify( '+1 day' );
 		}
 
@@ -134,65 +161,25 @@ class AvailabilityService {
 	}
 
 	/**
-	 * Calculate start and end DateTime for a slot + cleanup
-	 */
-	private function calculateWindow( $date, $start_time, $end_time, $cleanup_hours ) {
-		$start = new \DateTime( $date . ' ' . $start_time );
-		$end   = new \DateTime( $date . ' ' . $end_time );
-
-		if ( $cleanup_hours > 0 ) {
-			$end->modify( '+' . (int) $cleanup_hours . ' hours' );
-		}
-
-		// Trekk fra 1 sekund for å unngå at tidsluker som går "kant i kant" overlapper
-		$end->modify( '-1 second' );
-
-		return array(
-			'start' => $start,
-			'end'   => $end,
-		);
-	}
-
-	/**
-	 * Check if two windows overlap
-	 */
-	private function isOverlapping( $win1, $win2 ) {
-		return ( $win1['start'] < $win2['end'] ) && ( $win2['start'] < $win1['end'] );
-	}
-
-	/**
-	 * Check if a time slot is applicable for a given date
+	 * Check if a booking block is applicable for a given date.
 	 *
-	 * @param object $slot DB slot object (needs days_of_week, date_start, date_end)
+	 * @param object $block DB block object
 	 * @param string $date_str YYYY-MM-DD
 	 * @param bool   $is_holiday
 	 * @return bool
 	 */
-	public function isSlotApplicable( $slot, $date_str, $is_holiday ) {
-		$match = true;
+	public function isBlockApplicable( $block, $date_str, $is_holiday ) {
 		$day_of_week = date( 'w', strtotime( $date_str ) );
 
-		if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
-			$allowed_days = explode( ',', $slot->days_of_week );
+		if ( $block->days_of_week !== null && $block->days_of_week !== '' ) {
+			$allowed_days = explode( ',', $block->days_of_week );
 			if ( $is_holiday ) {
-				$is_day_match = in_array( '7', $allowed_days );
-			} else {
-				$is_day_match = in_array( (string) $day_of_week, $allowed_days );
+				// Holiday day code is 7
+				return in_array( '7', $allowed_days );
 			}
-
-			if ( ! $is_day_match ) {
-				$match = false;
-			}
+			return in_array( (string) $day_of_week, $allowed_days );
 		}
 
-		if ( !empty($slot->date_start) && $date_str < $slot->date_start ) {
-			$match = false;
-		}
-
-		if ( !empty($slot->date_end) && $date_str > $slot->date_end ) {
-			$match = false;
-		}
-
-		return $match;
+		return true;
 	}
 }

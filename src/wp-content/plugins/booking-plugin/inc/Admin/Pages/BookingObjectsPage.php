@@ -147,8 +147,8 @@ class BookingObjectsPage {
 	 */
 	private function render_list() {
 		global $wpdb;
-		$table   = $wpdb->prefix . 'snippen_booking_objects';
-		$objects = $wpdb->get_results( "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY name ASC" );
+		$table             = $wpdb->prefix . 'snippen_booking_objects';
+		$objects           = $wpdb->get_results( "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY name ASC" );
 		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
 
 		echo '<div class="snippen-card">';

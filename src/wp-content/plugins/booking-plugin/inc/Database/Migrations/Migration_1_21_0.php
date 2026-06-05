@@ -25,20 +25,20 @@ class Migration_1_21_0 {
 			if ( in_array( $slot->name, array( 'Hele dagen', 'Formiddag', 'Ettermiddag' ) ) ) {
 				// Find objects linked to this slot
 				$object_ids = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM $table_time_slot_objects WHERE time_slot_id = %d ORDER BY booking_object_id ASC", $slot->id ) );
-				
+
 				if ( ! empty( $object_ids ) ) {
 					// Get object names
 					$in_clause    = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
 					$object_names = $wpdb->get_col( $wpdb->prepare( "SELECT name FROM $table_objects WHERE id IN ($in_clause)", ...$object_ids ) );
-					
+
 					$prefix = implode( ' + ', $object_names );
 					if ( count( $object_names ) > 1 ) {
 						$prefix = 'Hele området';
 					}
 
 					// Determine suffix
-					$suffix = '';
-					$is_holiday = isset($slot->is_holiday) ? (int)$slot->is_holiday : 0;
+					$suffix     = '';
+					$is_holiday = isset( $slot->is_holiday ) ? (int) $slot->is_holiday : 0;
 					if ( $is_holiday === 1 ) {
 						$suffix = ' (Helligdager og høytider)';
 					} elseif ( $slot->days_of_week === '1,2,3,4' ) {

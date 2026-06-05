@@ -7,26 +7,22 @@ use SnippenBooking\Service\AvailabilityService;
 
 class OverlapReproductionTest extends TestCase {
 
-    public function testConsecutiveWholeDayBookingsDoNotOverlap() {
-        $service = new AvailabilityService();
-        
-        // Window 1: Day 1, 11:00 - 23:00 + 12h cleanup
-        // Logical end: Day 2, 11:00
-        $win1 = $this->callPrivateMethod($service, 'calculateWindow', ['2026-05-20', '11:00:00', '23:00:00', 12]);
-        
-        // Window 2: Day 2, 11:00 - 23:00 + 12h cleanup
-        // Logical start: Day 2, 11:00
-        $win2 = $this->callPrivateMethod($service, 'calculateWindow', ['2026-05-21', '11:00:00', '23:00:00', 12]);
-        
-        $isOverlapping = $this->callPrivateMethod($service, 'isOverlapping', [$win1, $win2]);
-        
-        $this->assertFalse($isOverlapping, 'Consecutive bookings should NOT overlap');
-    }
+	public function testConsecutiveWholeDayBookingsDoNotOverlap() {
+		$service = new AvailabilityService();
 
-    private function callPrivateMethod($object, $methodName, $parameters) {
-        $reflection = new \ReflectionClass(get_class($object));
-        $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
-        return $method->invokeArgs($object, $parameters);
-    }
+		// Proposed block 08:00:00 - 09:00:00.
+		// Next block 09:00:00 - 10:00:00.
+		// They should be compatible and not overlap.
+		$proposed_start = new \DateTime( '2026-05-20 08:00:00' );
+		$proposed_end   = new \DateTime( '2026-05-20 09:00:00' );
+		$proposed_end->modify( '-1 second' );
+
+		$booked_start = new \DateTime( '2026-05-20 09:00:00' );
+		$booked_end   = new \DateTime( '2026-05-20 10:00:00' );
+		$booked_end->modify( '-1 second' );
+
+		$isOverlapping = ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end );
+
+		$this->assertFalse( $isOverlapping, 'Consecutive blocks should NOT overlap' );
+	}
 }

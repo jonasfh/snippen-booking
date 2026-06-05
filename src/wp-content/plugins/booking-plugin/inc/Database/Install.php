@@ -17,8 +17,8 @@ class Install {
 
 		// If running in tests and tables already exist, skip to prevent implicit commits from DDL statements
 		if ( defined( 'SNIPPEN_BOOKING_TESTS_DIR' ) ) {
-			$table_bookings = $wpdb->prefix . 'snippen_bookings';
-			if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_bookings'" ) === $table_bookings ) {
+			$table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
+			if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_blocks'" ) === $table_blocks ) {
 				return;
 			}
 		}
@@ -42,35 +42,82 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_objects );
 
-		// Time slots table
-		$table_slots = $wpdb->prefix . 'snippen_time_slots';
-		$sql_slots   = "CREATE TABLE $table_slots (
+		// Booking blocks table
+		$table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
+		$sql_blocks   = "CREATE TABLE $table_blocks (
             id INT NOT NULL AUTO_INCREMENT,
             name VARCHAR(255) NOT NULL,
             description TEXT,
             start_time TIME DEFAULT '00:00:00',
             end_time TIME DEFAULT '23:59:59',
-            cleanup_hours INT DEFAULT 0,
             days_of_week VARCHAR(50) DEFAULT NULL,
+            sort_order INT DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+		dbDelta( $sql_blocks );
+
+		// Booking object booking blocks junction table
+		$table_object_blocks = $wpdb->prefix . 'snippen_booking_object_booking_blocks';
+		$sql_object_blocks   = "CREATE TABLE $table_object_blocks (
+            booking_object_id INT NOT NULL,
+            booking_block_id INT NOT NULL,
+            PRIMARY KEY  (booking_object_id, booking_block_id),
+            KEY booking_object_id (booking_object_id),
+            KEY booking_block_id (booking_block_id)
+        ) $charset_collate;";
+		dbDelta( $sql_object_blocks );
+
+		// Pricing rules table
+		$table_pricing_rules = $wpdb->prefix . 'snippen_pricing_rules';
+		$sql_pricing_rules   = "CREATE TABLE $table_pricing_rules (
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            priority INT DEFAULT 0,
+            days_of_week VARCHAR(50) DEFAULT NULL,
+            holiday_only TINYINT(1) DEFAULT 0,
             date_start DATE DEFAULT NULL,
             date_end DATE DEFAULT NULL,
-            price_id INT DEFAULT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id),
-            KEY price_id (price_id)
+            KEY priority (priority)
         ) $charset_collate;";
-		dbDelta( $sql_slots );
+		dbDelta( $sql_pricing_rules );
+
+		// Pricing rule booking blocks junction table
+		$table_rule_blocks = $wpdb->prefix . 'snippen_pricing_rule_booking_blocks';
+		$sql_rule_blocks   = "CREATE TABLE $table_rule_blocks (
+            pricing_rule_id INT NOT NULL,
+            booking_block_id INT NOT NULL,
+            PRIMARY KEY  (pricing_rule_id, booking_block_id),
+            KEY pricing_rule_id (pricing_rule_id),
+            KEY booking_block_id (booking_block_id)
+        ) $charset_collate;";
+		dbDelta( $sql_rule_blocks );
+
+		// Pricing rule booking objects junction table
+		$table_rule_objects = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
+		$sql_rule_objects   = "CREATE TABLE $table_rule_objects (
+            pricing_rule_id INT NOT NULL,
+            booking_object_id INT NOT NULL,
+            PRIMARY KEY  (pricing_rule_id, booking_object_id),
+            KEY pricing_rule_id (pricing_rule_id),
+            KEY booking_object_id (booking_object_id)
+        ) $charset_collate;";
+		dbDelta( $sql_rule_objects );
 
 		// Bookings table
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$sql_bookings   = "CREATE TABLE $table_bookings (
             id BIGINT NOT NULL AUTO_INCREMENT,
             uuid VARCHAR(36) NULL,
-            facility VARCHAR(50),
             user_id BIGINT UNSIGNED NOT NULL,
-            slot_id INT NOT NULL,
             booking_date DATE NOT NULL,
             customer_name VARCHAR(255) NOT NULL,
             customer_email VARCHAR(255) NOT NULL,
@@ -85,53 +132,31 @@ class Install {
             PRIMARY KEY  (id),
             UNIQUE KEY uuid (uuid),
             KEY booking_date (booking_date),
-            KEY slot_id (slot_id),
             KEY user_id (user_id)
         ) $charset_collate;";
 		dbDelta( $sql_bookings );
 
-		// Booking objects junction table (many-to-many relationship)
-		$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		// Booking booking blocks junction table
+		$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
+		$sql_booking_blocks   = "CREATE TABLE $table_booking_blocks (
+            booking_id BIGINT NOT NULL,
+            booking_block_id INT NOT NULL,
+            PRIMARY KEY  (booking_id, booking_block_id),
+            KEY booking_id (booking_id),
+            KEY booking_block_id (booking_block_id)
+        ) $charset_collate;";
+		dbDelta( $sql_booking_blocks );
+
+		// Booking booking objects junction table
+		$table_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
 		$sql_booking_objects   = "CREATE TABLE $table_booking_objects (
-            id INT NOT NULL AUTO_INCREMENT,
             booking_id BIGINT NOT NULL,
             booking_object_id INT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY  (id),
+            PRIMARY KEY  (booking_id, booking_object_id),
             KEY booking_id (booking_id),
-            KEY booking_object_id (booking_object_id),
-            UNIQUE KEY unique_booking_object (booking_id, booking_object_id)
+            KEY booking_object_id (booking_object_id)
         ) $charset_collate;";
 		dbDelta( $sql_booking_objects );
-
-		// Pricing table
-		$table_prices = $wpdb->prefix . 'snippen_prices';
-		$sql_prices   = "CREATE TABLE $table_prices (
-            id INT NOT NULL AUTO_INCREMENT,
-            name VARCHAR(100) NOT NULL,
-            description TEXT,
-            price DECIMAL(10,2) NOT NULL,
-            priority INT DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY  (id),
-            KEY priority (priority)
-        ) $charset_collate;";
-		dbDelta( $sql_prices );
-
-		// Time slot booking objects junction table
-		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
-		$sql_time_slot_objects   = "CREATE TABLE $table_time_slot_objects (
-            id INT NOT NULL AUTO_INCREMENT,
-            time_slot_id INT NOT NULL,
-            booking_object_id INT NOT NULL,
-            PRIMARY KEY  (id),
-            KEY time_slot_id (time_slot_id),
-            KEY booking_object_id (booking_object_id),
-            UNIQUE KEY unique_time_slot_object (time_slot_id, booking_object_id)
-        ) $charset_collate;";
-		dbDelta( $sql_time_slot_objects );
 
 		// Run migrations
 		MigrationManager::run();

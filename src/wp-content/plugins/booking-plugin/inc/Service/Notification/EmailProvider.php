@@ -112,13 +112,13 @@ class EmailProvider implements EmailProviderInterface {
 
 	public function send_email( string $to, string $subject, string $message ): bool {
 		error_log( sprintf( 'EmailProvider: Attempting to send email to %s. Subject: %s', $to, $subject ) );
-		
+
 		add_action( 'wp_mail_failed', array( $this, 'log_mail_failure' ) );
-		
+
 		$result = wp_mail( $to, $subject, $message );
-		
+
 		remove_action( 'wp_mail_failed', array( $this, 'log_mail_failure' ) );
-		
+
 		error_log( sprintf( 'EmailProvider: wp_mail returned %s', $result ? 'true' : 'false' ) );
 		return (bool) $result;
 	}

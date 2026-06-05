@@ -25,7 +25,8 @@ class DoorCodeServiceTest extends TestCase {
 
 		// Clear bookings for test isolation
 		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_bookings" );
-		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_bookings_booking_objects" );
+		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_booking_booking_blocks" );
+		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_booking_booking_objects" );
 
 		// Reset options
 		delete_option( 'snippen_door_code_hours_before' );
@@ -58,26 +59,8 @@ class DoorCodeServiceTest extends TestCase {
 		update_option( 'snippen_door_code_hours_before', 24 );
 		update_option( 'snippen_door_code_hours_after', 2 );
 
-		// Get current time as reference
-		$now = new \DateTime( current_time( 'mysql' ) );
-
-		// Create a booking whose start is 10 hours in the future
-		// This booking should be in the window
-		$booking_date = $now->format( 'Y-m-d' );
-		
-		$booking = (object) array(
-			'booking_date' => $booking_date,
-			'start_time'   => date( 'H:i:s', strtotime( current_time( 'mysql' ) . ' + 10 hours' ) ),
-			'end_time'     => date( 'H:i:s', strtotime( current_time( 'mysql' ) . ' + 14 hours' ) ),
-		);
-
-		// The start time is in the future. Wait! What if the time arithmetic crosses midnight?
-		// Let's use clean dates.
-		$now_base = new \DateTime( '2026-06-15 12:00:00' );
-		// Fake/mock the current_time action or just prepare datetime values relative to the actual current time.
-		// Since DoorCodeService::is_in_window uses current_time('mysql'), let's construct the booking relative to current_time('mysql')
 		$mysql_now = current_time( 'mysql' );
-		
+
 		// 1. Booking in progress / upcoming (starts in 5 hours, ends in 8 hours)
 		$booking_in = (object) array(
 			'booking_date' => date( 'Y-m-d', strtotime( $mysql_now . ' + 5 hours' ) ),
@@ -116,14 +99,17 @@ class DoorCodeServiceTest extends TestCase {
 			array( 'id' => $this->objectId )
 		);
 
+		// Get weekday block
+		$block_id = (int) $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}snippen_booking_blocks LIMIT 1" );
+
 		$mysql_now = current_time( 'mysql' );
 
 		// Create a booking that is in the window (starts in 2 hours)
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
 			array(
+				'uuid'           => 'doorcode-uuid-1',
 				'user_id'        => 1,
-				'slot_id'        => 1,
 				'booking_date'   => date( 'Y-m-d', strtotime( $mysql_now . ' + 2 hours' ) ),
 				'customer_name'  => 'John Doe',
 				'customer_email' => 'john@example.com',
@@ -134,20 +120,30 @@ class DoorCodeServiceTest extends TestCase {
 		$booking_id = $wpdb->insert_id;
 
 		$wpdb->insert(
-			$wpdb->prefix . 'snippen_bookings_booking_objects',
+			$wpdb->prefix . 'snippen_booking_booking_objects',
 			array(
 				'booking_id'        => $booking_id,
 				'booking_object_id' => $this->objectId,
 			)
 		);
 
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_booking_blocks',
+			array(
+				'booking_id'       => $booking_id,
+				'booking_block_id' => $block_id,
+			)
+		);
+
 		// Retrieve booking
 		$booking = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT b.*, s.start_time, s.end_time 
+				"SELECT b.*, MIN(s.start_time) as start_time, MAX(s.end_time) as end_time 
 				 FROM {$wpdb->prefix}snippen_bookings b
-				 JOIN {$wpdb->prefix}snippen_time_slots s ON b.slot_id = s.id
-				 WHERE b.id = %d",
+				 JOIN {$wpdb->prefix}snippen_booking_booking_blocks bb ON b.id = bb.booking_id
+				 JOIN {$wpdb->prefix}snippen_booking_blocks s ON bb.booking_block_id = s.id
+				 WHERE b.id = %d
+				 GROUP BY b.id",
 				$booking_id
 			)
 		);
@@ -202,14 +198,17 @@ class DoorCodeServiceTest extends TestCase {
 			array( 'id' => $this->objectId )
 		);
 
+		// Get weekday block
+		$block_id = (int) $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}snippen_booking_blocks LIMIT 1" );
+
 		$mysql_now = current_time( 'mysql' );
 
 		// Create a booking
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
 			array(
+				'uuid'           => 'doorcode-uuid-2',
 				'user_id'        => 1,
-				'slot_id'        => 1,
 				'booking_date'   => date( 'Y-m-d', strtotime( $mysql_now . ' + 1 hours' ) ),
 				'customer_name'  => 'Duet User',
 				'customer_email' => 'duet@example.com',
@@ -221,27 +220,37 @@ class DoorCodeServiceTest extends TestCase {
 
 		// Link to BOTH objects
 		$wpdb->insert(
-			$wpdb->prefix . 'snippen_bookings_booking_objects',
+			$wpdb->prefix . 'snippen_booking_booking_objects',
 			array(
 				'booking_id'        => $booking_id,
 				'booking_object_id' => $this->objectId,
 			)
 		);
 		$wpdb->insert(
-			$wpdb->prefix . 'snippen_bookings_booking_objects',
+			$wpdb->prefix . 'snippen_booking_booking_objects',
 			array(
 				'booking_id'        => $booking_id,
 				'booking_object_id' => $object2_id,
 			)
 		);
 
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_booking_blocks',
+			array(
+				'booking_id'       => $booking_id,
+				'booking_block_id' => $block_id,
+			)
+		);
+
 		// Retrieve booking
 		$booking = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT b.*, s.start_time, s.end_time 
+				"SELECT b.*, MIN(s.start_time) as start_time, MAX(s.end_time) as end_time 
 				 FROM {$wpdb->prefix}snippen_bookings b
-				 JOIN {$wpdb->prefix}snippen_time_slots s ON b.slot_id = s.id
-				 WHERE b.id = %d",
+				 JOIN {$wpdb->prefix}snippen_booking_booking_blocks bb ON b.id = bb.booking_id
+				 JOIN {$wpdb->prefix}snippen_booking_blocks s ON bb.booking_block_id = s.id
+				 WHERE b.id = %d
+				 GROUP BY b.id",
 				$booking_id
 			)
 		);
