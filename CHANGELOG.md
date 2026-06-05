@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.24.0] - 2026-06-05
+### Added
+- Redesign (#127): Redesigned core domain model to support flexible block-based selections (`booking_blocks`) and priority-based pricing rules (`pricing_rules`) instead of legacy slot-based systems.
+- Feature (#127): Updated demo-data seeding within the Setup Wizard to support Mon-Thu hourly bookings (08-23), Friday hourly bookings (08-16) plus an evening block (16-23), and weekend/holiday Day (08-16) and Evening (16-23) blocks with matching pricing.
+- Refactor (#127): Retained backward compatibility with slot-based tables and wrappers in Availability and Pricing services during transition.
+
 ## [1.23.2] - 2026-06-04
 ### Added
 - Feature (#125): Lagt til avhukingsboks i innstillinger under fanen Generelt for å aktivere eller deaktivere dørkode-systemet.

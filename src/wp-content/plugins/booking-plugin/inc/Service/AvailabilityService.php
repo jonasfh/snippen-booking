@@ -182,4 +182,99 @@ class AvailabilityService {
 
 		return true;
 	}
+
+	/**
+	 * Backward compatibility wrapper for old slot-based checks
+	 */
+	public function isSlotAvailable( $objectId, $date, $slotId ) {
+		global $wpdb;
+		$table_slots = $wpdb->prefix . 'snippen_time_slots';
+		$slot        = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table_slots WHERE id = %d",
+				$slotId
+			)
+		);
+		if ( ! $slot ) {
+			return false;
+		}
+
+		$proposed_start = new \DateTime( $date . ' ' . $slot->start_time );
+		$proposed_end   = new \DateTime( $date . ' ' . $slot->end_time );
+
+		if ( $slot->cleanup_hours > 0 ) {
+			$proposed_end->modify( '+' . (int) $slot->cleanup_hours . ' hours' );
+		}
+		$proposed_end->modify( '-1 second' );
+
+		// Fetch existing bookings for this object and date
+		$existing_bookings = $this->booking_repository->find_by_object_and_date_range( $objectId, $date, $date );
+
+		foreach ( $existing_bookings as $booking ) {
+			$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
+			foreach ( $booked_blocks as $booked ) {
+				$booked_start = new \DateTime( $date . ' ' . $booked->start_time );
+				$booked_end   = new \DateTime( $date . ' ' . $booked->end_time );
+
+				if ( $booked_end <= $booked_start ) {
+					$booked_end->modify( '+1 day' );
+				}
+				$booked_end->modify( '-1 second' );
+
+				if ( ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end ) ) {
+					return false;
+				}
+			}
+
+			// Check old slot_id if set
+			if ( ! empty( $booking->slot_id ) ) {
+				$b_slot = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_slots WHERE id = %d", $booking->slot_id ) );
+				if ( $b_slot ) {
+					$booked_start = new \DateTime( $booking->booking_date . ' ' . $b_slot->start_time );
+					$booked_end   = new \DateTime( $booking->booking_date . ' ' . $b_slot->end_time );
+					if ( $b_slot->cleanup_hours > 0 ) {
+						$booked_end->modify( '+' . (int) $b_slot->cleanup_hours . ' hours' );
+					}
+					$booked_end->modify( '-1 second' );
+
+					if ( ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end ) ) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Backward compatibility wrapper for old slot-based checks
+	 */
+	public function getUnavailableSlots( $objectId, $startDate, $endDate ) {
+		$unavailable = array();
+		$current     = new \DateTime( $startDate );
+		$last        = new \DateTime( $endDate );
+		while ( $current <= $last ) {
+			$unavailable[ $current->format( 'Y-m-d' ) ] = array();
+			$current->modify( '+1 day' );
+		}
+		return $unavailable;
+	}
+
+	/**
+	 * Backward compatibility wrapper for old slot-based checks
+	 */
+	public function isSlotApplicable( $slot, $date_str, $is_holiday ) {
+		$day_of_week = date( 'w', strtotime( $date_str ) );
+
+		if ( $slot->days_of_week !== null && $slot->days_of_week !== '' ) {
+			$allowed_days = explode( ',', $slot->days_of_week );
+			if ( $is_holiday ) {
+				return in_array( '7', $allowed_days );
+			}
+			return in_array( (string) $day_of_week, $allowed_days );
+		}
+
+		return true;
+	}
 }
