@@ -108,7 +108,7 @@ class KeySmsService implements SmsServiceInterface {
 			return false;
 		}
 
-		$code = wp_remote_retrieve_response_code( $response );
+		$code          = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
 		error_log( sprintf( 'KeySmsService: Received HTTP status code %d. Response body: %s', $code, $response_body ) );
 

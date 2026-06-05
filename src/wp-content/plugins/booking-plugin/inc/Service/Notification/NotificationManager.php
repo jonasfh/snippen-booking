@@ -77,7 +77,7 @@ class NotificationManager {
 			return false;
 		}
 
-		$message = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
+		$message       = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_user_activation_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_user_activation_enabled', 'yes' );
 

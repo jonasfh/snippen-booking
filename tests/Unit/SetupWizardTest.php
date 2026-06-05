@@ -23,12 +23,15 @@ class SetupWizardTest extends TestCase {
 
 	private function cleanup_setup_data() {
 		global $wpdb;
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_prices" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects" );
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_blocks" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_object_booking_blocks" );
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rules" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rule_booking_blocks" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rule_booking_objects" );
 	}
 
 	public function testIsCompletedReturnsFalseByDefault() {
@@ -47,7 +50,6 @@ class SetupWizardTest extends TestCase {
 	}
 
 	public function testCreateStarterSetupCreatesObjects() {
-		// Mock database tables
 		global $wpdb;
 
 		$result = SetupWizard::create_starter_setup();
@@ -60,14 +62,14 @@ class SetupWizardTest extends TestCase {
 		$this->assertCount( 2, $objects );
 	}
 
-	public function testCreateStarterSetupCreatesSlots() {
+	public function testCreateStarterSetupCreatesBlocks() {
 		global $wpdb;
 
 		SetupWizard::create_starter_setup();
 
-		// Verify time slots were created
-		$slots = $wpdb->get_results( "SELECT id FROM {$wpdb->prefix}snippen_time_slots WHERE deleted_at IS NULL" );
-		$this->assertCount( 21, $slots );
+		// Verify blocks were created (8 Mon-Fri hourly + 7 Mon-Thu hourly + 1 Day + 1 Evening = 17)
+		$blocks = $wpdb->get_results( "SELECT id FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL" );
+		$this->assertCount( 17, $blocks );
 	}
 
 	public function testCreateStarterSetupCreatesPricing() {
@@ -75,9 +77,9 @@ class SetupWizardTest extends TestCase {
 
 		SetupWizard::create_starter_setup();
 
-		// Verify pricing was created
-		$pricing = $wpdb->get_results( "SELECT id FROM {$wpdb->prefix}snippen_prices" );
-		$this->assertGreaterThan( 0, count( $pricing ) );
+		// Verify pricing rules were created (10)
+		$pricing = $wpdb->get_results( "SELECT id FROM {$wpdb->prefix}snippen_pricing_rules WHERE deleted_at IS NULL" );
+		$this->assertCount( 10, $pricing );
 	}
 
 	public function testCreateStarterSetupIsIdempotent() {

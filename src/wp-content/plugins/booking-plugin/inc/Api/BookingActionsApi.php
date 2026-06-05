@@ -106,7 +106,7 @@ class BookingActionsApi {
 				$booking_id
 			)
 		);
-		$object_names = implode( ' og ', $objs );
+		$object_names   = implode( ' og ', $objs );
 
 		$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
 		$email_provider       = $notification_manager->get_provider( 'email' );
@@ -115,7 +115,7 @@ class BookingActionsApi {
 			if ( ! $email_provider instanceof \SnippenBooking\Service\Notification\EmailProviderInterface ) {
 				wp_send_json_error( array( 'message' => __( 'E-post tilbyder er ikke tilgjengelig.', 'snippen-booking' ) ) );
 			}
-			$admin_users = get_users( array( 'capability' => Capabilities::MANAGE_BOOKINGS ) );
+			$admin_users  = get_users( array( 'capability' => Capabilities::MANAGE_BOOKINGS ) );
 			$admin_emails = array();
 			foreach ( $admin_users as $admin ) {
 				if ( ! empty( $admin->user_email ) ) {

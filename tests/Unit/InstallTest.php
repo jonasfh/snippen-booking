@@ -60,29 +60,32 @@ class InstallTest extends TestCase {
 
         // Clear existing tables if they exist
         $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_booking_objects" );
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_time_slots" );
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_prices" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_booking_blocks" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_booking_object_booking_blocks" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_pricing_rules" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_pricing_rule_booking_blocks" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_pricing_rule_booking_objects" );
         $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_bookings" );
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_bookings_booking_objects" );
-        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_time_slot_booking_objects" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_booking_booking_blocks" );
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}snippen_booking_booking_objects" );
 
         // Call activate
         Install::activate();
 
         // Verify tables exist
         $this->assertTableExists( "{$wpdb->prefix}snippen_booking_objects" );
-        $this->assertTableExists( "{$wpdb->prefix}snippen_time_slots" );
-        $this->assertTableExists( "{$wpdb->prefix}snippen_prices" );
+        $this->assertTableExists( "{$wpdb->prefix}snippen_booking_blocks" );
+        $this->assertTableExists( "{$wpdb->prefix}snippen_pricing_rules" );
 
         // Verify NO seed data was created
         $object_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_objects" );
         $this->assertEquals( 0, $object_count, 'No seed data should be created during activation' );
 
-        $slot_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_time_slots" );
-        $this->assertEquals( 0, $slot_count, 'No time slots should be created during activation' );
+        $block_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_blocks" );
+        $this->assertEquals( 0, $block_count, 'No booking blocks should be created during activation' );
 
-        $price_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_prices" );
-        $this->assertEquals( 0, $price_count, 'No pricing should be created during activation' );
+        $rule_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_pricing_rules" );
+        $this->assertEquals( 0, $rule_count, 'No pricing rules should be created during activation' );
     }
 
     /**

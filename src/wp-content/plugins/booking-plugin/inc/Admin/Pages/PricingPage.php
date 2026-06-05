@@ -258,7 +258,7 @@ class PricingPage {
 				echo '</div>';
 			}
 		}
-		
+
 		echo '</div>';
 		echo '</div>';
 

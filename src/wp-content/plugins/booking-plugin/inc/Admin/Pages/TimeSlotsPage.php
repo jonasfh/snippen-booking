@@ -93,8 +93,8 @@ class TimeSlotsPage {
 		$object_ids    = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
 		$days_of_week  = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
 		$days_of_week  = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
-		$start_date = ! empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
-		$end_date   = ! empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
+		$start_date    = ! empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
+		$end_date      = ! empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
 
 		$data = array(
 			'name'          => $name,
@@ -174,18 +174,18 @@ class TimeSlotsPage {
                   WHERE s.deleted_at IS NULL ";
 
 		if ( $filter === 'no_price' ) {
-			$query .= " AND s.price_id IS NULL ";
+			$query .= ' AND s.price_id IS NULL ';
 		}
 
-		$query .= " GROUP BY s.id ORDER BY s.start_time ASC";
+		$query .= ' GROUP BY s.id ORDER BY s.start_time ASC';
 
 		$slots = $wpdb->get_results( $query );
 
 		echo '<div style="margin-bottom: 15px;">';
-		$active_all = $filter !== 'no_price' ? 'nav-tab-active' : '';
+		$active_all      = $filter !== 'no_price' ? 'nav-tab-active' : '';
 		$active_no_price = $filter === 'no_price' ? 'nav-tab-active' : '';
-		echo '<a href="?page=snippen-booking-slots" class="nav-tab ' . esc_attr( $active_all ) . '">' . esc_html__('Alle', 'snippen-booking') . '</a>';
-		echo '<a href="?page=snippen-booking-slots&filter=no_price" class="nav-tab ' . esc_attr( $active_no_price ) . '">' . esc_html__('Uten pris', 'snippen-booking') . '</a>';
+		echo '<a href="?page=snippen-booking-slots" class="nav-tab ' . esc_attr( $active_all ) . '">' . esc_html__( 'Alle', 'snippen-booking' ) . '</a>';
+		echo '<a href="?page=snippen-booking-slots&filter=no_price" class="nav-tab ' . esc_attr( $active_no_price ) . '">' . esc_html__( 'Uten pris', 'snippen-booking' ) . '</a>';
 		echo '</div>';
 
 		echo '<div class="snippen-card">';
@@ -278,7 +278,7 @@ class TimeSlotsPage {
 				$price_row = $wpdb->get_row( $wpdb->prepare( "SELECT id, name, price FROM {$wpdb->prefix}snippen_prices WHERE id = %d", $slot->price_id ) );
 				if ( $price_row ) {
 					$edit_price_url = admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $price_row->id );
-					$price_info = sprintf(
+					$price_info     = sprintf(
 						'<strong><a href="%s">%s</a></strong> (%s kr)',
 						esc_url( $edit_price_url ),
 						esc_html( $price_row->name ),
@@ -333,7 +333,7 @@ class TimeSlotsPage {
 		echo '<div class="snippen-form-group">';
 		echo '<label>' . esc_html__( 'Gyldige dager', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:5px;">';
-		$days = array(
+		$days          = array(
 			'1' => __( 'Mandag', 'snippen-booking' ),
 			'2' => __( 'Tirsdag', 'snippen-booking' ),
 			'3' => __( 'Onsdag', 'snippen-booking' ),
