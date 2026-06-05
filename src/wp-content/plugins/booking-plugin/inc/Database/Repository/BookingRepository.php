@@ -146,9 +146,17 @@ class BookingRepository {
 
 		// Link objects
 		$table_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_bookings_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
 		foreach ( $object_ids as $obj_id ) {
 			$wpdb->insert(
 				$table_booking_objects,
+				array(
+					'booking_id'        => $booking_id,
+					'booking_object_id' => (int) $obj_id,
+				)
+			);
+			$wpdb->insert(
+				$table_bookings_booking_objects,
 				array(
 					'booking_id'        => $booking_id,
 					'booking_object_id' => (int) $obj_id,

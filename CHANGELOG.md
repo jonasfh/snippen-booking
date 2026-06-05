@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.1] - 2026-06-05
+### Added
+- Feature (#128): Created a new modern interactive wizard-based frontend booking interface supporting block-based selections (`booking_blocks`).
+- Feature (#128): Implemented week-based layout (Monday-Sunday) and responsive CSS to fold columns vertically on mobile.
+- Feature (#128): Hid past/unbookable days on mobile view to optimize scrolling.
+- Feature (#128): Enforced adjacent block selection and enabled live pricing calculations during room/block selection.
+- Refactor (#128): Maintained 100% backward compatibility for legacy slot-based bookings in Booking API and Repositories.
+
 ## [1.24.0] - 2026-06-05
 ### Added
 - Redesign (#127): Redesigned core domain model to support flexible block-based selections (`booking_blocks`) and priority-based pricing rules (`pricing_rules`) instead of legacy slot-based systems.
