@@ -317,6 +317,127 @@ class SetupWizard {
 			}
 		}
 
+		// 4. Create global legacy time slots (for backward compatibility during redesign)
+		$table_slots             = $wpdb->prefix . 'snippen_time_slots';
+		$table_prices            = $wpdb->prefix . 'snippen_prices';
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+
+		$base_slots = array(
+			array(
+				'name'          => 'Hele dagen',
+				'description'   => 'Du booker rommet fra kl 11 til 23, og har til kl 11 neste dag til å rydde og vaske ut.',
+				'start_time'    => '11:00:00',
+				'end_time'      => '23:00:00',
+				'cleanup_hours' => 12,
+			),
+			array(
+				'name'          => 'Formiddag',
+				'description'   => 'Fra kl 08:00 til 16:00. Du må vaske og ryddet lokalet når du forlater det.',
+				'start_time'    => '08:00:00',
+				'end_time'      => '16:00:00',
+				'cleanup_hours' => 0,
+			),
+			array(
+				'name'          => 'Ettermiddag',
+				'description'   => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
+				'start_time'    => '16:00:00',
+				'end_time'      => '23:00:00',
+				'cleanup_hours' => 9,
+			),
+		);
+
+		$base_prices = array(
+			'Hele dagen'  => 1000,
+			'Formiddag'   => 500,
+			'Ettermiddag' => 500,
+		);
+
+		$slot_variations = array(
+			array(
+				'suffix'       => '(Hverdag)',
+				'days_of_week' => '1,2,3,4',
+				'price_mult'   => 1,
+			),
+			array(
+				'suffix'       => '(Helg)',
+				'days_of_week' => '5,6,0',
+				'price_mult'   => 2,
+			),
+			array(
+				'suffix'       => '(Helligdager og høytider)',
+				'days_of_week' => '7',
+				'price_mult'   => 2,
+			),
+		);
+
+		$combinations = array(
+			array(
+				'name_prefix' => 'Festsalen',
+				'object_ids'  => array( $festsalen_id ),
+				'price_mult'  => 1,
+			),
+			array(
+				'name_prefix' => 'Peisestuen',
+				'object_ids'  => array( $peisestuen_id ),
+				'price_mult'  => 1,
+			),
+		);
+
+		$combo_both = array(
+			'name_prefix' => 'Hele området',
+			'object_ids'  => array( $festsalen_id, $peisestuen_id ),
+			'price_mult'  => 2,
+		);
+
+		foreach ( $base_slots as $base_slot ) {
+			foreach ( $slot_variations as $var ) {
+				$base_price = $base_prices[ $base_slot['name'] ] ?? 1000;
+				$var_price  = $base_price * $var['price_mult'];
+
+				$current_combinations = $combinations;
+				if ( $base_slot['name'] === 'Hele dagen' ) {
+					$current_combinations[] = $combo_both;
+				}
+
+				foreach ( $current_combinations as $combo ) {
+					$slot_name = $combo['name_prefix'] . ' - ' . $base_slot['name'] . ' ' . $var['suffix'];
+
+					$final_price = $var_price * $combo['price_mult'];
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'     => $slot_name,
+							'price'    => $final_price,
+							'priority' => ( strpos( $var['days_of_week'], '7' ) !== false ) ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
+						)
+					);
+					$price_id = $wpdb->insert_id;
+
+					$slot_data = array_merge(
+						$base_slot,
+						array(
+							'name'         => $slot_name,
+							'days_of_week' => $var['days_of_week'],
+							'price_id'     => $price_id,
+						)
+					);
+
+					$wpdb->insert( $table_slots, $slot_data );
+					$slot_id = $wpdb->insert_id;
+
+					foreach ( $combo['object_ids'] as $obj_id ) {
+						$wpdb->insert(
+							$table_time_slot_objects,
+							array(
+								'time_slot_id'      => $slot_id,
+								'booking_object_id' => $obj_id,
+							)
+						);
+					}
+				}
+			}
+		}
+
 		return array(
 			'success' => true,
 			'message' => 'Starter setup created successfully',

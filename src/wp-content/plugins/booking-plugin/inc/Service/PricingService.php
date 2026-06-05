@@ -42,6 +42,22 @@ class PricingService {
 		// Fetch all potentially applicable pricing rules
 		$rules = $this->pricing_rule_repository->find_applicable_rules( $objectIds, $blockIds );
 		if ( empty( $rules ) ) {
+			// Legacy fallback for backward compatibility
+			$table_prices   = $wpdb->prefix . 'snippen_prices';
+			$table_slots    = $wpdb->prefix . 'snippen_time_slots';
+			$slot_in_clause = implode( ',', array_fill( 0, count( $blockIds ), '%d' ) );
+			$query          = $wpdb->prepare(
+				"SELECT p.price 
+				 FROM $table_prices p
+				 JOIN $table_slots s ON s.price_id = p.id
+				 WHERE s.id IN ($slot_in_clause)
+				 ORDER BY p.priority DESC LIMIT 1",
+				...$blockIds
+			);
+			$legacy_price   = $wpdb->get_var( $query );
+			if ( $legacy_price !== null ) {
+				return (float) $legacy_price;
+			}
 			return 0.0;
 		}
 
