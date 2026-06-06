@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.25.1] - 2026-06-06
+### Changed
+- Feature (#142): Changed shortcode `[snippen_booking]` to display all active booking objects when called without the `object_id` argument. Updated related documentation and help page.
+
 ## [1.25.0] - 2026-06-06
 ### Added
 - Feature (#130): Added Admin Management of Pricing Rules.
