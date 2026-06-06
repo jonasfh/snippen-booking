@@ -130,7 +130,7 @@ class PricingPage {
 		if ( $message_key === 'created' ) {
 			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&message=created' ) );
 		} else {
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $id . '&message=updated' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-pricing&message=updated' ) );
 		}
 		exit;
 	}
