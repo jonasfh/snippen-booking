@@ -25,6 +25,7 @@ jQuery(document).ready(function($) {
         }, function(res) {
             if (res.success) {
                 $('#snippen_confirm_user_id').val(res.data.user_id);
+                $('#snippen_username').val(phone);
                 $step1.hide();
                 $step2.show();
                 showMessage(res.data.message, 'success');
