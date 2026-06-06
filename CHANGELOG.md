@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.23.3] - 2026-06-06
+### Fixed
+- Bug (#133): Fikset problem med at Safari autofyll lagret SMS-kode som brukernavn ved å legge til et skjult brukernavnfelt og skjema under kontoaktivering.
+
 ## [1.23.2] - 2026-06-04
 ### Added
 - Feature (#125): Lagt til avhukingsboks i innstillinger under fanen Generelt for å aktivere eller deaktivere dørkode-systemet.

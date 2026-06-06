@@ -77,7 +77,7 @@ class AccountConfirmationShortcode {
 				</button>
 			</div>
 
-			<div id="confirmation-step-2" class="confirmation-step" style="display: none;">
+			<form id="confirmation-step-2" class="confirmation-step" style="display: none;" onsubmit="return false;">
 				<h3><?php esc_html_e( 'Skriv inn kode', 'snippen-booking' ); ?></h3>
 				<p>
 					<?php
@@ -90,9 +90,15 @@ class AccountConfirmationShortcode {
 				</p>
 				<input type="hidden" id="snippen_confirm_user_id">
 				
+				<!-- Hidden username field for password managers -->
+				<div style="position: absolute; left: -9999px;">
+					<label for="snippen_username"><?php esc_html_e( 'Brukernavn', 'snippen-booking' ); ?></label>
+					<input type="text" id="snippen_username" name="username" autocomplete="username" tabindex="-1">
+				</div>
+
 				<div class="snippen-form-group">
 					<label for="snippen_code"><?php esc_html_e( 'Bekreftelseskode', 'snippen-booking' ); ?></label>
-					<input type="text" id="snippen_code" maxlength="6" placeholder="000000" class="regular-text">
+					<input type="text" id="snippen_code" maxlength="6" placeholder="000000" class="regular-text" autocomplete="one-time-code">
 				</div>
 
 				<div class="snippen-form-group">
@@ -109,7 +115,7 @@ class AccountConfirmationShortcode {
 				<button type="button" id="snippen-verify-code" class="snippen-btn snippen-btn-primary">
 					<?php esc_html_e( 'Bekreft og lagre passord', 'snippen-booking' ); ?>
 				</button>
-			</div>
+			</form>
 
 			<div id="confirmation-response" class="snippen-response-msg" style="display: none;"></div>
 		</div>
