@@ -22,6 +22,7 @@ jQuery(document).ready(function ($) {
     var objectIds = $container.data('object-id'); // Array of IDs
     var isAdmin = $container.data('is-admin') === true;
     var isLoggedIn = $container.data('logged-in') === true;
+    var originalSubmitText = $('.booking-submit').text() || 'Send bookingforespørsel';
 
     function init() {
         if (!$('#calendar-container').length) return;
@@ -288,6 +289,19 @@ jQuery(document).ready(function ($) {
         selectedDate = null;
         selectedBlockIds = [];
         selectedObjectIds = [];
+        
+        // Hide and clear response messages
+        $('#booking-response').hide().html('');
+        
+        // Reset submit button text and enabled status
+        var $submitBtn = $('#booking-form').find('.booking-submit');
+        var hasPhone = $container.data('user-phone') !== '';
+        if (hasPhone || isAdmin) {
+            $submitBtn.prop('disabled', false);
+        } else {
+            $submitBtn.prop('disabled', true);
+        }
+        $submitBtn.text(originalSubmitText);
     }
 
     // Handle block click in wizard (adjacent selection reinforcement)

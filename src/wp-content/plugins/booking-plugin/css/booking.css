@@ -266,7 +266,7 @@
 }
 
 .slots-container {
-    padding: 15px;
+    padding: 8px;
     flex-grow: 1;
     display: block;
 }
@@ -274,10 +274,10 @@
 
 
 .slot-item {
-    padding: 14px 10px;
-    border-radius: 14px;
-    margin-bottom: 10px;
-    font-size: 13px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
