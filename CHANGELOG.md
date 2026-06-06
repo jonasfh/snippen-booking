@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.23.4] - 2026-06-06
+### Fixed
+- Bug (#134): Fikset et problem der `snippen-booking-list-container` brøt ut av sin egen div på grunn av et ekstra, feilaktig plassert `</div>`-element.
+
 ## [1.23.3] - 2026-06-06
 ### Fixed
 - Bug (#133): Fikset problem med at Safari autofyll lagret SMS-kode som brukernavn ved å legge til et skjult brukernavnfelt og skjema under kontoaktivering.

@@ -267,7 +267,6 @@ class BookingListShortcode {
 					</div>
 				<?php endif; ?>
 			</div>
-			</div>
 
 			<div class="card-header-spacer"></div>
 
