@@ -1,7 +1,13 @@
 # Changelog
 
-## [1.24.2] - 2026-06-06
+## [1.25.0] - 2026-06-06
 ### Added
+- Feature (#130): Added Admin Management of Pricing Rules.
+- Feature (#130): Added `PricingPreviewApi` and UI for admins to preview rules in real-time.
+- Feature (#130): Upgraded the Pricing Rules Admin UI to support the new `is_active` toggle, day restrictions, date restrictions, and holiday overrides.
+- Refactor (#130): Created `PricingRuleRepository` for CRUD and pricing resolution logic based on priority.
+
+## [1.24.2] - 2026-06-06
 - Feature (#129): Added Admin Management of Booking Blocks.
 - Feature (#129): Added a new backend view `BookingBlocksPage` with support for managing, filtering and viewing weekly setup.
 - Feature (#129): Replaced `TimeSlotsPage` in admin dashboard with `BookingBlocksPage`.
