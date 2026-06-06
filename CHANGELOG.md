@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.23.6] - 2026-06-06
+### Changed
+- Feature (#142): Changed shortcode `[snippen_booking]` to display all active booking objects when called without the `object_id` argument. Updated related documentation and help page.
+
 ## [1.23.5] - 2026-06-06
 ### Fixed
 - Bug (#137): Skjuler nå fortidige dager (.day-column.past) på mobilvisning (skjermer under 600px bredde) i uke-kalenderen, for å unngå at brukeren må scrolle forbi dager som ikke er bookbare.
