@@ -127,7 +127,7 @@ class BookingBlocksPage {
 		}
 
 		if ( $id > 0 ) {
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-blocks&action=edit&id=' . $id . '&message=updated' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-blocks&message=updated' ) );
 		} else {
 			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-blocks&message=created' ) );
 		}
