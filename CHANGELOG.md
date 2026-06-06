@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.24.2] - 2026-06-06
+### Added
+- Feature (#129): Added Admin Management of Booking Blocks.
+- Feature (#129): Added a new backend view `BookingBlocksPage` with support for managing, filtering and viewing weekly setup.
+- Feature (#129): Replaced `TimeSlotsPage` in admin dashboard with `BookingBlocksPage`.
+
 ## [1.24.1] - 2026-06-05
 ### Added
 - Feature (#128): Created a new modern interactive wizard-based frontend booking interface supporting block-based selections (`booking_blocks`).
