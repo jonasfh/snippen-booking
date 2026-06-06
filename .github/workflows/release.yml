@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/**'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -27,6 +28,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if tag already exists
+        if: github.event_name != 'workflow_dispatch'
         id: check_tag
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -40,7 +42,7 @@ jobs:
           fi
 
       - name: Create Tag
-        if: steps.check_tag.outputs.exists == 'false'
+        if: github.event_name != 'workflow_dispatch' && steps.check_tag.outputs.exists == 'false'
         run: |
           TAG="v${{ steps.version.outputs.version }}"
           git config user.name "github-actions[bot]"
@@ -49,7 +51,7 @@ jobs:
           git push origin "$TAG"
 
       - name: Package Plugin
-        if: steps.check_tag.outputs.exists == 'false'
+        if: github.event_name == 'workflow_dispatch' || steps.check_tag.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           # Create a temporary directory for packaging
@@ -62,7 +64,7 @@ jobs:
           cd ..
 
       - name: Extract Changelog Entry
-        if: steps.check_tag.outputs.exists == 'false'
+        if: github.event_name != 'workflow_dispatch' && steps.check_tag.outputs.exists == 'false'
         id: changelog
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -79,7 +81,7 @@ jobs:
           echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        if: steps.check_tag.outputs.exists == 'false'
+        if: github.event_name != 'workflow_dispatch' && steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
@@ -89,6 +91,7 @@ jobs:
           generate_release_notes: false
 
       - name: Add Release Link to Summary
+        if: github.event_name != 'workflow_dispatch'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
@@ -97,3 +100,10 @@ jobs:
           else
             echo "- **Status:** ✅ Ny release opprettet! [Se den her]($RELEASE_URL)" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Upload Artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: snippen-booking-v${{ steps.version.outputs.version }}
+          path: snippen-booking-v${{ steps.version.outputs.version }}.zip
