@@ -275,13 +275,23 @@
 
 .slot-item {
     padding: 8px 6px;
-    border-radius: 8px;
-    margin-bottom: 4px;
+    border-radius: 0;
+    margin-bottom: 0;
     font-size: 12px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
     border: 1px solid transparent;
+}
+
+.slot-item:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.slot-item:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .slot-item.available {
