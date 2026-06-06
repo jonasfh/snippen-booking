@@ -78,6 +78,7 @@ class Install {
             description TEXT,
             price DECIMAL(10,2) NOT NULL,
             priority INT DEFAULT 0,
+            is_active TINYINT(1) DEFAULT 1,
             days_of_week VARCHAR(50) DEFAULT NULL,
             holiday_only TINYINT(1) DEFAULT 0,
             date_start DATE DEFAULT NULL,
