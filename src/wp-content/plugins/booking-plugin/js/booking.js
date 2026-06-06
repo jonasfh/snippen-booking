@@ -607,4 +607,6 @@ jQuery(document).ready(function ($) {
 
         return start.toLocaleDateString('nb-NO', startOptions) + ' - ' + end.toLocaleDateString('nb-NO', endOptions);
     }
+
+    init();
 });
