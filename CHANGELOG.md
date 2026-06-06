@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.23.5] - 2026-06-06
+### Fixed
+- Bug (#137): Skjuler nå fortidige dager (.day-column.past) på mobilvisning (skjermer under 600px bredde) i uke-kalenderen, for å unngå at brukeren må scrolle forbi dager som ikke er bookbare.
+
 ## [1.23.4] - 2026-06-06
 ### Fixed
 - Bug (#134): Fikset et problem der `snippen-booking-list-container` brøt ut av sin egen div på grunn av et ekstra, feilaktig plassert `</div>`-element.

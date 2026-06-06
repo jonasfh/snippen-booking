@@ -555,6 +555,10 @@
         border-radius: 16px;
     }
     
+    .day-column.past {
+        display: none;
+    }
+    
     .day-header {
         padding: 15px;
         text-align: center;
