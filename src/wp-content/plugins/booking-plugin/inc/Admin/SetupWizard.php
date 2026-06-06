@@ -93,6 +93,7 @@ class SetupWizard {
 				'end_time'     => $end_str,
 				'days_of_week' => '1,2,3,4,5',
 				'type'         => 'hourly_day',
+				'sort_order'   => $hour * 10,
 			);
 		}
 
@@ -110,6 +111,7 @@ class SetupWizard {
 				'end_time'     => $end_str,
 				'days_of_week' => '1,2,3,4',
 				'type'         => 'hourly_evening',
+				'sort_order'   => $hour * 10,
 			);
 		}
 
@@ -121,6 +123,7 @@ class SetupWizard {
 			'end_time'     => '16:00:00',
 			'days_of_week' => '6,0,7',
 			'type'         => 'weekend_day',
+			'sort_order'   => 80,
 		);
 
 		// Evening block for Friday, Saturday, Sunday, and holidays (16-23)
@@ -131,6 +134,7 @@ class SetupWizard {
 			'end_time'     => '23:00:00',
 			'days_of_week' => '5,6,0,7',
 			'type'         => 'weekend_evening',
+			'sort_order'   => 240,
 		);
 
 		// Insert blocks and link them to objects
