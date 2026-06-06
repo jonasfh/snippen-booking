@@ -41,7 +41,7 @@ class HelpPage {
 							
 							<h4><?php esc_html_e( '1. Bookingskjema:', 'snippen-booking' ); ?></h4>
 							<p><code>[snippen_booking]</code></p>
-							<p><?php esc_html_e( 'Denne viser kalender og skjema for booking. Hvis du vil begrense skjemaet til ett bestemt lokale, kan du bruke object_id:', 'snippen-booking' ); ?> <code>[snippen_booking object_id="1"]</code></p>
+							<p><?php esc_html_e( 'Denne viser kalender og skjema for booking av alle lokaler. Hvis du vil begrense skjemaet til ett bestemt lokale, kan du bruke object_id:', 'snippen-booking' ); ?> <code>[snippen_booking object_id="1"]</code></p>
 							
 							<h4><?php esc_html_e( '2. Brukeraktivering:', 'snippen-booking' ); ?></h4>
 							<p><code>[snippen_account_confirmation]</code></p>

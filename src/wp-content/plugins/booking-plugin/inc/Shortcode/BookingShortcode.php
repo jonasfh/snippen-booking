@@ -25,25 +25,32 @@ class BookingShortcode {
 	public static function render( $atts ) {
 		$atts = shortcode_atts(
 			array(
-				'object_id' => 1,
+				'object_id' => '',
 			),
 			$atts
 		);
 
-		// Parse comma-separated object IDs
-		$object_ids = array_map( 'intval', explode( ',', $atts['object_id'] ) );
-		$object_ids = array_filter( $object_ids );
-
 		global $wpdb;
 		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
 
-		if ( empty( $object_ids ) ) {
-			return '<div class="snippen-booking-error">' . esc_html__( 'Ugyldig objekt-ID.', 'snippen-booking' ) . '</div>';
-		}
+		if ( empty( $atts['object_id'] ) ) {
+			// Fetch all active objects
+			$objects   = $wpdb->get_results( "SELECT * FROM $table_objects WHERE deleted_at IS NULL ORDER BY id ASC" );
+			$object_ids = wp_list_pluck( $objects, 'id' );
+			$object_ids = array_map( 'intval', $object_ids );
+		} else {
+			// Parse comma-separated object IDs
+			$object_ids = array_map( 'intval', explode( ',', $atts['object_id'] ) );
+			$object_ids = array_filter( $object_ids );
 
-		$in_clause = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
-		$query     = $wpdb->prepare( "SELECT * FROM $table_objects WHERE id IN ($in_clause) AND deleted_at IS NULL", ...$object_ids );
-		$objects   = $wpdb->get_results( $query );
+			if ( empty( $object_ids ) ) {
+				return '<div class="snippen-booking-error">' . esc_html__( 'Ugyldig objekt-ID.', 'snippen-booking' ) . '</div>';
+			}
+
+			$in_clause = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
+			$query     = $wpdb->prepare( "SELECT * FROM $table_objects WHERE id IN ($in_clause) AND deleted_at IS NULL ORDER BY id ASC", ...$object_ids );
+			$objects   = $wpdb->get_results( $query );
+		}
 
 		if ( empty( $objects ) ) {
 			return '<div class="snippen-booking-error">' . esc_html__( 'Booking-objekt(er) ikke funnet.', 'snippen-booking' ) . '</div>';
