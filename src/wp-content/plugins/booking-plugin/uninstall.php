@@ -20,10 +20,20 @@ global $wpdb;
 // 1. Drop plugin tables.
 $tables = array(
 	$wpdb->prefix . 'snippen_booking_objects',
-	$wpdb->prefix . 'snippen_time_slots',
+	$wpdb->prefix . 'snippen_booking_blocks',
+	$wpdb->prefix . 'snippen_booking_object_blocks',
+	$wpdb->prefix . 'snippen_pricing_rules',
+	$wpdb->prefix . 'snippen_pricing_rule_blocks',
+	$wpdb->prefix . 'snippen_pricing_rule_booking_objects',
+	$wpdb->prefix . 'snippen_discount_rules',
+	$wpdb->prefix . 'snippen_discount_rule_booking_objects',
 	$wpdb->prefix . 'snippen_bookings',
-	$wpdb->prefix . 'snippen_bookings_booking_objects',
+	$wpdb->prefix . 'snippen_booking_selected_blocks',
+	$wpdb->prefix . 'snippen_booking_selected_objects',
+	$wpdb->prefix . 'snippen_time_slots',
 	$wpdb->prefix . 'snippen_prices',
+	$wpdb->prefix . 'snippen_time_slot_objects',
+	$wpdb->prefix . 'snippen_bookings_booking_objects',
 	$wpdb->prefix . 'snippen_price_booking_objects',
 );
 

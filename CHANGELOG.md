@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.1] - 2026-06-07
+- (#150) Fixed uninstall script to drop all missing `snippen_` tables.
+
 ## [2.1.0] - 2026-06-07
 - (#147) Added duration-based discount rules for bookings
 
