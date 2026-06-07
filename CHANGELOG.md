@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.2] - 2026-06-07
+- (#152) Updated English translation files (`en_US`) to cover new features like discount rules and wizard.
+
 ## [2.1.1] - 2026-06-07
 - (#150) Fixed uninstall script to drop all missing `snippen_` tables.
 
