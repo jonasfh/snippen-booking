@@ -548,7 +548,7 @@ class SetupWizard {
 				array(
 					'name'         => "$obj_name - Hverdag Dag",
 					'description'  => 'Dagpris på hverdager (Mon-Fri)',
-					'price'        => 500.00,
+					'price'        => $obj_id === $festsalen_id ? 750.00 : 500.00,
 					'priority'     => 1,
 					'days_of_week' => '1,2,3,4,5',
 					'holiday_only' => 0,
@@ -569,7 +569,7 @@ class SetupWizard {
 				array(
 					'name'         => "$obj_name - Hverdag Kveld",
 					'description'  => 'Kveldspris på hverdager (Mon-Thu)',
-					'price'        => 500.00,
+					'price'        => $obj_id === $festsalen_id ? 750.00 : 500.00,
 					'priority'     => 1,
 					'days_of_week' => '1,2,3,4',
 					'holiday_only' => 0,
@@ -590,7 +590,7 @@ class SetupWizard {
 				array(
 					'name'         => "$obj_name - Helg Dag",
 					'description'  => 'Dagpris i helger',
-					'price'        => 1000.00,
+					'price'        => $obj_id === $festsalen_id ? 1500.00 : 1000.00,
 					'priority'     => 2,
 					'days_of_week' => '6,0',
 					'holiday_only' => 0,
@@ -611,7 +611,7 @@ class SetupWizard {
 				array(
 					'name'         => "$obj_name - Helg Kveld",
 					'description'  => 'Kveldspris i helger (Fri, Sat, Sun)',
-					'price'        => 1000.00,
+					'price'        => $obj_id === $festsalen_id ? 1500.00 : 1000.00,
 					'priority'     => 2,
 					'days_of_week' => '5,6,0',
 					'holiday_only' => 0,
@@ -632,7 +632,7 @@ class SetupWizard {
 				array(
 					'name'         => "$obj_name - Helligdag Dag",
 					'description'  => 'Helligdagspris på dagtid',
-					'price'        => 1000.00,
+					'price'        => $obj_id === $festsalen_id ? 1500.00 : 1000.00,
 					'priority'     => 100,
 					'days_of_week' => '7',
 					'holiday_only' => 1,
@@ -653,7 +653,7 @@ class SetupWizard {
 				array(
 					'name'         => "$obj_name - Helligdag Kveld",
 					'description'  => 'Helligdagspris på kveldstid',
-					'price'        => 1000.00,
+					'price'        => $obj_id === $festsalen_id ? 1500.00 : 1000.00,
 					'priority'     => 100,
 					'days_of_week' => '7',
 					'holiday_only' => 1,
@@ -731,7 +731,7 @@ class SetupWizard {
 			array(
 				'name_prefix' => 'Festsalen',
 				'object_ids'  => array( $festsalen_id ),
-				'price_mult'  => 1,
+				'price_mult'  => 1.5,
 			),
 			array(
 				'name_prefix' => 'Peisestuen',
