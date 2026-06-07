@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.0.1] - 2026-06-07
+### Added
+- Feature (#144): Added `demo:wizard2` composer script and `create_starter_setup_v2` in SetupWizard to support a simpler, legacy-style variant with only 2 blocks per day (Dag and Kveld).
 ## [2.0.0] - 2026-06-06
 ### Changed
 - Feature (#142): Changed shortcode `[snippen_booking]` to display all active booking objects when called without the `object_id` argument. Updated related documentation and help page.

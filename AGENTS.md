@@ -152,7 +152,7 @@ All changes made to the project MUST be based on a GitHub issue. If a task or in
 Once a GitHub issue is identified or created, the following workflow **MUST** be followed:
 
 1.  **Preparation**:
-    - For issues 127, 128, 129, and 130 (the redesign), start in the `v2.0` branch instead of `main`. Ensure `v2.0` is up to date: `git pull origin v2.0`.
+    - For issues 127, 128, 129, 130, 142, 144: start in the `v2.0` branch instead of `main`. Ensure `v2.0` is up to date: `git pull origin v2.0`.
     - For all other issues, start in the `main` branch and ensure `main` is up to date: `git pull origin main`.
     - Check if the terminal is logged in to GitHub: `gh auth status`. If not, inform the developer and ask them to run `gh auth login`.
     - To read issue details, ALWAYS use `gh issue view <id> --json title,body` instead of `gh issue view <id>`. This prevents the command from failing due to deprecation warnings related to Projects (classic).

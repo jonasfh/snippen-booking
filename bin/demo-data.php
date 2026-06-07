@@ -156,6 +156,23 @@ if ($action === 'wizard') {
     }
 }
 
+if ($action === 'wizard2') {
+    echo "Running Setup Wizard to create starter data (Variant 2)...\n";
+    if (class_exists('\SnippenBooking\Admin\SetupWizard')) {
+        $result = \SnippenBooking\Admin\SetupWizard::create_starter_setup_v2();
+        if ($result['success']) {
+            echo "Success: Starter data created successfully.\n";
+            exit(0);
+        } else {
+            echo "Error creating starter data: " . $result['message'] . "\n";
+            exit(1);
+        }
+    } else {
+        echo "Error: SnippenBooking\Admin\SetupWizard not found. Please activate the plugin first.\n";
+        exit(1);
+    }
+}
+
 if ($action === 'generate') {
     echo "Generating demo bookings...\n";
 
