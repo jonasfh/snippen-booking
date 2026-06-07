@@ -148,8 +148,15 @@
 }
 
 @keyframes dropdownAnim {
-    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 .week-picker-dropdown ul {
@@ -391,8 +398,15 @@
 }
 
 @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .form-header {
@@ -560,11 +574,15 @@
         grid-template-columns: 1fr;
         gap: 10px;
     }
-    
+
     .day-column {
         border-radius: 16px;
     }
-    
+
+    .day-column.past {
+        display: none;
+    }
+
     .day-header {
         padding: 15px;
         text-align: center;
@@ -572,27 +590,27 @@
         border-bottom: 1px solid var(--border-color);
         cursor: default;
     }
-    
+
     .day-date {
         font-size: 20px;
         margin-top: 4px;
         display: block;
     }
-    
+
     .form-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .full-width {
         grid-column: span 1;
     }
-    
+
     .snippen-booking-container,
     .snippen-booking-list-container {
         padding: 20px;
         margin: 20px 10px;
     }
-    
+
     .booking-header-section h3 {
         font-size: 24px;
     }
@@ -712,7 +730,8 @@
 }
 
 .slot-item.booked {
-    cursor: pointer !important; /* Admins can click booked slots */
+    cursor: pointer !important;
+    /* Admins can click booked slots */
 }
 
 .snippen-modal {
@@ -749,8 +768,15 @@
 }
 
 @keyframes modalSlideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-header {
@@ -837,13 +863,25 @@
 }
 
 @keyframes fadeInModal {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideUpModal {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .snippen-booking-modal-close {
@@ -1001,12 +1039,12 @@
         padding: 25px;
         border-radius: 20px;
     }
-    
+
     .snippen-booking-details-grid {
         grid-template-columns: 1fr;
         gap: 15px;
     }
-    
+
     .snippen-booking-details-grid .detail-item.full-width {
         grid-column: span 1;
     }
@@ -1350,8 +1388,15 @@
 }
 
 @keyframes wizardSlideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .wizard-header {

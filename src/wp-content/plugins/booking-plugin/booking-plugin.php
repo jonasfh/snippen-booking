@@ -23,7 +23,7 @@ if ( ! function_exists( 'snippen_save_phone_number' ) ) {
 }
 
 // Define version constant
-define( 'SNIPPEN_BOOKING_VERSION', '2.0.1' );
+define( 'SNIPPEN_BOOKING_VERSION', '2.1.2' );
 // Load autoloader
 require_once __DIR__ . '/autoloader.php';
 

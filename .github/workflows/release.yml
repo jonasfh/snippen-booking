@@ -71,13 +71,13 @@ jobs:
           # Extract the section for this version from CHANGELOG.md
           # It looks for the header for this version and takes everything until the next header (or end of file)
           sed -n "/## \[$VERSION\]/,/## /p" CHANGELOG.md | sed '1d;$d' > release_notes.md
-          
+
           # Add link to full changelog
           echo -e "\n\n[Se hele CHANGELOG.md her](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)" >> release_notes.md
-          
+
           echo "#### Release Notes for $VERSION:" >> $GITHUB_STEP_SUMMARY
           cat release_notes.md >> $GITHUB_STEP_SUMMARY
-          
+
           echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release

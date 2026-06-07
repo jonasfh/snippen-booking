@@ -32,6 +32,18 @@
 - Feature (#127): Updated demo-data seeding within the Setup Wizard to support Mon-Thu hourly bookings (08-23), Friday hourly bookings (08-16) plus an evening block (16-23), and weekend/holiday Day (08-16) and Evening (16-23) blocks with matching pricing.
 - Refactor (#127): Retained backward compatibility with slot-based tables and wrappers in Availability and Pricing services during transition.
 
+## [1.23.5] - 2026-06-06
+### Fixed
+- Bug (#137): Skjuler nå fortidige dager (.day-column.past) på mobilvisning (skjermer under 600px bredde) i uke-kalenderen, for å unngå at brukeren må scrolle forbi dager som ikke er bookbare.
+
+## [1.23.4] - 2026-06-06
+### Fixed
+- Bug (#134): Fikset et problem der `snippen-booking-list-container` brøt ut av sin egen div på grunn av et ekstra, feilaktig plassert `</div>`-element.
+
+## [1.23.3] - 2026-06-06
+### Fixed
+- Bug (#133): Fikset problem med at Safari autofyll lagret SMS-kode som brukernavn ved å legge til et skjult brukernavnfelt og skjema under kontoaktivering.
+
 ## [1.23.2] - 2026-06-04
 ### Added
 - Feature (#125): Lagt til avhukingsboks i innstillinger under fanen Generelt for å aktivere eller deaktivere dørkode-systemet.
