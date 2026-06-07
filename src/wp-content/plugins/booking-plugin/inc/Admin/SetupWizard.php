@@ -447,4 +447,349 @@ class SetupWizard {
 			'message' => 'Starter setup created successfully',
 		);
 	}
+
+	/**
+	 * Create starter configuration variant 2 (2 blocks per day)
+	 */
+	public static function create_starter_setup_v2() {
+		global $wpdb;
+
+		// Check if data already exists (idempotency)
+		$object_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
+		if ( $object_count > 0 ) {
+			return array(
+				'success' => false,
+				'message' => 'Starter setup already exists',
+			);
+		}
+
+		$table_objects       = $wpdb->prefix . 'snippen_booking_objects';
+		$table_blocks        = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_object_blocks = $wpdb->prefix . 'snippen_booking_object_booking_blocks';
+		$table_rules         = $wpdb->prefix . 'snippen_pricing_rules';
+		$table_rule_blocks   = $wpdb->prefix . 'snippen_pricing_rule_booking_blocks';
+		$table_rule_objects  = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
+
+		// 1. Create booking objects
+		$wpdb->insert(
+			$table_objects,
+			array(
+				'name'        => 'Festsalen',
+				'description' => 'Vårt største lokale med plass til mange gjester.',
+			)
+		);
+		$festsalen_id = $wpdb->insert_id;
+
+		$wpdb->insert(
+			$table_objects,
+			array(
+				'name'        => 'Peisestuen',
+				'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.',
+			)
+		);
+		$peisestuen_id = $wpdb->insert_id;
+
+		$object_ids = array( $festsalen_id, $peisestuen_id );
+
+		// 2. Create booking blocks
+		$blocks_to_create = array(
+			array(
+				'name'         => 'Dag',
+				'description'  => 'Dagtid (08-16)',
+				'start_time'   => '08:00:00',
+				'end_time'     => '16:00:00',
+				'days_of_week' => '1,2,3,4,5,6,0,7',
+				'type'         => 'day',
+				'sort_order'   => 10,
+			),
+			array(
+				'name'         => 'Kveld',
+				'description'  => 'Kveldstid (16-23)',
+				'start_time'   => '16:00:00',
+				'end_time'     => '23:00:00',
+				'days_of_week' => '1,2,3,4,5,6,0,7',
+				'type'         => 'evening',
+				'sort_order'   => 20,
+			),
+		);
+
+		$created_blocks = array();
+		foreach ( $blocks_to_create as $block_data ) {
+			$type = $block_data['type'];
+			unset( $block_data['type'] );
+
+			$wpdb->insert( $table_blocks, $block_data );
+			$block_id = $wpdb->insert_id;
+
+			$created_blocks[] = array(
+				'id'   => $block_id,
+				'type' => $type,
+			);
+
+			// Link to both objects
+			foreach ( $object_ids as $obj_id ) {
+				$wpdb->insert(
+					$table_object_blocks,
+					array(
+						'booking_object_id' => $obj_id,
+						'booking_block_id'  => $block_id,
+					)
+				);
+			}
+		}
+
+		// 3. Create pricing rules and link them
+		foreach ( $object_ids as $obj_id ) {
+			$obj_name = $obj_id === $festsalen_id ? 'Festsalen' : 'Peisestuen';
+
+			// Weekday Day Rule
+			$wpdb->insert(
+				$table_rules,
+				array(
+					'name'         => "$obj_name - Hverdag Dag",
+					'description'  => 'Dagpris på hverdager (Mon-Fri)',
+					'price'        => 500.00,
+					'priority'     => 1,
+					'days_of_week' => '1,2,3,4,5',
+					'holiday_only' => 0,
+				)
+			);
+			$weekday_day_rule_id = $wpdb->insert_id;
+			$wpdb->insert(
+				$table_rule_objects,
+				array(
+					'pricing_rule_id'   => $weekday_day_rule_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+
+			// Weekday Evening Rule
+			$wpdb->insert(
+				$table_rules,
+				array(
+					'name'         => "$obj_name - Hverdag Kveld",
+					'description'  => 'Kveldspris på hverdager (Mon-Thu)',
+					'price'        => 500.00,
+					'priority'     => 1,
+					'days_of_week' => '1,2,3,4',
+					'holiday_only' => 0,
+				)
+			);
+			$weekday_evening_rule_id = $wpdb->insert_id;
+			$wpdb->insert(
+				$table_rule_objects,
+				array(
+					'pricing_rule_id'   => $weekday_evening_rule_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+
+			// Weekend Day Rule
+			$wpdb->insert(
+				$table_rules,
+				array(
+					'name'         => "$obj_name - Helg Dag",
+					'description'  => 'Dagpris i helger',
+					'price'        => 1000.00,
+					'priority'     => 2,
+					'days_of_week' => '6,0',
+					'holiday_only' => 0,
+				)
+			);
+			$weekend_day_rule_id = $wpdb->insert_id;
+			$wpdb->insert(
+				$table_rule_objects,
+				array(
+					'pricing_rule_id'   => $weekend_day_rule_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+
+			// Weekend Evening Rule
+			$wpdb->insert(
+				$table_rules,
+				array(
+					'name'         => "$obj_name - Helg Kveld",
+					'description'  => 'Kveldspris i helger (Fri, Sat, Sun)',
+					'price'        => 1000.00,
+					'priority'     => 2,
+					'days_of_week' => '5,6,0',
+					'holiday_only' => 0,
+				)
+			);
+			$weekend_evening_rule_id = $wpdb->insert_id;
+			$wpdb->insert(
+				$table_rule_objects,
+				array(
+					'pricing_rule_id'   => $weekend_evening_rule_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+
+			// Holiday Day Rule
+			$wpdb->insert(
+				$table_rules,
+				array(
+					'name'         => "$obj_name - Helligdag Dag",
+					'description'  => 'Helligdagspris på dagtid',
+					'price'        => 1000.00,
+					'priority'     => 100,
+					'days_of_week' => '7',
+					'holiday_only' => 1,
+				)
+			);
+			$holiday_day_rule_id = $wpdb->insert_id;
+			$wpdb->insert(
+				$table_rule_objects,
+				array(
+					'pricing_rule_id'   => $holiday_day_rule_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+
+			// Holiday Evening Rule
+			$wpdb->insert(
+				$table_rules,
+				array(
+					'name'         => "$obj_name - Helligdag Kveld",
+					'description'  => 'Helligdagspris på kveldstid',
+					'price'        => 1000.00,
+					'priority'     => 100,
+					'days_of_week' => '7',
+					'holiday_only' => 1,
+				)
+			);
+			$holiday_evening_rule_id = $wpdb->insert_id;
+			$wpdb->insert(
+				$table_rule_objects,
+				array(
+					'pricing_rule_id'   => $holiday_evening_rule_id,
+					'booking_object_id' => $obj_id,
+				)
+			);
+
+			// Link the rules to their respective blocks
+			foreach ( $created_blocks as $cb ) {
+				if ( $cb['type'] === 'day' ) {
+					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekday_day_rule_id, 'booking_block_id' => $cb['id'], ) );
+					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekend_day_rule_id, 'booking_block_id' => $cb['id'], ) );
+					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $holiday_day_rule_id, 'booking_block_id' => $cb['id'], ) );
+				} elseif ( $cb['type'] === 'evening' ) {
+					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekday_evening_rule_id, 'booking_block_id' => $cb['id'], ) );
+					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekend_evening_rule_id, 'booking_block_id' => $cb['id'], ) );
+					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $holiday_evening_rule_id, 'booking_block_id' => $cb['id'], ) );
+				}
+			}
+		}
+
+		// 4. Create global legacy time slots (for backward compatibility)
+		$table_slots             = $wpdb->prefix . 'snippen_time_slots';
+		$table_prices            = $wpdb->prefix . 'snippen_prices';
+		$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
+
+		$base_slots = array(
+			array(
+				'name'          => 'Formiddag',
+				'description'   => 'Fra kl 08:00 til 16:00. Du må vaske og ryddet lokalet når du forlater det.',
+				'start_time'    => '08:00:00',
+				'end_time'      => '16:00:00',
+				'cleanup_hours' => 0,
+			),
+			array(
+				'name'          => 'Ettermiddag',
+				'description'   => 'Fra kl 16:00 til 23:00. Du har til kl 08:00 neste dag til å vaske deg ut',
+				'start_time'    => '16:00:00',
+				'end_time'      => '23:00:00',
+				'cleanup_hours' => 9,
+			),
+		);
+
+		$base_prices = array(
+			'Formiddag'   => 500,
+			'Ettermiddag' => 500,
+		);
+
+		$slot_variations = array(
+			array(
+				'suffix'       => '(Hverdag)',
+				'days_of_week' => '1,2,3,4',
+				'price_mult'   => 1,
+			),
+			array(
+				'suffix'       => '(Helg)',
+				'days_of_week' => '5,6,0',
+				'price_mult'   => 2,
+			),
+			array(
+				'suffix'       => '(Helligdager og høytider)',
+				'days_of_week' => '7',
+				'price_mult'   => 2,
+			),
+		);
+
+		$combinations = array(
+			array(
+				'name_prefix' => 'Festsalen',
+				'object_ids'  => array( $festsalen_id ),
+				'price_mult'  => 1,
+			),
+			array(
+				'name_prefix' => 'Peisestuen',
+				'object_ids'  => array( $peisestuen_id ),
+				'price_mult'  => 1,
+			),
+		);
+
+		foreach ( $base_slots as $base_slot ) {
+			foreach ( $slot_variations as $var ) {
+				$base_price = $base_prices[ $base_slot['name'] ] ?? 500;
+				$var_price  = $base_price * $var['price_mult'];
+
+				$current_combinations = $combinations;
+
+				foreach ( $current_combinations as $combo ) {
+					$slot_name = $combo['name_prefix'] . ' - ' . $base_slot['name'] . ' ' . $var['suffix'];
+
+					$final_price = $var_price * $combo['price_mult'];
+					$wpdb->insert(
+						$table_prices,
+						array(
+							'name'     => $slot_name,
+							'price'    => $final_price,
+							'priority' => ( strpos( $var['days_of_week'], '7' ) !== false ) ? 100 : ( $var['price_mult'] > 1 ? 10 : 0 ),
+						)
+					);
+					$price_id = $wpdb->insert_id;
+
+					$slot_data = array_merge(
+						$base_slot,
+						array(
+							'name'         => $slot_name,
+							'days_of_week' => $var['days_of_week'],
+							'price_id'     => $price_id,
+						)
+					);
+
+					$wpdb->insert( $table_slots, $slot_data );
+					$slot_id = $wpdb->insert_id;
+
+					foreach ( $combo['object_ids'] as $obj_id ) {
+						$wpdb->insert(
+							$table_time_slot_objects,
+							array(
+								'time_slot_id'      => $slot_id,
+								'booking_object_id' => $obj_id,
+							)
+						);
+					}
+				}
+			}
+		}
+
+		return array(
+			'success' => true,
+			'message' => 'Starter setup (Variant 2) created successfully',
+		);
+	}
 }
+
