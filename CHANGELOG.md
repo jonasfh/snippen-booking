@@ -1,31 +1,21 @@
 # Changelog
 
-## [1.25.1] - 2026-06-06
+## [2.0.0] - 2026-06-06
 ### Changed
 - Feature (#142): Changed shortcode `[snippen_booking]` to display all active booking objects when called without the `object_id` argument. Updated related documentation and help page.
-
-## [1.25.0] - 2026-06-06
 ### Added
 - Feature (#130): Added Admin Management of Pricing Rules.
 - Feature (#130): Added `PricingPreviewApi` and UI for admins to preview rules in real-time.
 - Feature (#130): Upgraded the Pricing Rules Admin UI to support the new `is_active` toggle, day restrictions, date restrictions, and holiday overrides.
 - Refactor (#130): Created `PricingRuleRepository` for CRUD and pricing resolution logic based on priority.
-
-## [1.24.2] - 2026-06-06
 - Feature (#129): Added Admin Management of Booking Blocks.
 - Feature (#129): Added a new backend view `BookingBlocksPage` with support for managing, filtering and viewing weekly setup.
 - Feature (#129): Replaced `TimeSlotsPage` in admin dashboard with `BookingBlocksPage`.
-
-## [1.24.1] - 2026-06-05
-### Added
 - Feature (#128): Created a new modern interactive wizard-based frontend booking interface supporting block-based selections (`booking_blocks`).
 - Feature (#128): Implemented week-based layout (Monday-Sunday) and responsive CSS to fold columns vertically on mobile.
 - Feature (#128): Hid past/unbookable days on mobile view to optimize scrolling.
 - Feature (#128): Enforced adjacent block selection and enabled live pricing calculations during room/block selection.
 - Refactor (#128): Maintained 100% backward compatibility for legacy slot-based bookings in Booking API and Repositories.
-
-## [1.24.0] - 2026-06-05
-### Added
 - Redesign (#127): Redesigned core domain model to support flexible block-based selections (`booking_blocks`) and priority-based pricing rules (`pricing_rules`) instead of legacy slot-based systems.
 - Feature (#127): Updated demo-data seeding within the Setup Wizard to support Mon-Thu hourly bookings (08-23), Friday hourly bookings (08-16) plus an evening block (16-23), and weekend/holiday Day (08-16) and Evening (16-23) blocks with matching pricing.
 - Refactor (#127): Retained backward compatibility with slot-based tables and wrappers in Availability and Pricing services during transition.
