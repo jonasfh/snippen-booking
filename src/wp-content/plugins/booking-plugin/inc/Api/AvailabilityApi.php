@@ -6,6 +6,7 @@ use SnippenBooking\Database\Repository\BookingBlockRepository;
 use SnippenBooking\Database\Repository\BookingRepository;
 use SnippenBooking\Service\AvailabilityService;
 use SnippenBooking\Service\PricingService;
+use SnippenBooking\Service\DiscountService;
 use SnippenBooking\Helper\Capabilities;
 use SnippenBooking\Service\HolidayService;
 
@@ -59,6 +60,7 @@ class AvailabilityApi {
 		$booking_repository   = new BookingRepository();
 		$availability_service = new AvailabilityService();
 		$pricing_service      = new PricingService();
+		$discount_service     = new DiscountService();
 		$holiday_service      = new HolidayService();
 
 		$all_blocks = $block_repository->find_all();
@@ -131,7 +133,8 @@ class AvailabilityApi {
 					}
 				}
 
-				$price = $pricing_service->getPrice( $object_ids, array( $block->id ), $date_str );
+				$base_price = $pricing_service->getPrice( $object_ids, array( $block->id ), $date_str );
+				$discount_info = $discount_service->applyDiscount( $base_price, $object_ids, array( $block->id ), $date_str );
 
 				$day_blocks[] = array(
 					'id'           => (int) $block->id,
@@ -139,7 +142,9 @@ class AvailabilityApi {
 					'start_time'   => $block->start_time,
 					'end_time'     => $block->end_time,
 					'is_available' => $is_available,
-					'price'        => $price,
+					'price'        => $discount_info['final_price'],
+					'base_price'   => $base_price,
+					'discount_amount' => $discount_info['discount_amount'],
 					'booked_by'    => $booked_by,
 					'booking_info' => $booking_info,
 				);
@@ -234,15 +239,32 @@ class AvailabilityApi {
 			);
 		}
 
-		$total_price = 0;
+		$base_price = 0;
+		$final_price = 0;
+		$discount_amount = 0;
+		$discount_name = null;
+
 		if ( ! empty( $selected_object_ids ) ) {
-			$total_price = $pricing_service->getPrice( $selected_object_ids, $block_ids, $event_date );
+			$base_price = $pricing_service->getPrice( $selected_object_ids, $block_ids, $event_date );
+			$discount_service = new DiscountService();
+			$discount_info = $discount_service->applyDiscount( $base_price, $selected_object_ids, $block_ids, $event_date );
+			$final_price = $discount_info['final_price'];
+			$discount_amount = $discount_info['discount_amount'];
+			if ( $discount_info['discount_rule'] ) {
+				$discount_name = $discount_info['discount_rule']->name;
+				if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {
+					$discount_name .= ' (' . floatval( $discount_info['discount_rule']->discount_value ) . '%)';
+				}
+			}
 		}
 
 		wp_send_json_success(
 			array(
 				'objects' => $objects_data,
-				'price'   => $total_price,
+				'price'   => $final_price,
+				'base_price' => $base_price,
+				'discount_amount' => $discount_amount,
+				'discount_name' => $discount_name,
 			)
 		);
 	}

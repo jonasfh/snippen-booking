@@ -481,7 +481,13 @@ class PricingPage {
 						if(res.success) {
 							if(res.data.found) {
 								var html = '<h3 style="margin-top:0; color:#16a34a;">Vinnende prisregel: ' + res.data.rule_name + '</h3>';
-								html += '<p style="font-size:24px; font-weight:bold; margin:10px 0;">' + res.data.rule_price.toLocaleString('no-NO') + ' kr</p>';
+								if (res.data.discount_amount > 0) {
+									html += '<p style="margin:5px 0;">Grunnpris: ' + res.data.rule_price.toLocaleString('no-NO') + ' kr</p>';
+									html += '<p style="margin:5px 0; color:#16a34a;">Rabatt (' + res.data.discount_name + '): -' + res.data.discount_amount.toLocaleString('no-NO') + ' kr</p>';
+									html += '<p style="font-size:24px; font-weight:bold; margin:10px 0;">Totalpris: ' + res.data.final_price.toLocaleString('no-NO') + ' kr</p>';
+								} else {
+									html += '<p style="font-size:24px; font-weight:bold; margin:10px 0;">' + res.data.rule_price.toLocaleString('no-NO') + ' kr</p>';
+								}
 								html += '<p style="margin:0;">Prioritet: ' + res.data.priority + '</p>';
 								if(res.data.description) {
 									html += '<p style="margin-top:5px; color:#64748b;">' + res.data.description + '</p>';

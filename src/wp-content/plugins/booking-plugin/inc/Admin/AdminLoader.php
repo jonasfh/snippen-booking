@@ -31,6 +31,13 @@ class AdminLoader {
 	private static $pricing_page_instance = null;
 
 	/**
+	 * DiscountPage instance
+	 *
+	 * @var \SnippenBooking\Admin\Pages\DiscountPage|null
+	 */
+	private static $discount_page_instance = null;
+
+	/**
 	 * Register admin hooks
 	 */
 	public static function register() {
@@ -118,6 +125,15 @@ class AdminLoader {
 			array( self::class, 'render_pricing_page' )
 		);
 
+		$discount_hook = add_submenu_page(
+			'snippen-booking',
+			__( 'Rabattregler', 'snippen-booking' ),
+			__( 'Rabattregler', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-discounts',
+			array( self::class, 'render_discount_page' )
+		);
+
 		add_submenu_page(
 			'snippen-booking',
 			__( 'Innstillinger', 'snippen-booking' ),
@@ -168,6 +184,9 @@ class AdminLoader {
 		if ( $pricing_hook ) {
 			add_action( 'load-' . $pricing_hook, array( self::class, 'handle_pricing_page_save' ) );
 		}
+		if ( $discount_hook ) {
+			add_action( 'load-' . $discount_hook, array( self::class, 'handle_discount_page_save' ) );
+		}
 		if ( $templates_hook ) {
 			add_action( 'load-' . $templates_hook, array( self::class, 'handle_templates_page_save' ) );
 		}
@@ -200,6 +219,16 @@ class AdminLoader {
 		if ( class_exists( 'SnippenBooking\Admin\Pages\PricingPage' ) ) {
 			self::$pricing_page_instance = new \SnippenBooking\Admin\Pages\PricingPage();
 			self::$pricing_page_instance->handle_request();
+		}
+	}
+
+	/**
+	 * Handle Discount Page save early (before headers)
+	 */
+	public static function handle_discount_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\DiscountPage' ) ) {
+			self::$discount_page_instance = new \SnippenBooking\Admin\Pages\DiscountPage();
+			self::$discount_page_instance->handle_request();
 		}
 	}
 
@@ -299,6 +328,20 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Prisregler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render Discount Page
+	 */
+	public static function render_discount_page() {
+		if ( self::$discount_page_instance ) {
+			self::$discount_page_instance->render();
+		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\DiscountPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\DiscountPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'Rabattregler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 
