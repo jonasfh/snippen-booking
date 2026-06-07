@@ -38,6 +38,12 @@ class SetupWizardPage {
 				$message      = $result['message'];
 			}
 
+			if ( $wizard_action === 'create_starter_setup_v2' ) {
+				$result       = SetupWizard::create_starter_setup_v2();
+				$message_type = $result['success'] ? 'success' : 'error';
+				$message      = $result['message'];
+			}
+
 			if ( $wizard_action === 'skip_wizard' ) {
 				SetupWizard::mark_completed();
 				$message_type = 'info';
@@ -98,7 +104,11 @@ class SetupWizardPage {
 
 						<div style="display: flex; gap: 10px;">
 							<button type="submit" name="action" value="create_starter_setup" class="button button-primary">
-								<?php esc_html_e( 'Create Starter Setup', 'snippen-booking' ); ?>
+								<?php esc_html_e( 'Create Standard Setup', 'snippen-booking' ); ?>
+							</button>
+
+							<button type="submit" name="action" value="create_starter_setup_v2" class="button button-secondary">
+								<?php esc_html_e( 'Create Simplified Setup (Variant 2)', 'snippen-booking' ); ?>
 							</button>
 
 							<button type="submit" name="action" value="skip_wizard" class="button">
@@ -112,11 +122,17 @@ class SetupWizardPage {
 			<!-- Info Section -->
 			<div class="card" style="margin-top: 20px;">
 				<h3><?php esc_html_e( 'About Starter Setup', 'snippen-booking' ); ?></h3>
-				<p><?php esc_html_e( 'The starter setup includes:', 'snippen-booking' ); ?></p>
+				<p><?php esc_html_e( 'The standard starter setup includes:', 'snippen-booking' ); ?></p>
 				<ul style="list-style: disc; margin-left: 20px;">
 					<li><?php esc_html_e( '2 sample booking objects: Festsalen and Peisestuen', 'snippen-booking' ); ?></li>
-					<li><?php esc_html_e( '3 time slots: Hele dagen, Formiddag, Ettermiddag', 'snippen-booking' ); ?></li>
-					<li><?php esc_html_e( 'Pricing for weekdays, weekends, and holidays', 'snippen-booking' ); ?></li>
+					<li><?php esc_html_e( 'Hourly blocks and weekend day/evening blocks', 'snippen-booking' ); ?></li>
+					<li><?php esc_html_e( 'Flexible pricing for weekdays, weekends, and holidays', 'snippen-booking' ); ?></li>
+				</ul>
+				<p style="margin-top: 15px;"><?php esc_html_e( 'The simplified starter setup (Variant 2) includes:', 'snippen-booking' ); ?></p>
+				<ul style="list-style: disc; margin-left: 20px;">
+					<li><?php esc_html_e( '2 sample booking objects: Festsalen and Peisestuen', 'snippen-booking' ); ?></li>
+					<li><?php esc_html_e( 'Only 2 blocks per day: Dag (08-16) and Kveld (16-23)', 'snippen-booking' ); ?></li>
+					<li><?php esc_html_e( 'Simple pricing for weekdays, weekends, and holidays', 'snippen-booking' ); ?></li>
 				</ul>
 				<p><?php esc_html_e( 'You can edit or delete these entries later from the plugin settings.', 'snippen-booking' ); ?></p>
 			</div>
