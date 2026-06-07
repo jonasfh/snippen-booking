@@ -4,6 +4,7 @@ namespace SnippenBooking\Api;
 
 use SnippenBooking\Helper\Capabilities;
 use SnippenBooking\Database\Repository\PricingRuleRepository;
+use SnippenBooking\Service\DiscountService;
 
 /**
  * API for pricing preview in Admin
@@ -42,13 +43,30 @@ class PricingPreviewApi {
 		$rule       = $repository->find_matching_rule( $date, $object_id, $block_id );
 
 		if ( $rule ) {
+			$base_price = floatval( $rule->price );
+			$discount_service = new DiscountService();
+			$discount_info = $discount_service->applyDiscount( $base_price, array( $object_id ), array( $block_id ), $date );
+
+			$final_price = $discount_info['final_price'];
+			$discount_amount = $discount_info['discount_amount'];
+			$discount_name = '';
+			if ( $discount_info['discount_rule'] ) {
+				$discount_name = $discount_info['discount_rule']->name;
+				if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {
+					$discount_name .= ' (' . floatval( $discount_info['discount_rule']->discount_value ) . '%)';
+				}
+			}
+
 			wp_send_json_success(
 				array(
-					'found'       => true,
-					'rule_name'   => $rule->name,
-					'rule_price'  => floatval( $rule->price ),
-					'priority'    => intval( $rule->priority ),
-					'description' => $rule->description,
+					'found'           => true,
+					'rule_name'       => $rule->name,
+					'rule_price'      => $base_price,
+					'final_price'     => $final_price,
+					'discount_amount' => $discount_amount,
+					'discount_name'   => $discount_name,
+					'priority'        => intval( $rule->priority ),
+					'description'     => $rule->description,
 				)
 			);
 		} else {

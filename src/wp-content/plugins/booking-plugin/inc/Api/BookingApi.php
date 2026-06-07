@@ -4,6 +4,7 @@ namespace SnippenBooking\Api;
 
 use SnippenBooking\Service\AvailabilityService;
 use SnippenBooking\Service\PricingService;
+use SnippenBooking\Service\DiscountService;
 use SnippenBooking\Helper\Capabilities;
 use SnippenBooking\Database\Repository\BookingRepository;
 
@@ -121,26 +122,60 @@ class BookingApi {
 			$description    = sanitize_textarea_field( $_POST['description'] ?? '' );
 
 			$pricing_service = new PricingService();
-			$price = $pricing_service->getPrice( $booking_object_ids, array( $slot_id ), $booking_date );
-			if ( $price === null ) {
-				$price = 0.0;
+			$base_price = $pricing_service->getPrice( $booking_object_ids, array( $slot_id ), $booking_date );
+			if ( $base_price === null ) {
+				$base_price = 0.0;
+			}
+
+			// For legacy slots, we can calculate duration from slot start and end
+			$duration = 0;
+			if ( $slot ) {
+				$start = strtotime($slot->start_time);
+				$end = strtotime($slot->end_time);
+				if ($end <= $start) {
+					$end += 24 * 3600;
+				}
+				$duration = round(($end - $start) / 3600, 2);
+			}
+
+			$discount_service = new DiscountService();
+			$discount_repo    = new \SnippenBooking\Database\Repository\DiscountRuleRepository();
+			$rule = $discount_repo->find_applicable_rule( $booking_object_ids, $duration );
+			
+			$discount_amount = 0.0;
+			$final_price = $base_price;
+			$discount_rule_id = null;
+
+			if ( $rule ) {
+				if ( $rule->discount_type === 'percentage' ) {
+					$discount_amount = $base_price * ( (float) $rule->discount_value / 100 );
+				} elseif ( $rule->discount_type === 'fixed_amount' ) {
+					$discount_amount = (float) $rule->discount_value;
+				}
+				if ( $discount_amount > $base_price ) {
+					$discount_amount = $base_price;
+				}
+				$final_price = $base_price - $discount_amount;
+				$discount_rule_id = $rule->id;
 			}
 
 			$uuid = wp_generate_uuid4();
 
 			$booking_data = array(
-				'uuid'           => $uuid,
-				'booking_date'   => $booking_date,
-				'user_id'        => $booking_user_id,
-				'slot_id'        => $slot_id,
-				'customer_name'  => $customer_name,
-				'customer_email' => $customer_email,
-				'customer_phone' => $customer_phone,
-				'description'    => $description,
-				'price'          => $price,
-				'status'         => 'pending',
-				'created_at'     => current_time( 'mysql' ),
-				'modified_at'    => current_time( 'mysql' ),
+				'uuid'             => $uuid,
+				'booking_date'     => $booking_date,
+				'user_id'          => $booking_user_id,
+				'slot_id'          => $slot_id,
+				'customer_name'    => $customer_name,
+				'customer_email'   => $customer_email,
+				'customer_phone'   => $customer_phone,
+				'description'      => $description,
+				'price'            => $final_price,
+				'discount_amount'  => $discount_amount,
+				'discount_rule_id' => $discount_rule_id,
+				'status'           => 'pending',
+				'created_at'       => current_time( 'mysql' ),
+				'modified_at'      => current_time( 'mysql' ),
 			);
 
 			$booking_repository = new BookingRepository();
@@ -211,25 +246,30 @@ class BookingApi {
 
 		// Calculate total price
 		$pricing_service = new PricingService();
-		$price           = $pricing_service->getPrice( $booking_object_ids, $block_ids, $booking_date );
-		if ( $price === null ) {
-			$price = 0.0;
+		$base_price      = $pricing_service->getPrice( $booking_object_ids, $block_ids, $booking_date );
+		if ( $base_price === null ) {
+			$base_price = 0.0;
 		}
+
+		$discount_service = new DiscountService();
+		$discount_info    = $discount_service->applyDiscount( $base_price, $booking_object_ids, $block_ids, $booking_date );
 
 		$uuid = wp_generate_uuid4();
 
 		$booking_data = array(
-			'uuid'           => $uuid,
-			'booking_date'   => $booking_date,
-			'user_id'        => $booking_user_id,
-			'customer_name'  => $customer_name,
-			'customer_email' => $customer_email,
-			'customer_phone' => $customer_phone,
-			'description'    => $description,
-			'price'          => $price,
-			'status'         => 'pending',
-			'created_at'     => current_time( 'mysql' ),
-			'modified_at'    => current_time( 'mysql' ),
+			'uuid'             => $uuid,
+			'booking_date'     => $booking_date,
+			'user_id'          => $booking_user_id,
+			'customer_name'    => $customer_name,
+			'customer_email'   => $customer_email,
+			'customer_phone'   => $customer_phone,
+			'description'      => $description,
+			'price'            => $discount_info['final_price'],
+			'discount_amount'  => $discount_info['discount_amount'],
+			'discount_rule_id' => $discount_info['discount_rule'] ? $discount_info['discount_rule']->id : null,
+			'status'           => 'pending',
+			'created_at'       => current_time( 'mysql' ),
+			'modified_at'      => current_time( 'mysql' ),
 		);
 
 		$booking_repository = new BookingRepository();

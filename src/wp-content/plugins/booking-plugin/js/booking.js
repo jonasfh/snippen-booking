@@ -457,7 +457,14 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 if (response.success) {
-                    $('#summary-price').text('kr. ' + Math.round(response.data.price) + ',-');
+                    if (response.data.discount_amount > 0) {
+                        var html = '<div style="text-decoration: line-through; color: #64748b; font-size: 0.9em;">kr. ' + Math.round(response.data.base_price) + ',-</div>';
+                        html += '<div style="color: #16a34a; font-size: 0.9em; margin-bottom: 5px;">Rabatt: -kr. ' + Math.round(response.data.discount_amount) + ',-</div>';
+                        html += '<div style="font-weight: bold; font-size: 1.2em;">kr. ' + Math.round(response.data.price) + ',-</div>';
+                        $('#summary-price').html(html);
+                    } else {
+                        $('#summary-price').text('kr. ' + Math.round(response.data.price) + ',-');
+                    }
                 }
             }
         });

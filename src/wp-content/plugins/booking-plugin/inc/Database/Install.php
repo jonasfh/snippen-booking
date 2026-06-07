@@ -113,6 +113,38 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_rule_objects );
 
+		// Discount rules table
+		$table_discount_rules = $wpdb->prefix . 'snippen_discount_rules';
+		$sql_discount_rules   = "CREATE TABLE $table_discount_rules (
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            discount_type VARCHAR(20) NOT NULL,
+            discount_value DECIMAL(10,2) NOT NULL,
+            min_duration_hours DECIMAL(10,2) NULL,
+            max_duration_hours DECIMAL(10,2) NULL,
+            days_of_week VARCHAR(50) NULL,
+            holiday_only TINYINT(1) DEFAULT 0,
+            priority INT DEFAULT 10,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            PRIMARY KEY  (id),
+            KEY priority (priority)
+        ) $charset_collate;";
+		dbDelta( $sql_discount_rules );
+
+		// Discount rule booking objects junction table
+		$table_discount_rule_objects = $wpdb->prefix . 'snippen_discount_rule_booking_objects';
+		$sql_discount_rule_objects   = "CREATE TABLE $table_discount_rule_objects (
+            discount_rule_id INT NOT NULL,
+            booking_object_id INT NOT NULL,
+            PRIMARY KEY  (discount_rule_id, booking_object_id),
+            KEY discount_rule_id (discount_rule_id),
+            KEY booking_object_id (booking_object_id)
+        ) $charset_collate;";
+		dbDelta( $sql_discount_rule_objects );
+
 		// Bookings table (with slot_id and facility restored for backward compatibility)
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$sql_bookings   = "CREATE TABLE $table_bookings (
@@ -127,6 +159,8 @@ class Install {
             customer_phone VARCHAR(50) DEFAULT '',
             description TEXT,
             price DECIMAL(10,2) DEFAULT 0,
+            discount_amount DECIMAL(10,2) DEFAULT 0,
+            discount_rule_id INT NULL,
             status VARCHAR(20) DEFAULT 'pending',
             door_code VARCHAR(255) NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

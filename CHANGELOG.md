@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.0] - 2026-06-07
+- (#147) Added duration-based discount rules for bookings
+
 ## [2.0.1] - 2026-06-07
 ### Added
 - Feature (#144): Added `demo:wizard2` composer script and `create_starter_setup_v2` in SetupWizard to support a simpler, legacy-style variant with only 2 blocks per day (Dag and Kveld).
