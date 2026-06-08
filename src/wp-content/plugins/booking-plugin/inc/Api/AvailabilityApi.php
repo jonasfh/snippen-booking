@@ -101,15 +101,24 @@ class AvailabilityApi {
 				}
 
 				// Check availability
-				$is_available = true;
-				$booked_by    = null;
-				$booking_info = null;
+				$total_capacity        = count( $object_ids );
+				$available_capacity    = 0;
+				$occupied_object_names = array();
+				$booked_by             = null;
+				$booking_info          = null;
 
 				foreach ( $object_ids as $obj_id ) {
-					if ( ! $availability_service->isBlockAvailable( $obj_id, $date_str, $block->id ) ) {
-						$is_available = false;
+					if ( $availability_service->isBlockAvailable( $obj_id, $date_str, $block->id ) ) {
+						$available_capacity++;
+					} else {
+						// Fetch object name
+						$obj_name = $wpdb->get_var( $wpdb->prepare( "SELECT name FROM {$wpdb->prefix}snippen_booking_objects WHERE id = %d", $obj_id ) );
+						if ( $obj_name ) {
+							$occupied_object_names[] = $obj_name;
+						}
+
 						// Find who booked it for admin
-						if ( $is_admin ) {
+						if ( $is_admin && ! $booking_info ) {
 							foreach ( $bookings_by_object[ $obj_id ] as $booking ) {
 								if ( $booking->booking_date === $date_str && in_array( (int) $block->id, $booking->booking_block_ids, true ) ) {
 									$booked_by    = $booking->customer_name;
@@ -129,24 +138,28 @@ class AvailabilityApi {
 								}
 							}
 						}
-						break;
 					}
 				}
+
+				$is_available = $available_capacity > 0;
 
 				$base_price = $pricing_service->getPrice( $object_ids, array( $block->id ), $date_str );
 				$discount_info = $discount_service->applyDiscount( $base_price, $object_ids, array( $block->id ), $date_str );
 
 				$day_blocks[] = array(
-					'id'           => (int) $block->id,
-					'name'         => $block->name,
-					'start_time'   => $block->start_time,
-					'end_time'     => $block->end_time,
-					'is_available' => $is_available,
-					'price'        => $discount_info['final_price'],
-					'base_price'   => $base_price,
-					'discount_amount' => $discount_info['discount_amount'],
-					'booked_by'    => $booked_by,
-					'booking_info' => $booking_info,
+					'id'                    => (int) $block->id,
+					'name'                  => $block->name,
+					'start_time'            => $block->start_time,
+					'end_time'              => $block->end_time,
+					'is_available'          => $is_available,
+					'available_capacity'    => $available_capacity,
+					'total_capacity'        => $total_capacity,
+					'occupied_object_names' => $occupied_object_names,
+					'price'                 => $discount_info['final_price'],
+					'base_price'            => $base_price,
+					'discount_amount'       => $discount_info['discount_amount'],
+					'booked_by'             => $booked_by,
+					'booking_info'          => $booking_info,
 				);
 			}
 
