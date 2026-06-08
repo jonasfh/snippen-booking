@@ -174,9 +174,41 @@ jQuery(document).ready(function ($) {
                 weekHtml += '<div class="no-slots-info">' + (snippenBookingAjax.strings.noSlotsAvailable || 'Ingen tider') + '</div>';
             } else {
                 dayInfo.blocks.forEach(function (block) {
+                    var total = block.total_capacity || 1;
+                    var available = block.available_capacity !== undefined ? block.available_capacity : (block.is_available ? 1 : 0);
+                    var occupied = total - available;
+                    var capacityIndicator = '';
+                    
+                    if (total > 1) {
+                        var indicatorHtml = '<div class="capacity-indicator">';
+                        for (var i = 0; i < occupied; i++) {
+                            indicatorHtml += '<span class="capacity-segment occupied">■</span> ';
+                        }
+                        for (var i = 0; i < available; i++) {
+                            indicatorHtml += '<span class="capacity-segment available">□</span> ';
+                        }
+                        indicatorHtml += '</div>';
+                        
+                        var capacityTextHtml = '<div class="capacity-text">';
+                        if (available === 0) {
+                            capacityTextHtml += 'Fullbooket';
+                        } else {
+                            capacityTextHtml += available + ' av ' + total + ' ledig';
+                        }
+                        capacityTextHtml += '</div>';
+                        
+                        var occupiedNamesHtml = '';
+                        if (occupied > 0 && block.occupied_object_names && block.occupied_object_names.length > 0) {
+                            occupiedNamesHtml = '<div class="occupied-names">Booket: ' + block.occupied_object_names.join(', ') + '</div>';
+                        }
+                        
+                        capacityIndicator = indicatorHtml + capacityTextHtml + occupiedNamesHtml;
+                    }
+
                     if (block.is_available) {
                         weekHtml += '<div class="slot-item available" data-date="' + dayInfo.date + '" data-block-id="' + block.id + '">';
                         weekHtml += '<span class="slot-name">' + block.name + '</span>';
+                        weekHtml += capacityIndicator;
                         if (block.price) {
                             weekHtml += '<span class="slot-price">kr. ' + Math.round(block.price) + ',-</span>';
                         }
@@ -185,10 +217,13 @@ jQuery(document).ready(function ($) {
                         var bookingInfoStr = (isAdmin && block.booking_info) ? JSON.stringify(block.booking_info).replace(/"/g, '&quot;') : '';
                         weekHtml += '<div class="slot-item booked" ' + (isAdmin ? 'data-booking-info="' + bookingInfoStr + '"' : '') + '>';
                         weekHtml += '<span class="slot-name">' + block.name + '</span>';
+                        weekHtml += capacityIndicator;
                         if (isAdmin && block.booked_by) {
                             weekHtml += '<span class="customer-name-label">' + block.booked_by + '</span>';
                         }
-                        weekHtml += '<span class="booking-info">' + (snippenBookingAjax.strings.bookedLabel || 'Opptatt') + '</span>';
+                        if (total <= 1) {
+                            weekHtml += '<span class="booking-info">' + (snippenBookingAjax.strings.bookedLabel || 'Opptatt') + '</span>';
+                        }
                         weekHtml += '</div>';
                     }
                 });

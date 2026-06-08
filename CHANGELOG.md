@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.3] - 2026-06-08
+- (#155) Changed calendar rendering to visualize remaining booking capacity with a segment indicator instead of a binary available/unavailable status.
+
 ## [2.1.2] - 2026-06-07
 - (#152) Updated English translation files (`en_US`) to cover new features like discount rules and wizard.
 
