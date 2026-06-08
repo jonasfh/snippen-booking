@@ -21,7 +21,7 @@ require_once $abspath . 'wp-load.php';
 $username = getenv('KEYSMS_USERNAME');
 $api_key = getenv('KEYSMS_API_KEY');
 $sender = getenv('SMS_SENDER') ?: 'Snippen';
-$booking_enabled = getenv('SMS_BOOKING_CONFIRMATION_ENABLED') ?: 'yes';
+$booking_enabled = getenv('SMS_BOOKING_CONFIRMATION_ENABLED') ?: 'no';
 $account_enabled = getenv('SMS_ACCOUNT_CONFIRMATION_ENABLED') ?: 'yes';
 
 if (!$username || !$api_key) {
