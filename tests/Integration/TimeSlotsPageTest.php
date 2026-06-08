@@ -13,10 +13,20 @@ class TimeSlotsPageTest extends TestCase {
     public function test_render_form_shows_associated_price() {
         global $wpdb;
 
-        // 1. Get a time slot
+        // 1. Get a time slot or create one if none exists
         $slot = $wpdb->get_row( "SELECT * FROM {$wpdb->prefix}snippen_time_slots LIMIT 1" );
         if ( ! $slot ) {
-            $this->fail( 'No time slots found in test database.' );
+            $wpdb->insert(
+                "{$wpdb->prefix}snippen_time_slots",
+                array(
+                    'name' => 'Legacy Slot',
+                    'start_time' => '08:00',
+                    'end_time' => '16:00',
+                    'created_at' => current_time('mysql'),
+                    'modified_at' => current_time('mysql'),
+                )
+            );
+            $slot = $wpdb->get_row( "SELECT * FROM {$wpdb->prefix}snippen_time_slots LIMIT 1" );
         }
 
         // 2. Create a price and associate it with the slot
@@ -65,7 +75,17 @@ class TimeSlotsPageTest extends TestCase {
 
         $slot = $wpdb->get_row( "SELECT * FROM {$wpdb->prefix}snippen_time_slots LIMIT 1" );
         if ( ! $slot ) {
-            $this->fail( 'No time slots found in test database.' );
+            $wpdb->insert(
+                "{$wpdb->prefix}snippen_time_slots",
+                array(
+                    'name' => 'Legacy Slot',
+                    'start_time' => '08:00',
+                    'end_time' => '16:00',
+                    'created_at' => current_time('mysql'),
+                    'modified_at' => current_time('mysql'),
+                )
+            );
+            $slot = $wpdb->get_row( "SELECT * FROM {$wpdb->prefix}snippen_time_slots LIMIT 1" );
         }
 
         // Dissociate any price

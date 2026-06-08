@@ -30,7 +30,7 @@ class SetupWizardPageTest extends TestCase {
 		$output = ob_get_clean();
 
 		$this->assertStringContainsString( 'Setup Wizard', $output );
-		$this->assertStringContainsString( 'Create Starter Setup', $output );
+		$this->assertStringContainsString( 'Installer Standard Oppsett', $output );
 	}
 
 	public function testSetupWizardFormSubmissionCreatesData() {
