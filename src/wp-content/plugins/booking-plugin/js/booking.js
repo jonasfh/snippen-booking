@@ -209,9 +209,6 @@ jQuery(document).ready(function ($) {
                         weekHtml += '<div class="slot-item available" data-date="' + dayInfo.date + '" data-block-id="' + block.id + '">';
                         weekHtml += '<span class="slot-name">' + block.name + '</span>';
                         weekHtml += capacityIndicator;
-                        if (block.price) {
-                            weekHtml += '<span class="slot-price">kr. ' + Math.round(block.price) + ',-</span>';
-                        }
                         weekHtml += '</div>';
                     } else {
                         var bookingInfoStr = (isAdmin && block.booking_info) ? JSON.stringify(block.booking_info).replace(/"/g, '&quot;') : '';

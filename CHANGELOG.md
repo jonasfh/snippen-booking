@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.4] - 2026-06-09
+- (#157) Removed price display from the calendar view to avoid confusion with dynamic pricing based on user selection.
+
 ## [2.1.3] - 2026-06-08
 - (#155) Changed calendar rendering to visualize remaining booking capacity with a segment indicator instead of a binary available/unavailable status.
 
