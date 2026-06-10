@@ -127,7 +127,7 @@ class BookingsPage {
 		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
 		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
 
-		$query = "SELECT b.*, s.name as slot_name 
+		$query = "SELECT b.*, s.name as slot_name, s.start_time, s.end_time 
                   FROM $table_bookings b 
                   LEFT JOIN $table_slots s ON b.slot_id = s.id 
                   WHERE b.deleted_at IS NULL";
@@ -226,6 +226,10 @@ class BookingsPage {
 
 		$status_class = 'snippen-status-' . $booking->status;
 		$booking_date = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
+		$time_range   = '';
+		if ( ! empty( $booking->start_time ) && ! empty( $booking->end_time ) ) {
+			$time_range = date_i18n( 'H:i', strtotime( $booking->start_time ) ) . ' - ' . date_i18n( 'H:i', strtotime( $booking->end_time ) );
+		}
 
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
 		echo '<td><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
@@ -257,6 +261,9 @@ class BookingsPage {
 		echo '<div><strong>' . esc_html__( 'Kontaktinfo:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->customer_phone ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse/Notater:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
+		echo '<div><strong>' . esc_html__( 'Tidsrom:', 'snippen-booking' ) . '</strong><br>' . esc_html( $time_range ?: '-' ) . '</div>';
+		echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->door_code ?: '-' ) . '</div>';
+		echo '<div><strong>' . esc_html__( 'Rabatt:', 'snippen-booking' ) . '</strong><br>' . ( $booking->discount_amount > 0 ? esc_html( number_format( $booking->discount_amount, 0, ',', ' ' ) . ',-' ) : '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Booket den:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->created_at ) . '</div>';
 		echo '<div class="booking-assistant-actions" data-id="' . esc_attr( $booking->id ) . '" data-uuid="' . esc_attr( $booking->uuid ) . '">';
 		echo '<strong>' . esc_html__( 'Booking-hjelper:', 'snippen-booking' ) . '</strong><br>';
