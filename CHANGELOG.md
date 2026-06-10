@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.6] - 2026-06-10
+- (#162) Added option to preserve user metadata and the resident role during plugin uninstallation, allowing safe data retention for reinstallations.
+
 ## [2.1.5] - 2026-06-10
 - (#160) Added door code, discount, and specific start/end times to the booking details in the admin overview.
 

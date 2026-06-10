@@ -62,7 +62,11 @@ class SettingsPage {
 		$terms_url = isset( $_POST['snippen_terms_url'] ) ? esc_url_raw( $_POST['snippen_terms_url'] ) : '';
 		update_option( 'snippen_terms_url', $terms_url );
 
-		$preserve_data = isset( $_POST['snippen_preserve_data_on_uninstall'] ) ? 'yes' : 'no';
+		$preserve_data = isset( $_POST['snippen_preserve_data_on_uninstall'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_preserve_data_on_uninstall'] ) ) : 'no';
+		$valid_values  = array( 'yes', 'no', 'keep_usermeta' );
+		if ( ! in_array( $preserve_data, $valid_values, true ) ) {
+			$preserve_data = 'no';
+		}
 		update_option( 'snippen_preserve_data_on_uninstall', $preserve_data );
 
 		// Save Active Toggles per channel and type
@@ -235,11 +239,19 @@ class SettingsPage {
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="background:#fff1f2; border:1px solid #fecdd3; padding:16px; border-radius:8px; margin-top:20px;">';
-		echo '<label style="font-weight:700; color:#9f1239; display: flex; align-items: center; gap:8px;">';
-		echo '<input type="checkbox" name="snippen_preserve_data_on_uninstall" value="yes" ' . checked( $preserve_data, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Behold data ved avinstallering', 'snippen-booking' );
+		echo '<h4 style="margin:0 0 12px 0; color:#9f1239;">' . esc_html__( 'Sletting av data ved avinstallering', 'snippen-booking' ) . '</h4>';
+		echo '<label style="font-weight:600; color:#9f1239; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
+		echo '<input type="radio" name="snippen_preserve_data_on_uninstall" value="yes" ' . checked( $preserve_data, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Behold alt (tabeller, innstillinger og brukermeta)', 'snippen-booking' );
 		echo '</label>';
-		echo '<p class="description" style="margin: 4px 0 0 24px;">' . esc_html__( 'Hvis dette ikke er krysset av, vil all data knyttet til Snippen Booking bli slettet når pluginen slettes.', 'snippen-booking' ) . '</p>';
+		echo '<label style="font-weight:600; color:#9f1239; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
+		echo '<input type="radio" name="snippen_preserve_data_on_uninstall" value="keep_usermeta" ' . checked( $preserve_data, 'keep_usermeta', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Slett tabeller og innstillinger, men behold beboer-data (anbefalt for re-installasjon)', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; color:#9f1239; display: flex; align-items: center; gap:8px;">';
+		echo '<input type="radio" name="snippen_preserve_data_on_uninstall" value="no" ' . checked( $preserve_data, 'no', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Slett alt knyttet til Snippen Booking', 'snippen-booking' );
+		echo '</label>';
 		echo '</div>';
 
 		echo '</div>';
