@@ -45,9 +45,7 @@ foreach ( $tables as $table ) {
 $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", 'snippen\_%', '_transient_%snippen\_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 // 3. Delete user meta.
-if ( 'keep_usermeta' !== $preserve_data ) {
-	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", 'snippen\_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-}
+$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", 'snippen\_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 // 4. Remove plugin capabilities from all roles.
 require_once __DIR__ . '/inc/Helper/Capabilities.php';
@@ -64,9 +62,7 @@ foreach ( $roles_obj->roles as $role_name => $role_info ) {
 }
 
 // 5. Remove custom role.
-if ( 'keep_usermeta' !== $preserve_data ) {
-	remove_role( 'snippen_resident' );
-}
+remove_role( 'snippen_resident' );
 
 // 6. Clear scheduled cron jobs.
 // We clear any scheduled cron jobs related to the plugin.
