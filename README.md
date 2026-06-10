@@ -13,17 +13,20 @@ A WordPress plugin for handling bookings at Snippen community house.
 ## Usage
 
 ### Displaying the Booking Form
-The booking form is displayed using the following shortcode, where object_id is the ID of the object you want to book:
+The booking form is displayed using the following shortcode. If called without arguments, all active booking objects are available:
+
+```text
+[snippen_booking]
+```
+
+To limit the form to a specific object or multiple objects, you can pass the `object_id` argument (use a comma-separated list for multiple objects):
 
 ```text
 [snippen_booking object_id="1"]
-```
-
-Multiple objects can be booked by passing a comma-separated list of object IDs to the shortcode. Only time slots marked as "delt" (shared) will be available in this mode.
-
-```text
 [snippen_booking object_id="1,2"]
 ```
+
+When multiple objects are available or selected, only time slots marked as "delt" (shared) will be available in this mode.
 
 ### User Account Confirmation
 Users must confirm their account via SMS before they can create bookings. The account confirmation form is displayed using the following shortcode:

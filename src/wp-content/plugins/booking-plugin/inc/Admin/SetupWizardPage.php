@@ -38,6 +38,12 @@ class SetupWizardPage {
 				$message      = $result['message'];
 			}
 
+			if ( $wizard_action === 'create_starter_setup_v2' ) {
+				$result       = SetupWizard::create_starter_setup_v2();
+				$message_type = $result['success'] ? 'success' : 'error';
+				$message      = $result['message'];
+			}
+
 			if ( $wizard_action === 'skip_wizard' ) {
 				SetupWizard::mark_completed();
 				$message_type = 'info';
@@ -81,45 +87,82 @@ class SetupWizardPage {
 			<?php else : ?>
 				<!-- Welcome Screen -->
 				<div class="card">
-					<h2><?php esc_html_e( 'Welcome to Snippen Booking', 'snippen-booking' ); ?></h2>
-					<p><?php esc_html_e( 'This setup wizard will help you configure the plugin with a starter setup including booking objects, time slots, and pricing.', 'snippen-booking' ); ?></p>
+					<h2><?php esc_html_e( 'Velkommen til Snippen Booking', 'snippen-booking' ); ?></h2>
+					<p><?php esc_html_e( 'Denne veiviseren hjelper deg å komme i gang med et forhåndsdefinert oppsett. Velg hvilken variant som passer ditt behov best:', 'snippen-booking' ); ?></p>
 
-					<h3><?php esc_html_e( 'What you can do:', 'snippen-booking' ); ?></h3>
-					<ul style="list-style: disc; margin-left: 20px;">
-						<li><?php esc_html_e( 'Create booking objects (e.g., rooms, venues)', 'snippen-booking' ); ?></li>
-						<li><?php esc_html_e( 'Set up time slots for availability', 'snippen-booking' ); ?></li>
-						<li><?php esc_html_e( 'Configure pricing models', 'snippen-booking' ); ?></li>
-					</ul>
+					<h2 class="nav-tab-wrapper" style="margin-top: 20px;">
+						<a href="#variant-1" class="nav-tab nav-tab-active" id="tab-variant-1"><?php esc_html_e( 'Standard Oppsett (Fleksibelt)', 'snippen-booking' ); ?></a>
+						<a href="#variant-2" class="nav-tab" id="tab-variant-2"><?php esc_html_e( 'Enkelt Oppsett (Dag/Kveld)', 'snippen-booking' ); ?></a>
+					</h2>
 
-					<p style="margin-top: 20px;"><strong><?php esc_html_e( 'You can also skip this wizard and configure everything manually later.', 'snippen-booking' ); ?></strong></p>
+					<div id="content-variant-1" class="wizard-tab-content" style="padding: 20px 0;">
+						<p><?php esc_html_e( 'Dette oppsettet er best for lokaler med fleksible behov og kortere leieperioder på hverdager.', 'snippen-booking' ); ?></p>
+						<ul style="list-style: disc; margin-left: 20px;">
+							<li><?php esc_html_e( '2 booking-objekter: Festsalen og Peisestuen', 'snippen-booking' ); ?></li>
+							<li><?php esc_html_e( 'Timebaserte blokker mandag til fredag (kl. 08-23)', 'snippen-booking' ); ?></li>
+							<li><?php esc_html_e( 'Helg og helligdager har kun Dag (08-16) og Kveld (16-23)', 'snippen-booking' ); ?></li>
+							<li><?php esc_html_e( 'Egne prisregler for hverdager, helger og helligdager', 'snippen-booking' ); ?></li>
+						</ul>
+						<form method="post" style="margin-top: 20px;">
+							<?php wp_nonce_field( 'snippen_booking_wizard' ); ?>
+							<button type="submit" name="action" value="create_starter_setup" class="button button-primary button-large">
+								<?php esc_html_e( 'Installer Standard Oppsett', 'snippen-booking' ); ?>
+							</button>
+						</form>
+					</div>
 
-					<form method="post" style="margin-top: 20px;">
+					<div id="content-variant-2" class="wizard-tab-content" style="display: none; padding: 20px 0;">
+						<p><?php esc_html_e( 'Dette oppsettet er mer likt den gamle versjonen, hvor man kun har faste, lange bolker hver dag.', 'snippen-booking' ); ?></p>
+						<ul style="list-style: disc; margin-left: 20px;">
+							<li><?php esc_html_e( '2 booking-objekter: Festsalen og Peisestuen', 'snippen-booking' ); ?></li>
+							<li><?php esc_html_e( 'Kun 2 tidsblokker per dag (alle dager): Dag (08-16) og Kveld (16-23)', 'snippen-booking' ); ?></li>
+							<li><?php esc_html_e( 'Enkle prisregler med ulik pris for ukedager, helger og helligdager', 'snippen-booking' ); ?></li>
+						</ul>
+						<form method="post" style="margin-top: 20px;">
+							<?php wp_nonce_field( 'snippen_booking_wizard' ); ?>
+							<button type="submit" name="action" value="create_starter_setup_v2" class="button button-primary button-large">
+								<?php esc_html_e( 'Installer Enkelt Oppsett', 'snippen-booking' ); ?>
+							</button>
+						</form>
+					</div>
+
+					<hr style="margin: 30px 0;">
+					<p><strong><?php esc_html_e( 'Vil du heller sette opp alt selv fra bunnen av?', 'snippen-booking' ); ?></strong></p>
+					<form method="post" style="margin-top: 10px;">
 						<?php wp_nonce_field( 'snippen_booking_wizard' ); ?>
-
-						<div style="display: flex; gap: 10px;">
-							<button type="submit" name="action" value="create_starter_setup" class="button button-primary">
-								<?php esc_html_e( 'Create Starter Setup', 'snippen-booking' ); ?>
-							</button>
-
-							<button type="submit" name="action" value="skip_wizard" class="button">
-								<?php esc_html_e( 'Skip for Now', 'snippen-booking' ); ?>
-							</button>
-						</div>
+						<button type="submit" name="action" value="skip_wizard" class="button">
+							<?php esc_html_e( 'Hopp over veiviseren', 'snippen-booking' ); ?>
+						</button>
 					</form>
 				</div>
-			<?php endif; ?>
 
-			<!-- Info Section -->
-			<div class="card" style="margin-top: 20px;">
-				<h3><?php esc_html_e( 'About Starter Setup', 'snippen-booking' ); ?></h3>
-				<p><?php esc_html_e( 'The starter setup includes:', 'snippen-booking' ); ?></p>
-				<ul style="list-style: disc; margin-left: 20px;">
-					<li><?php esc_html_e( '2 sample booking objects: Festsalen and Peisestuen', 'snippen-booking' ); ?></li>
-					<li><?php esc_html_e( '3 time slots: Hele dagen, Formiddag, Ettermiddag', 'snippen-booking' ); ?></li>
-					<li><?php esc_html_e( 'Pricing for weekdays, weekends, and holidays', 'snippen-booking' ); ?></li>
-				</ul>
-				<p><?php esc_html_e( 'You can edit or delete these entries later from the plugin settings.', 'snippen-booking' ); ?></p>
-			</div>
+				<script>
+					document.addEventListener('DOMContentLoaded', function() {
+						var tab1 = document.getElementById('tab-variant-1');
+						var tab2 = document.getElementById('tab-variant-2');
+						var content1 = document.getElementById('content-variant-1');
+						var content2 = document.getElementById('content-variant-2');
+
+						if (tab1 && tab2 && content1 && content2) {
+							tab1.addEventListener('click', function(e) {
+								e.preventDefault();
+								tab1.classList.add('nav-tab-active');
+								tab2.classList.remove('nav-tab-active');
+								content1.style.display = 'block';
+								content2.style.display = 'none';
+							});
+
+							tab2.addEventListener('click', function(e) {
+								e.preventDefault();
+								tab2.classList.add('nav-tab-active');
+								tab1.classList.remove('nav-tab-active');
+								content2.style.display = 'block';
+								content1.style.display = 'none';
+							});
+						}
+					});
+				</script>
+			<?php endif; ?>
 		</div>
 
 		<style>

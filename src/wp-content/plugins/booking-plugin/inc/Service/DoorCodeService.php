@@ -77,14 +77,17 @@ class DoorCodeService {
 			return;
 		}
 
-		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
+		$table_blocks         = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
 
 		// Fetch all pending or confirmed bookings that are active
 		$bookings = $wpdb->get_results(
-			"SELECT b.*, s.start_time, s.end_time 
+			"SELECT b.*, MIN(s.start_time) as start_time, MAX(s.end_time) as end_time 
 			 FROM $table_bookings b
-			 JOIN $table_slots s ON b.slot_id = s.id
-			 WHERE b.deleted_at IS NULL AND b.status IN ('pending', 'confirmed')"
+			 JOIN $table_booking_blocks bb ON b.id = bb.booking_id
+			 JOIN $table_blocks s ON bb.booking_block_id = s.id
+			 WHERE b.deleted_at IS NULL AND b.status IN ('pending', 'confirmed')
+			 GROUP BY b.id"
 		);
 
 		foreach ( $bookings as $booking ) {
@@ -100,7 +103,7 @@ class DoorCodeService {
 	public static function sync_booking_door_code( $booking ) {
 		global $wpdb;
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
-		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_junction = $wpdb->prefix . 'snippen_booking_booking_objects';
 		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 
 		if ( ! self::is_enabled() ) {
@@ -115,12 +118,40 @@ class DoorCodeService {
 			return;
 		}
 
+		// Hydrate start_time and end_time if they are not already set
+		if ( ! isset( $booking->start_time ) || ! isset( $booking->end_time ) ) {
+			$table_blocks         = $wpdb->prefix . 'snippen_booking_blocks';
+			$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
+			$table_slots          = $wpdb->prefix . 'snippen_time_slots';
+			$times                = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT COALESCE(MIN(s.start_time), ts.start_time) as start_time, 
+					        COALESCE(MAX(s.end_time), ts.end_time) as end_time 
+					 FROM $table_bookings b
+					 LEFT JOIN $table_booking_blocks bb ON b.id = bb.booking_id
+					 LEFT JOIN $table_blocks s ON bb.booking_block_id = s.id
+					 LEFT JOIN $table_slots ts ON b.slot_id = ts.id
+					 WHERE b.id = %d
+					 GROUP BY b.id",
+					$booking->id
+				)
+			);
+			if ( $times ) {
+				$booking->start_time = $times->start_time;
+				$booking->end_time   = $times->end_time;
+			}
+		}
+
 		if ( self::is_in_window( $booking ) && in_array( $booking->status, array( 'pending', 'confirmed' ), true ) ) {
-			// Find door codes from associated booking objects
+			// Find door codes from associated booking objects (support both new and legacy tables)
 			$door_codes = $wpdb->get_col(
 				$wpdb->prepare(
 					"SELECT o.door_code 
-					 FROM $table_junction bo 
+					 FROM (
+					 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_booking_booking_objects
+					 	UNION
+					 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_bookings_booking_objects
+					 ) bo 
 					 JOIN $table_objects o ON bo.booking_object_id = o.id 
 					 WHERE bo.booking_id = %d AND o.deleted_at IS NULL AND o.door_code IS NOT NULL AND o.door_code != ''",
 					$booking->id
@@ -164,22 +195,32 @@ class DoorCodeService {
 		}
 
 		global $wpdb;
-		$table_bookings = $wpdb->prefix . 'snippen_bookings';
-		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
-		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
+		$table_bookings       = $wpdb->prefix . 'snippen_bookings';
+		$table_blocks         = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
+		$table_slots          = $wpdb->prefix . 'snippen_time_slots';
 
 		// Find all upcoming bookings (where booking_date >= today) associated with this booking object
 		$today    = current_time( 'Y-m-d' );
 		$bookings = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT b.*, s.start_time, s.end_time 
+				"SELECT b.*, 
+				        COALESCE(MIN(s.start_time), ts.start_time) as start_time, 
+				        COALESCE(MAX(s.end_time), ts.end_time) as end_time 
 				 FROM $table_bookings b
-				 JOIN $table_junction bo ON b.id = bo.booking_id
-				 JOIN $table_slots s ON b.slot_id = s.id
+				 JOIN (
+				 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_booking_booking_objects
+				 	UNION
+				 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_bookings_booking_objects
+				 ) bo ON b.id = bo.booking_id
+				 LEFT JOIN $table_booking_blocks bb ON b.id = bb.booking_id
+				 LEFT JOIN $table_blocks s ON bb.booking_block_id = s.id
+				 LEFT JOIN $table_slots ts ON b.slot_id = ts.id
 				 WHERE bo.booking_object_id = %d 
 				   AND b.booking_date >= %s 
 				   AND b.deleted_at IS NULL 
-				   AND b.status IN ('pending', 'confirmed')",
+				   AND b.status IN ('pending', 'confirmed')
+				 GROUP BY b.id",
 				$booking_object_id,
 				$today
 			)

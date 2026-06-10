@@ -17,11 +17,11 @@ class AdminLoader {
 	private static $objects_page_instance = null;
 
 	/**
-	 * TimeSlotsPage instance
+	 * BookingBlocksPage instance
 	 *
-	 * @var \SnippenBooking\Admin\Pages\TimeSlotsPage|null
+	 * @var \SnippenBooking\Admin\Pages\BookingBlocksPage|null
 	 */
-	private static $slots_page_instance = null;
+	private static $blocks_page_instance = null;
 
 	/**
 	 * PricingPage instance
@@ -29,6 +29,13 @@ class AdminLoader {
 	 * @var \SnippenBooking\Admin\Pages\PricingPage|null
 	 */
 	private static $pricing_page_instance = null;
+
+	/**
+	 * DiscountPage instance
+	 *
+	 * @var \SnippenBooking\Admin\Pages\DiscountPage|null
+	 */
+	private static $discount_page_instance = null;
 
 	/**
 	 * Register admin hooks
@@ -100,13 +107,13 @@ class AdminLoader {
 			array( self::class, 'render_objects_page' )
 		);
 
-		$slots_hook = add_submenu_page(
+		$blocks_hook = add_submenu_page(
 			'snippen-booking',
 			__( 'Tidsluker', 'snippen-booking' ),
 			__( 'Tidsluker', 'snippen-booking' ),
 			Capabilities::MANAGE_BOOKINGS,
-			'snippen-booking-slots',
-			array( self::class, 'render_slots_page' )
+			'snippen-booking-blocks',
+			array( self::class, 'render_blocks_page' )
 		);
 
 		$pricing_hook = add_submenu_page(
@@ -116,6 +123,15 @@ class AdminLoader {
 			Capabilities::MANAGE_BOOKINGS,
 			'snippen-booking-pricing',
 			array( self::class, 'render_pricing_page' )
+		);
+
+		$discount_hook = add_submenu_page(
+			'snippen-booking',
+			__( 'Rabattregler', 'snippen-booking' ),
+			__( 'Rabattregler', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-discounts',
+			array( self::class, 'render_discount_page' )
 		);
 
 		add_submenu_page(
@@ -162,11 +178,14 @@ class AdminLoader {
 		if ( $objects_hook ) {
 			add_action( 'load-' . $objects_hook, array( self::class, 'handle_objects_page_save' ) );
 		}
-		if ( $slots_hook ) {
-			add_action( 'load-' . $slots_hook, array( self::class, 'handle_slots_page_save' ) );
+		if ( $blocks_hook ) {
+			add_action( 'load-' . $blocks_hook, array( self::class, 'handle_blocks_page_save' ) );
 		}
 		if ( $pricing_hook ) {
 			add_action( 'load-' . $pricing_hook, array( self::class, 'handle_pricing_page_save' ) );
+		}
+		if ( $discount_hook ) {
+			add_action( 'load-' . $discount_hook, array( self::class, 'handle_discount_page_save' ) );
 		}
 		if ( $templates_hook ) {
 			add_action( 'load-' . $templates_hook, array( self::class, 'handle_templates_page_save' ) );
@@ -184,12 +203,12 @@ class AdminLoader {
 	}
 
 	/**
-	 * Handle Slots Page save early (before headers)
+	 * Handle Blocks Page save early (before headers)
 	 */
-	public static function handle_slots_page_save() {
-		if ( class_exists( 'SnippenBooking\Admin\Pages\TimeSlotsPage' ) ) {
-			self::$slots_page_instance = new \SnippenBooking\Admin\Pages\TimeSlotsPage();
-			self::$slots_page_instance->handle_request();
+	public static function handle_blocks_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\BookingBlocksPage' ) ) {
+			self::$blocks_page_instance = new \SnippenBooking\Admin\Pages\BookingBlocksPage();
+			self::$blocks_page_instance->handle_request();
 		}
 	}
 
@@ -200,6 +219,16 @@ class AdminLoader {
 		if ( class_exists( 'SnippenBooking\Admin\Pages\PricingPage' ) ) {
 			self::$pricing_page_instance = new \SnippenBooking\Admin\Pages\PricingPage();
 			self::$pricing_page_instance->handle_request();
+		}
+	}
+
+	/**
+	 * Handle Discount Page save early (before headers)
+	 */
+	public static function handle_discount_page_save() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\DiscountPage' ) ) {
+			self::$discount_page_instance = new \SnippenBooking\Admin\Pages\DiscountPage();
+			self::$discount_page_instance->handle_request();
 		}
 	}
 
@@ -275,13 +304,13 @@ class AdminLoader {
 	}
 
 	/**
-	 * Render Slots Page
+	 * Render Blocks Page
 	 */
-	public static function render_slots_page() {
-		if ( self::$slots_page_instance ) {
-			self::$slots_page_instance->render();
-		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\TimeSlotsPage' ) ) {
-			$page = new \SnippenBooking\Admin\Pages\TimeSlotsPage();
+	public static function render_blocks_page() {
+		if ( self::$blocks_page_instance ) {
+			self::$blocks_page_instance->render();
+		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\BookingBlocksPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\BookingBlocksPage();
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Tidsluker', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
@@ -299,6 +328,20 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Prisregler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render Discount Page
+	 */
+	public static function render_discount_page() {
+		if ( self::$discount_page_instance ) {
+			self::$discount_page_instance->render();
+		} elseif ( class_exists( 'SnippenBooking\Admin\Pages\DiscountPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\DiscountPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'Rabattregler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 

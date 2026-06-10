@@ -47,8 +47,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
             if ($this->requires_seed_data) {
                 // If tables are empty, force re-seeding regardless of the static flag
                 if (self::$db_seeded) {
-                    $slots_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_time_slots");
-                    if ($slots_count === 0) {
+                    $blocks_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_blocks");
+                    if ($blocks_count === 0) {
                         self::$db_seeded = false;
                     }
                 }
@@ -57,11 +57,18 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                     $wpdb->query("DELETE FROM {$wpdb->users} WHERE ID > 1");
                     $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE user_id > 1");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings");
-                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_blocks");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_object_booking_blocks");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rules");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rule_booking_blocks");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rule_booking_objects");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
                     
                     \SnippenBooking\Admin\SetupWizard::create_starter_setup();
                     self::$db_seeded = true;
@@ -70,11 +77,18 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                 $wpdb->query("DELETE FROM {$wpdb->users} WHERE ID > 1");
                 $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE user_id > 1");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings");
-                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_blocks");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_object_booking_blocks");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rules");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rule_booking_blocks");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_pricing_rule_booking_objects");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
                 
                 self::$db_seeded = false;
             }

@@ -35,6 +35,7 @@
         "test:integration": "phpunit --testsuite=Integration",
         "demo:bookings": "php bin/demo-data.php generate",
         "demo:wizard": "php bin/demo-data.php wizard",
+        "demo:wizard2": "php bin/demo-data.php wizard2",
         "demo:clear": "php bin/demo-data.php clear",
         "demo:pages": "php bin/demo-pages.php",
         "demo:users": "php bin/demo-data.php users",

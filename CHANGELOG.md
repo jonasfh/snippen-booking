@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.1.6] - 2026-06-10
+- (#162) Added option to preserve user metadata and the resident role during plugin uninstallation, allowing safe data retention for reinstallations.
+
+## [2.1.5] - 2026-06-10
+- (#160) Added door code, discount, and specific start/end times to the booking details in the admin overview.
+
+## [2.1.4] - 2026-06-09
+- (#157) Removed price display from the calendar view to avoid confusion with dynamic pricing based on user selection.
+
+## [2.1.3] - 2026-06-08
+- (#155) Changed calendar rendering to visualize remaining booking capacity with a segment indicator instead of a binary available/unavailable status.
+
+## [2.1.2] - 2026-06-07
+- (#152) Updated English translation files (`en_US`) to cover new features like discount rules and wizard.
+
+## [2.1.1] - 2026-06-07
+- (#150) Fixed uninstall script to drop all missing `snippen_` tables.
+
+## [2.1.0] - 2026-06-07
+- (#147) Added duration-based discount rules for bookings
+
+## [2.0.1] - 2026-06-07
+### Added
+- Feature (#144): Added `demo:wizard2` composer script and `create_starter_setup_v2` in SetupWizard to support a simpler, legacy-style variant with only 2 blocks per day (Dag and Kveld).
+## [2.0.0] - 2026-06-06
+### Changed
+- Feature (#142): Changed shortcode `[snippen_booking]` to display all active booking objects when called without the `object_id` argument. Updated related documentation and help page.
+### Added
+- Feature (#130): Added Admin Management of Pricing Rules.
+- Feature (#130): Added `PricingPreviewApi` and UI for admins to preview rules in real-time.
+- Feature (#130): Upgraded the Pricing Rules Admin UI to support the new `is_active` toggle, day restrictions, date restrictions, and holiday overrides.
+- Refactor (#130): Created `PricingRuleRepository` for CRUD and pricing resolution logic based on priority.
+- Feature (#129): Added Admin Management of Booking Blocks.
+- Feature (#129): Added a new backend view `BookingBlocksPage` with support for managing, filtering and viewing weekly setup.
+- Feature (#129): Replaced `TimeSlotsPage` in admin dashboard with `BookingBlocksPage`.
+- Feature (#128): Created a new modern interactive wizard-based frontend booking interface supporting block-based selections (`booking_blocks`).
+- Feature (#128): Implemented week-based layout (Monday-Sunday) and responsive CSS to fold columns vertically on mobile.
+- Feature (#128): Hid past/unbookable days on mobile view to optimize scrolling.
+- Feature (#128): Enforced adjacent block selection and enabled live pricing calculations during room/block selection.
+- Refactor (#128): Maintained 100% backward compatibility for legacy slot-based bookings in Booking API and Repositories.
+- Redesign (#127): Redesigned core domain model to support flexible block-based selections (`booking_blocks`) and priority-based pricing rules (`pricing_rules`) instead of legacy slot-based systems.
+- Feature (#127): Updated demo-data seeding within the Setup Wizard to support Mon-Thu hourly bookings (08-23), Friday hourly bookings (08-16) plus an evening block (16-23), and weekend/holiday Day (08-16) and Evening (16-23) blocks with matching pricing.
+- Refactor (#127): Retained backward compatibility with slot-based tables and wrappers in Availability and Pricing services during transition.
+
 ## [1.23.5] - 2026-06-06
 ### Fixed
 - Bug (#137): Skjuler nå fortidige dager (.day-column.past) på mobilvisning (skjermer under 600px bredde) i uke-kalenderen, for å unngå at brukeren må scrolle forbi dager som ikke er bookbare.

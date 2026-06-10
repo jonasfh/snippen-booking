@@ -26,7 +26,45 @@ global $wpdb;
 $table_objects = $wpdb->prefix . 'snippen_booking_objects';
 $table_slots = $wpdb->prefix . 'snippen_time_slots';
 $table_bookings = $wpdb->prefix . 'snippen_bookings';
-$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects'; // Legacy
+$table_new_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects'; // New
+$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks'; // New
+
+/**
+ * Helper to map a legacy slot to the overlapping new booking blocks.
+ */
+function get_overlapping_blocks($slot_start, $slot_end, $days_of_week) {
+    global $wpdb;
+    $table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
+    $blocks = $wpdb->get_results("SELECT id, start_time, end_time, days_of_week FROM $table_blocks WHERE deleted_at IS NULL");
+    
+    $overlapping_ids = [];
+    $s_start = strtotime("1970-01-01 " . $slot_start);
+    $s_end   = strtotime("1970-01-01 " . $slot_end);
+    if ($s_end <= $s_start) {
+        $s_end += 86400;
+    }
+    $s_end -= 1; // subtract 1 second to prevent boundary issues
+
+    foreach ($blocks as $block) {
+        $b_start = strtotime("1970-01-01 " . $block->start_time);
+        $b_end   = strtotime("1970-01-01 " . $block->end_time);
+        if ($b_end <= $b_start) {
+            $b_end += 86400;
+        }
+        $b_end -= 1;
+
+        if (($s_start < $b_end) && ($b_start < $s_end)) {
+            // Check day intersection
+            $slot_days = explode(',', $days_of_week);
+            $block_days = explode(',', $block->days_of_week);
+            if (array_intersect($slot_days, $block_days)) {
+                $overlapping_ids[] = (int) $block->id;
+            }
+        }
+    }
+    return $overlapping_ids;
+}
 
 $action = $argv[1] ?? 'bookings';
 
@@ -37,6 +75,8 @@ if ($action === 'generate' || $action === 'bookings') {
 if ($action === 'clear') {
     echo "Clearing all bookings...\n";
     $wpdb->query("DELETE FROM $table_booking_objects");
+    $wpdb->query("DELETE FROM $table_new_booking_objects");
+    $wpdb->query("DELETE FROM $table_booking_blocks");
     $wpdb->query("DELETE FROM $table_bookings");
     echo "Success: All bookings cleared.\n";
 
@@ -116,6 +156,23 @@ if ($action === 'wizard') {
     }
 }
 
+if ($action === 'wizard2') {
+    echo "Running Setup Wizard to create starter data (Variant 2)...\n";
+    if (class_exists('\SnippenBooking\Admin\SetupWizard')) {
+        $result = \SnippenBooking\Admin\SetupWizard::create_starter_setup_v2();
+        if ($result['success']) {
+            echo "Success: Starter data created successfully.\n";
+            exit(0);
+        } else {
+            echo "Error creating starter data: " . $result['message'] . "\n";
+            exit(1);
+        }
+    } else {
+        echo "Error: SnippenBooking\Admin\SetupWizard not found. Please activate the plugin first.\n";
+        exit(1);
+    }
+}
+
 if ($action === 'generate') {
     echo "Generating demo bookings...\n";
 
@@ -158,7 +215,7 @@ if ($action === 'generate') {
         if (rand(1, 10) <= 2) {
             // Find global slot ID for all objects
             $potential_slots = $wpdb->get_results(
-                "SELECT id, name, days_of_week, date_start, date_end FROM $table_slots WHERE name LIKE 'Hele området%' AND deleted_at IS NULL"
+                "SELECT id, name, days_of_week, start_time, end_time, date_start, date_end FROM $table_slots WHERE name LIKE 'Hele området%' AND deleted_at IS NULL"
             );
             $applicable_slots = array_filter($potential_slots, function($s) use ($service, $date_str) {
                 return $service->isSlotApplicable($s, $date_str, false);
@@ -204,6 +261,19 @@ if ($action === 'generate') {
                             'booking_id' => $booking_id,
                             'booking_object_id' => (int) $obj->id
                         ));
+                        $wpdb->insert($table_new_booking_objects, array(
+                            'booking_id' => $booking_id,
+                            'booking_object_id' => (int) $obj->id
+                        ));
+                    }
+
+                    // Link blocks
+                    $block_ids = get_overlapping_blocks($slot->start_time, $slot->end_time, $slot->days_of_week);
+                    foreach ($block_ids as $bid) {
+                        $wpdb->insert($table_booking_blocks, array(
+                            'booking_id' => $booking_id,
+                            'booking_block_id' => $bid
+                        ));
                     }
                     
                     $count++;
@@ -218,7 +288,7 @@ if ($action === 'generate') {
             if (rand(1, 10) <= 3) {
                 $table_tso = $wpdb->prefix . 'snippen_time_slot_booking_objects';
                 $slots = $wpdb->get_results($wpdb->prepare(
-                    "SELECT t.id, t.name, t.days_of_week, t.date_start, t.date_end FROM $table_slots t 
+                    "SELECT t.id, t.name, t.days_of_week, t.start_time, t.end_time, t.date_start, t.date_end FROM $table_slots t 
                      JOIN $table_tso tso ON t.id = tso.time_slot_id 
                      WHERE t.deleted_at IS NULL 
                      AND tso.booking_object_id = %d
@@ -264,11 +334,26 @@ if ($action === 'generate') {
                     
                     $booking_id = $wpdb->insert_id;
                     
-                    // Insert junction table entry
+                    // Insert legacy junction table entry
                     $wpdb->insert($table_booking_objects, array(
                         'booking_id' => $booking_id,
                         'booking_object_id' => (int) $obj->id
                     ));
+
+                    // Insert new junction table entry
+                    $wpdb->insert($table_new_booking_objects, array(
+                        'booking_id' => $booking_id,
+                        'booking_object_id' => (int) $obj->id
+                    ));
+
+                    // Link blocks
+                    $block_ids = get_overlapping_blocks($slot->start_time, $slot->end_time, $slot->days_of_week);
+                    foreach ($block_ids as $bid) {
+                        $wpdb->insert($table_booking_blocks, array(
+                            'booking_id' => $booking_id,
+                            'booking_block_id' => $bid
+                        ));
+                    }
                     
                     $count++;
                 }

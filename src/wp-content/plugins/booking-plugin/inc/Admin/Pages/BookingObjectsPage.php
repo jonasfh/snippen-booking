@@ -107,7 +107,7 @@ class BookingObjectsPage {
 				\SnippenBooking\Service\DoorCodeService::handle_object_door_code_change( $id, $door_code );
 			}
 
-			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects&action=edit&id=' . $id . '&message=updated' ) );
+			wp_safe_redirect( admin_url( 'admin.php?page=snippen-booking-objects&message=updated' ) );
 			exit;
 		} else {
 			$data['created_at'] = current_time( 'mysql' );
@@ -147,8 +147,8 @@ class BookingObjectsPage {
 	 */
 	private function render_list() {
 		global $wpdb;
-		$table   = $wpdb->prefix . 'snippen_booking_objects';
-		$objects = $wpdb->get_results( "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY name ASC" );
+		$table             = $wpdb->prefix . 'snippen_booking_objects';
+		$objects           = $wpdb->get_results( "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY name ASC" );
 		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
 
 		echo '<div class="snippen-card">';
