@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.5] - 2026-06-10
+- (#160) Added door code, discount, and specific start/end times to the booking details in the admin overview.
+
 ## [2.1.4] - 2026-06-09
 - (#157) Removed price display from the calendar view to avoid confusion with dynamic pricing based on user selection.
 
