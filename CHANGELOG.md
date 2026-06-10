@@ -1,9 +1,5 @@
 # Changelog
 
-## [1.23.6] - 2026-06-10
-### Added
-- Feature (#162): Added option to preserve user metadata and the resident role during plugin uninstallation, allowing safe data retention for reinstallations.
-
 ## [1.23.5] - 2026-06-06
 ### Fixed
 - Bug (#137): Skjuler nå fortidige dager (.day-column.past) på mobilvisning (skjermer under 600px bredde) i uke-kalenderen, for å unngå at brukeren må scrolle forbi dager som ikke er bookbare.
