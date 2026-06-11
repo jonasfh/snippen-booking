@@ -306,7 +306,7 @@ class SettingsPage {
 		} else {
 			echo '<label for="' . esc_attr( $key ) . '" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html( $label ) . $req_mark . '</label>';
 			if ( 'password' === $type ) {
-				echo '<input type="password" name="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" class="regular-text">';
+				echo '<input type="password" name="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" class="regular-text" autocomplete="new-password">';
 			} elseif ( 'select' === $type ) {
 				echo '<select name="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" style="min-width:300px;">';
 				foreach ( $field['options'] as $opt_val => $opt_lbl ) {
