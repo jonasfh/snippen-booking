@@ -62,6 +62,11 @@ class Plugin {
 		// Asynchronous notification sending
 		add_action( 'snippen_booking_send_notifications', array( __CLASS__, 'handle_background_notifications' ), 10, 2 );
 
+		// Disable all emails if setting is true (Issue #166)
+		if ( 'yes' === get_option( 'snippen_disable_all_emails', 'no' ) ) {
+			add_filter( 'pre_wp_mail', '__return_true' );
+		}
+
 		// SMTP fallback / configuration hooks.
 		if ( 'yes' === get_option( 'snippen_smtp_enabled', 'no' ) ) {
 			add_action( 'phpmailer_init', array( __CLASS__, 'configure_smtp' ) );

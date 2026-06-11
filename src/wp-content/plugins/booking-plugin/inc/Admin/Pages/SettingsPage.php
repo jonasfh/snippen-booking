@@ -65,6 +65,9 @@ class SettingsPage {
 		$preserve_data = isset( $_POST['snippen_preserve_data_on_uninstall'] ) ? 'yes' : 'no';
 		update_option( 'snippen_preserve_data_on_uninstall', $preserve_data );
 
+		$disable_all_emails = isset( $_POST['snippen_disable_all_emails'] ) ? 'yes' : 'no';
+		update_option( 'snippen_disable_all_emails', $disable_all_emails );
+
 		// Save Active Toggles per channel and type
 		update_option( 'snippen_email_booking_confirmation_enabled', isset( $_POST['snippen_email_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_admin_booking_enabled', isset( $_POST['snippen_email_admin_booking_enabled'] ) ? 'yes' : 'no' );
@@ -110,6 +113,7 @@ class SettingsPage {
 		$dispatch_method        = get_option( 'snippen_notification_dispatch_method', 'async' );
 		$terms_url              = get_option( 'snippen_terms_url', '' );
 		$preserve_data          = get_option( 'snippen_preserve_data_on_uninstall', 'no' );
+		$disable_all_emails     = get_option( 'snippen_disable_all_emails', 'no' );
 
 		$email_booking    = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 		$email_admin      = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
@@ -206,6 +210,14 @@ class SettingsPage {
 		echo '<option value="sync" ' . selected( $dispatch_method, 'sync', false ) . '>' . esc_html__( 'Synkron (Send direkte ved booking)', 'snippen-booking' ) . '</option>';
 		echo '</select>';
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Velg Synkron hvis WP-Cron er sperret eller ustabil på webhotellet.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_disable_all_emails" id="snippen_disable_all_emails" value="yes" ' . checked( $disable_all_emails, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Deaktiver all e-postutsendelse fullstendig', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Kryss av her hvis serveren mangler e-postoppsett for å unngå at systemet henger ved passordtilbakestilling og andre e-poster (løser #166).', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
