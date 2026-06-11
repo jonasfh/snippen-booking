@@ -181,31 +181,28 @@ class PhoneAuthenticationService {
 			'reset_link' => $reset_link,
 		);
 
-		// Determine if the user actually typed a phone number in the lost password form.
-		$posted_login     = isset( $_POST['user_login'] ) ? sanitize_text_field( wp_unslash( $_POST['user_login'] ) ) : '';
-		$normalized_phone = PhoneHelper::normalize_phone( $posted_login );
+		// Always use the user's registered phone number to determine SMS routing.
+		$user_phone    = get_user_meta( $user_data->ID, 'snippen_phone', true );
 
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_password_reset_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_password_reset_enabled', 'yes' );
 		$sms_sent      = false;
 
-		if ( $normalized_phone && $normalized_phone === get_user_meta( $user_data->ID, 'snippen_phone', true ) ) {
-			// Request was made via phone.
-			if ( $sms_enabled ) {
-				$rendered    = $template_service->render_template( 'password_reset', 'sms', $context );
-				$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
-				$provider    = $notification_manager->get_provider( $provider_id );
+		// Dispatch SMS if enabled and the user has a phone number, regardless of how they identified themselves.
+		if ( $sms_enabled && $user_phone ) {
+			$rendered    = $template_service->render_template( 'password_reset', 'sms', $context );
+			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$provider    = $notification_manager->get_provider( $provider_id );
 
-				if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
-					$sms_sent = $provider->send_sms( $normalized_phone, $rendered['body'] );
-					if ( ! $sms_sent ) {
-						error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
-					}
+			if ( $provider instanceof \SnippenBooking\Service\Notification\SmsProviderInterface && $provider->is_configured() ) {
+				$sms_sent = $provider->send_sms( $user_phone, $rendered['body'] );
+				if ( ! $sms_sent ) {
+					error_log( 'PhoneAuth: Failed to send SMS password reset. Attempting email fallback.' );
 				}
 			}
 		}
 
-		// If email is enabled, OR if SMS was attempted but failed, send/return email message
+		// If email is enabled globally, or if SMS was attempted but failed, send/return email message
 		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
 			$email_rendered = $template_service->render_template( 'password_reset', 'email', $context );
 			if ( ! empty( $email_rendered['body'] ) ) {
@@ -214,7 +211,7 @@ class PhoneAuthenticationService {
 			return $message;
 		}
 
-		// If email is disabled and SMS succeeded, return false to prevent WP from sending the email
+		// If email is disabled and SMS succeeded (or they have no phone and email is disabled), return false to prevent WP from sending the email
 		return false;
 	}
 }
