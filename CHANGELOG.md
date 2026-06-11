@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.8] - 2026-06-11
+- (#168) Added support for routing password reset notifications based on global settings regardless of input method.
+- Added autocomplete="new-password" to KeySMS API Key field to prevent auto-fill.
+
 ## [2.1.7] - 2026-06-11
 - (#166) Added setting to completely disable all email dispatching to prevent timeouts on environments without email configuration.
 
