@@ -59,8 +59,9 @@ class SmsFallbackTest extends TestCase {
 	 * Test that a user confirmation code is sent via email if SMS confirmation is disabled.
 	 */
 	public function testAccountConfirmationEmailFallback() {
-		// 1. Disable SMS confirmation.
-		update_option( 'snippen_keysms_notifications_enabled', 'no' );
+		// 1. Disable SMS confirmation, enable email confirmation.
+		update_option( 'snippen_sms_user_activation_enabled', 'no' );
+		update_option( 'snippen_email_user_activation_enabled', 'yes' );
 
 		// 2. Create test user.
 		$username   = 'fallbacktest_' . time() . '_' . wp_rand( 0, 999 );
@@ -101,8 +102,9 @@ class SmsFallbackTest extends TestCase {
 	public function testBookingConfirmationEmailFallback() {
 		global $wpdb;
 
-		// 1. Disable SMS booking confirmation.
-		update_option( 'snippen_keysms_notifications_enabled', 'no' );
+		// 1. Disable SMS booking confirmation, enable email confirmation.
+		update_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		update_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 
 		// 2. Create booking objects and time slot.
 		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', array( 'name' => 'Fallback Room' ) );
@@ -194,9 +196,10 @@ class SmsFallbackTest extends TestCase {
 	public function testBookingConfirmationSynchronousDispatch() {
 		global $wpdb;
 
-		// 1. Set dispatch method to sync and disable SMS.
+		// 1. Set dispatch method to sync and disable SMS, enable email.
 		update_option( 'snippen_notification_dispatch_method', 'sync' );
-		update_option( 'snippen_keysms_notifications_enabled', 'no' );
+		update_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		update_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 
 		// 2. Create booking objects and time slot.
 		$wpdb->insert( $wpdb->prefix . 'snippen_booking_objects', array( 'name' => 'Sync Room' ) );

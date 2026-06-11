@@ -253,6 +253,9 @@ class BookingManagementCapabilityTest extends TestCase {
 		] );
 		update_user_meta( $sub_id, 'snippen_phone', '+4799887766' );
 
+		// Enable admin emails explicitly
+		update_option( 'snippen_email_admin_booking_enabled', 'yes' );
+
 		// Make a booking
 		wp_set_current_user( $sub_id );
 
