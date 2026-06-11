@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.7] - 2026-06-11
+- (#166) Added setting to completely disable all email dispatching to prevent timeouts on environments without email configuration.
+
 ## [2.1.6] - 2026-06-10
 - (#162) Added option to preserve user metadata and the resident role during plugin uninstallation, allowing safe data retention for reinstallations.
 
