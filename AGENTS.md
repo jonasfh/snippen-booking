@@ -24,7 +24,7 @@ Guide AI agents working in this repository.
 - **DO NOT commit or push changes** (the USER handles version control), **EXCEPT** when following the "GitHub Issue Workflow" below.
 - **ALWAYS suggest a commit message** Focus on the problem solved. Use the header for the issue/outcome, and the body for implementation details and rationale. Format it as plain text in a copy-pasteable code block, without qusotes.
 - **GitHub Issue Workflow**: When tasked with solving a specific GitHub issue (e.g., "solve issue #15"), follow the dedicated workflow below.
-- **ALWAYS update version and changelog when changes to src/ folder is made**
+- **Always make sure new branches get updated version number and changelog when changes to src/ folder is made (see src/inc/booking-plugin.php and CHANGELOG.md)**
 - **Always keep README.md updated with user-related changes**
 - **Always keep DEV_README.md updated with developer-related changes**
 
@@ -152,22 +152,21 @@ All changes made to the project MUST be based on a GitHub issue. If a task or in
 Once a GitHub issue is identified or created, the following workflow **MUST** be followed:
 
 1.  **Preparation**:
-    - For issues 127, 128, 129, 130, 142, 144, 147, 155, 157: start in the `v2.0` branch instead of `main`. Ensure `v2.0` is up to date: `git pull origin v2.0`.
-    - For all other issues, start in the `main` branch and ensure `main` is up to date: `git pull origin main`.
+    - For all issues, start in the `main` branch and ensure `main` is up to date: `git pull origin main`.
     - Check if the terminal is logged in to GitHub: `gh auth status`. If not, inform the developer and ask them to run `gh auth login`.
     - To read issue details, ALWAYS use `gh issue view <id> --json title,body` instead of `gh issue view <id>`. This prevents the command from failing due to deprecation warnings related to Projects (classic).
 2.  **Branching**:
     - Check if a branch already exists for the issue.
-    - If not, create a new branch using the pattern: `gh-issue/<id>` (e.g., `gh-issue/127`). Base this branch off `v2.0` for issues 127, 128, 129, and 130, or off `main` for other issues.
+    - If not, create a new branch using the pattern: `gh-issue/<id>` (e.g., `gh-issue/127`). Base this branch off `main`.
 3.  **Implementation**:
     - Solve the issue as requested.
     - Create tests for new functionality and run all tests to verify.
 4.  **Submission**:
     - Commit changed files.
-    - Update changelog in `CHANGELOG.md` and version in `booking-plugin.php`.
     - **Commit Message**: The message **MUST** start with the issue reference in parentheses, e.g., `(#127) Fixed xxx...`.
     - Push the branch to origin.
-    - Create a Pull Request using `gh`. For issues 127, 128, 129, and 130, target the `v2.0` branch: `gh pr create --base v2.0 --body "Closes #<id>" --title "(#<id>) <Issue Title>"`. For other issues, target `main` (default): `gh pr create --body "Closes #<id>" --title "(#<id>) <Issue Title>"`.
+    - Create a Pull Request using `gh`, target `main` (default): `gh pr create --body "Closes #<id>" --title "(#<id>) <Issue Title>"`.
+    - Make sure PR has updated version and changelog in `src/inc/booking-plugin.php` and `CHANGELOG.md` if needed.
 5.  **Update github issues with implementation notes**: Add implementation details and a summary of the changes made to resolve the issue.
 
 ## Key Classes Overview
