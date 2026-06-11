@@ -103,8 +103,8 @@ class PhoneAuthenticationTest extends TestCase {
 	public function test_filter_password_reset_message_sms() {
 		$user_data = get_userdata( $this->user_id );
 		
-		// Simulate POST with phone number
-		$_POST['user_login'] = '90011223';
+		// Simulate POST with an email address instead of phone number
+		$_POST['user_login'] = 'test_' . $this->user_id . '@example.com';
 		
 		// We mock the notification provider using the same approach as NotificationPluggableTest
 		require_once __DIR__ . '/NotificationPluggableTest.php';
