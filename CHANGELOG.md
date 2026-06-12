@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.9] - 2026-06-12
+- (#170) Made the admin booking list and user bookings list responsive on mobile screens.
+
 ## [2.1.8] - 2026-06-11
 - (#168) Added support for routing password reset notifications based on global settings regardless of input method.
 - Added autocomplete="new-password" to KeySMS API Key field to prevent auto-fill.

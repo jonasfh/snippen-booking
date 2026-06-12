@@ -91,12 +91,12 @@ class UserBookingsPage {
 		echo '<div class="snippen-card" style="padding:0; overflow:hidden;">';
 		echo '<table class="snippen-list-table bookings-table">';
 		echo '<thead><tr>';
-		echo '<th style="width:40px;"></th>';
+		echo '<th style="text-align:left; width:100px;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo $this->render_sortable_header( 'booking_date', __( 'Dato / Tid', 'snippen-booking' ), $orderby, $order );
 		echo '<th>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
 		echo $this->render_sortable_header( 'price', __( 'Pris', 'snippen-booking' ), $orderby, $order );
 		echo $this->render_sortable_header( 'status', __( 'Status', 'snippen-booking' ), $orderby, $order );
-		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
+		echo '<th style="width:40px; text-align:right;"></th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
 
@@ -154,23 +154,22 @@ class UserBookingsPage {
 		$booking_date = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
 
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
-		echo '<td><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
-		echo '<td><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small></td>';
-		echo '<td>';
+		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
+		echo '<div style="display:flex; justify-content:flex-start; gap:8px;">';
+		if ( $booking->status !== 'cancelled' ) {
+			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
+		}
+		echo '</div></td>';
+		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small></td>';
+		echo '<td data-label="' . esc_attr__( 'Lokaler', 'snippen-booking' ) . '">';
 		foreach ( $objs as $oname ) {
 			echo '<span class="snippen-tag">' . esc_html( $oname ) . '</span> ';
 		}
 		echo '</td>';
-		echo '<td style="font-weight:600;">' . number_format( $booking->price, 0, ',', ' ' ) . ',-</td>';
-		echo '<td><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></td>';
-		echo '<td style="text-align:right;">';
-		echo '<div style="display:flex; justify-content:flex-end; gap:8px;">';
-
-		if ( $booking->status !== 'cancelled' ) {
-			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
-		}
-
-		echo '</div></td></tr>';
+		echo '<td data-label="' . esc_attr__( 'Pris', 'snippen-booking' ) . '" style="font-weight:600;">' . number_format( $booking->price, 0, ',', ' ' ) . ',-</td>';
+		echo '<td data-label="' . esc_attr__( 'Status', 'snippen-booking' ) . '"><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></td>';
+		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
+		echo '</tr>';
 
 		// Details Row
 		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
@@ -196,6 +195,10 @@ class UserBookingsPage {
 		if ( $door_code_enabled ) {
 			echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>' . $door_code_display . '</div>';
 		}
+		
+		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Pris:', 'snippen-booking' ) . '</strong><br>' . number_format( $booking->price, 0, ',', ' ' ) . ',-</div>';
+		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Status:', 'snippen-booking' ) . '</strong><br><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></div>';
+
 		echo '</div></td></tr>';
 	}
 
