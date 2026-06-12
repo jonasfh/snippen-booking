@@ -404,3 +404,89 @@ th.sorted-desc .sort-icon {
     opacity: 1;
 }
 
+/* Responsive Booking List */
+@media screen and (max-width: 768px) {
+    .bookings-table,
+    .bookings-table thead,
+    .bookings-table tbody,
+    .bookings-table th,
+    .bookings-table td,
+    .bookings-table tr {
+        display: block;
+    }
+
+    .bookings-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .bookings-table tr.snippen-booking-row {
+        border: 1px solid var(--border-color);
+        margin-bottom: 20px;
+        border-radius: 8px;
+        background: #fff;
+    }
+    
+    .bookings-table tr.snippen-details-row.active {
+        display: block !important;
+        border: 1px solid var(--border-color);
+        border-top: none;
+        margin-top: -20px;
+        margin-bottom: 20px;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .bookings-table td {
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        padding: 14px 16px 14px 45% !important;
+        text-align: left !important;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .bookings-table td:last-child {
+        border-bottom: none;
+    }
+    
+    /* Hide some columns on the main row to save space */
+    .bookings-table td[data-label="Pris"],
+    .bookings-table td[data-label="Status"] {
+        display: none !important;
+    }
+
+    .bookings-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 16px;
+        width: 40%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: 600;
+        color: #475569;
+        font-size: 13px;
+    }
+    
+    .snippen-mobile-detail {
+        display: block !important;
+    }
+    
+    .snippen-details-row td {
+        padding: 20px 16px !important;
+        display: block;
+    }
+    
+    .snippen-details-row td:before {
+        display: none;
+    }
+    
+    .snippen-details-row .details-content {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+}
+
