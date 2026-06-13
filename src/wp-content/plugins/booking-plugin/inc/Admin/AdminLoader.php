@@ -251,9 +251,9 @@ class AdminLoader {
 			return;
 		}
 
-		wp_enqueue_style( 'snippen-booking-admin', plugins_url( 'css/admin.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );
-		wp_enqueue_script( 'snippen-booking-admin', plugins_url( 'js/admin.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), '1.1.0', true );
-		wp_enqueue_script( 'snippen-booking-admin-filter', plugins_url( 'js/admin-table-filter.js', dirname( __DIR__, 1 ) ), array(), '1.0.0', true );
+		wp_enqueue_style( 'snippen-booking-admin', plugins_url( 'css/admin.css', dirname( __DIR__, 1 ) ), array(), SNIPPEN_BOOKING_VERSION );
+		wp_enqueue_script( 'snippen-booking-admin', plugins_url( 'js/admin.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), SNIPPEN_BOOKING_VERSION, true );
+		wp_enqueue_script( 'snippen-booking-admin-filter', plugins_url( 'js/admin-table-filter.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), SNIPPEN_BOOKING_VERSION, true );
 
 		wp_localize_script(
 			'snippen-booking-admin',

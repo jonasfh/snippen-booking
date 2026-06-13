@@ -275,7 +275,7 @@ class BookingsPage {
 		echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>';
 		echo '<div class="door-code-edit-container" data-id="' . esc_attr( $booking->id ) . '" style="display: flex; align-items: center; margin-top: 4px;">';
 		echo '<input type="text" class="door-code-input" value="' . esc_attr( $booking->door_code ) . '" placeholder="' . esc_attr__( 'Ingen kode', 'snippen-booking' ) . '" style="width: 100px; margin-right: 5px; height: 30px;">';
-		echo '<button class="button button-small snippen-btn-save-door-code" style="height: 30px; line-height: 1;">' . esc_html__( 'Lagre', 'snippen-booking' ) . '</button>';
+		echo '<button type="button" class="button button-small snippen-btn-save-door-code" style="height: 30px; line-height: 1;">' . esc_html__( 'Lagre', 'snippen-booking' ) . '</button>';
 		echo '<span class="door-code-feedback" style="margin-left: 5px; font-size: 11px; font-weight: 600;"></span>';
 		echo '</div></div>';
 		echo '<div><strong>' . esc_html__( 'Rabatt:', 'snippen-booking' ) . '</strong><br>' . ( $booking->discount_amount > 0 ? esc_html( number_format( $booking->discount_amount, 0, ',', ' ' ) . ',-' ) : '-' ) . '</div>';

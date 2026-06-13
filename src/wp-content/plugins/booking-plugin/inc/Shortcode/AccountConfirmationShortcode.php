@@ -30,7 +30,7 @@ class AccountConfirmationShortcode {
 		}
 
 		wp_enqueue_style( 'snippen-booking-public', plugins_url( 'css/booking.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );
-		wp_enqueue_script( 'snippen-account-confirmation', plugins_url( 'js/account-confirmation.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), '1.1.0', true );
+		wp_enqueue_script( 'snippen-account-confirmation', plugins_url( 'js/account-confirmation.js', dirname( __DIR__, 1 ) ), array( 'jquery' ), SNIPPEN_BOOKING_VERSION, true );
 
 		wp_localize_script(
 			'snippen-account-confirmation',
