@@ -15,6 +15,7 @@ class BookingActionsApi {
 	public static function register() {
 		add_action( 'wp_ajax_snippen_update_booking_status', array( __CLASS__, 'update_status' ) );
 		add_action( 'wp_ajax_snippen_dispatch_notification_manually', array( __CLASS__, 'dispatch_notification_manually' ) );
+		add_action( 'wp_ajax_snippen_update_door_code', array( __CLASS__, 'update_door_code' ) );
 	}
 
 	/**
@@ -66,6 +67,42 @@ class BookingActionsApi {
 			);
 		} else {
 			wp_send_json_error( array( 'message' => __( 'Kunne ikke oppdatere status.', 'snippen-booking' ) ) );
+		}
+	}
+
+	/**
+	 * Update booking door code
+	 */
+	public static function update_door_code() {
+		check_ajax_referer( 'snippen_admin_nonce', 'nonce' );
+
+		if ( ! Capabilities::can_manage_bookings() ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
+		}
+
+		global $wpdb;
+		$id        = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$door_code = isset( $_POST['door_code'] ) ? sanitize_text_field( $_POST['door_code'] ) : '';
+
+		if ( ! $id ) {
+			wp_send_json_error( array( 'message' => __( 'Ugyldig forespørsel.', 'snippen-booking' ) ) );
+		}
+
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		$updated = $wpdb->update(
+			$table,
+			array(
+				'door_code'   => $door_code,
+				'modified_at' => current_time( 'mysql' ),
+			),
+			array( 'id' => $id )
+		);
+
+		if ( $updated !== false ) {
+			wp_send_json_success( array( 'message' => __( 'Dørkode oppdatert.', 'snippen-booking' ) ) );
+		} else {
+			wp_send_json_error( array( 'message' => __( 'Kunne ikke oppdatere dørkode.', 'snippen-booking' ) ) );
 		}
 	}
 

@@ -127,6 +127,66 @@ class BookingActionsTest extends TestCase {
     }
 
     /**
+     * Test that an admin can update door code
+     */
+    public function test_admin_can_update_door_code() {
+        $user_id = wp_insert_user([
+            'user_login' => 'admin_test_door',
+            'user_pass' => 'password',
+            'role' => 'administrator'
+        ]);
+        $user = get_user_by('id', $user_id);
+        $user->add_cap('manage_snippen_bookings');
+        wp_set_current_user($user_id);
+
+        $booking_id = $this->create_test_booking($user_id);
+
+        $_POST['id'] = $booking_id;
+        $_POST['door_code'] = '123456';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
+
+        ob_start();
+        try {
+            BookingActionsApi::update_door_code();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        global $wpdb;
+        $door_code = $wpdb->get_var($wpdb->prepare("SELECT door_code FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $this->assertEquals('123456', $door_code);
+    }
+
+    /**
+     * Test that a non-admin cannot update door code
+     */
+    public function test_user_cannot_update_door_code() {
+        $user_id = wp_insert_user([
+            'user_login' => 'user_test_door',
+            'user_pass' => 'password',
+            'role' => 'subscriber'
+        ]);
+        wp_set_current_user($user_id);
+
+        $booking_id = $this->create_test_booking($user_id);
+
+        $_POST['id'] = $booking_id;
+        $_POST['door_code'] = '654321';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
+
+        ob_start();
+        try {
+            BookingActionsApi::update_door_code();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        global $wpdb;
+        $door_code = $wpdb->get_var($wpdb->prepare("SELECT door_code FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $this->assertNull($door_code);
+    }
+
+    /**
      * Helper to create a test booking
      */
     private function create_test_booking($user_id) {

@@ -13,19 +13,20 @@ class BookingsPage {
 	public function render() {
 		global $wpdb;
 
-		$status_filter = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
-		$object_filter = isset( $_GET['object_id'] ) ? intval( $_GET['object_id'] ) : 0;
-		$search        = isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : '';
-		$orderby       = isset( $_GET['orderby'] ) ? sanitize_sql_orderby( $_GET['orderby'] ) : 'booking_date';
-		$order         = isset( $_GET['order'] ) ? ( strtoupper( $_GET['order'] ) === 'DESC' ? 'DESC' : 'ASC' ) : 'ASC';
-		$show_all      = isset( $_GET['show_all'] ) && $_GET['show_all'] === '1';
+		$status_filter    = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
+		$object_filter    = isset( $_GET['object_id'] ) ? intval( $_GET['object_id'] ) : 0;
+		$search           = isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : '';
+		$orderby          = isset( $_GET['orderby'] ) ? sanitize_sql_orderby( $_GET['orderby'] ) : 'booking_date';
+		$order            = isset( $_GET['order'] ) ? ( strtoupper( $_GET['order'] ) === 'DESC' ? 'DESC' : 'ASC' ) : 'ASC';
+		$show_all         = isset( $_GET['show_all'] ) && $_GET['show_all'] === '1';
+		$door_code_filter = isset( $_GET['door_code_filter'] ) ? sanitize_text_field( $_GET['door_code_filter'] ) : '';
 
 		echo '<div class="snippen-booking-admin-wrap">';
 
 		$this->render_header();
 		$this->render_tagged_pages();
-		$this->render_filters( $status_filter, $object_filter, $search, $show_all );
-		$this->render_list( $status_filter, $object_filter, $search, $orderby, $order, $show_all );
+		$this->render_filters( $status_filter, $object_filter, $search, $show_all, $door_code_filter );
+		$this->render_list( $status_filter, $object_filter, $search, $orderby, $order, $show_all, $door_code_filter );
 
 		echo '</div>';
 	}
@@ -81,7 +82,7 @@ class BookingsPage {
 	/**
 	 * Render filters
 	 */
-	private function render_filters( $status, $obj_id, $s, $show_all ) {
+	private function render_filters( $status, $obj_id, $s, $show_all, $door_code_filter = '' ) {
 		global $wpdb;
 		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
 		$objects       = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
@@ -115,13 +116,19 @@ class BookingsPage {
 		echo '<label><input type="checkbox" name="show_all" value="1" ' . checked( $show_all, true, false ) . ' onchange="this.form.submit()"> ' . esc_html__( 'Vis historikk / eldre bookinger', 'snippen-booking' ) . '</label>';
 		echo '</div>';
 
+		echo '<div class="snippen-filter-group">';
+		echo '<select name="door_code_filter" onchange="this.form.submit()">';
+		echo '<option value="">' . esc_html__( 'Alle dørkoder', 'snippen-booking' ) . '</option>';
+		echo '<option value="missing" ' . selected( $door_code_filter, 'missing', false ) . '>' . esc_html__( 'Mangler dørkode', 'snippen-booking' ) . '</option>';
+		echo '</select></div>';
+
 		echo '</form></div>';
 	}
 
 	/**
 	 * Render bookings list
 	 */
-	private function render_list( $status, $obj_id, $s, $orderby, $order, $show_all ) {
+	private function render_list( $status, $obj_id, $s, $orderby, $order, $show_all, $door_code_filter = '' ) {
 		global $wpdb;
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
@@ -150,6 +157,10 @@ class BookingsPage {
 
 		if ( ! $show_all && ! $s ) {
 			$query .= ' AND b.booking_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)';
+		}
+
+		if ( $door_code_filter === 'missing' ) {
+			$query .= " AND (b.door_code IS NULL OR b.door_code = '')";
 		}
 
 		// Validate orderby to prevent SQL injection (even if sanitized above)
@@ -261,7 +272,12 @@ class BookingsPage {
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse/Notater:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Tidsrom:', 'snippen-booking' ) . '</strong><br>' . esc_html( $time_range ?: '-' ) . '</div>';
-		echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->door_code ?: '-' ) . '</div>';
+		echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>';
+		echo '<div class="door-code-edit-container" data-id="' . esc_attr( $booking->id ) . '" style="display: flex; align-items: center; margin-top: 4px;">';
+		echo '<input type="text" class="door-code-input" value="' . esc_attr( $booking->door_code ) . '" placeholder="' . esc_attr__( 'Ingen kode', 'snippen-booking' ) . '" style="width: 100px; margin-right: 5px; height: 30px;">';
+		echo '<button class="button button-small snippen-btn-save-door-code" style="height: 30px; line-height: 1;">' . esc_html__( 'Lagre', 'snippen-booking' ) . '</button>';
+		echo '<span class="door-code-feedback" style="margin-left: 5px; font-size: 11px; font-weight: 600;"></span>';
+		echo '</div></div>';
 		echo '<div><strong>' . esc_html__( 'Rabatt:', 'snippen-booking' ) . '</strong><br>' . ( $booking->discount_amount > 0 ? esc_html( number_format( $booking->discount_amount, 0, ',', ' ' ) . ',-' ) : '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Booket den:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->created_at ) . '</div>';
 		

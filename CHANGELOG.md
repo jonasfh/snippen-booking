@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.2.0] - 2026-06-13
+- (#172) Added functionality to link door codes directly to bookings. Administrators can now easily filter and add door codes to bookings from the booking overview page.
+
 ## [2.1.9] - 2026-06-12
 - (#170) Made the admin booking list and user bookings list responsive on mobile screens.
 

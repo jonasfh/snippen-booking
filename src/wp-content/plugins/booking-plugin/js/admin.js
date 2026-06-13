@@ -98,6 +98,37 @@
                 $container.find('.snippen-btn-dispatch').prop('disabled', false).css('opacity', '1');
             });
         });
+
+        // AJAX Save Door Code
+        $('.bookings-table').on('click', '.snippen-btn-save-door-code', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const $container = $btn.closest('.door-code-edit-container');
+            const id = $container.data('id');
+            const doorCode = $container.find('.door-code-input').val();
+            const $feedback = $container.find('.door-code-feedback');
+
+            $btn.prop('disabled', true);
+            $feedback.text('Lagrer...').css('color', '#6b7280');
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_update_door_code',
+                nonce: snippenAdmin.nonce,
+                id: id,
+                door_code: doorCode
+            }, function(response) {
+                if (response.success) {
+                    $feedback.text('Lagret').css('color', '#15803d');
+                    setTimeout(function() { $feedback.fadeOut(function() { $(this).text('').show(); }); }, 2000);
+                } else {
+                    $feedback.text(response.data.message || 'Feilet').css('color', '#b91c1c');
+                }
+            }).fail(function() {
+                $feedback.text('Feilet').css('color', '#b91c1c');
+            }).always(function() {
+                $btn.prop('disabled', false);
+            });
+        });
     });
 
 })(jQuery);
