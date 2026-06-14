@@ -42,6 +42,7 @@ class AssetLoader {
 				'ajaxurl'     => admin_url( 'admin-ajax.php' ),
 				'nonce'       => wp_create_nonce( 'snippen_booking_nonce' ),
 				'admin_nonce' => wp_create_nonce( 'snippen_admin_nonce' ),
+				'bookingHorizonWeeks' => get_option( 'snippen_booking_horizon_weeks', 52 ),
 				'strings'     => array(
 					'updatingAvailability' => __( 'Oppdaterer tilgjengelighet...', 'snippen-booking' ),
 					'errorLoadingCalendar' => __( 'Kunne ikke laste kalender.', 'snippen-booking' ),

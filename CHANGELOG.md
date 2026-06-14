@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.2.1] - 2026-06-14
+- (#174) Added a new setting to configure the booking horizon (how far ahead in time the calendar dropdown menu displays, default 52 weeks).
+
 ## [2.2.0] - 2026-06-13
 - (#172) Added functionality to link door codes directly to bookings. Administrators can now easily filter and add door codes to bookings from the booking overview page.
 
