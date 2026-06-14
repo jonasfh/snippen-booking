@@ -246,7 +246,8 @@ jQuery(document).ready(function ($) {
         tempDate.setDate(diff);
         tempDate.setHours(0, 0, 0, 0);
 
-        for (var i = 0; i < 52; i++) {
+        var horizonWeeks = snippenBookingAjax.bookingHorizonWeeks ? parseInt(snippenBookingAjax.bookingHorizonWeeks, 10) : 52;
+        for (var i = 0; i < horizonWeeks; i++) {
             var weekStart = new Date(tempDate);
             var isActive = formatDateISO(weekStart) === formatDateISO(currentStartDate);
             var weekNr = getWeekNumber(weekStart);

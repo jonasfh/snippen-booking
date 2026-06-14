@@ -62,6 +62,9 @@ class SettingsPage {
 		$terms_url = isset( $_POST['snippen_terms_url'] ) ? esc_url_raw( $_POST['snippen_terms_url'] ) : '';
 		update_option( 'snippen_terms_url', $terms_url );
 
+		$horizon_weeks = isset( $_POST['snippen_booking_horizon_weeks'] ) ? intval( $_POST['snippen_booking_horizon_weeks'] ) : 52;
+		update_option( 'snippen_booking_horizon_weeks', $horizon_weeks );
+
 		$preserve_data = isset( $_POST['snippen_preserve_data_on_uninstall'] ) ? 'yes' : 'no';
 		update_option( 'snippen_preserve_data_on_uninstall', $preserve_data );
 
@@ -113,6 +116,7 @@ class SettingsPage {
 		$dispatch_method        = get_option( 'snippen_notification_dispatch_method', 'async' );
 		$terms_url              = get_option( 'snippen_terms_url', '' );
 		$preserve_data          = get_option( 'snippen_preserve_data_on_uninstall', 'no' );
+		$horizon_weeks          = get_option( 'snippen_booking_horizon_weeks', 52 );
 		$disable_all_emails     = get_option( 'snippen_disable_all_emails', 'no' );
 
 		$email_booking    = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
@@ -244,6 +248,12 @@ class SettingsPage {
 		echo '<label for="snippen_terms_url" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Lenke til vilkår/regler for leie', 'snippen-booking' ) . '</label>';
 		echo '<input type="url" name="snippen_terms_url" id="snippen_terms_url" value="' . esc_url( $terms_url ) . '" class="regular-text" placeholder="https://...">';
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvis feltet er tomt, vises ikke akseptboksen i booking-skjemaet.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_booking_horizon_weeks" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Hvor mange uker frem i tid skal kalenderen vise?', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_booking_horizon_weeks" id="snippen_booking_horizon_weeks" value="' . esc_attr( $horizon_weeks ) . '" class="small-text" min="1" max="520">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Standard er 52 uker (1 år). Kalender-nedtrekksmenyen vil vise dette antallet uker frem i tid.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="background:#fff1f2; border:1px solid #fecdd3; padding:16px; border-radius:8px; margin-top:20px;">';
