@@ -1,6 +1,23 @@
 # snippen-booking
 Booking modul for snippen grendehus
 
+## 🚀 TL;DR / Hurtigstart
+
+Kjør følgende i container-terminalen for å komme i gang:
+
+```bash
+# 1. Start/sikre at bakgrunnstjenester (MariaDB, Apache, WP) kjører:
+/entrypoint.sh &
+
+# Merk: Dersom MariaDB eller Apache ikke kommer igang på første forsøk (f.eks. pga. eksisterende PID-filer),
+# kan du stoppe prosessen (Ctrl+C) og kjøre /entrypoint.sh & én gang til.
+
+# 2. Sett opp demodata og miljø:
+composer demo
+```
+
+Etter dette er nettsiden tilgjengelig på [http://localhost:8080](http://localhost:8080) (Admin: `admin` / `admin`).
+
 ## Container-based development
 
 This repository uses a VS Code devcontainer to run WordPress with MariaDB locally.
@@ -10,6 +27,7 @@ This repository uses a VS Code devcontainer to run WordPress with MariaDB locall
 1. Open the repository in VS Code.
 2. Use `Remote Containers: Reopen in Container` (or `Dev Containers: Reopen in Container`).
 3. Wait for the devcontainer build and `postCreateCommand` to finish.
+
 
 ### Access WordPress
 
@@ -57,9 +75,17 @@ Tests are automatically run on GitHub Actions for every push and pull request to
 #### Booking Demo Page
 Upon plugin activation, a "Booking Demo" page is automatically created in WordPress. This page contains the `[snippen_booking]` shortcode and can be used for immediate manual testing of the booking form and calendar.
 
-#### Commands
-- **Reset environment**: `bash /entrypoint.sh reset` (wipes DB)
-- **Setup environment**: `bash /entrypoint.sh setup` (installs WP and activates plugin)
+#### Commands & Entrypoint (`/entrypoint.sh`)
+Skriptet `/entrypoint.sh` håndterer oppstart og klargjøring av tjenestene (MariaDB, WordPress-installasjon, symlinking av plugin, samt Apache i forgrunnen).
+
+- **Start bakgrunnstjenester**: `/entrypoint.sh &` eller `bash /entrypoint.sh`
+- **Reset environment**: `bash /entrypoint.sh reset` (sletter `wp-config.php` og databasen)
+- **Setup environment**: `bash /entrypoint.sh setup` (laster ned WP, oppretter konfigurasjon, installerer og aktiverer pluginet uten å starte Apache i forgrunnen)
+
+##### Instabilitet ved oppstart / Kjent oppføring
+Dersom `/entrypoint.sh` stopper uventet eller tjenestene ikke kommer helt i gang på første forsøk:
+1. Dette skyldes som regel at MariaDB-tjenesten trenger en ekstra restart eller at et tidligere Apache/MariaDB PID-flagg lå igjen.
+2. Løsning: Kjøre `/entrypoint.sh` / `/entrypoint.sh setup` én ekstra gang i terminalen før du kjører `composer demo`.
 
 #### Demo Data
 The plugin includes tools to populate the environment with demo data for development and testing.
