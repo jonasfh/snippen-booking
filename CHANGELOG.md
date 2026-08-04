@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.4.0] - 2026-08-04
+- (#180) Updated booking shortcode header to render individual object selector buttons and object descriptions interactively when multiple objects are shown in calendar.
+
 ## [2.3.0] - 2026-08-04
 - (#178) Updated user booking list shortcode to show compact list layout, filter current/upcoming bookings by default (sorted ASC), and added archive toggle to view past bookings (sorted DESC).
 

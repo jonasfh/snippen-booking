@@ -57,4 +57,24 @@ class ShortcodeTest extends TestCase {
         $this->assertStringContainsString( 'id="calendar-container"', $output );
     }
 
+    /**
+     * Test rendering multiple objects shows object selector buttons
+     */
+    public function test_multiple_objects_renders_selector_buttons() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'snippen_booking_objects';
+
+        $wpdb->insert( $table, array( 'name' => 'Peisestuen', 'description' => 'Koselig peisestue', 'deleted_at' => null ) );
+        $id1 = $wpdb->insert_id;
+
+        $wpdb->insert( $table, array( 'name' => 'Festsalen', 'description' => 'Stor festsal', 'deleted_at' => null ) );
+        $id2 = $wpdb->insert_id;
+
+        $output = do_shortcode( '[snippen_booking object_id="' . $id1 . ',' . $id2 . '"]' );
+
+        $this->assertStringContainsString( 'Objekter tilgjengelige for booking i denne kalenderen:', $output );
+        $this->assertStringContainsString( 'class="object-selector-btn active"', $output );
+        $this->assertStringContainsString( 'Peisestuen', $output );
+        $this->assertStringContainsString( 'Festsalen', $output );
+    }
 }
