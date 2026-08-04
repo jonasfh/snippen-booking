@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.3.0] - 2026-08-04
+- (#178) Updated user booking list shortcode to show compact list layout, filter current/upcoming bookings by default (sorted ASC), and added archive toggle to view past bookings (sorted DESC).
+
 ## [2.2.1] - 2026-06-14
 - (#174) Added a new setting to configure the booking horizon (how far ahead in time the calendar dropdown menu displays, default 52 weeks).
 
