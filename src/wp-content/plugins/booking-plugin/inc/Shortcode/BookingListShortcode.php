@@ -284,28 +284,18 @@ class BookingListShortcode {
 				</div>
 			</div>
 
-			<?php if ( $door_code_enabled || 'cancelled' !== $booking->status ) : ?>
+			<?php if ( $door_code_enabled ) : ?>
 				<div class="booking-compact-sub">
-					<?php if ( $door_code_enabled ) : ?>
-						<div class="booking-door-code-badge <?php echo $door_code_active ? 'active-code' : 'hidden-code'; ?>">
-							<span class="label"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></span>
-							<span class="value">
-								<?php if ( $door_code_active ) : ?>
-									<span class="lock-icon">🔓</span> <strong><?php echo esc_html( $door_code_display ); ?></strong>
-								<?php else : ?>
-									<span class="lock-icon">🔒</span> <span class="code-unavailable"><?php echo esc_html( $door_code_display ); ?></span>
-								<?php endif; ?>
-							</span>
-						</div>
-					<?php endif; ?>
-
-					<?php if ( 'cancelled' !== $booking->status && strtotime( $booking->booking_date ) >= strtotime( 'today' ) ) : ?>
-						<div class="booking-compact-actions">
-							<button class="snippen-btn-cancel-booking cancel" data-id="<?php echo esc_attr( $booking->id ); ?>" title="<?php esc_attr_e( 'Avbryt booking', 'snippen-booking' ); ?>">
-								<?php esc_html_e( 'Avbryt booking', 'snippen-booking' ); ?>
-							</button>
-						</div>
-					<?php endif; ?>
+					<div class="booking-door-code-badge <?php echo $door_code_active ? 'active-code' : 'hidden-code'; ?>">
+						<span class="label"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></span>
+						<span class="value">
+							<?php if ( $door_code_active ) : ?>
+								<span class="lock-icon">🔓</span> <strong><?php echo esc_html( $door_code_display ); ?></strong>
+							<?php else : ?>
+								<span class="lock-icon">🔒</span> <span class="code-unavailable"><?php echo esc_html( $door_code_display ); ?></span>
+							<?php endif; ?>
+						</span>
+					</div>
 				</div>
 			<?php endif; ?>
 		</div>
