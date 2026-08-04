@@ -104,19 +104,18 @@ class BookingListShortcodeTest extends TestCase {
 
         $this->assertStringContainsString( 'class="snippen-booking-list-container"', $output );
         $this->assertStringContainsString( 'Mine Bookinger', $output );
-        $this->assertStringContainsString( 'class="booking-list-card"', $output );
+        $this->assertStringContainsString( 'class="booking-compact-row"', $output );
         $this->assertStringContainsString( 'Felleshus', $output );
         $this->assertStringContainsString( 'Bursdagsfeiring', $output );
         $this->assertStringContainsString( '500,-', $output );
         $this->assertStringContainsString( 'Venter', $output );
-        $this->assertStringContainsString( 'snippen-btn-cancel-booking', $output );
 
         // Logout
         wp_set_current_user( 0 );
     }
 
     /**
-     * Test booking list displays user bookings sorted by closest in time first
+     * Test booking list displays user upcoming bookings sorted ASC, and past bookings in archive
      */
     public function test_displays_bookings_sorted_by_closest_first() {
         global $wpdb;
@@ -168,7 +167,7 @@ class BookingListShortcodeTest extends TestCase {
             'modified_at' => current_time('mysql')
         ]);
 
-        // 2. Near future booking (in 2 days) - should be first!
+        // 2. Near future booking (in 2 days) - should be first in upcoming view!
         $near_date = date('Y-m-d', strtotime('+2 days'));
         $wpdb->insert($table_bookings, [
             'user_id' => $user_id,
@@ -184,7 +183,7 @@ class BookingListShortcodeTest extends TestCase {
             'modified_at' => current_time('mysql')
         ]);
 
-        // 3. Past booking (2 days ago) - should be last!
+        // 3. Past booking (2 days ago) - should appear in archive view
         $past_date = date('Y-m-d', strtotime('-2 days'));
         $wpdb->insert($table_bookings, [
             'user_id' => $user_id,
@@ -200,21 +199,25 @@ class BookingListShortcodeTest extends TestCase {
             'modified_at' => current_time('mysql')
         ]);
 
-        // Run shortcode
-        $output = do_shortcode( '[snippen_booking_list]' );
+        // Run shortcode for upcoming view (default)
+        $output_upcoming = do_shortcode( '[snippen_booking_list]' );
 
-        // Let's assert the order in which they appear in the HTML
-        $pos_near = strpos( $output, 'Near Future' );
-        $pos_far  = strpos( $output, 'Far Future' );
-        $pos_past = strpos( $output, 'Past' );
+        $pos_near = strpos( $output_upcoming, 'Near Future' );
+        $pos_far  = strpos( $output_upcoming, 'Far Future' );
+        $pos_past = strpos( $output_upcoming, 'Past' );
 
         $this->assertNotFalse( $pos_near );
         $this->assertNotFalse( $pos_far );
-        $this->assertNotFalse( $pos_past );
-
-        // Near Future must be before Far Future, and both must be before Past
+        $this->assertFalse( $pos_past );
         $this->assertTrue( $pos_near < $pos_far );
-        $this->assertTrue( $pos_far < $pos_past );
+
+        // Run shortcode for archive view
+        $_GET['booking_view'] = 'archive';
+        $output_archive = do_shortcode( '[snippen_booking_list]' );
+        unset( $_GET['booking_view'] );
+
+        $this->assertStringContainsString( 'Past', $output_archive );
+        $this->assertStringNotContainsString( 'Near Future', $output_archive );
 
         // Logout
         wp_set_current_user( 0 );
