@@ -106,6 +106,18 @@ composer demo:me         # Create/update an admin test user (uses TEST_USER_* in
 composer demo:env        # Update KeySMS settings from local .env
 ```
 
+#### Environment Configuration (`.env` & `.env.example`)
+Prosjektet benytter en `.env`-fil i rotmappen for lokal konfigurasjon under utvikling (f.eks. for KeySMS integration, test-bruker, og SMTP-innstillinger). 
+
+- **`.env.example`**: Malfil som ligger i versjonskontroll. Denne viser alle støttede miljøvariabler og eksempelveidier.
+- **`.env`**: Din lokale konfigurasjonsfil. Hvis `.env` ikke eksisterer når du kjører setup/demo-skript (som `composer demo`), vil `.env` automatisk bli kopiert fra `.env.example`.
+
+**Støttede konfigurasjonsgrupper i `.env`:**
+- **KeySMS Settings**: `KEYSMS_USERNAME`, `KEYSMS_API_KEY`, `SMS_SENDER`, `SMS_BOOKING_CONFIRMATION_ENABLED`, `SMS_ACCOUNT_CONFIRMATION_ENABLED`. Kjøring av `composer demo` / `composer demo:env` oppdaterer KeySMS-innstillingene i WordPress automatisk fra disse variablene.
+- **Test User Settings**: `TEST_USER_EMAIL`, `TEST_USER_PHONE`, `TEST_USER_NAME`, `TEST_USER_PASS`. Brukes av `composer demo:me` til å opprette/oppdatere en beboer/testbruker.
+- **SMTP / Email Settings**: `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`. Brukes dersom du ønsker å teste reell utsending av e-post via SMTP.
+
+
 ### GitHub Integration
 
 The development environment includes the [GitHub CLI (`gh`)](https://cli.github.com/). This tool is used by both developers and AI agents to manage issues and pull requests directly from the terminal.
