@@ -91,6 +91,8 @@ Dersom `/entrypoint.sh` stopper uventet eller tjenestene ikke kommer helt i gang
 #### Demo Data
 The plugin includes tools to populate the environment with demo data for development and testing.
 
+Det opprettes også en WordPress admin-bruker med brukernavn `admin` og passord `admin`.
+
 ```bash
 # Run the full demo environment setup (users, bookings, pages, test user, sms settings)
 composer demo
