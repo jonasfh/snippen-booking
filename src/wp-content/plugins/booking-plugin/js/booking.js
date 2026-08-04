@@ -29,6 +29,33 @@ jQuery(document).ready(function ($) {
 
         renderCalendar();
 
+        // Object selector button click (when multiple objects exist)
+        $(document).on('click', '.object-selector-btn', function () {
+            var $btn = $(this);
+            var name = $btn.data('object-name');
+            var description = $btn.data('object-description');
+            var infoLink = $btn.data('info-link');
+
+            $('.object-selector-btn').removeClass('active');
+            $btn.addClass('active');
+
+            $('.selected-object-title').text(name || '');
+
+            var $descEl = $('.selected-object-desc');
+            if (description) {
+                $descEl.text(description).show();
+            } else {
+                $descEl.hide();
+            }
+
+            var $infoLinkEl = $('.selected-object-infolink');
+            if (infoLink) {
+                $infoLinkEl.attr('href', infoLink).show();
+            } else {
+                $infoLinkEl.hide();
+            }
+        });
+
         // Week navigation
         $(document).on('click', '.week-nav-next', function () {
             currentStartDate.setDate(currentStartDate.getDate() + 7);

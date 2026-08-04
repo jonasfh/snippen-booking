@@ -56,21 +56,7 @@ class BookingShortcode {
 			return '<div class="snippen-booking-error">' . esc_html__( 'Booking-objekt(er) ikke funnet.', 'snippen-booking' ) . '</div>';
 		}
 
-		// Combine names and info
-		$object_names  = wp_list_pluck( $objects, 'name' );
-		$combined_name = implode( ' og ', $object_names );
-
-		$descriptions         = wp_list_pluck( $objects, 'description' );
-		$combined_description = implode( ' ', array_filter( $descriptions ) );
-
-		// Use first object's link if available
-		$info_link = '';
-		foreach ( $objects as $obj ) {
-			if ( ! empty( $obj->info_link ) ) {
-				$info_link = $obj->info_link;
-				break;
-			}
-		}
+		$is_multiple_objects = count( $objects ) > 1;
 
 		$is_logged_in = is_user_logged_in();
 		$current_user = wp_get_current_user();
@@ -90,14 +76,42 @@ class BookingShortcode {
 			data-is-admin="<?php echo Capabilities::can_manage_bookings() ? 'true' : 'false'; ?>">
 			
 			<div class="booking-header-section">
-				<div class="header-main">
-					<h3><?php echo esc_html( $combined_name ); ?></h3>
-					<?php if ( $info_link ) : ?>
-						<a href="<?php echo esc_url( $info_link ); ?>" class="info-link" target="_blank"><?php esc_html_e( 'Mer info &rarr;', 'snippen-booking' ); ?></a>
+				<?php if ( $is_multiple_objects ) : ?>
+					<div class="multiple-objects-header">
+						<h4><?php esc_html_e( 'Objekter tilgjengelige for booking i denne kalenderen:', 'snippen-booking' ); ?></h4>
+						<div class="object-buttons-list">
+							<?php foreach ( $objects as $index => $obj ) : ?>
+								<button type="button" 
+									class="object-selector-btn <?php echo 0 === $index ? 'active' : ''; ?>" 
+									data-object-id="<?php echo esc_attr( $obj->id ); ?>"
+									data-object-name="<?php echo esc_attr( $obj->name ); ?>"
+									data-object-description="<?php echo esc_attr( $obj->description ); ?>"
+									data-info-link="<?php echo esc_attr( $obj->info_link ); ?>">
+									<?php echo esc_html( $obj->name ); ?>
+								</button>
+							<?php endforeach; ?>
+						</div>
+						<div class="selected-object-details">
+							<div class="header-main">
+								<h3 class="selected-object-title"><?php echo esc_html( $objects[0]->name ); ?></h3>
+								<a href="<?php echo esc_url( $objects[0]->info_link ); ?>" class="info-link selected-object-infolink" target="_blank" <?php echo empty( $objects[0]->info_link ) ? 'style="display:none;"' : ''; ?>><?php esc_html_e( 'Mer info &rarr;', 'snippen-booking' ); ?></a>
+							</div>
+							<p class="object-summary selected-object-desc" <?php echo empty( $objects[0]->description ) ? 'style="display:none;"' : ''; ?>><?php echo esc_html( $objects[0]->description ); ?></p>
+						</div>
+					</div>
+				<?php else : ?>
+					<?php
+					$single_obj = $objects[0];
+					?>
+					<div class="header-main">
+						<h3><?php echo esc_html( $single_obj->name ); ?></h3>
+						<?php if ( ! empty( $single_obj->info_link ) ) : ?>
+							<a href="<?php echo esc_url( $single_obj->info_link ); ?>" class="info-link" target="_blank"><?php esc_html_e( 'Mer info &rarr;', 'snippen-booking' ); ?></a>
+						<?php endif; ?>
+					</div>
+					<?php if ( ! empty( $single_obj->description ) ) : ?>
+						<p class="object-summary"><?php echo esc_html( $single_obj->description ); ?></p>
 					<?php endif; ?>
-				</div>
-				<?php if ( $combined_description ) : ?>
-					<p class="object-summary"><?php echo esc_html( $combined_description ); ?></p>
 				<?php endif; ?>
 			</div>
 
