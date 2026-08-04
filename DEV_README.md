@@ -44,6 +44,7 @@ This repository uses a VS Code devcontainer to run WordPress with MariaDB locall
 - Use the container terminal to run commands like `wp plugin list`, `wp plugin activate snippen-booking`, and other WP-CLI commands
 - The devcontainer setup automates WordPress installation so you should not need to complete the web install wizard manually
 - Database: MariaDB with database `wordpress`, user `wpuser`, password `wppass`
+- Access MariaDB prompt directly via terminal: `mariadb wordpress` (eller `mysql -u root wordpress`)
 
 ### Testing
 
