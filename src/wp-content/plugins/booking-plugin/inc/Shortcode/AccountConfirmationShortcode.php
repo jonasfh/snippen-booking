@@ -26,7 +26,11 @@ class AccountConfirmationShortcode {
 	 */
 	public static function render() {
 		if ( is_user_logged_in() ) {
-			return '';
+			$current_user = wp_get_current_user();
+			$user_name    = $current_user->display_name ?: $current_user->user_login;
+			return '<div class="snippen-account-activated-notice" style="padding: 14px 18px; background-color: #e7f4e8; border: 1px solid #b7e1cd; border-left: 4px solid #4caf50; border-radius: 6px; color: #1e4620; margin: 15px 0; font-size: 15px;">' . 
+			       sprintf( esc_html__( 'Din bruker %s er aktivert og innlogget.', 'snippen-booking' ), '<strong>' . esc_html( $user_name ) . '</strong>' ) . 
+			       '</div>';
 		}
 
 		wp_enqueue_style( 'snippen-booking-public', plugins_url( 'css/booking.css', dirname( __DIR__, 1 ) ), array(), '1.1.0' );

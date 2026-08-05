@@ -398,6 +398,15 @@
     margin-bottom: 2px;
 }
 
+.slot-time,
+.block-time {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.8;
+    margin-top: 1px;
+}
+
 .slot-price {
     display: block;
     font-size: 11px;

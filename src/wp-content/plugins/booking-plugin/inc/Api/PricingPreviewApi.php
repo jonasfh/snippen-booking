@@ -54,6 +54,8 @@ class PricingPreviewApi {
 				$discount_name = $discount_info['discount_rule']->name;
 				if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {
 					$discount_name .= ' (' . floatval( $discount_info['discount_rule']->discount_value ) . '%)';
+				} elseif ( $discount_info['discount_rule']->discount_type === 'fixed_price' ) {
+					$discount_name .= ' (' . sprintf( __( 'Fast pris %s kr', 'snippen-booking' ), floatval( $discount_info['discount_rule']->discount_value ) ) . ')';
 				}
 			}
 

@@ -50,6 +50,9 @@ class HelpPage {
 							<h4><?php esc_html_e( '3. Mine bookinger:', 'snippen-booking' ); ?></h4>
 							<p><code>[snippen_booking_list]</code></p>
 							<p><?php esc_html_e( 'Denne viser en liste over den innloggede brukerens egne bookinger (inkludert dørkoder for aktive bookinger). Hvis du også vil inkludere et innloggingsskjema for brukere som ikke er logget inn, kan du bruke:', 'snippen-booking' ); ?> <code>[snippen_booking_list login-form="1"]</code></p>
+							
+							<h4><?php esc_html_e( '4. Hurtiglenker på administrasjonssiden (Page Tagging):', 'snippen-booking' ); ?></h4>
+							<p><?php esc_html_e( 'Hvis du tagger en WordPress-side med stikkordet (tag) "snippen-booking", vil det automatisk vises en hurtiglenke til denne siden øverst i oversikten på administrasjonssiden.', 'snippen-booking' ); ?></p>
 						</div>
 					</div>
 

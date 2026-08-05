@@ -27,6 +27,7 @@ class HelpPageTest extends TestCase {
 		$this->assertStringContainsString( 'Brukermanual &amp; Hjelp', $output );
 		$this->assertStringContainsString( 'Hurtigstart (TL;DR)', $output );
 		$this->assertStringContainsString( 'Bruk av Shortcodes', $output );
+		$this->assertStringContainsString( 'snippen-booking', $output );
 	}
 
 }

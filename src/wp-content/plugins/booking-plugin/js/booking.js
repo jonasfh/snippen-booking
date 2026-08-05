@@ -232,15 +232,20 @@ jQuery(document).ready(function ($) {
                         capacityIndicator = indicatorHtml + capacityTextHtml + occupiedNamesHtml;
                     }
 
+                    var timeStr = formatTimeInterval(block.start_time, block.end_time);
+                    var timeHtml = timeStr ? '<small class="slot-time">' + timeStr + '</small>' : '';
+
                     if (block.is_available) {
                         weekHtml += '<div class="slot-item available" data-date="' + dayInfo.date + '" data-block-id="' + block.id + '">';
-                        weekHtml += '<span class="slot-name">' + block.name + '</span>';
+                        weekHtml += '<strong>' + block.name + '</strong>';
+                        if (timeHtml) weekHtml += '<br>' + timeHtml;
                         weekHtml += capacityIndicator;
                         weekHtml += '</div>';
                     } else {
                         var bookingInfoStr = (isAdmin && block.booking_info) ? JSON.stringify(block.booking_info).replace(/"/g, '&quot;') : '';
                         weekHtml += '<div class="slot-item booked" ' + (isAdmin ? 'data-booking-info="' + bookingInfoStr + '"' : '') + '>';
-                        weekHtml += '<span class="slot-name">' + block.name + '</span>';
+                        weekHtml += '<strong>' + block.name + '</strong>';
+                        if (timeHtml) weekHtml += '<br>' + timeHtml;
                         weekHtml += capacityIndicator;
                         if (isAdmin && block.booked_by) {
                             weekHtml += '<span class="customer-name-label">' + block.booked_by + '</span>';
@@ -260,6 +265,25 @@ jQuery(document).ready(function ($) {
         weekHtml += '</div>'; // week-grid
 
         $calendar.html(weekHtml);
+    }
+
+    function formatTimeInterval(startTime, endTime) {
+        if (!startTime || !endTime) return '';
+        var start = startTime.substring(0, 5);
+        var end = endTime.substring(0, 5);
+        if (start.slice(-3) === ':00') {
+            start = start.slice(0, -3);
+            if (start.length === 2 && start.charAt(0) === '0') {
+                start = start.charAt(1);
+            }
+        }
+        if (end.slice(-3) === ':00') {
+            end = end.slice(0, -3);
+            if (end.length === 2 && end.charAt(0) === '0') {
+                end = end.charAt(1);
+            }
+        }
+        return 'kl ' + start + ' - ' + end;
     }
 
     /**
@@ -317,8 +341,12 @@ jQuery(document).ready(function ($) {
 
         blocks.forEach(function (block) {
             var statusClass = block.is_available ? 'available' : 'booked';
+            var timeStr = formatTimeInterval(block.start_time, block.end_time);
             blocksHtml += '<div class="block-select-item ' + statusClass + '" data-id="' + block.id + '" data-start="' + block.start_time + '" data-end="' + block.end_time + '">';
-            blocksHtml += block.name;
+            blocksHtml += '<strong>' + block.name + '</strong>';
+            if (timeStr) {
+                blocksHtml += '<br><small class="block-time">' + timeStr + '</small>';
+            }
             blocksHtml += '</div>';
         });
 

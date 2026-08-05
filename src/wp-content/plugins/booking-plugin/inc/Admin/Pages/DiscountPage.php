@@ -193,7 +193,13 @@ class DiscountPage {
 					$duration = 'Alle';
 				}
 
-				$discount = $rule->discount_type === 'percentage' ? $rule->discount_value . ' %' : number_format( $rule->discount_value, 0, ',', ' ' ) . ' kr';
+				if ( $rule->discount_type === 'percentage' ) {
+					$discount = $rule->discount_value . ' %';
+				} elseif ( $rule->discount_type === 'fixed_price' ) {
+					$discount = sprintf( __( 'Fast pris: %s kr', 'snippen-booking' ), number_format( $rule->discount_value, 0, ',', ' ' ) );
+				} else {
+					$discount = number_format( $rule->discount_value, 0, ',', ' ' ) . ' kr';
+				}
 
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
@@ -236,6 +242,7 @@ class DiscountPage {
 		echo '<select name="discount_type" id="discount_type" required>';
 		echo '<option value="percentage" ' . selected( $rule ? $rule->discount_type : '', 'percentage', false ) . '>' . esc_html__( 'Prosent (%)', 'snippen-booking' ) . '</option>';
 		echo '<option value="fixed_amount" ' . selected( $rule ? $rule->discount_type : '', 'fixed_amount', false ) . '>' . esc_html__( 'Fast sum (kr)', 'snippen-booking' ) . '</option>';
+		echo '<option value="fixed_price" ' . selected( $rule ? $rule->discount_type : '', 'fixed_price', false ) . '>' . esc_html__( 'Fast pris (kr)', 'snippen-booking' ) . '</option>';
 		echo '</select></div>';
 		echo '<div><label for="discount_value">' . esc_html__( 'Verdi', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" step="0.01" name="discount_value" id="discount_value" value="' . esc_attr( $rule ? $rule->discount_value : 0 ) . '" required style="max-width:150px;"></div>';

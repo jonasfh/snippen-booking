@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.5.0] - 2026-08-05
+- (#182) Updated Help admin page with documentation on tagging WordPress pages with `snippen-booking` for admin overview quick links.
+- (#183) Added fixed price (`fixed_price`) discount type option in discount rules calculation and admin interface.
+- (#184) Updated account confirmation shortcode to display a highlighted activation status notice with the user's name when logged in.
+- (#185) Displayed actual time interval (e.g. `kl 16 - 23`) under timeslot names on calendar buttons and wizard.
+
 ## [2.4.0] - 2026-08-04
 - (#180) Updated booking shortcode header to render individual object selector buttons and object descriptions interactively when multiple objects are shown in calendar.
 
