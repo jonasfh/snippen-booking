@@ -142,4 +142,27 @@ class DiscountServiceTest extends TestCase {
 		$this->assertEquals( 20.00, $discount_info['discount_amount'] );
 		$this->assertEquals( $rule_2, $discount_info['discount_rule']->id );
 	}
+
+	public function test_fixed_price_discount_applied() {
+		// Create a rule: Fixed price of 400 NOK for >= 2 hours
+		$rule_id = $this->repo->save( array(
+			'name' => 'Fixed price 400 NOK',
+			'discount_type' => 'fixed_price',
+			'discount_value' => 400.0,
+			'min_duration_hours' => 2.0,
+			'max_duration_hours' => null,
+			'priority' => 10
+		) );
+		$this->repo->sync_booking_objects( $rule_id, array( $this->objectId ) );
+
+		$block_08_09 = $this->getBlockId('08-09');
+		$block_09_10 = $this->getBlockId('09-10');
+		$base_price = 1000.00;
+
+		$discount_info = $this->service->applyDiscount( $base_price, array( $this->objectId ), array( $block_08_09, $block_09_10 ) );
+
+		$this->assertEquals( 400.00, $discount_info['final_price'] );
+		$this->assertEquals( 600.00, $discount_info['discount_amount'] );
+		$this->assertEquals( $rule_id, $discount_info['discount_rule']->id );
+	}
 }

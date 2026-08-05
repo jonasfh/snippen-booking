@@ -95,20 +95,28 @@ class DiscountService {
 		}
 
 		$discount_amount = 0.0;
+		$final_price     = $base_price;
 
 		if ( $rule->discount_type === 'percentage' ) {
 			$discount_amount = $base_price * ( (float) $rule->discount_value / 100 );
+			if ( $discount_amount > $base_price ) {
+				$discount_amount = $base_price;
+			}
+			$final_price = $base_price - $discount_amount;
 		} elseif ( $rule->discount_type === 'fixed_amount' ) {
 			$discount_amount = (float) $rule->discount_value;
-		}
-
-		// Ensure discount doesn't exceed base price
-		if ( $discount_amount > $base_price ) {
-			$discount_amount = $base_price;
+			if ( $discount_amount > $base_price ) {
+				$discount_amount = $base_price;
+			}
+			$final_price = $base_price - $discount_amount;
+		} elseif ( $rule->discount_type === 'fixed_price' ) {
+			$target_price    = (float) $rule->discount_value;
+			$discount_amount = max( 0.0, $base_price - $target_price );
+			$final_price     = $target_price;
 		}
 
 		return array(
-			'final_price'     => $base_price - $discount_amount,
+			'final_price'     => $final_price,
 			'discount_amount' => $discount_amount,
 			'discount_rule'   => $rule,
 		);

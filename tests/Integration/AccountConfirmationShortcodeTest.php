@@ -18,22 +18,26 @@ class AccountConfirmationShortcodeTest extends TestCase {
 	}
 
 	/**
-	 * Test that when a guest user is logged in, the shortcode returns an empty string.
+	 * Test that when a user is logged in, the shortcode returns an activation notice with the user's name.
 	 */
-	public function test_returns_empty_when_user_logged_in() {
+	public function test_returns_notice_when_user_logged_in() {
 		// Mock logged in user
-		$user_id = wp_insert_user(
+		$username = 'test_logged_in_user_' . uniqid();
+		$user_id  = wp_insert_user(
 			array(
-				'user_login' => 'test_logged_in_user_' . uniqid(),
-				'user_pass'  => 'password',
-				'role'       => 'subscriber',
+				'user_login'   => $username,
+				'display_name' => 'Ola Nordmann',
+				'user_pass'    => 'password',
+				'role'         => 'subscriber',
 			)
 		);
 		$this->assertNotInstanceOf( \WP_Error::class, $user_id, 'User creation failed: ' . ( is_wp_error( $user_id ) ? $user_id->get_error_message() : '' ) );
 		wp_set_current_user( $user_id );
 
 		$output = do_shortcode( '[snippen_account_confirmation]' );
-		$this->assertEquals( '', $output );
+		$this->assertStringContainsString( 'snippen-account-activated-notice', $output );
+		$this->assertStringContainsString( 'Ola Nordmann', $output );
+		$this->assertStringContainsString( 'er aktivert og innlogget', $output );
 
 		// Clean up
 		wp_set_current_user( 0 );
