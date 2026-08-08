@@ -10,6 +10,15 @@ class PhoneHelper {
 	 * @return string|false Normalized phone string or false if invalid.
 	 */
 	public static function normalize_phone( $phone ) {
+		if ( empty( $phone ) || ! is_string( $phone ) ) {
+			return false;
+		}
+
+		// Reject input if it contains @ or alphabetic characters (username/email)
+		if ( preg_match( '/[@a-zA-Z]/', $phone ) ) {
+			return false;
+		}
+
 		// Strip everything except digits
 		$clean = preg_replace( '/[^0-9]/', '', $phone );
 
