@@ -253,13 +253,10 @@ class SettingsPage {
 
 		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';
 		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'E-postvarsel til administrator ved opplastet betalingsdokumentasjon:', 'snippen-booking' ) . '</h4>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:12px;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px;">';
 		echo '<input type="checkbox" name="snippen_payment_notify_admin" value="yes" ' . checked( $payment_notify_admin, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send e-postvarsel til administrator når en bruker laster opp kvittering/skjermbilde', 'snippen-booking' );
+		echo esc_html__( 'Send e-postvarsel til Booking-administratorer når en bruker laster opp kvittering/skjermbilde', 'snippen-booking' );
 		echo '</label>';
-		echo '<label for="snippen_payment_admin_emails" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'E-postadresse(r) for betalingsvarsel', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_payment_admin_emails" id="snippen_payment_admin_emails" value="' . esc_attr( $payment_admin_emails ) . '" class="regular-text" placeholder="admin@eksempel.no, kasserer@eksempel.no">';
-		echo '<p class="description">' . esc_html__( 'Kommaseparert liste med e-postadresser som skal motta betalingsvarsel. Hvis tomt, benyttes nettstedets admin-epost.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 		echo '</div>';
 

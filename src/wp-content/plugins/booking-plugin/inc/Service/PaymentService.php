@@ -83,15 +83,16 @@ class PaymentService {
 			return false;
 		}
 
-		$raw_emails = get_option( 'snippen_payment_admin_emails', '' );
-		$recipients = array();
+		$recipients  = array();
+		$admin_users = get_users(
+			array(
+				'capability' => \SnippenBooking\Helper\Capabilities::MANAGE_BOOKINGS,
+			)
+		);
 
-		if ( ! empty( $raw_emails ) ) {
-			$emails = array_map( 'trim', explode( ',', $raw_emails ) );
-			foreach ( $emails as $em ) {
-				if ( is_email( $em ) ) {
-					$recipients[] = $em;
-				}
+		foreach ( $admin_users as $admin ) {
+			if ( ! empty( $admin->user_email ) ) {
+				$recipients[] = $admin->user_email;
 			}
 		}
 

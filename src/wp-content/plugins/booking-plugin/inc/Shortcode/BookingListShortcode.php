@@ -261,22 +261,6 @@ class BookingListShortcode {
 		$vipps_no               = get_option( 'snippen_payment_vipps_number', '' );
 		$default_instructs      = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
 		$payment_instructs      = get_option( 'snippen_payment_instructions', $default_instructs );
-		$template_service       = new \SnippenBooking\Service\Notification\NotificationTemplateService();
-		$rendered_template      = $template_service->render_template(
-			'booking_confirmation',
-			'email',
-			array(
-				'bank_account'         => $bank_acc,
-				'vipps_number'         => $vipps_no,
-				'user_name'            => $booking->customer_name,
-				'booking_objects'      => implode( ', ', $objs ),
-				'booking_date'         => $booking_date_formatted,
-				'booking_url'          => add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) ),
-				'booking_price'        => number_format( $booking->price, 0, ',', ' ' ),
-				'payment_instructions' => $payment_instructs,
-			)
-		);
-		$instructs_body         = ! empty( $rendered_template['body'] ) ? $rendered_template['body'] : $payment_instructs;
 		?>
 		<div class="booking-compact-row" id="booking-card-<?php echo esc_attr( $booking->id ); ?>">
 			<div class="booking-compact-main">
@@ -310,7 +294,7 @@ class BookingListShortcode {
 
 			<div class="booking-compact-payment" style="margin-top:12px; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
 				<strong><?php esc_html_e( 'Betalingsinformasjon:', 'snippen-booking' ); ?></strong>
-				<?php if ( $bank_acc || $vipps_no || $instructs_body ) : ?>
+				<?php if ( $bank_acc || $vipps_no || $payment_instructs ) : ?>
 					<div style="margin-top:4px; color:#334155; line-height:1.4;">
 						<?php if ( $bank_acc ) : ?>
 							<div><strong><?php esc_html_e( 'Bankkontonr:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $bank_acc ); ?></div>
@@ -318,8 +302,8 @@ class BookingListShortcode {
 						<?php if ( $vipps_no ) : ?>
 							<div><strong><?php esc_html_e( 'Vipps:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $vipps_no ); ?></div>
 						<?php endif; ?>
-						<?php if ( $instructs_body ) : ?>
-							<div style="margin-top:4px; color:#475569; white-space:pre-line;"><?php echo esc_html( $instructs_body ); ?></div>
+						<?php if ( $payment_instructs ) : ?>
+							<div style="margin-top:4px; color:#475569; white-space:pre-line;"><?php echo esc_html( $payment_instructs ); ?></div>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>
