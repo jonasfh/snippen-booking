@@ -129,6 +129,39 @@
                 $btn.prop('disabled', false);
             });
         });
+
+        // AJAX Save Payment Status
+        $('.bookings-table').on('click', '.snippen-btn-save-payment', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const $container = $btn.closest('.payment-admin-container');
+            const id = $container.data('id');
+            const paymentStatusId = $container.find('.payment-status-select').val();
+            const paymentNotes = $container.find('.payment-notes-input').val();
+            const $feedback = $container.find('.payment-feedback');
+
+            $btn.prop('disabled', true);
+            $feedback.text('Lagrer...').css('color', '#6b7280');
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_update_payment_status',
+                nonce: snippenAdmin.nonce,
+                booking_id: id,
+                payment_status_id: paymentStatusId,
+                payment_notes: paymentNotes
+            }, function(response) {
+                if (response.success) {
+                    $feedback.text('Lagret').css('color', '#15803d');
+                    setTimeout(function() { window.location.reload(); }, 1000);
+                } else {
+                    $feedback.text(response.data.message || 'Feilet').css('color', '#b91c1c');
+                }
+            }).fail(function() {
+                $feedback.text('Feilet').css('color', '#b91c1c');
+            }).always(function() {
+                $btn.prop('disabled', false);
+            });
+        });
     });
 
 })(jQuery);

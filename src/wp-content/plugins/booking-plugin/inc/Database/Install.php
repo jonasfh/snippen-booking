@@ -145,6 +145,33 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_discount_rule_objects );
 
+		// Payment statuses table
+		$table_payment_statuses = $wpdb->prefix . 'snippen_payment_statuses';
+		$sql_payment_statuses   = "CREATE TABLE $table_payment_statuses (
+            id INT NOT NULL AUTO_INCREMENT,
+            slug VARCHAR(50) NOT NULL,
+            name VARCHAR(100) NOT NULL,
+            is_settled TINYINT(1) DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY slug (slug)
+        ) $charset_collate;";
+		dbDelta( $sql_payment_statuses );
+
+		$default_statuses = array(
+			array( 'id' => 1, 'slug' => 'UNPAID', 'name' => 'Mangler betaling', 'is_settled' => 0 ),
+			array( 'id' => 2, 'slug' => 'PENDING_VERIFICATION', 'name' => 'Venter på godkjenning', 'is_settled' => 0 ),
+			array( 'id' => 3, 'slug' => 'PAID', 'name' => 'Betalt', 'is_settled' => 1 ),
+			array( 'id' => 4, 'slug' => 'EXEMPT', 'name' => 'Fritatt / Gratis', 'is_settled' => 1 ),
+		);
+		foreach ( $default_statuses as $st ) {
+			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table_payment_statuses WHERE slug = %s", $st['slug'] ) );
+			if ( ! $exists ) {
+				$wpdb->insert( $table_payment_statuses, $st );
+			}
+		}
+
 		// Bookings table (with slot_id and facility restored for backward compatibility)
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$sql_bookings   = "CREATE TABLE $table_bookings (
@@ -162,6 +189,10 @@ class Install {
             discount_amount DECIMAL(10,2) DEFAULT 0,
             discount_rule_id INT NULL,
             status VARCHAR(20) DEFAULT 'pending',
+            payment_status_id INT DEFAULT 1,
+            payment_receipt_attachment_id BIGINT UNSIGNED NULL,
+            payment_notes TEXT NULL,
+            payment_updated_at DATETIME NULL,
             door_code VARCHAR(255) NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

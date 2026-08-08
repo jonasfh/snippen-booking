@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0] - 2026-08-08
+- (#188) Added database table `wp_snippen_payment_statuses` (`UNPAID`, `PENDING_VERIFICATION`, `PAID`, `EXEMPT`) with `is_settled` status tracking, and updated bookings schema for payment receipts and notes (`Migration_2_6_0`).
+- (#189) Added admin payment settings tab for configuring bank account, Vipps instructions, payment terms, and admin email notification settings.
+- (#190) Added frontend payment details and receipt image/PDF upload form (`UploadPaymentReceiptApi`) supporting both logged-in users and guest access via UUID token link.
+- (#191) Added admin payment management controls to view receipt attachments, update payment status, and record transaction notes (`UpdatePaymentStatusApi`).
+- (#192) Added payment status filtering (`UNPAID`, `PENDING_VERIFICATION`, `PAID`, `EXEMPT`, `settled`, `unsettled`) and payment status badges to admin booking overview list.
+
 ## [2.5.0] - 2026-08-05
 - (#182) Updated Help admin page with documentation on tagging WordPress pages with `snippen-booking` for admin overview quick links.
 - (#183) Added fixed price (`fixed_price`) discount type option in discount rules calculation and admin interface.
