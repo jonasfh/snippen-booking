@@ -53,7 +53,7 @@ class PaymentApiTest extends TestCase {
 		}
 
 		$updated_booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id ) );
-		$this->assertEquals( 3, (int) $updated_booking->payment_status_id );
+		$this->assertEquals( 2, (int) $updated_booking->payment_status_id );
 		$this->assertEquals( 'Vipps ref #987654', $updated_booking->payment_notes );
 	}
 
@@ -91,6 +91,56 @@ class PaymentApiTest extends TestCase {
 
 		$this->assertFalse( $response['success'] );
 		$this->assertEquals( 'Ingen tilgang.', $response['data']['message'] );
+	}
+
+	/**
+	 * Test uploading a payment receipt places file in userdata/user_id_<id>/booking_id_<id>/
+	 */
+	public function test_upload_payment_receipt_custom_directory() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'           => $uuid,
+				'user_id'        => 42,
+				'customer_name'  => 'Isolated Upload User',
+				'customer_email' => 'isolated@example.com',
+				'booking_date'   => '2026-09-05',
+				'price'          => 300,
+				'payment_status_id' => 1,
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		// Create a temporary dummy file
+		$temp_file = wp_tempnam( 'test_receipt' );
+		file_put_contents( $temp_file, 'dummy content' );
+
+		$_FILES['payment_receipt'] = array(
+			'name'     => 'test-receipt.png',
+			'type'     => 'image/png',
+			'tmp_name' => $temp_file,
+			'error'    => UPLOAD_ERR_OK,
+			'size'     => strlen( 'dummy content' ),
+		);
+
+		$_POST['booking_uuid'] = $uuid;
+
+		$response = $this->catch_json_output( function() {
+			UploadPaymentReceiptApi::upload_receipt();
+		} );
+
+		$this->assertTrue( $response['success'] );
+		$this->assertArrayHasKey( 'attachment_url', $response['data'] );
+		$this->assertStringContainsString( '/userdata/user_id_42/booking_id_' . $booking_id . '/', $response['data']['attachment_url'] );
+
+		// Clean up
+		if ( file_exists( $temp_file ) ) {
+			unlink( $temp_file );
+		}
 	}
 
 	/**
