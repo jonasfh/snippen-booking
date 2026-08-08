@@ -161,9 +161,6 @@ class BookingsPage {
 				case 'unpaid':
 					$query .= " AND (ps.slug = 'UNPAID' OR b.payment_status_id IS NULL OR b.payment_status_id = 1)";
 					break;
-				case 'pending':
-					$query .= " AND ps.slug = 'PENDING_VERIFICATION'";
-					break;
 				case 'paid':
 					$query .= " AND ps.slug = 'PAID'";
 					break;
