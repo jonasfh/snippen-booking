@@ -11,34 +11,36 @@ use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\Notification\NotificationTemplateService;
 
 /**
- * Unit tests for payment_instructions template.
+ * Unit tests for booking_confirmation template placeholders.
  */
 class PaymentTemplateTest extends TestCase {
 
 	/**
-	 * Test that payment_instructions default template and placeholders render correctly.
+	 * Test that booking_confirmation default template and placeholders render correctly.
 	 */
-	public function test_payment_instructions_template_rendering() {
+	public function test_booking_confirmation_template_rendering_with_payment_placeholders() {
 		$template_service = new NotificationTemplateService();
 
 		// Verify event type exists in placeholders
-		$placeholders = $template_service->get_available_placeholders( 'payment_instructions' );
+		$placeholders = $template_service->get_available_placeholders( 'booking_confirmation' );
 		$this->assertArrayHasKey( 'bank_account', $placeholders );
 		$this->assertArrayHasKey( 'vipps_number', $placeholders );
+		$this->assertArrayHasKey( 'booking_price', $placeholders );
 
 		// Render template with context
 		$context = array(
 			'user_name'       => 'Ola Nordmann',
 			'booking_objects' => 'Festsalen',
 			'booking_date'    => '2026-09-01',
+			'booking_url'     => 'https://example.com/?booking_uuid=123',
 			'booking_price'   => '1 500',
 			'bank_account'    => '1234.56.78901',
 			'vipps_number'    => '#12345',
 		);
 
-		$rendered = $template_service->render_template( 'payment_instructions', 'email', $context );
+		$rendered = $template_service->render_template( 'booking_confirmation', 'email', $context );
 
-		$this->assertStringContainsString( 'Betalingsinstruksjoner', $rendered['subject'] );
+		$this->assertStringContainsString( 'Bekreftelse på din bookingforespørsel', $rendered['subject'] );
 		$this->assertStringContainsString( 'Ola Nordmann', $rendered['body'] );
 		$this->assertStringContainsString( 'Festsalen', $rendered['body'] );
 		$this->assertStringContainsString( '1234.56.78901', $rendered['body'] );

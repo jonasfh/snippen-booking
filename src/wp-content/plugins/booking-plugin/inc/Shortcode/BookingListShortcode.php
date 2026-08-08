@@ -261,7 +261,7 @@ class BookingListShortcode {
 		$vipps_no               = get_option( 'snippen_payment_vipps_number', '' );
 		$template_service       = new \SnippenBooking\Service\Notification\NotificationTemplateService();
 		$rendered_template      = $template_service->render_template(
-			'payment_instructions',
+			'booking_confirmation',
 			'email',
 			array(
 				'bank_account'    => $bank_acc,
@@ -269,6 +269,7 @@ class BookingListShortcode {
 				'user_name'       => $booking->customer_name,
 				'booking_objects' => implode( ', ', $objs ),
 				'booking_date'    => $booking_date_formatted,
+				'booking_url'     => add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) ),
 				'booking_price'   => number_format( $booking->price, 0, ',', ' ' ),
 			)
 		);
