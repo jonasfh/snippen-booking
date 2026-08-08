@@ -71,6 +71,22 @@ class SettingsPage {
 		$disable_all_emails = isset( $_POST['snippen_disable_all_emails'] ) ? 'yes' : 'no';
 		update_option( 'snippen_disable_all_emails', $disable_all_emails );
 
+		// Save Payment Settings
+		$payment_bank_account = isset( $_POST['snippen_payment_bank_account'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_bank_account'] ) ) : '';
+		update_option( 'snippen_payment_bank_account', $payment_bank_account );
+
+		$payment_vipps_number = isset( $_POST['snippen_payment_vipps_number'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_vipps_number'] ) ) : '';
+		update_option( 'snippen_payment_vipps_number', $payment_vipps_number );
+
+		$payment_instructions = isset( $_POST['snippen_payment_instructions'] ) ? sanitize_textarea_field( wp_unslash( $_POST['snippen_payment_instructions'] ) ) : '';
+		update_option( 'snippen_payment_instructions', $payment_instructions );
+
+		$payment_admin_emails = isset( $_POST['snippen_payment_admin_emails'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_admin_emails'] ) ) : '';
+		update_option( 'snippen_payment_admin_emails', $payment_admin_emails );
+
+		$payment_notify_admin = isset( $_POST['snippen_payment_notify_admin'] ) ? 'yes' : 'no';
+		update_option( 'snippen_payment_notify_admin', $payment_notify_admin );
+
 		// Save Active Toggles per channel and type
 		update_option( 'snippen_email_booking_confirmation_enabled', isset( $_POST['snippen_email_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_admin_booking_enabled', isset( $_POST['snippen_email_admin_booking_enabled'] ) ? 'yes' : 'no' );
@@ -119,6 +135,12 @@ class SettingsPage {
 		$horizon_weeks          = get_option( 'snippen_booking_horizon_weeks', 52 );
 		$disable_all_emails     = get_option( 'snippen_disable_all_emails', 'no' );
 
+		$payment_bank_account = get_option( 'snippen_payment_bank_account', '' );
+		$payment_vipps_number = get_option( 'snippen_payment_vipps_number', '' );
+		$payment_instructions = get_option( 'snippen_payment_instructions', '' );
+		$payment_admin_emails = get_option( 'snippen_payment_admin_emails', '' );
+		$payment_notify_admin = get_option( 'snippen_payment_notify_admin', 'yes' );
+
 		$email_booking    = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 		$email_admin      = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
 		$email_activation = get_option( 'snippen_email_user_activation_enabled', 'yes' );
@@ -140,6 +162,7 @@ class SettingsPage {
 		echo '<h2 class="nav-tab-wrapper" style="margin-bottom:20px; border-bottom:1px solid #ccd0d4; padding-left:0;">';
 		echo '<a href="#" class="nav-tab nav-tab-active" data-tab="email">' . esc_html__( 'E-post', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="keysms">' . esc_html__( 'KeySMS (SMS)', 'snippen-booking' ) . '</a>';
+		echo '<a href="#" class="nav-tab" data-tab="payment">' . esc_html__( 'Betaling', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="general">' . esc_html__( 'Generelt', 'snippen-booking' ) . '</a>';
 		echo '</h2>';
 
@@ -201,9 +224,41 @@ class SettingsPage {
 				$this->render_field( $field );
 			}
 		}
+		// 3. Betaling tab content
+		echo '<div class="tab-content" id="tab-payment" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'Betalingsinnstillinger', 'snippen-booking' ) . '</h3>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_payment_bank_account" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Bankkontonummer for betaling', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_payment_bank_account" id="snippen_payment_bank_account" value="' . esc_attr( $payment_bank_account ) . '" class="regular-text" placeholder="1234.56.78901">';
+		echo '<p class="description">' . esc_html__( 'Kontonummer som vises til kundene ved manuell betaling.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
-		// 3. Generelt tab content
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_payment_vipps_number" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Vipps-nummer / Instruksjon', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_payment_vipps_number" id="snippen_payment_vipps_number" value="' . esc_attr( $payment_vipps_number ) . '" class="regular-text" placeholder="F.eks. #12345 (Snippen Samfunnshus)">';
+		echo '<p class="description">' . esc_html__( 'Vipps-nummer eller Vipps-instruksjon for kundene.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_payment_instructions" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Betalingsinstruksjoner / Betalingsfrist', 'snippen-booking' ) . '</label>';
+		echo '<textarea name="snippen_payment_instructions" id="snippen_payment_instructions" rows="4" class="large-text">' . esc_textarea( $payment_instructions ) . '</textarea>';
+		echo '<p class="description">' . esc_html__( 'Tekst som forklarer kunden hvordan de skal betale og merke betalingen (f.eks. oppgi booking-ID).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';
+		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'E-postvarsel til administrator ved opplastet betalingsdokumentasjon:', 'snippen-booking' ) . '</h4>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:12px;">';
+		echo '<input type="checkbox" name="snippen_payment_notify_admin" value="yes" ' . checked( $payment_notify_admin, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send e-postvarsel til administrator når en bruker laster opp kvittering/skjermbilde', 'snippen-booking' );
+		echo '</label>';
+		echo '<label for="snippen_payment_admin_emails" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'E-postadresse(r) for betalingsvarsel', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_payment_admin_emails" id="snippen_payment_admin_emails" value="' . esc_attr( $payment_admin_emails ) . '" class="regular-text" placeholder="admin@eksempel.no, kasserer@eksempel.no">';
+		echo '<p class="description">' . esc_html__( 'Kommaseparert liste med e-postadresser som skal motta betalingsvarsel. Hvis tomt, benyttes nettstedets admin-epost.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+		echo '</div>';
+
+		// 4. Generelt tab content
 		echo '<div class="tab-content" id="tab-general" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Generelle innstillinger', 'snippen-booking' ) . '</h3>';
 

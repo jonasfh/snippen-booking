@@ -389,3 +389,14 @@ add_filter('snippen_booking_import_providers', function($providers) {
 ```
 
 Once registered, your provider will automatically appear in the dropdown menu on the **Beboer Import** page, and its custom UI will be rendered when selected!
+
+## Payment Management System
+
+The plugin includes a manual payment tracking system, allowing users to view payment details and upload receipt screenshots or PDFs, while administrators can manage payment status, view uploaded receipts, record notes, and filter bookings.
+
+### Key Classes & Components
+- **`SnippenBooking\Service\PaymentService`**: Helper service for retrieving payment statuses (`UNPAID`, `PENDING_VERIFICATION`, `PAID`, `EXEMPT`), status details, and dispatching admin email notifications upon receipt upload.
+- **`SnippenBooking\Api\UploadPaymentReceiptApi`**: AJAX endpoint (`snippen_upload_payment_receipt`) for file upload validation (JPEG, PNG, WEBP, PDF) and storing receipt attachments in the WP Media Library. Supports guest authorization via booking UUID.
+- **`SnippenBooking\Api\UpdatePaymentStatusApi`**: AJAX endpoint (`snippen_update_payment_status`) for administrators (`manage_bookings`) to update payment status and notes.
+- **`SnippenBooking\Database\Migrations\Migration_2_6_0`**: Database migration creating table `wp_snippen_payment_statuses` and adding payment metadata columns to `wp_snippen_bookings`.
+
