@@ -208,28 +208,7 @@ class Plugin {
 			echo '<h2>' . esc_html__( 'Booking ikke funnet', 'snippen-booking' ) . '</h2>';
 			echo '<p>' . esc_html__( 'Forespurt booking ble ikke funnet eller har blitt slettet.', 'snippen-booking' ) . '</p>';
 			echo '</div>';
-		} elseif ( ! is_user_logged_in() ) {
-			// 2. Not logged in -> show login prompt with redirect
-			$current_url = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
-			$login_url   = wp_login_url( $current_url );
-
-			echo '<div class="snippen-modal-login-content">';
-			echo '<h2>' . esc_html__( 'Logg inn kreves', 'snippen-booking' ) . '</h2>';
-			echo '<p>' . esc_html__( 'Du må logge inn for å se denne bookingen.', 'snippen-booking' ) . '</p>';
-			echo '<a href="' . esc_url( $login_url ) . '" class="snippen-login-btn">' . esc_html__( 'Logg inn', 'snippen-booking' ) . '</a>';
-			echo '</div>';
 		} else {
-			// 3. Logged in -> check permission
-			$current_user_id = get_current_user_id();
-			$is_admin        = Capabilities::can_manage_bookings();
-			$is_owner        = intval( $booking->user_id ) === $current_user_id;
-
-			if ( ! $is_admin && ! $is_owner ) {
-				echo '<div class="snippen-modal-error-content">';
-				echo '<h2>' . esc_html__( 'Ingen tilgang', 'snippen-booking' ) . '</h2>';
-				echo '<p>' . esc_html__( 'Du har ikke tilgang til å se denne bookingen.', 'snippen-booking' ) . '</p>';
-				echo '</div>';
-			} else {
 				// Get associated objects/locales
 				$objs         = $wpdb->get_col(
 					$wpdb->prepare(
@@ -374,7 +353,6 @@ class Plugin {
 				echo '</div>'; // payment section
 
 				echo '</div>'; // details content
-			}
 		}
 
 		echo '</div>'; // content

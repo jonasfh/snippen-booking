@@ -54,13 +54,13 @@ class BookingViewTest extends TestCase {
 	}
 
 	/**
-	 * Test that login prompt with redirect is rendered for non-logged-in users
+	 * Test that booking details are rendered for guests (logged-out users) with a valid UUID token
 	 */
-	public function test_renders_login_prompt_when_not_logged_in() {
+	public function test_renders_booking_details_for_guest_with_uuid() {
 		// Mock NOT logged in
 		wp_set_current_user( 0 );
 		$uuid = wp_generate_uuid4();
-		$this->create_test_booking_with_uuid( 1, $uuid );
+		$this->create_test_booking_with_uuid( 1, $uuid, 'pending', 'Guest UUID Test Booking' );
 
 		$_GET['booking_uuid'] = $uuid;
 
@@ -68,17 +68,15 @@ class BookingViewTest extends TestCase {
 		Plugin::render_booking_popup();
 		$output = ob_get_clean();
 
-		$this->assertStringContainsString( 'Logg inn kreves', $output );
-		$this->assertStringContainsString( 'Logg inn', $output );
-		// Verify redirect URL includes the booking_uuid
-		$expected_redirect = urlencode( add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) ) );
-		$this->assertStringContainsString( $expected_redirect, $output );
+		$this->assertStringContainsString( 'Bookingdetaljer', $output );
+		$this->assertStringContainsString( 'Guest UUID Test Booking', $output );
+		$this->assertStringNotContainsString( 'Logg inn kreves', $output );
 	}
 
 	/**
-	 * Test that unauthorized message is rendered for logged-in users who do not own the booking
+	 * Test that any user with a valid UUID token can view the booking
 	 */
-	public function test_renders_unauthorized_for_other_user() {
+	public function test_renders_booking_details_for_other_user_with_uuid() {
 		$owner_id = wp_insert_user([
 			'user_login' => 'owner_user_' . uniqid(),
 			'user_pass' => 'password',
@@ -92,9 +90,9 @@ class BookingViewTest extends TestCase {
 		]);
 
 		$uuid = wp_generate_uuid4();
-		$this->create_test_booking_with_uuid( $owner_id, $uuid );
+		$this->create_test_booking_with_uuid( $owner_id, $uuid, 'pending', 'Other User UUID Booking' );
 
-		// Set current user to the unauthorized one
+		// Set current user to other user
 		wp_set_current_user( $other_id );
 		$_GET['booking_uuid'] = $uuid;
 
@@ -102,8 +100,9 @@ class BookingViewTest extends TestCase {
 		Plugin::render_booking_popup();
 		$output = ob_get_clean();
 
-		$this->assertStringContainsString( 'Ingen tilgang', $output );
-		$this->assertStringContainsString( 'Du har ikke tilgang til å se denne bookingen.', $output );
+		$this->assertStringContainsString( 'Bookingdetaljer', $output );
+		$this->assertStringContainsString( 'Other User UUID Booking', $output );
+		$this->assertStringNotContainsString( 'Ingen tilgang', $output );
 	}
 
 	/**

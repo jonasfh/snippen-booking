@@ -96,12 +96,13 @@ class UserBookingsPage {
 		echo '<th>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
 		echo $this->render_sortable_header( 'price', __( 'Pris', 'snippen-booking' ), $orderby, $order );
 		echo $this->render_sortable_header( 'status', __( 'Status', 'snippen-booking' ), $orderby, $order );
+		echo '<th>' . esc_html__( 'Betaling', 'snippen-booking' ) . '</th>';
 		echo '<th style="width:40px; text-align:right;"></th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
 
 		if ( empty( $bookings ) ) {
-			echo '<tr><td colspan="6" style="padding:40px; text-align:center;">' . esc_html__( 'Du har ingen bookinger.', 'snippen-booking' ) . '</td></tr>';
+			echo '<tr><td colspan="7" style="padding:40px; text-align:center;">' . esc_html__( 'Du har ingen bookinger.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $bookings as $booking ) {
 				$this->render_booking_row( $booking );
@@ -150,8 +151,9 @@ class UserBookingsPage {
 			)
 		);
 
-		$status_class = 'snippen-status-' . $booking->status;
-		$booking_date = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
+		$status_class   = 'snippen-status-' . $booking->status;
+		$booking_date   = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
+		$payment_status = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
 
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
 		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
@@ -168,6 +170,17 @@ class UserBookingsPage {
 		echo '</td>';
 		echo '<td data-label="' . esc_attr__( 'Pris', 'snippen-booking' ) . '" style="font-weight:600;">' . number_format( $booking->price, 0, ',', ' ' ) . ',-</td>';
 		echo '<td data-label="' . esc_attr__( 'Status', 'snippen-booking' ) . '"><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></td>';
+
+		echo '<td data-label="' . esc_attr__( 'Betaling', 'snippen-booking' ) . '">';
+		echo '<span class="snippen-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
+		if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
+			$r_url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
+			if ( $r_url ) {
+				echo '<br><a href="' . esc_url( $r_url ) . '" target="_blank" style="font-size:11px; text-decoration:none; color:#0284c7; margin-top:3px; display:inline-block;"><span class="dashicons dashicons-paperclip" style="font-size:13px; width:13px; height:13px; line-height:13px; vertical-align:middle;"></span> ' . esc_html__( 'Kvittering', 'snippen-booking' ) . '</a>';
+			}
+		}
+		echo '</td>';
+
 		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
 		echo '</tr>';
 
@@ -187,8 +200,8 @@ class UserBookingsPage {
 		$cols = $door_code_enabled ? 4 : 3;
 
 		echo '<tr class="snippen-details-row" id="details-' . esc_attr( $booking->id ) . '" style="display:none; background:#f8fafc;">';
-		echo '<td colspan="6" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
-		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(' . $cols . ', 1fr); gap:30px;">';
+		echo '<td colspan="7" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
+		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(' . $cols . ', 1fr); gap:30px; margin-bottom:15px;">';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Booket den:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->created_at ) . '</div>';
@@ -198,8 +211,87 @@ class UserBookingsPage {
 		
 		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Pris:', 'snippen-booking' ) . '</strong><br>' . number_format( $booking->price, 0, ',', ' ' ) . ',-</div>';
 		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Status:', 'snippen-booking' ) . '</strong><br><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></div>';
+		echo '</div>';
 
-		echo '</div></td></tr>';
+		// Payment & Receipt upload section
+		$bank_acc  = get_option( 'snippen_payment_bank_account', '' );
+		$vipps_no  = get_option( 'snippen_payment_vipps_number', '' );
+		$instructs = get_option( 'snippen_payment_instructions', '' );
+
+		echo '<div class="snippen-payment-box" style="padding:15px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; margin-top:10px;">';
+		echo '<h4 style="margin:0 0 10px 0; font-size:14px;">' . esc_html__( 'Betalingsinformasjon', 'snippen-booking' ) . '</h4>';
+		
+		if ( $bank_acc || $vipps_no || $instructs ) {
+			echo '<div style="font-size:13px; line-height:1.4; margin-bottom:10px; color:#334155;">';
+			if ( $bank_acc ) {
+				echo '<div><strong>' . esc_html__( 'Bankkontonr', 'snippen-booking' ) . ':</strong> ' . esc_html( $bank_acc ) . '</div>';
+			}
+			if ( $vipps_no ) {
+				echo '<div><strong>' . esc_html__( 'Vipps', 'snippen-booking' ) . ':</strong> ' . esc_html( $vipps_no ) . '</div>';
+			}
+			if ( $instructs ) {
+				echo '<div style="margin-top:4px; color:#475569;">' . nl2br( esc_html( $instructs ) ) . '</div>';
+			}
+			echo '</div>';
+		}
+
+		if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
+			$url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
+			if ( $url ) {
+				echo '<div style="margin-bottom:10px; font-size:13px;"><strong>' . esc_html__( 'Opplastet kvittering:', 'snippen-booking' ) . '</strong> <a href="' . esc_url( $url ) . '" target="_blank" style="color:#0284c7; text-decoration:underline;">' . esc_html__( 'Vis kvittering', 'snippen-booking' ) . '</a></div>';
+			}
+		}
+
+		if ( ! $payment_status->is_settled ) {
+			$form_id = 'upload-form-mybooking-' . $booking->id;
+			$msg_id  = 'upload-msg-mybooking-' . $booking->id;
+
+			echo '<form id="' . esc_attr( $form_id ) . '" style="margin-top:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">';
+			echo '<label style="font-size:13px; font-weight:600;">' . esc_html__( 'Last opp kvittering / skjermbilde:', 'snippen-booking' ) . '</label>';
+			echo '<input type="file" name="payment_receipt" class="snippen-receipt-input" accept="image/*,.pdf" required style="font-size:13px;">';
+			echo '<button type="submit" class="button button-small" style="background:#0284c7; border:none; color:#fff; cursor:pointer;">' . esc_html__( 'Last opp', 'snippen-booking' ) . '</button>';
+			echo '<span id="' . esc_attr( $msg_id ) . '" style="font-size:13px; font-weight:600;"></span>';
+			echo '</form>';
+
+			echo '<script>
+			document.getElementById("' . esc_js( $form_id ) . '").addEventListener("submit", function(e) {
+				e.preventDefault();
+				var fileInput = this.querySelector(".snippen-receipt-input");
+				if (!fileInput.files.length) return;
+				var formData = new FormData();
+				formData.append("action", "snippen_upload_payment_receipt");
+				formData.append("booking_id", "' . intval( $booking->id ) . '");
+				formData.append("booking_uuid", "' . esc_js( $booking->uuid ) . '");
+				formData.append("payment_receipt", fileInput.files[0]);
+
+				var msgSpan = document.getElementById("' . esc_js( $msg_id ) . '");
+				msgSpan.style.color = "#0284c7";
+				msgSpan.textContent = "' . esc_js( __( 'Laster opp...', 'snippen-booking' ) ) . '";
+
+				fetch("' . esc_url( admin_url( 'admin-ajax.php' ) ) . '", {
+					method: "POST",
+					body: formData
+				}).then(function(r) { return r.json(); })
+				.then(function(res) {
+					if (res.success) {
+						msgSpan.style.color = "#16a34a";
+						msgSpan.textContent = res.data.message;
+						setTimeout(function() { window.location.reload(); }, 1500);
+					} else {
+						msgSpan.style.color = "#dc2626";
+						msgSpan.textContent = res.data.message || "' . esc_js( __( 'Feil ved opplasting.', 'snippen-booking' ) ) . '";
+					}
+				}).catch(function(err) {
+					msgSpan.style.color = "#dc2626";
+					msgSpan.textContent = "' . esc_js( __( 'Tilkoblingsfeil.', 'snippen-booking' ) ) . '";
+				});
+			});
+			</script>';
+		}
+
+		echo '</div>'; // payment box
+
+		echo '</td></tr>';
 	}
 
 	/**
