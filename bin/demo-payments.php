@@ -45,6 +45,12 @@ function create_demo_attachment( $booking_uuid ) {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
 	$custom_filter = function( $uploads ) use ( $booking_uuid ) {
+		$userdata_dir = $uploads['basedir'] . '/userdata';
+		if ( ! file_exists( $userdata_dir ) ) {
+			wp_mkdir_p( $userdata_dir );
+		}
+		@chmod( $userdata_dir, 0777 );
+
 		$subdir            = '/userdata/booking_uuid_' . $booking_uuid;
 		$uploads['subdir'] = $subdir;
 		$uploads['path']   = $uploads['basedir'] . $subdir;
@@ -58,6 +64,7 @@ function create_demo_attachment( $booking_uuid ) {
 	if ( ! file_exists( $upload_dir['path'] ) ) {
 		wp_mkdir_p( $upload_dir['path'] );
 	}
+	@chmod( $upload_dir['path'], 0777 );
 
 	$filename    = 'demo-betaling-kvittering-' . time() . '.png';
 	$target_file = $upload_dir['path'] . '/' . $filename;

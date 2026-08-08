@@ -92,10 +92,22 @@ class UploadPaymentReceiptApi {
 		$booking_uuid = $booking->uuid;
 
 		$custom_upload_dir_filter = function( $uploads ) use ( $booking_uuid ) {
+			$userdata_dir = $uploads['basedir'] . '/userdata';
+			if ( ! file_exists( $userdata_dir ) ) {
+				wp_mkdir_p( $userdata_dir );
+			}
+			@chmod( $userdata_dir, 0777 );
+
 			$subdir            = '/userdata/booking_uuid_' . $booking_uuid;
 			$uploads['subdir'] = $subdir;
 			$uploads['path']   = $uploads['basedir'] . $subdir;
 			$uploads['url']    = $uploads['baseurl'] . $subdir;
+
+			if ( ! file_exists( $uploads['path'] ) ) {
+				wp_mkdir_p( $uploads['path'] );
+			}
+			@chmod( $uploads['path'], 0777 );
+
 			return $uploads;
 		};
 
