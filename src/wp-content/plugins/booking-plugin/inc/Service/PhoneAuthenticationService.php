@@ -18,8 +18,8 @@ class PhoneAuthenticationService {
 	 * Register hooks
 	 */
 	public static function register() {
-		// Hook into authentication process
-		add_filter( 'authenticate', array( __CLASS__, 'authenticate_by_phone' ), 20, 3 );
+		// Hook into authentication process (priority 30 runs after core username and email auth)
+		add_filter( 'authenticate', array( __CLASS__, 'authenticate_by_phone' ), 30, 3 );
 
 		// Hook into password reset user lookup
 		add_action( 'lostpassword_user_data', array( __CLASS__, 'reset_password_by_phone' ), 10, 2 );
