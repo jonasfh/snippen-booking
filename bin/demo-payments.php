@@ -34,7 +34,7 @@ global $wpdb;
 $table_bookings = $wpdb->prefix . 'snippen_bookings';
 
 // Helper function to create demo attachment in custom user folder
-function create_demo_attachment( $user_id, $booking_id ) {
+function create_demo_attachment( $booking_uuid ) {
 	$source_image = __DIR__ . '/../src/wp-content/plugins/booking-plugin/assets/images/betalt.png';
 	if ( ! file_exists( $source_image ) ) {
 		return 0;
@@ -44,11 +44,8 @@ function create_demo_attachment( $user_id, $booking_id ) {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$u_folder = intval( $user_id );
-	$b_folder = intval( $booking_id );
-
-	$custom_filter = function( $uploads ) use ( $u_folder, $b_folder ) {
-		$subdir            = '/userdata/user_id_' . $u_folder . '/booking_id_' . $b_folder;
+	$custom_filter = function( $uploads ) use ( $booking_uuid ) {
+		$subdir            = '/userdata/booking_uuid_' . $booking_uuid;
 		$uploads['subdir'] = $subdir;
 		$uploads['path']   = $uploads['basedir'] . $subdir;
 		$uploads['url']    = $uploads['baseurl'] . $subdir;
@@ -163,7 +160,7 @@ foreach ( $demo_test_bookings as $data ) {
 	$booking_id = $wpdb->insert_id;
 
 	if ( $with_receipt ) {
-		$attach_id = create_demo_attachment( $data['user_id'], $booking_id );
+		$attach_id = create_demo_attachment( $data['uuid'] );
 		if ( $attach_id ) {
 			$wpdb->update(
 				$table_bookings,
