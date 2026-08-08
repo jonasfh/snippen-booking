@@ -163,7 +163,7 @@ Once a GitHub issue is identified or created, the following workflow **MUST** be
     - Create tests for new functionality and run all tests to verify.
 4.  **Submission**:
     - Commit changed files.
-    - **Commit Message**: The message **MUST** start with the issue reference in parentheses, e.g., `(#127) Fixed xxx...`.
+    - **Commit Message**: The message **MUST** start with the specific issue reference in parentheses for issue-related commits, e.g., `(#127) Fixed xxx...`. When multiple issues are addressed in the same branch, make separate commits for each issue referencing its specific issue number (e.g., `(#187) ...`, `(#194) ...`). General updates not tied to a specific issue (such as updates to `AGENTS.md`) do not require an issue reference header.
     - Push the branch to origin.
     - Create a Pull Request using `gh`, target `main` (default): `gh pr create --body "Closes #<id>" --title "(#<id>) <Issue Title>"`.
     - Make sure PR has updated version and changelog in `src/inc/booking-plugin.php` and `CHANGELOG.md` if needed.
