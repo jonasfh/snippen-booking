@@ -88,7 +88,21 @@ class UploadPaymentReceiptApi {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
 		$upload_overrides = array( 'test_form' => false );
-		$uploaded_file    = wp_handle_upload( $file, $upload_overrides );
+
+		$user_folder    = ! empty( $booking->user_id ) ? intval( $booking->user_id ) : 'guest';
+		$booking_folder = intval( $booking->id );
+
+		$custom_upload_dir_filter = function( $uploads ) use ( $user_folder, $booking_folder ) {
+			$subdir            = '/userdata/user_id_' . $user_folder . '/booking_id_' . $booking_folder;
+			$uploads['subdir'] = $subdir;
+			$uploads['path']   = $uploads['basedir'] . $subdir;
+			$uploads['url']    = $uploads['baseurl'] . $subdir;
+			return $uploads;
+		};
+
+		add_filter( 'upload_dir', $custom_upload_dir_filter );
+		$uploaded_file = wp_handle_upload( $file, $upload_overrides );
+		remove_filter( 'upload_dir', $custom_upload_dir_filter );
 
 		if ( isset( $uploaded_file['error'] ) ) {
 			wp_send_json_error( array( 'message' => $uploaded_file['error'] ) );
