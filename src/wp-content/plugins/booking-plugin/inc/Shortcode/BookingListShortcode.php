@@ -259,7 +259,20 @@ class BookingListShortcode {
 		$payment_status         = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
 		$bank_acc               = get_option( 'snippen_payment_bank_account', '' );
 		$vipps_no               = get_option( 'snippen_payment_vipps_number', '' );
-		$instructs              = get_option( 'snippen_payment_instructions', '' );
+		$template_service       = new \SnippenBooking\Service\Notification\NotificationTemplateService();
+		$rendered_template      = $template_service->render_template(
+			'payment_instructions',
+			'email',
+			array(
+				'bank_account'    => $bank_acc,
+				'vipps_number'    => $vipps_no,
+				'user_name'       => $booking->customer_name,
+				'booking_objects' => implode( ', ', $objs ),
+				'booking_date'    => $booking_date_formatted,
+				'booking_price'   => number_format( $booking->price, 0, ',', ' ' ),
+			)
+		);
+		$instructs_body         = ! empty( $rendered_template['body'] ) ? $rendered_template['body'] : get_option( 'snippen_payment_instructions', '' );
 		?>
 		<div class="booking-compact-row" id="booking-card-<?php echo esc_attr( $booking->id ); ?>">
 			<div class="booking-compact-main">
@@ -293,7 +306,7 @@ class BookingListShortcode {
 
 			<div class="booking-compact-payment" style="margin-top:12px; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
 				<strong><?php esc_html_e( 'Betalingsinformasjon:', 'snippen-booking' ); ?></strong>
-				<?php if ( $bank_acc || $vipps_no || $instructs ) : ?>
+				<?php if ( $bank_acc || $vipps_no || $instructs_body ) : ?>
 					<div style="margin-top:4px; color:#334155; line-height:1.4;">
 						<?php if ( $bank_acc ) : ?>
 							<div><strong><?php esc_html_e( 'Bankkontonr:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $bank_acc ); ?></div>
@@ -301,8 +314,8 @@ class BookingListShortcode {
 						<?php if ( $vipps_no ) : ?>
 							<div><strong><?php esc_html_e( 'Vipps:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $vipps_no ); ?></div>
 						<?php endif; ?>
-						<?php if ( $instructs ) : ?>
-							<div style="margin-top:4px; color:#475569;"><?php echo nl2br( esc_html( $instructs ) ); ?></div>
+						<?php if ( $instructs_body ) : ?>
+							<div style="margin-top:4px; color:#475569; white-space:pre-line;"><?php echo esc_html( $instructs_body ); ?></div>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>

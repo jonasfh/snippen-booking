@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.0] - 2026-08-08
+- (#187) Fixed login authentication for username and email identifiers by tuning authentication filter priority and handling in `PhoneHelper::normalize_phone`.
+- (#194) Moved payment instructions/deadline to a dedicated Notification Template (`payment_instructions`) with placeholders (`{{bank_account}}`, `{{vipps_number}}`, `{{user_name}}`, `{{booking_objects}}`, `{{booking_date}}`, `{{booking_price}}`).
+
 ## [2.6.1] - 2026-08-08
 - (#188-#192) Added `Migration_2_6_1` to clean up obsolete `PENDING_VERIFICATION` payment status from `wp_snippen_payment_statuses` table and re-index canonical statuses (`UNPAID`, `PAID`, `EXEMPT`).
 - (#188-#192) Automatically confirm pending bookings when admin registers payment status as `PAID` or `EXEMPT`.

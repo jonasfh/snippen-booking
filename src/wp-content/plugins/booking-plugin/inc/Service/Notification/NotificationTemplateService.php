@@ -22,7 +22,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_instructions' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -105,6 +105,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Tilbakestill passord', 'snippen-booking' ),
 					'body'    => __( "Hallo {{user_name}},\n\nNoen har bedt om å tilbakestille passordet for din konto.\n\nHvis dette var en feiltakelse, kan du se bort fra denne e-posten.\n\nFor å tilbakestille passordet ditt, trykk på denne lenken:\n{{reset_link}}", 'snippen-booking' ),
+				),
+			),
+			'payment_instructions' => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Betalingsinfo for {{booking_objects}} {{booking_date}}: Bankkonto {{bank_account}}, Vipps {{vipps_number}}. Beløp: {{booking_price}} kr.', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Betalingsinstruksjoner for din booking', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nTakk for din booking av {{booking_objects}} den {{booking_date}}.\n\nBetalingsinformasjon:\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\nBeløp: {{booking_price}} kr\n\nVennligst innbetal beløpet innen betalingsfristen.", 'snippen-booking' ),
 				),
 			),
 		);
@@ -212,6 +222,14 @@ class NotificationTemplateService {
 			'password_reset'       => array(
 				'user_name'  => __( 'Recipient user name', 'snippen-booking' ),
 				'reset_link' => __( 'Password reset URL', 'snippen-booking' ),
+			),
+			'payment_instructions' => array(
+				'user_name'       => __( 'Booking customer name', 'snippen-booking' ),
+				'booking_objects' => __( 'Booked venue names', 'snippen-booking' ),
+				'booking_date'    => __( 'Booking date', 'snippen-booking' ),
+				'booking_price'   => __( 'Booking total price', 'snippen-booking' ),
+				'bank_account'    => __( 'Payment bank account number', 'snippen-booking' ),
+				'vipps_number'    => __( 'Payment Vipps number / info', 'snippen-booking' ),
 			),
 		);
 
