@@ -89,7 +89,7 @@ class UploadPaymentReceiptApi {
 
 		$upload_overrides = array( 'test_form' => false );
 
-		$user_folder    = ! empty( $booking->user_id ) ? intval( $booking->user_id ) : 'guest';
+		$user_folder    = intval( $booking->user_id );
 		$booking_folder = intval( $booking->id );
 
 		$custom_upload_dir_filter = function( $uploads ) use ( $user_folder, $booking_folder ) {

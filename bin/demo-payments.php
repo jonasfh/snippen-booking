@@ -44,7 +44,7 @@ function create_demo_attachment( $user_id, $booking_id ) {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$u_folder = ! empty( $user_id ) ? intval( $user_id ) : 'guest';
+	$u_folder = intval( $user_id );
 	$b_folder = intval( $booking_id );
 
 	$custom_filter = function( $uploads ) use ( $u_folder, $b_folder ) {
