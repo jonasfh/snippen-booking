@@ -67,7 +67,7 @@ function create_demo_attachment( $booking_uuid ) {
 	$filetype   = wp_check_filetype( $filename, null );
 	$attachment = array(
 		'post_mime_type' => $filetype['type'],
-		'post_title'     => sprintf( 'Demo Betalingskvittering (Booking #%d)', $booking_id ),
+		'post_title'     => 'Demo Betalingskvittering (Nettbank)',
 		'post_content'   => '',
 		'post_status'    => 'inherit',
 	);
