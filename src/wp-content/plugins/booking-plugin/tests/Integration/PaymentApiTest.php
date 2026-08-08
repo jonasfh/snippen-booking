@@ -54,6 +54,7 @@ class PaymentApiTest extends TestCase {
 
 		$updated_booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id ) );
 		$this->assertEquals( 2, (int) $updated_booking->payment_status_id );
+		$this->assertEquals( 'confirmed', $updated_booking->status );
 		$this->assertEquals( 'Vipps ref #987654', $updated_booking->payment_notes );
 	}
 

@@ -43,11 +43,18 @@ class UpdatePaymentStatusApi {
 			wp_send_json_error( array( 'message' => __( 'Ugyldig betalingsstatus.', 'snippen-booking' ) ) );
 		}
 
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT status FROM $table_bookings WHERE id = %d", $booking_id ) );
+
 		$update_data = array(
 			'payment_status_id'  => $payment_status_id,
 			'payment_updated_at' => current_time( 'mysql' ),
 			'modified_at'        => current_time( 'mysql' ),
 		);
+
+		// Automatically confirm booking if payment is set to PAID or settled and booking is currently pending
+		if ( ( $status->slug === 'PAID' || (int) $status->is_settled === 1 ) && $booking && 'pending' === $booking->status ) {
+			$update_data['status'] = 'confirmed';
+		}
 
 		if ( $payment_notes !== null ) {
 			$update_data['payment_notes'] = $payment_notes;
