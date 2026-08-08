@@ -288,7 +288,7 @@ class BookingManagementCapabilityTest extends TestCase {
 		$this->assertNotEmpty( self::$intercepted_emails );
 		$recipient_emails = [];
 		foreach ( self::$intercepted_emails as $email ) {
-			if ( stripos( $email['subject'], 'Bookingforespørsel' ) !== false || stripos( $email['subject'], 'Booking Request' ) !== false ) {
+			if ( ( strpos( $email['subject'], 'Ny Bookingforespørsel' ) !== false || strpos( $email['subject'], 'New Booking Request' ) !== false ) && strpos( $email['subject'], 'Bekreftelse' ) === false ) {
 				if ( is_array( $email['to'] ) ) {
 					$recipient_emails = array_merge( $recipient_emails, $email['to'] );
 				} else {
