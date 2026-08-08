@@ -224,6 +224,8 @@ class SettingsPage {
 				$this->render_field( $field );
 			}
 		}
+		echo '</div>';
+
 		// 3. Betaling tab content
 		echo '<div class="tab-content" id="tab-payment" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Betalingsinnstillinger', 'snippen-booking' ) . '</h3>';

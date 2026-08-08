@@ -41,6 +41,12 @@ class SettingsPageTest extends TestCase {
 		$output = ob_get_clean();
 
 		$this->assertStringContainsString( 'E-post-varsler', $output );
+		$this->assertStringContainsString( 'id="tab-email"', $output );
+		$this->assertStringContainsString( 'id="tab-keysms"', $output );
+		$this->assertStringContainsString( 'id="tab-payment"', $output );
+		$this->assertStringContainsString( 'id="tab-general"', $output );
+		$this->assertStringContainsString( 'name="snippen_payment_bank_account"', $output );
+		$this->assertStringContainsString( 'name="snippen_payment_vipps_number"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_enabled"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_host"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_port"', $output );
