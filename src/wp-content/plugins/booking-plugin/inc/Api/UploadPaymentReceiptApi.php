@@ -89,11 +89,10 @@ class UploadPaymentReceiptApi {
 
 		$upload_overrides = array( 'test_form' => false );
 
-		$user_folder    = intval( $booking->user_id );
-		$booking_folder = intval( $booking->id );
+		$booking_uuid = $booking->uuid;
 
-		$custom_upload_dir_filter = function( $uploads ) use ( $user_folder, $booking_folder ) {
-			$subdir            = '/userdata/user_id_' . $user_folder . '/booking_id_' . $booking_folder;
+		$custom_upload_dir_filter = function( $uploads ) use ( $booking_uuid ) {
+			$subdir            = '/userdata/booking_uuid_' . $booking_uuid;
 			$uploads['subdir'] = $subdir;
 			$uploads['path']   = $uploads['basedir'] . $subdir;
 			$uploads['url']    = $uploads['baseurl'] . $subdir;

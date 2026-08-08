@@ -135,7 +135,7 @@ class PaymentApiTest extends TestCase {
 
 		$this->assertTrue( $response['success'] );
 		$this->assertArrayHasKey( 'attachment_url', $response['data'] );
-		$this->assertStringContainsString( '/userdata/user_id_42/booking_id_' . $booking_id . '/', $response['data']['attachment_url'] );
+		$this->assertStringContainsString( '/userdata/booking_uuid_' . $uuid . '/', $response['data']['attachment_url'] );
 
 		// Clean up
 		if ( file_exists( $temp_file ) ) {
