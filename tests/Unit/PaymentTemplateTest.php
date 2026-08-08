@@ -15,6 +15,12 @@ use SnippenBooking\Service\Notification\NotificationTemplateService;
  */
 class PaymentTemplateTest extends TestCase {
 
+	public function setUp(): void {
+		parent::setUp();
+		delete_option( 'snippen_template_booking_confirmation_email' );
+		delete_option( 'snippen_template_booking_confirmation_sms' );
+	}
+
 	/**
 	 * Test that booking_confirmation default template and placeholders render correctly.
 	 */

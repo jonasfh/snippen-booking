@@ -32,6 +32,14 @@ class SmsFallbackTest extends TestCase {
 			require_once ABSPATH . 'wp-admin/includes/user.php';
 		}
 		self::$sent_mails = array();
+		delete_option( 'snippen_template_user_activation_email' );
+		delete_option( 'snippen_template_user_activation_sms' );
+		delete_option( 'snippen_template_booking_confirmation_email' );
+		delete_option( 'snippen_template_booking_confirmation_sms' );
+		delete_option( 'snippen_template_admin_booking_email' );
+		delete_option( 'snippen_template_admin_booking_sms' );
+		delete_option( 'snippen_template_password_reset_email' );
+		delete_option( 'snippen_template_password_reset_sms' );
 		add_filter( 'pre_wp_mail', array( $this, 'catch_mail' ), 10, 2 );
 	}
 
@@ -86,7 +94,7 @@ class SmsFallbackTest extends TestCase {
 		$mail = self::$sent_mails[0];
 
 		$this->assertEquals( $user_email, $mail['to'] );
-		$this->assertEquals( 'Bekreftelseskode for Snippen Booking', $mail['subject'] );
+		$this->assertEquals( __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' ), $mail['subject'] );
 
 		$stored_code = get_user_meta( $user_id, 'snippen_confirmation_code', true );
 		$this->assertNotEmpty( $stored_code );
@@ -181,7 +189,7 @@ class SmsFallbackTest extends TestCase {
 		}
 
 		$this->assertNotNull( $customer_mail, 'Customer should have received a confirmation email.' );
-		$this->assertEquals( 'Bekreftelse på din bookingforespørsel', $customer_mail['subject'] );
+		$this->assertEquals( __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' ), $customer_mail['subject'] );
 		$this->assertStringContainsString( 'Fallback Room', $customer_mail['message'] );
 		$this->assertStringContainsString( '2026-06-15', $customer_mail['message'] );
 		$this->assertStringContainsString( 'booking_uuid', $customer_mail['message'] );
@@ -263,7 +271,7 @@ class SmsFallbackTest extends TestCase {
 		}
 
 		$this->assertNotNull( $customer_mail, 'Customer should have received a confirmation email synchronously.' );
-		$this->assertEquals( 'Bekreftelse på din bookingforespørsel', $customer_mail['subject'] );
+		$this->assertEquals( __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' ), $customer_mail['subject'] );
 		$this->assertStringContainsString( 'Sync Room', $customer_mail['message'] );
 
 		// Clean up.
