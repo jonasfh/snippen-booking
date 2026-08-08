@@ -77,7 +77,14 @@ class NotificationManager {
 			return false;
 		}
 
-		$message       = sprintf( __( 'Din bekreftelseskode for Snippen Booking er: %s. Koden er gyldig i 15 minutter.', 'snippen-booking' ), $code );
+		$template_service = new NotificationTemplateService();
+		$context          = array(
+			'user_name'         => $user->display_name ?: $user->user_login,
+			'confirmation_code' => $code,
+		);
+		$rendered_sms   = $template_service->render_template( 'user_activation', 'sms', $context );
+		$rendered_email = $template_service->render_template( 'user_activation', 'email', $context );
+
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_user_activation_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_user_activation_enabled', 'yes' );
 
@@ -90,7 +97,7 @@ class NotificationManager {
 			$provider    = $this->get_provider( $provider_id );
 
 			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
-				$sms_sent = $provider->send_sms( $phone, $message );
+				$sms_sent = $provider->send_sms( $phone, $rendered_sms['body'] );
 				if ( ! $sms_sent ) {
 					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s.', $provider_id ) );
 				}
@@ -101,8 +108,8 @@ class NotificationManager {
 		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
 			$email_provider = $this->get_provider( 'email' );
 			if ( $email_provider instanceof EmailProviderInterface && ! empty( $user->user_email ) ) {
-				$subject    = __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
-				$email_sent = $email_provider->send_email( $user->user_email, $subject, $message );
+				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
+				$email_sent = $email_provider->send_email( $user->user_email, $subject, $rendered_email['body'] );
 			}
 		}
 
@@ -148,7 +155,19 @@ class NotificationManager {
 		$email_admin       = 'yes' === get_option( 'snippen_email_admin_booking_enabled', 'yes' );
 		$sms_admin_enabled = 'yes' === get_option( 'snippen_sms_admin_booking_enabled', 'no' );
 
-		$email_provider = $this->get_provider( 'email' );
+		$email_provider   = $this->get_provider( 'email' );
+		$template_service = new NotificationTemplateService();
+
+		$admin_context = array(
+			'user_name'           => $booking->customer_name,
+			'user_email'          => $booking->customer_email,
+			'user_phone'          => $booking->customer_phone,
+			'booking_objects'     => $object_names,
+			'booking_date'        => $booking->booking_date,
+			'booking_description' => $booking->description,
+		);
+		$rendered_admin_email = $template_service->render_template( 'admin_booking', 'email', $admin_context );
+		$rendered_admin_sms   = $template_service->render_template( 'admin_booking', 'sms', $admin_context );
 
 		// Retrieve all admin users
 		$admin_users = get_users(
@@ -168,14 +187,8 @@ class NotificationManager {
 			error_log( sprintf( 'NotificationManager: Active admins found for email alert: %d (%s)', count( $admin_emails ), implode( ', ', $admin_emails ) ) );
 
 			if ( ! empty( $admin_emails ) ) {
-				$subject  = sprintf( __( 'Ny Bookingforespørsel - %s', 'snippen-booking' ), $object_names );
-				$message  = __( 'Ny bookingforespørsel mottatt:', 'snippen-booking' ) . "\n\n";
-				$message .= __( 'Lokale:', 'snippen-booking' ) . ' ' . $object_names . "\n";
-				$message .= __( 'Dato:', 'snippen-booking' ) . ' ' . $booking->booking_date . "\n";
-				$message .= __( 'Navn:', 'snippen-booking' ) . ' ' . $booking->customer_name . "\n";
-				$message .= __( 'Email:', 'snippen-booking' ) . ' ' . $booking->customer_email . "\n";
-				$message .= __( 'Telefon:', 'snippen-booking' ) . ' ' . $booking->customer_phone . "\n";
-				$message .= __( 'Beskrivelse:', 'snippen-booking' ) . ' ' . $booking->description . "\n";
+				$subject = ! empty( $rendered_admin_email['subject'] ) ? $rendered_admin_email['subject'] : sprintf( __( 'Ny Bookingforespørsel - %s', 'snippen-booking' ), $object_names );
+				$message = $rendered_admin_email['body'];
 
 				foreach ( $admin_emails as $admin_email ) {
 					try {
@@ -207,13 +220,7 @@ class NotificationManager {
 				error_log( sprintf( 'NotificationManager: Active admins found for SMS alert: %d (%s)', count( $admin_phones ), implode( ', ', $admin_phones ) ) );
 
 				if ( ! empty( $admin_phones ) ) {
-					$admin_sms_message = sprintf(
-						__( 'Ny bookingforespørsel mottatt for %1$s den %2$s. Kunde: %3$s (%4$s)', 'snippen-booking' ),
-						$object_names,
-						$booking->booking_date,
-						$booking->customer_name,
-						$booking->customer_phone ?: $booking->customer_email
-					);
+					$admin_sms_message = $rendered_admin_sms['body'];
 
 					foreach ( $admin_phones as $admin_phone ) {
 						try {
