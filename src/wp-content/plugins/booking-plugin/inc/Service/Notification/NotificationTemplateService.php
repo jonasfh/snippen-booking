@@ -80,11 +80,11 @@ class NotificationTemplateService {
 			'booking_confirmation' => array(
 				'sms'   => array(
 					'subject' => '',
-					'body'    => __( 'Takk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}. Betaling: Bank {{bank_account}}, Vipps {{vipps_number}} ({{booking_price}} kr). Se detaljer: {{booking_url}}', 'snippen-booking' ),
+					'body'    => __( 'Takk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}. Betaling: Bank {{bank_account}}, Vipps {{vipps_number}} ({{booking_price}} kr). {{payment_instructions}} Se detaljer: {{booking_url}}', 'snippen-booking' ),
 				),
 				'email' => array(
 					'subject' => __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' ),
-					'body'    => __( "Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nBetalingsinformasjon:\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\nBeløp: {{booking_price}} kr\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nBetalingsinformasjon:\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\nBeløp: {{booking_price}} kr\n\n{{payment_instructions}}\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				),
 			),
 			'admin_booking'        => array(
@@ -196,13 +196,14 @@ class NotificationTemplateService {
 				'confirmation_code' => __( '6-digit confirmation code', 'snippen-booking' ),
 			),
 			'booking_confirmation' => array(
-				'user_name'       => __( 'Booking customer name', 'snippen-booking' ),
-				'booking_objects' => __( 'Booked venue names', 'snippen-booking' ),
-				'booking_date'    => __( 'Booking date', 'snippen-booking' ),
-				'booking_url'     => __( 'Booking details URL', 'snippen-booking' ),
-				'booking_price'   => __( 'Booking total price', 'snippen-booking' ),
-				'bank_account'    => __( 'Payment bank account number', 'snippen-booking' ),
-				'vipps_number'    => __( 'Payment Vipps number / info', 'snippen-booking' ),
+				'user_name'            => __( 'Booking customer name', 'snippen-booking' ),
+				'booking_objects'      => __( 'Booked venue names', 'snippen-booking' ),
+				'booking_date'         => __( 'Booking date', 'snippen-booking' ),
+				'booking_url'          => __( 'Booking details URL', 'snippen-booking' ),
+				'booking_price'        => __( 'Booking total price', 'snippen-booking' ),
+				'bank_account'         => __( 'Payment bank account number', 'snippen-booking' ),
+				'vipps_number'         => __( 'Payment Vipps number / info', 'snippen-booking' ),
+				'payment_instructions' => __( 'Payment instructions / deadline text from payment settings', 'snippen-booking' ),
 			),
 			'admin_booking'        => array(
 				'user_name'           => __( 'Booking customer name', 'snippen-booking' ),
