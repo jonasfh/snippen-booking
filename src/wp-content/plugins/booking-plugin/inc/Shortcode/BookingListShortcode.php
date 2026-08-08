@@ -259,21 +259,24 @@ class BookingListShortcode {
 		$payment_status         = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
 		$bank_acc               = get_option( 'snippen_payment_bank_account', '' );
 		$vipps_no               = get_option( 'snippen_payment_vipps_number', '' );
+		$default_instructs      = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
+		$payment_instructs      = get_option( 'snippen_payment_instructions', $default_instructs );
 		$template_service       = new \SnippenBooking\Service\Notification\NotificationTemplateService();
 		$rendered_template      = $template_service->render_template(
 			'booking_confirmation',
 			'email',
 			array(
-				'bank_account'    => $bank_acc,
-				'vipps_number'    => $vipps_no,
-				'user_name'       => $booking->customer_name,
-				'booking_objects' => implode( ', ', $objs ),
-				'booking_date'    => $booking_date_formatted,
-				'booking_url'     => add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) ),
-				'booking_price'   => number_format( $booking->price, 0, ',', ' ' ),
+				'bank_account'         => $bank_acc,
+				'vipps_number'         => $vipps_no,
+				'user_name'            => $booking->customer_name,
+				'booking_objects'      => implode( ', ', $objs ),
+				'booking_date'         => $booking_date_formatted,
+				'booking_url'          => add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) ),
+				'booking_price'        => number_format( $booking->price, 0, ',', ' ' ),
+				'payment_instructions' => $payment_instructs,
 			)
 		);
-		$instructs_body         = ! empty( $rendered_template['body'] ) ? $rendered_template['body'] : get_option( 'snippen_payment_instructions', '' );
+		$instructs_body         = ! empty( $rendered_template['body'] ) ? $rendered_template['body'] : $payment_instructs;
 		?>
 		<div class="booking-compact-row" id="booking-card-<?php echo esc_attr( $booking->id ); ?>">
 			<div class="booking-compact-main">

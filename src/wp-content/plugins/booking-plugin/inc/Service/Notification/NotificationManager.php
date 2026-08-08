@@ -242,14 +242,16 @@ class NotificationManager {
 		$email_sent = false;
 
 		$template_service = new NotificationTemplateService();
+		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
 		$context          = array(
-			'user_name'       => $booking->customer_name,
-			'booking_objects' => $object_names,
-			'booking_date'    => $booking->booking_date,
-			'booking_url'     => $sms_link,
-			'booking_price'   => number_format( $booking->price, 0, ',', ' ' ),
-			'bank_account'    => get_option( 'snippen_payment_bank_account', '' ),
-			'vipps_number'    => get_option( 'snippen_payment_vipps_number', '' ),
+			'user_name'            => $booking->customer_name,
+			'booking_objects'      => $object_names,
+			'booking_date'         => $booking->booking_date,
+			'booking_url'          => $sms_link,
+			'booking_price'        => number_format( $booking->price, 0, ',', ' ' ),
+			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
+			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
+			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
 		);
 
 		$rendered_sms   = $template_service->render_template( 'booking_confirmation', 'sms', $context );

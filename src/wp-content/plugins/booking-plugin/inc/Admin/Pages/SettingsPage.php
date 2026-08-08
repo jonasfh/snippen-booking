@@ -242,10 +242,13 @@ class SettingsPage {
 		echo '<p class="description">' . esc_html__( 'Vipps-nummer eller Vipps-instruksjon for kundene.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
-		echo '<div class="snippen-form-group" style="margin-bottom:20px; background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px;">';
-		echo '<label style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Betalingsinstruksjoner / Betalingsfrist', 'snippen-booking' ) . '</label>';
-		echo '<p class="description" style="margin-bottom:10px;">' . esc_html__( 'Betalingsinstruksjoner og betalingsfrist styres nå som en egen mal under Varslingsmaler ("Betalingsinstruksjoner / Betalingsfrist"). Bankkontonummer og Vipps-nummer oppgitt her er tilgjengelige som plassholdere ({{bank_account}} og {{vipps_number}}) i malen.', 'snippen-booking' ) . '</p>';
-		echo '<a href="' . esc_url( admin_url( 'admin.php?page=snippen-booking-templates' ) ) . '" class="button button-secondary">' . esc_html__( 'Rediger mal under Varslingsmaler', 'snippen-booking' ) . '</a>';
+		$payment_instructions_default = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
+		$payment_instructions         = get_option( 'snippen_payment_instructions', $payment_instructions_default );
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_payment_instructions" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Betalingsinstruksjoner / Betalingsfrist', 'snippen-booking' ) . '</label>';
+		echo '<textarea name="snippen_payment_instructions" id="snippen_payment_instructions" class="large-text" rows="4" placeholder="' . esc_attr( $payment_instructions_default ) . '">' . esc_textarea( $payment_instructions ) . '</textarea>';
+		echo '<p class="description">' . esc_html__( 'Instruksjonstekst og betalingsfrist. Denne teksten vises ved bookingvisning for leietaker og er også tilgjengelig som plassholder ({{payment_instructions}}) i Bookingbekreftelse varslingsmalen.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';

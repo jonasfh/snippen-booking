@@ -216,7 +216,7 @@ class UserBookingsPage {
 		// Payment & Receipt upload section
 		$bank_acc  = get_option( 'snippen_payment_bank_account', '' );
 		$vipps_no  = get_option( 'snippen_payment_vipps_number', '' );
-		$instructs = get_option( 'snippen_payment_instructions', '' );
+		$instructs = get_option( 'snippen_payment_instructions', __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' ) );
 
 		echo '<div class="snippen-payment-box" style="padding:15px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; margin-top:10px;">';
 		echo '<h4 style="margin:0 0 10px 0; font-size:14px;">' . esc_html__( 'Betalingsinformasjon', 'snippen-booking' ) . '</h4>';
