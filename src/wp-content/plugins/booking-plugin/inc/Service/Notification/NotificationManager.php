@@ -229,18 +229,27 @@ class NotificationManager {
 			}
 		}
 
-		// 2. Send customer confirmation
+		// 2. Send customer confirmation using booking_confirmation NotificationTemplateService
 		$sms_link   = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
 		$sms_sent   = false;
 		$email_sent = false;
 
+		$template_service = new NotificationTemplateService();
+		$context          = array(
+			'user_name'       => $booking->customer_name,
+			'booking_objects' => $object_names,
+			'booking_date'    => $booking->booking_date,
+			'booking_url'     => $sms_link,
+			'booking_price'   => number_format( $booking->price, 0, ',', ' ' ),
+			'bank_account'    => get_option( 'snippen_payment_bank_account', '' ),
+			'vipps_number'    => get_option( 'snippen_payment_vipps_number', '' ),
+		);
+
+		$rendered_sms   = $template_service->render_template( 'booking_confirmation', 'sms', $context );
+		$rendered_email = $template_service->render_template( 'booking_confirmation', 'email', $context );
+
 		if ( $sms_enabled && ! empty( $booking->customer_phone ) ) {
-			$sms_message = sprintf(
-				__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),
-				$object_names,
-				$booking->booking_date,
-				$sms_link
-			);
+			$sms_message = $rendered_sms['body'];
 
 			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
 			$provider    = $this->get_provider( $provider_id );
@@ -259,13 +268,8 @@ class NotificationManager {
 		// Customer Email Fallback/Direct
 		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
 			if ( $email_provider instanceof EmailProviderInterface ) {
-				$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
-				$mail_message = sprintf(
-					__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
-					$object_names,
-					$booking->booking_date,
-					$sms_link
-				);
+				$subject      = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
+				$mail_message = $rendered_email['body'];
 
 				$recipient = $booking->customer_email;
 				if ( empty( $recipient ) ) {
