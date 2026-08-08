@@ -1,6 +1,6 @@
 <?php
 /**
- * Set up demo payment settings and demo bookings with payment statuses & uploaded receipt.
+ * Set up demo payment settings and enrich demo bookings with realistic payment statuses & uploaded receipt.
  */
 
 require_once __DIR__ . '/env-loader.php';
@@ -28,7 +28,7 @@ update_option( 'snippen_payment_admin_emails', 'kasserer@snippen.com, admin@exam
 update_option( 'snippen_payment_notify_admin', 'yes' );
 
 // 2. Import demo receipt image into WordPress Uploads media library
-$source_image = __DIR__ . '/../src/wp-content/plugins/booking-plugin/assets/images/betalt.png';
+$source_image  = __DIR__ . '/../src/wp-content/plugins/booking-plugin/assets/images/betalt.png';
 $attachment_id = 0;
 
 if ( file_exists( $source_image ) ) {
@@ -36,8 +36,8 @@ if ( file_exists( $source_image ) ) {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$upload_dir = wp_upload_dir();
-	$filename   = 'demo-betaling-kvittering-' . time() . '.png';
+	$upload_dir  = wp_upload_dir();
+	$filename    = 'demo-betaling-kvittering-' . time() . '.png';
 	$target_file = $upload_dir['path'] . '/' . $filename;
 
 	copy( $source_image, $target_file );
@@ -58,14 +58,60 @@ if ( file_exists( $source_image ) ) {
 	}
 }
 
-// 3. Create demo bookings with different payment statuses
-global $wpdb;
-$table_bookings = $wpdb->prefix . 'snippen_bookings';
-
 // Ensure migration has run so payment columns and statuses exist
 \SnippenBooking\Database\MigrationManager::run();
 
-$demo_bookings = array(
+global $wpdb;
+$table_bookings = $wpdb->prefix . 'snippen_bookings';
+
+// 3. Enrich existing generated bookings from composer demo:bookings
+$existing_bookings = $wpdb->get_results( "SELECT id, status FROM $table_bookings WHERE deleted_at IS NULL ORDER BY id ASC" );
+
+if ( ! empty( $existing_bookings ) ) {
+	$idx = 0;
+	foreach ( $existing_bookings as $b ) {
+		$idx++;
+		if ( $idx % 3 === 1 ) {
+			// Unpaid & pending
+			$wpdb->update(
+				$table_bookings,
+				array(
+					'status'                        => 'pending',
+					'payment_status_id'             => 1, // UNPAID
+					'payment_receipt_attachment_id' => ( $idx === 1 && $attachment_id ) ? $attachment_id : null,
+					'payment_notes'                 => ( $idx === 1 ) ? 'Kvittering sist opplastet via nettbank' : null,
+				),
+				array( 'id' => $b->id )
+			);
+		} elseif ( $idx % 3 === 2 ) {
+			// Paid & confirmed
+			$wpdb->update(
+				$table_bookings,
+				array(
+					'status'            => 'confirmed',
+					'payment_status_id' => 2, // PAID
+					'payment_notes'     => 'Innbetaling registrert via Vipps',
+				),
+				array( 'id' => $b->id )
+			);
+		} else {
+			// Exempt & confirmed
+			$wpdb->update(
+				$table_bookings,
+				array(
+					'status'            => 'confirmed',
+					'payment_status_id' => 3, // EXEMPT
+					'payment_notes'     => 'Fritatt for leie (Internt arrangement)',
+				),
+				array( 'id' => $b->id )
+			);
+		}
+	}
+	echo "Enriched " . count( $existing_bookings ) . " existing demo bookings with realistic payment statuses & receipt attachments.\n";
+}
+
+// 4. Create specific demo test cases for explicit testing
+$demo_test_bookings = array(
 	array(
 		'uuid'               => wp_generate_uuid4(),
 		'user_id'            => 1,
@@ -76,22 +122,22 @@ $demo_bookings = array(
 		'customer_phone'     => '90001001',
 		'description'        => 'Bursdagsfeiring i Festsalen',
 		'price'              => 1500.00,
-		'status'             => 'confirmed',
+		'status'             => 'pending',
 		'payment_status_id'  => 1, // UNPAID
-		'payment_notes'      => 'Betalingspåminnelse kan sendes.',
+		'payment_notes'      => 'Venter på betaling eller kvittering.',
 	),
 	array(
 		'uuid'                          => wp_generate_uuid4(),
 		'user_id'                       => 1,
 		'slot_id'                       => 1,
 		'booking_date'                  => date( 'Y-m-d', strtotime( '+3 days' ) ),
-		'customer_name'                 => 'Kari Nordmann (Venter bekreftelse)',
+		'customer_name'                 => 'Kari Nordmann (Kvittering opplastet)',
 		'customer_email'                => 'kari.nordmann@example.com',
 		'customer_phone'                => '90001002',
-		'description'                   => 'Konfirmasjon - kvittering opplastet',
+		'description'                   => 'Konfirmasjon - kvittering fra nettbank vedlagt',
 		'price'                         => 2000.00,
-		'status'                        => 'confirmed',
-		'payment_status_id'             => 2, // PENDING_VERIFICATION
+		'status'                        => 'pending',
+		'payment_status_id'             => 1, // UNPAID (with receipt attachment)
 		'payment_receipt_attachment_id' => $attachment_id,
 		'payment_notes'                 => 'Kunde har lastet opp skjermbilde fra nettbank.',
 	),
@@ -100,13 +146,13 @@ $demo_bookings = array(
 		'user_id'            => 1,
 		'slot_id'            => 1,
 		'booking_date'       => date( 'Y-m-d', strtotime( '+5 days' ) ),
-		'customer_name'      => 'Per Hansen (Betalt)',
+		'customer_name'      => 'Per Hansen (Betalt & Bekreftet)',
 		'customer_email'     => 'per.hansen@example.com',
 		'customer_phone'     => '90001003',
 		'description'        => 'Møte i Velferden',
 		'price'              => 800.00,
 		'status'             => 'confirmed',
-		'payment_status_id'  => 3, // PAID
+		'payment_status_id'  => 2, // PAID
 		'payment_notes'      => 'Betalt med Vipps ref #987654. Registrert av kasserer.',
 	),
 	array(
@@ -120,19 +166,19 @@ $demo_bookings = array(
 		'description'        => 'Årsmøte for vel veilag - Åpent arrangement',
 		'price'              => 0.00,
 		'status'             => 'confirmed',
-		'payment_status_id'  => 4, // EXEMPT
+		'payment_status_id'  => 3, // EXEMPT
 		'payment_notes'      => 'Fritatt for leie (Internt arrangement).',
 	),
 );
 
 $created_uuids = array();
-foreach ( $demo_bookings as $data ) {
+foreach ( $demo_test_bookings as $data ) {
 	$data['payment_updated_at'] = current_time( 'mysql' );
 	$data['created_at']         = current_time( 'mysql' );
 	$data['modified_at']        = current_time( 'mysql' );
 
 	$wpdb->insert( $table_bookings, $data );
-	$booking_id = $wpdb->insert_id;
+	$booking_id                                  = $wpdb->insert_id;
 	$created_uuids[ $data['payment_status_id'] ] = array(
 		'id'   => $booking_id,
 		'uuid' => $data['uuid'],
@@ -149,13 +195,11 @@ foreach ( $demo_bookings as $data ) {
 	);
 }
 
-echo "Success: Created demo payment bookings!\n\n";
+echo "Success: Configured demo payments and created demo test bookings!\n\n";
 echo "--- TEST-LENKER FOR DEMO ---\n";
 echo "1. Admin Booking-oversikt (Filtrer & Behandle betalinger):\n";
 echo "   http://localhost:8080/wp-admin/admin.php?page=snippen-booking\n\n";
 echo "2. Admin Betalingsinnstillinger:\n";
 echo "   http://localhost:8080/wp-admin/admin.php?page=snippen-booking-settings\n\n";
-echo "3. Brukervisning / Kvitteringsopplasting via UUID (Kunde: Kari - Venter bekreftelse):\n";
-echo "   http://localhost:8080/?booking_uuid=" . $created_uuids[2]['uuid'] . "\n\n";
-echo "4. Brukervisning / Kvitteringsopplasting via UUID (Kunde: Ola - Mangler betaling):\n";
+echo "3. Brukervisning / Kvitteringsopplasting via UUID (Kunde: Kari - Kvittering vedlagt):\n";
 echo "   http://localhost:8080/?booking_uuid=" . $created_uuids[1]['uuid'] . "\n\n";

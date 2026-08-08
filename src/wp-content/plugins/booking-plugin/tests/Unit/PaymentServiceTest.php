@@ -19,7 +19,6 @@ class PaymentServiceTest extends TestCase {
 
 		$slugs = array_map( function( $s ) { return $s->slug; }, $statuses );
 		$this->assertContains( 'UNPAID', $slugs );
-		$this->assertContains( 'PENDING_VERIFICATION', $slugs );
 		$this->assertContains( 'PAID', $slugs );
 		$this->assertContains( 'EXEMPT', $slugs );
 	}

@@ -108,11 +108,10 @@ class UploadPaymentReceiptApi {
 			wp_update_attachment_metadata( $attachment_id, $attach_data );
 		}
 
-		// Update booking status to PENDING_VERIFICATION (id=2)
+		// Update booking with receipt attachment ID
 		$wpdb->update(
 			$table_bookings,
 			array(
-				'payment_status_id'             => 2,
 				'payment_receipt_attachment_id' => $attachment_id,
 				'payment_updated_at'            => current_time( 'mysql' ),
 				'modified_at'                   => current_time( 'mysql' ),
@@ -126,9 +125,9 @@ class UploadPaymentReceiptApi {
 
 		wp_send_json_success(
 			array(
-				'message'        => __( 'Betalingsdokumentasjon ble lastet opp. Status er nå venter på bekreftelse.', 'snippen-booking' ),
+				'message'        => __( 'Betalingsdokumentasjon ble lastet opp.', 'snippen-booking' ),
 				'attachment_url' => wp_get_attachment_url( $attachment_id ),
-				'status_name'    => __( 'Venter på godkjenning', 'snippen-booking' ),
+				'status_name'    => __( 'Mangler betaling (dokumentasjon opplastet)', 'snippen-booking' ),
 			)
 		);
 	}

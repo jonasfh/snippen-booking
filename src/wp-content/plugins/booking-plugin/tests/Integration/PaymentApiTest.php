@@ -41,7 +41,7 @@ class PaymentApiTest extends TestCase {
 
 		$_POST['nonce']             = wp_create_nonce( 'snippen_admin_nonce' );
 		$_POST['booking_id']        = $booking_id;
-		$_POST['payment_status_id'] = 3; // PAID
+		$_POST['payment_status_id'] = 2; // PAID
 		$_POST['payment_notes']     = 'Vipps ref #987654';
 
 		try {
@@ -83,7 +83,7 @@ class PaymentApiTest extends TestCase {
 
 		$_POST['nonce']             = wp_create_nonce( 'snippen_admin_nonce' );
 		$_POST['booking_id']        = $booking_id;
-		$_POST['payment_status_id'] = 3;
+		$_POST['payment_status_id'] = 2;
 
 		$response = $this->catch_json_output( function() {
 			UpdatePaymentStatusApi::update_payment_status();
