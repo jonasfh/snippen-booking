@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.1] - 2026-08-08
+- (#188-#192) Added `Migration_2_6_1` to clean up obsolete `PENDING_VERIFICATION` payment status from `wp_snippen_payment_statuses` table and re-index canonical statuses (`UNPAID`, `PAID`, `EXEMPT`).
+- (#188-#192) Automatically confirm pending bookings when admin registers payment status as `PAID` or `EXEMPT`.
+- (#188-#192) Isolate receipt uploads into unguessable directory structure `wp-content/uploads/userdata/booking_uuid_<uuid>/`.
+
 ## [2.6.0] - 2026-08-08
 - (#188) Added database table `wp_snippen_payment_statuses` (`UNPAID`, `PENDING_VERIFICATION`, `PAID`, `EXEMPT`) with `is_settled` status tracking, and updated bookings schema for payment receipts and notes (`Migration_2_6_0`).
 - (#189) Added admin payment settings tab for configuring bank account, Vipps instructions, payment terms, and admin email notification settings.
