@@ -102,7 +102,6 @@ class BookingsPage {
 		echo '<select name="payment_status" onchange="this.form.submit()">';
 		echo '<option value="">' . esc_html__( 'Alle betalingsstatuser', 'snippen-booking' ) . '</option>';
 		echo '<option value="unpaid" ' . selected( $payment_status, 'unpaid', false ) . '>' . esc_html__( 'Mangler betaling', 'snippen-booking' ) . '</option>';
-		echo '<option value="pending" ' . selected( $payment_status, 'pending', false ) . '>' . esc_html__( 'Venter bekreftelse', 'snippen-booking' ) . '</option>';
 		echo '<option value="paid" ' . selected( $payment_status, 'paid', false ) . '>' . esc_html__( 'Betalt', 'snippen-booking' ) . '</option>';
 		echo '<option value="exempt" ' . selected( $payment_status, 'exempt', false ) . '>' . esc_html__( 'Fritatt / Gratis', 'snippen-booking' ) . '</option>';
 		echo '<option value="unsettled" ' . selected( $payment_status, 'unsettled', false ) . '>' . esc_html__( 'Utestående betalinger', 'snippen-booking' ) . '</option>';
@@ -301,6 +300,12 @@ class BookingsPage {
 		
 		echo '<td data-label="' . esc_attr__( 'Betaling', 'snippen-booking' ) . '">';
 		echo '<span class="snippen-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
+		if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
+			$receipt_url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
+			if ( $receipt_url ) {
+				echo '<br><a href="' . esc_url( $receipt_url ) . '" target="_blank" style="font-size:11px; text-decoration:none; color:#0284c7; margin-top:3px; display:inline-block;" title="' . esc_attr__( 'Vis kvittering', 'snippen-booking' ) . '"><span class="dashicons dashicons-paperclip" style="font-size:13px; width:13px; height:13px; line-height:13px; vertical-align:middle;"></span> ' . esc_html__( 'Kvittering', 'snippen-booking' ) . '</a>';
+			}
+		}
 		echo '</td>';
 
 		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';

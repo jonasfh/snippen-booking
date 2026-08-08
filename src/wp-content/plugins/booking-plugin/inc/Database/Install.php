@@ -161,9 +161,8 @@ class Install {
 
 		$default_statuses = array(
 			array( 'id' => 1, 'slug' => 'UNPAID', 'name' => 'Mangler betaling', 'is_settled' => 0 ),
-			array( 'id' => 2, 'slug' => 'PENDING_VERIFICATION', 'name' => 'Venter på godkjenning', 'is_settled' => 0 ),
-			array( 'id' => 3, 'slug' => 'PAID', 'name' => 'Betalt', 'is_settled' => 1 ),
-			array( 'id' => 4, 'slug' => 'EXEMPT', 'name' => 'Fritatt / Gratis', 'is_settled' => 1 ),
+			array( 'id' => 2, 'slug' => 'PAID', 'name' => 'Betalt', 'is_settled' => 1 ),
+			array( 'id' => 3, 'slug' => 'EXEMPT', 'name' => 'Fritatt / Gratis', 'is_settled' => 1 ),
 		);
 		foreach ( $default_statuses as $st ) {
 			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table_payment_statuses WHERE slug = %s", $st['slug'] ) );

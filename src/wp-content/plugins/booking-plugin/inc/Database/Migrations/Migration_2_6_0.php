@@ -38,18 +38,12 @@ class Migration_2_6_0 {
 			),
 			array(
 				'id'         => 2,
-				'slug'       => 'PENDING_VERIFICATION',
-				'name'       => 'Venter på godkjenning',
-				'is_settled' => 0,
-			),
-			array(
-				'id'         => 3,
 				'slug'       => 'PAID',
 				'name'       => 'Betalt',
 				'is_settled' => 1,
 			),
 			array(
-				'id'         => 4,
+				'id'         => 3,
 				'slug'       => 'EXEMPT',
 				'name'       => 'Fritatt / Gratis',
 				'is_settled' => 1,
@@ -60,8 +54,13 @@ class Migration_2_6_0 {
 			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table_payment_statuses WHERE slug = %s", $st['slug'] ) );
 			if ( ! $exists ) {
 				$wpdb->insert( $table_payment_statuses, $st );
+			} else {
+				$wpdb->update( $table_payment_statuses, $st, array( 'slug' => $st['slug'] ) );
 			}
 		}
+
+		// Delete obsolete PENDING_VERIFICATION status if present
+		$wpdb->delete( $table_payment_statuses, array( 'slug' => 'PENDING_VERIFICATION' ) );
 
 		// Add payment columns to bookings table
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
