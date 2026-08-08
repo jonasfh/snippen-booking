@@ -54,9 +54,9 @@ Granular SMS settings are available in the WordPress admin dashboard under **Set
 If an SMS notification is disabled, the system will automatically fall back to sending that notification via email to ensure that confirmation codes and booking details are still delivered to the user.
 
 ### Notification Templates (Varslingsmaler)
-You can configure custom templates for SMS and Email notifications (such as booking confirmations, account confirmations, and admin alerts).
+You can configure custom templates for SMS and Email notifications (such as booking confirmations, account confirmations, admin alerts, and payment instructions/deadlines).
 Navigate to **Snippen Booking > Varslingsmaler** in the WordPress Admin dashboard.
-Here you can edit the text and subject lines. You can use dynamic placeholders (e.g. `{{user_name}}`, `{{booking_date}}`, `{{confirmation_code}}`) to personalize the messages. Default templates are provided out of the box, and you can easily revert to them at any time.
+Here you can edit the text and subject lines. You can use dynamic placeholders (e.g. `{{user_name}}`, `{{booking_date}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{booking_price}}`) to personalize the messages. Default templates are provided out of the box, and you can easily revert to them at any time.
 
 ### Door Codes
 Booking objects (venues) can be configured with a door code in the WordPress Admin dashboard under **Snippen Booking > Lokaler**.

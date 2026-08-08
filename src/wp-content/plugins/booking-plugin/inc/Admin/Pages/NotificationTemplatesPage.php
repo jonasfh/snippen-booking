@@ -125,6 +125,7 @@ class NotificationTemplatesPage {
 			'booking_confirmation' => __( 'Booking Confirmation', 'snippen-booking' ),
 			'admin_booking'        => __( 'Admin Booking Alert', 'snippen-booking' ),
 			'password_reset'       => __( 'Password Reset (SMS / Email)', 'snippen-booking' ),
+			'payment_instructions' => __( 'Betalingsinstruksjoner / Betalingsfrist', 'snippen-booking' ),
 		);
 
 		foreach ( $event_names as $event_type => $event_label ) {
