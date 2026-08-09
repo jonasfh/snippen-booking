@@ -180,7 +180,38 @@
                 entity_type: entityType,
                 is_active: isChecked
             }, function(response) {
-                if (!response.success) {
+                if (response.success) {
+                    if (entityType === 'time_slot') {
+                        // Dynamically update the corresponding row in the weekly preview matrix if present
+                        const $row = $checkbox.closest('tr');
+                        const $weeklyTable = $('.wp-list-table');
+                        if ($weeklyTable.length && $row.length) {
+                            const rowIndex = $row.index();
+                            const $weeklyRow = $weeklyTable.find('tbody tr').eq(rowIndex);
+                            if ($weeklyRow.length) {
+                                if (isChecked) {
+                                    $weeklyRow.css({'opacity': '1', 'background-color': ''});
+                                    $weeklyRow.find('.snippen-badge').remove();
+                                    $weeklyRow.find('td').each(function() {
+                                        if ($(this).text().trim() === '✓') {
+                                            $(this).css('color', '#46b450');
+                                        }
+                                    });
+                                } else {
+                                    $weeklyRow.css({'opacity': '0.55', 'background-color': '#f8fafc'});
+                                    if (!$weeklyRow.find('.snippen-badge').length) {
+                                        $weeklyRow.find('td').first().find('strong').after(' <span class="snippen-badge snippen-status-cancelled" style="font-size:10px; padding:2px 6px; margin-left:4px;">Deaktivert</span>');
+                                    }
+                                    $weeklyRow.find('td').each(function() {
+                                        if ($(this).text().trim() === '✓') {
+                                            $(this).css('color', '#94a3b8');
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                } else {
                     alert(response.data.message || snippenAdmin.strings.error);
                     $checkbox.prop('checked', !isChecked);
                 }

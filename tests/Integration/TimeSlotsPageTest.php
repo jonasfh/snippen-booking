@@ -59,7 +59,7 @@ class TimeSlotsPageTest extends TestCase {
         $output = ob_get_clean();
 
         // 4. Assertions
-        $this->assertStringContainsString( 'Tilknyttet pris', $output );
+        $this->assertStringContainsString( 'Associated price', $output );
         $this->assertStringContainsString( 'Test Prisregel X', $output );
         $this->assertStringContainsString( '1 500 kr', $output );
         $this->assertStringContainsString( 'page=snippen-booking-pricing', $output );
