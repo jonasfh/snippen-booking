@@ -41,12 +41,12 @@ jQuery(document).ready(function ($) {
                 $content.slideUp(150);
                 $btn.attr('aria-expanded', 'false');
                 $drawer.removeClass('open');
-                $icon.text('v');
+                $icon.text('▾');
             } else {
                 $content.slideDown(150);
                 $btn.attr('aria-expanded', 'true');
                 $drawer.addClass('open');
-                $icon.text('^');
+                $icon.text('▴');
             }
         });
 

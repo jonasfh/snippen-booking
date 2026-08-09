@@ -86,7 +86,7 @@ class BookingShortcode {
 										class="object-drawer-toggle" 
 										aria-expanded="false">
 										<span class="drawer-title"><?php echo esc_html( $obj->name ); ?></span>
-										<span class="drawer-icon" aria-hidden="true">v</span>
+										<span class="drawer-icon" aria-hidden="true">▾</span>
 									</button>
 									<div class="object-drawer-content" style="display: none;">
 										<?php if ( ! empty( $obj->description ) ) : ?>
