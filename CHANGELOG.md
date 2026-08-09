@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.8.3] - 2026-08-09
+- (#202) Fixed missing time range (`Tidsrom:`) in admin bookings list when using booking blocks.
+
 ## [2.8.2] - 2026-08-09
 - (#108) Added `composer test:fast` script for fast unit testing, optimized `TestCase.php` to skip DB operations for non-DB unit tests, enabled PHPUnit result caching, and updated developer documentation.
 

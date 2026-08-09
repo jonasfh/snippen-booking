@@ -134,19 +134,23 @@ class BookingsPage {
 		echo '</form></div>';
 	}
 
-	/**
-	 * Render bookings list
-	 */
 	private function render_list( $status = '', $payment_status = '', $obj_id = 0, $s = '', $orderby = 'booking_date', $order = 'ASC', $show_all = false, $door_code_filter = '' ) {
 		global $wpdb;
 		$table_bookings         = $wpdb->prefix . 'snippen_bookings';
 		$table_slots            = $wpdb->prefix . 'snippen_time_slots';
 		$table_junction         = $wpdb->prefix . 'snippen_bookings_booking_objects';
 		$table_payment_statuses = $wpdb->prefix . 'snippen_payment_statuses';
+		$table_booking_blocks   = $wpdb->prefix . 'snippen_booking_booking_blocks';
+		$table_blocks           = $wpdb->prefix . 'snippen_booking_blocks';
 
-		$query = "SELECT b.*, s.name as slot_name, s.start_time, s.end_time, ps.slug as payment_slug, ps.name as payment_name, ps.is_settled as payment_is_settled
+		$query = "SELECT b.*, s.name as slot_name, 
+                         COALESCE(MIN(bb.start_time), s.start_time) as start_time, 
+                         COALESCE(MAX(bb.end_time), s.end_time) as end_time, 
+                         ps.slug as payment_slug, ps.name as payment_name, ps.is_settled as payment_is_settled
                   FROM $table_bookings b 
                   LEFT JOIN $table_slots s ON b.slot_id = s.id 
+                  LEFT JOIN $table_booking_blocks bbb ON b.id = bbb.booking_id
+                  LEFT JOIN $table_blocks bb ON bbb.booking_block_id = bb.id
                   LEFT JOIN $table_payment_statuses ps ON b.payment_status_id = ps.id
                   WHERE b.deleted_at IS NULL";
 
@@ -192,6 +196,8 @@ class BookingsPage {
 		if ( $door_code_filter === 'missing' ) {
 			$query .= " AND (b.door_code IS NULL OR b.door_code = '')";
 		}
+
+		$query .= ' GROUP BY b.id';
 
 		$allowed_orderby = array( 'booking_date', 'customer_name', 'price', 'status', 'created_at' );
 		if ( ! in_array( $orderby, $allowed_orderby ) ) {
