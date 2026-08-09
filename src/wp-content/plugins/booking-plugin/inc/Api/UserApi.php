@@ -160,7 +160,7 @@ class UserApi {
 			wp_send_json_error( array( 'message' => __( 'Sikkerhetssjekk feilet (ugyldig nonce). Vennligst laste siden på nytt.', 'snippen-booking' ) ) );
 		}
 
-		$log         = isset( $_POST['log'] ) ? sanitize_text_field( wp_unslash( $_POST['log'] ) ) : '';
+		$log = isset( $_POST['log'] ) ? sanitize_text_field( wp_unslash( $_POST['log'] ) ) : '';
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotUnslashed
 		$pwd         = isset( $_POST['pwd'] ) ? $_POST['pwd'] : '';
 		$rememberme  = isset( $_POST['rememberme'] ) && 'forever' === $_POST['rememberme'];
@@ -170,18 +170,17 @@ class UserApi {
 			wp_send_json_error( array( 'message' => __( 'Vennligst oppgi brukernavn/e-post/telefonnummer og passord.', 'snippen-booking' ) ) );
 		}
 
-		$credentials = array(
-			'user_login'    => $log,
-			'user_password' => $pwd,
-			'remember'      => $rememberme,
-		);
-
-		$user = wp_signon( $credentials, is_ssl() );
+		$user = wp_authenticate( $log, $pwd );
 
 		if ( is_wp_error( $user ) ) {
 			$error_message = wp_strip_all_tags( $user->get_error_message() );
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
+
+		wp_set_current_user( $user->ID, $user->user_login );
+		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		@wp_set_auth_cookie( $user->ID, $rememberme );
+		do_action( 'wp_login', $user->user_login, $user );
 
 		wp_send_json_success(
 			array(
