@@ -55,11 +55,14 @@ The plugin includes a comprehensive test suite covering both unit and integratio
 Use composer to run the tests from the container terminal:
 
 ```bash
-# Run all tests (unit + integration)
+# Run all tests (Unit + Integration - full suite run in CI/CD)
 composer test
 
-# Run only unit tests
+# Run only unit tests (fast local feedback)
 composer test:unit
+
+# Run fast unit tests (stops on first failure)
+composer test:fast
 
 # Run only integration tests
 composer test:integration
@@ -68,8 +71,10 @@ composer test:integration
 npm run test:js
 ```
 
-#### CI/CD
-Tests are automatically run on GitHub Actions for every push and pull request to the repository.
+#### Local Development vs. CI/CD Strategy
+- **Local Development**: Use `composer test:unit` or `composer test:fast` during active code changes for near-instant execution (~0.6 seconds).
+- **Pre-commit / Pre-PR**: Run `composer test` locally to verify the entire test suite (Unit + Integration) before pushing.
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/phpunit.yml`) executes the full test suite (`composer test`) and JS tests (`npm run test:js`) automatically on every push and pull request.
 
 ### Development Tools
 
