@@ -260,8 +260,12 @@ class BookingBlocksPage {
 		$days_cols = array( 1, 2, 3, 4, 5, 6, 0, 7 );
 
 		foreach ( $blocks as $block ) {
-			echo '<tr>';
-			echo '<td><strong>' . esc_html( $block->name ) . '</strong><br><small>' . esc_html( substr( $block->start_time, 0, 5 ) . '-' . substr( $block->end_time, 0, 5 ) ) . '</small></td>';
+			$is_active  = ! isset( $block->is_active ) || (int) $block->is_active === 1;
+			$row_style  = $is_active ? '' : ' style="opacity: 0.55; background-color: #f8fafc;"';
+			$status_tag = $is_active ? '' : ' <span class="snippen-badge snippen-status-cancelled" style="font-size:10px; padding:2px 6px; margin-left:4px;">' . esc_html__( 'Deaktivert', 'snippen-booking' ) . '</span>';
+
+			echo '<tr' . $row_style . '>';
+			echo '<td><strong>' . esc_html( $block->name ) . '</strong>' . $status_tag . '<br><small>' . esc_html( substr( $block->start_time, 0, 5 ) . '-' . substr( $block->end_time, 0, 5 ) ) . '</small></td>';
 
 			$block_days = $block->days_of_week !== null && $block->days_of_week !== ''
 				? explode( ',', $block->days_of_week )
@@ -269,7 +273,8 @@ class BookingBlocksPage {
 
 			foreach ( $days_cols as $day ) {
 				if ( in_array( (string) $day, $block_days, true ) ) {
-					echo '<td style="text-align:center; color: #46b450; font-weight:bold;">✓</td>';
+					$check_color = $is_active ? '#46b450' : '#94a3b8';
+					echo '<td style="text-align:center; color: ' . $check_color . '; font-weight:bold;">✓</td>';
 				} else {
 					echo '<td></td>';
 				}
