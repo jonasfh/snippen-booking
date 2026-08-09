@@ -29,30 +29,24 @@ jQuery(document).ready(function ($) {
 
         renderCalendar();
 
-        // Object selector button click (when multiple objects exist)
-        $(document).on('click', '.object-selector-btn', function () {
+        // Object drawer toggle click (when multiple objects exist)
+        $(document).on('click', '.object-drawer-toggle', function () {
             var $btn = $(this);
-            var name = $btn.data('object-name');
-            var description = $btn.data('object-description');
-            var infoLink = $btn.data('info-link');
+            var $drawer = $btn.closest('.object-drawer');
+            var $content = $drawer.find('.object-drawer-content');
+            var $icon = $btn.find('.drawer-icon');
+            var isExpanded = $btn.attr('aria-expanded') === 'true';
 
-            $('.object-selector-btn').removeClass('active');
-            $btn.addClass('active');
-
-            $('.selected-object-title').text(name || '');
-
-            var $descEl = $('.selected-object-desc');
-            if (description) {
-                $descEl.text(description).show();
+            if (isExpanded) {
+                $content.slideUp(150);
+                $btn.attr('aria-expanded', 'false');
+                $drawer.removeClass('open');
+                $icon.text('v');
             } else {
-                $descEl.hide();
-            }
-
-            var $infoLinkEl = $('.selected-object-infolink');
-            if (infoLink) {
-                $infoLinkEl.attr('href', infoLink).show();
-            } else {
-                $infoLinkEl.hide();
+                $content.slideDown(150);
+                $btn.attr('aria-expanded', 'true');
+                $drawer.addClass('open');
+                $icon.text('^');
             }
         });
 

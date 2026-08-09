@@ -43,32 +43,62 @@
     color: var(--text-muted);
 }
 
-.object-buttons-list {
+.object-drawers-list {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
 }
 
-.object-selector-btn {
-    padding: 6px 14px;
+.object-drawer {
     border: 1px solid var(--border-color);
-    background: transparent;
-    color: inherit;
     border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    overflow: hidden;
+    background: transparent;
+    transition: border-color 0.15s ease;
 }
 
-.object-selector-btn:hover {
+.object-drawer:hover {
     border-color: var(--primary-color);
+}
+
+.object-drawer-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.object-drawer-toggle:hover {
     background: var(--bg-light);
 }
 
-.object-selector-btn.active {
-    background: var(--primary-color);
-    color: #ffffff;
-    border-color: var(--primary-color);
+.object-drawer-toggle .drawer-icon {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    transition: transform 0.15s ease;
+}
+
+.object-drawer-content {
+    padding: 0 14px 12px 14px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-light);
+}
+
+.object-drawer-content .object-summary {
+    margin: 10px 0 6px 0;
+}
+
+.object-drawer-content .object-infolink-wrapper {
+    margin: 4px 0 0 0;
 }
 
 .facility-selector {
