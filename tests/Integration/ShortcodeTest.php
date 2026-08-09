@@ -58,9 +58,9 @@ class ShortcodeTest extends TestCase {
     }
 
     /**
-     * Test rendering multiple objects shows object selector buttons
+     * Test rendering multiple objects shows object drawers
      */
-    public function test_multiple_objects_renders_selector_buttons() {
+    public function test_multiple_objects_renders_drawers() {
         global $wpdb;
         $table = $wpdb->prefix . 'snippen_booking_objects';
 
@@ -73,7 +73,8 @@ class ShortcodeTest extends TestCase {
         $output = do_shortcode( '[snippen_booking object_id="' . $id1 . ',' . $id2 . '"]' );
 
         $this->assertStringContainsString( 'Objekter tilgjengelige for booking i denne kalenderen:', $output );
-        $this->assertStringContainsString( 'class="object-selector-btn active"', $output );
+        $this->assertStringContainsString( 'class="object-drawers-list"', $output );
+        $this->assertStringContainsString( 'class="object-drawer-toggle"', $output );
         $this->assertStringContainsString( 'Peisestuen', $output );
         $this->assertStringContainsString( 'Festsalen', $output );
     }
