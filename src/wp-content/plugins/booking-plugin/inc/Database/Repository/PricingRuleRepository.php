@@ -34,20 +34,20 @@ class PricingRuleRepository {
 	public function find_all( $include_inactive = false ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_pricing_rules';
-		
+
 		$query = "SELECT * FROM $table WHERE deleted_at IS NULL";
 		if ( ! $include_inactive ) {
-			$query .= " AND is_active = 1";
+			$query .= ' AND is_active = 1';
 		}
-		$query .= " ORDER BY priority DESC, name ASC";
-		
+		$query .= ' ORDER BY priority DESC, name ASC';
+
 		return $wpdb->get_results( $query );
 	}
 
 	/**
 	 * Save a pricing rule (insert or update).
 	 *
-	 * @param array $data
+	 * @param array    $data
 	 * @param int|null $id
 	 * @return int|false The ID of the rule, or false on failure.
 	 */
@@ -75,11 +75,11 @@ class PricingRuleRepository {
 	 */
 	public function delete( $id ) {
 		global $wpdb;
-		$table = $wpdb->prefix . 'snippen_pricing_rules';
-		$result = $wpdb->update( 
-			$table, 
-			array( 'deleted_at' => current_time( 'mysql' ) ), 
-			array( 'id' => $id ) 
+		$table  = $wpdb->prefix . 'snippen_pricing_rules';
+		$result = $wpdb->update(
+			$table,
+			array( 'deleted_at' => current_time( 'mysql' ) ),
+			array( 'id' => $id )
 		);
 		return $result !== false;
 	}
@@ -87,21 +87,21 @@ class PricingRuleRepository {
 	/**
 	 * Sync booking objects for a pricing rule.
 	 *
-	 * @param int $rule_id
+	 * @param int   $rule_id
 	 * @param array $object_ids
 	 * @return void
 	 */
 	public function sync_booking_objects( $rule_id, array $object_ids ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
-		
+
 		$wpdb->delete( $table, array( 'pricing_rule_id' => $rule_id ) );
-		
+
 		foreach ( $object_ids as $object_id ) {
 			$wpdb->insert(
 				$table,
 				array(
-					'pricing_rule_id' => $rule_id,
+					'pricing_rule_id'   => $rule_id,
 					'booking_object_id' => (int) $object_id,
 				)
 			);
@@ -111,21 +111,21 @@ class PricingRuleRepository {
 	/**
 	 * Sync booking blocks for a pricing rule.
 	 *
-	 * @param int $rule_id
+	 * @param int   $rule_id
 	 * @param array $block_ids
 	 * @return void
 	 */
 	public function sync_booking_blocks( $rule_id, array $block_ids ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_pricing_rule_booking_blocks';
-		
+
 		$wpdb->delete( $table, array( 'pricing_rule_id' => $rule_id ) );
-		
+
 		foreach ( $block_ids as $block_id ) {
 			$wpdb->insert(
 				$table,
 				array(
-					'pricing_rule_id' => $rule_id,
+					'pricing_rule_id'  => $rule_id,
 					'booking_block_id' => (int) $block_id,
 				)
 			);
@@ -206,20 +206,20 @@ class PricingRuleRepository {
 	 * 6. From matching rules, select the one with highest priority.
 	 *
 	 * @param string $date YYYY-MM-DD
-	 * @param int $object_id
-	 * @param int $block_id
+	 * @param int    $object_id
+	 * @param int    $block_id
 	 * @return object|null The matching rule object, or null if none found
 	 */
 	public function find_matching_rule( $date, $object_id, $block_id ) {
 		$applicable_rules = $this->find_applicable_rules( array( $object_id ), array( $block_id ) );
-		
+
 		if ( empty( $applicable_rules ) ) {
 			return null;
 		}
 
-		$timestamp = strtotime( $date );
+		$timestamp   = strtotime( $date );
 		$day_of_week = (int) date( 'N', $timestamp ); // 1 (Mon) to 7 (Sun)
-		
+
 		// In a real scenario, we might have a service checking for holidays.
 		// For simplicity, we assume we might check a holiday API, but let's
 		// assume no holidays for now, unless passed from outside.

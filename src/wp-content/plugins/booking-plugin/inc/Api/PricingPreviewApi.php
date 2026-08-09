@@ -43,13 +43,13 @@ class PricingPreviewApi {
 		$rule       = $repository->find_matching_rule( $date, $object_id, $block_id );
 
 		if ( $rule ) {
-			$base_price = floatval( $rule->price );
+			$base_price       = floatval( $rule->price );
 			$discount_service = new DiscountService();
-			$discount_info = $discount_service->applyDiscount( $base_price, array( $object_id ), array( $block_id ), $date );
+			$discount_info    = $discount_service->applyDiscount( $base_price, array( $object_id ), array( $block_id ), $date );
 
-			$final_price = $discount_info['final_price'];
+			$final_price     = $discount_info['final_price'];
 			$discount_amount = $discount_info['discount_amount'];
-			$discount_name = '';
+			$discount_name   = '';
 			if ( $discount_info['discount_rule'] ) {
 				$discount_name = $discount_info['discount_rule']->name;
 				if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {

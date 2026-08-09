@@ -126,6 +126,6 @@ class TimeSlotsPageTest extends TestCase {
         $method->invoke( $page, '' );
         $output = ob_get_clean();
 
-        $this->assertStringContainsString( '<td colspan="7">', $output );
+        $this->assertStringContainsString( '<td colspan="8">', $output );
     }
 }

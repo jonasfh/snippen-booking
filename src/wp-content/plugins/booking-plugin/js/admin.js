@@ -162,6 +162,35 @@
                 $btn.prop('disabled', false);
             });
         });
+
+        // AJAX Toggle Status (Time Slots, Pricing Rules, Discount Rules)
+        $(document).on('change', '.snippen-toggle-status', function(e) {
+            const $checkbox = $(this);
+            const id = $checkbox.data('id');
+            const entityType = $checkbox.data('entity-type');
+            const isChecked = $checkbox.is(':checked') ? 1 : 0;
+            const $container = $checkbox.closest('.snippen-switch');
+
+            $checkbox.prop('disabled', true);
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_toggle_entity_status',
+                nonce: snippenAdmin.nonce,
+                id: id,
+                entity_type: entityType,
+                is_active: isChecked
+            }, function(response) {
+                if (!response.success) {
+                    alert(response.data.message || snippenAdmin.strings.error);
+                    $checkbox.prop('checked', !isChecked);
+                }
+            }).fail(function() {
+                alert(snippenAdmin.strings.error);
+                $checkbox.prop('checked', !isChecked);
+            }).always(function() {
+                $checkbox.prop('disabled', false);
+            });
+        });
     });
 
 })(jQuery);

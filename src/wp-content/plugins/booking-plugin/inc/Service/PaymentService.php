@@ -16,13 +16,28 @@ class PaymentService {
 	 */
 	public static function get_statuses() {
 		global $wpdb;
-		$table = $wpdb->prefix . 'snippen_payment_statuses';
+		$table   = $wpdb->prefix . 'snippen_payment_statuses';
 		$results = $wpdb->get_results( "SELECT * FROM $table ORDER BY id ASC" );
 		if ( empty( $results ) ) {
 			return array(
-				(object) array( 'id' => 1, 'slug' => 'UNPAID', 'name' => 'Mangler betaling', 'is_settled' => 0 ),
-				(object) array( 'id' => 2, 'slug' => 'PAID', 'name' => 'Betalt', 'is_settled' => 1 ),
-				(object) array( 'id' => 3, 'slug' => 'EXEMPT', 'name' => 'Fritatt / Gratis', 'is_settled' => 1 ),
+				(object) array(
+					'id'         => 1,
+					'slug'       => 'UNPAID',
+					'name'       => 'Mangler betaling',
+					'is_settled' => 0,
+				),
+				(object) array(
+					'id'         => 2,
+					'slug'       => 'PAID',
+					'name'       => 'Betalt',
+					'is_settled' => 1,
+				),
+				(object) array(
+					'id'         => 3,
+					'slug'       => 'EXEMPT',
+					'name'       => 'Fritatt / Gratis',
+					'is_settled' => 1,
+				),
 			);
 		}
 		return $results;
@@ -101,13 +116,13 @@ class PaymentService {
 		}
 
 		$site_name = get_bloginfo( 'name' );
-		$subject   = sprintf( __( '[%s] Ny betalingskvittering lastet opp - Booking #%d', 'snippen-booking' ), $site_name, $booking->id );
+		$subject   = sprintf( __( '[%1$s] Ny betalingskvittering lastet opp - Booking #%2$d', 'snippen-booking' ), $site_name, $booking->id );
 
 		$admin_url = admin_url( 'admin.php?page=snippen-booking&s=' . rawurlencode( $booking->customer_name ) );
 
 		$message  = sprintf( __( "Det har blitt lastet opp ny betalingsdokumentasjon for en booking.\n\n", 'snippen-booking' ) );
 		$message .= sprintf( __( "Booking-ID: #%d\n", 'snippen-booking' ), $booking->id );
-		$message .= sprintf( __( "Kunde: %s (%s)\n", 'snippen-booking' ), $booking->customer_name, $booking->customer_email );
+		$message .= sprintf( __( "Kunde: %1\$s (%2\$s)\n", 'snippen-booking' ), $booking->customer_name, $booking->customer_email );
 		$message .= sprintf( __( "Dato: %s\n", 'snippen-booking' ), $booking->booking_date );
 		$message .= sprintf( __( "Beløp: %s kr\n\n", 'snippen-booking' ), number_format( $booking->price, 0, ',', ' ' ) );
 		$message .= sprintf( __( "Se og behandle betalingen i admin-panelet:\n%s\n", 'snippen-booking' ), $admin_url );

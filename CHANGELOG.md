@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.10.0] - 2026-08-09
+- (#206) Added `isActive` (`is_active`) state and inline AJAX toggle switch to Time Slots, Discount Rules, and Pricing Rules in admin list views.
+- (#206) Updated time slot overlap validation so that deactivated time slots do not trigger overlap errors, allowing overlapping time slots as long as no more than 1 of them is active.
+
 ## [2.9.0] - 2026-08-09
 - (#204) Added `booking_snapshot` JSON column to `wp_snippen_bookings` and migration `Migration_2_9_0` to freeze booking details (times, objects, blocks) and prevent double bookings when block configurations change.
 

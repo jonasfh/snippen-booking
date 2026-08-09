@@ -63,9 +63,9 @@ class Migration_2_9_0 {
 				)
 			);
 
-			$blocks     = array();
-			$min_start  = null;
-			$max_end    = null;
+			$blocks    = array();
+			$min_start = null;
+			$max_end   = null;
 
 			foreach ( $block_rows as $b ) {
 				$blocks[] = array(

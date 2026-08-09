@@ -74,7 +74,7 @@ class AvailabilityApi {
 			$bookings_by_object[ $obj_id ] = $booking_repository->find_by_object_and_date_range( $obj_id, $start_date, $end_date );
 		}
 
-		$days = array();
+		$days    = array();
 		$current = new \DateTime( $start_date );
 		$last    = new \DateTime( $end_date );
 
@@ -109,7 +109,7 @@ class AvailabilityApi {
 
 				foreach ( $object_ids as $obj_id ) {
 					if ( $availability_service->isBlockAvailable( $obj_id, $date_str, $block->id ) ) {
-						$available_capacity++;
+						++$available_capacity;
 					} else {
 						// Fetch object name
 						$obj_name = $wpdb->get_var( $wpdb->prepare( "SELECT name FROM {$wpdb->prefix}snippen_booking_objects WHERE id = %d", $obj_id ) );
@@ -127,9 +127,15 @@ class AvailabilityApi {
 										'customer_email' => $booking->customer_email,
 										'customer_phone' => $booking->customer_phone,
 										'description'    => $booking->description,
-										'object_names'   => implode( ', ', array_map( function($id) use ($wpdb) {
-											return $wpdb->get_var( $wpdb->prepare( "SELECT name FROM {$wpdb->prefix}snippen_booking_objects WHERE id = %d", $id ) );
-										}, $booking->booking_object_ids ) ),
+										'object_names'   => implode(
+											', ',
+											array_map(
+												function ( $id ) use ( $wpdb ) {
+													return $wpdb->get_var( $wpdb->prepare( "SELECT name FROM {$wpdb->prefix}snippen_booking_objects WHERE id = %d", $id ) );
+												},
+												$booking->booking_object_ids
+											)
+										),
 										'start_time'     => $block->start_time,
 										'end_time'       => $block->end_time,
 										'slot_name'      => $block->name,
@@ -143,7 +149,7 @@ class AvailabilityApi {
 
 				$is_available = $available_capacity > 0;
 
-				$base_price = $pricing_service->getPrice( $object_ids, array( $block->id ), $date_str );
+				$base_price    = $pricing_service->getPrice( $object_ids, array( $block->id ), $date_str );
 				$discount_info = $discount_service->applyDiscount( $base_price, $object_ids, array( $block->id ), $date_str );
 
 				$day_blocks[] = array(
@@ -252,17 +258,17 @@ class AvailabilityApi {
 			);
 		}
 
-		$base_price = 0;
-		$final_price = 0;
+		$base_price      = 0;
+		$final_price     = 0;
 		$discount_amount = 0;
-		$discount_name = null;
+		$discount_name   = null;
 
 		if ( ! empty( $selected_object_ids ) ) {
-			$base_price = $pricing_service->getPrice( $selected_object_ids, $block_ids, $event_date );
+			$base_price       = $pricing_service->getPrice( $selected_object_ids, $block_ids, $event_date );
 			$discount_service = new DiscountService();
-			$discount_info = $discount_service->applyDiscount( $base_price, $selected_object_ids, $block_ids, $event_date );
-			$final_price = $discount_info['final_price'];
-			$discount_amount = $discount_info['discount_amount'];
+			$discount_info    = $discount_service->applyDiscount( $base_price, $selected_object_ids, $block_ids, $event_date );
+			$final_price      = $discount_info['final_price'];
+			$discount_amount  = $discount_info['discount_amount'];
 			if ( $discount_info['discount_rule'] ) {
 				$discount_name = $discount_info['discount_rule']->name;
 				if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {
@@ -273,11 +279,11 @@ class AvailabilityApi {
 
 		wp_send_json_success(
 			array(
-				'objects' => $objects_data,
-				'price'   => $final_price,
-				'base_price' => $base_price,
+				'objects'         => $objects_data,
+				'price'           => $final_price,
+				'base_price'      => $base_price,
 				'discount_amount' => $discount_amount,
-				'discount_name' => $discount_name,
+				'discount_name'   => $discount_name,
 			)
 		);
 	}

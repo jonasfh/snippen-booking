@@ -105,21 +105,21 @@ class PricingPage {
 			return;
 		}
 
-		$id             = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name           = sanitize_text_field( $_POST['name'] );
-		$description    = sanitize_textarea_field( $_POST['description'] );
-		$price          = floatval( $_POST['price'] );
-		$priority       = intval( $_POST['priority'] );
-		$is_active      = isset( $_POST['is_active'] ) ? 1 : 0;
-		$holiday_only   = isset( $_POST['holiday_only'] ) ? 1 : 0;
-		$date_start     = ! empty( $_POST['date_start'] ) ? sanitize_text_field( $_POST['date_start'] ) : null;
-		$date_end       = ! empty( $_POST['date_end'] ) ? sanitize_text_field( $_POST['date_end'] ) : null;
+		$id           = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name         = sanitize_text_field( $_POST['name'] );
+		$description  = sanitize_textarea_field( $_POST['description'] );
+		$price        = floatval( $_POST['price'] );
+		$priority     = intval( $_POST['priority'] );
+		$is_active    = isset( $_POST['is_active'] ) ? 1 : 0;
+		$holiday_only = isset( $_POST['holiday_only'] ) ? 1 : 0;
+		$date_start   = ! empty( $_POST['date_start'] ) ? sanitize_text_field( $_POST['date_start'] ) : null;
+		$date_end     = ! empty( $_POST['date_end'] ) ? sanitize_text_field( $_POST['date_end'] ) : null;
 
-		$object_ids     = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
-		$block_ids      = isset( $_POST['booking_blocks'] ) ? array_map( 'intval', (array) $_POST['booking_blocks'] ) : array();
-		
-		$days_of_week   = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
-		$days_of_week   = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
+		$object_ids = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
+		$block_ids  = isset( $_POST['booking_blocks'] ) ? array_map( 'intval', (array) $_POST['booking_blocks'] ) : array();
+
+		$days_of_week = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
+		$days_of_week = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
 
 		if ( empty( $object_ids ) || empty( $block_ids ) ) {
 			$this->errors[] = __( 'Du må velge minst ett lokale og én bookingblokk.', 'snippen-booking' );
@@ -138,7 +138,7 @@ class PricingPage {
 			'days_of_week' => $days_of_week,
 		);
 
-		$repo = new PricingRuleRepository();
+		$repo     = new PricingRuleRepository();
 		$saved_id = $repo->save( $data, $id > 0 ? $id : null );
 
 		if ( $saved_id ) {
@@ -182,11 +182,11 @@ class PricingPage {
 				'date_end'     => $rule->date_end,
 				'days_of_week' => $rule->days_of_week,
 			);
-			
+
 			$new_id = $repo->save( $data );
 			if ( $new_id ) {
 				$objects = $repo->get_rule_objects( $id );
-				$blocks = $repo->get_rule_blocks( $id );
+				$blocks  = $repo->get_rule_blocks( $id );
 				$repo->sync_booking_objects( $new_id, $objects );
 				$repo->sync_booking_blocks( $new_id, $blocks );
 			}
@@ -207,11 +207,11 @@ class PricingPage {
 	 */
 	private function render_list() {
 		global $wpdb;
-		$table_rules = $wpdb->prefix . 'snippen_pricing_rules';
+		$table_rules        = $wpdb->prefix . 'snippen_pricing_rules';
 		$table_rule_objects = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
-		$table_rule_blocks = $wpdb->prefix . 'snippen_pricing_rule_booking_blocks';
-		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
-		$table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_rule_blocks  = $wpdb->prefix . 'snippen_pricing_rule_booking_blocks';
+		$table_objects      = $wpdb->prefix . 'snippen_booking_objects';
+		$table_blocks       = $wpdb->prefix . 'snippen_booking_blocks';
 
 		$query = "SELECT r.*, 
 		          GROUP_CONCAT(DISTINCT o.name SEPARATOR ', ') as object_names,
@@ -245,20 +245,18 @@ class PricingPage {
 			echo '<tr><td colspan="8">' . esc_html__( 'Ingen prisregler funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $rules as $rule ) {
-				$edit_url   = admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $rule->id );
-				$delete_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-pricing&action=delete&id=' . $rule->id ), 'delete_price_' . $rule->id );
+				$edit_url      = admin_url( 'admin.php?page=snippen-booking-pricing&action=edit&id=' . $rule->id );
+				$delete_url    = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-pricing&action=delete&id=' . $rule->id ), 'delete_price_' . $rule->id );
 				$duplicate_url = wp_nonce_url( admin_url( 'admin.php?page=snippen-booking-pricing&action=duplicate&id=' . $rule->id ), 'duplicate_price_' . $rule->id );
 
 				$period = '-';
 				if ( ! empty( $rule->date_start ) || ! empty( $rule->date_end ) ) {
-					$start = ! empty( $rule->date_start ) ? $rule->date_start : '...';
-					$end   = ! empty( $rule->date_end ) ? $rule->date_end : '...';
+					$start  = ! empty( $rule->date_start ) ? $rule->date_start : '...';
+					$end    = ! empty( $rule->date_end ) ? $rule->date_end : '...';
 					$period = $start . ' til ' . $end;
 				}
 
-				$status = (int) $rule->is_active === 1 
-					? '<span class="snippen-badge snippen-status-confirmed">' . esc_html__( 'Aktiv', 'snippen-booking' ) . '</span>'
-					: '<span class="snippen-badge snippen-status-cancelled">' . esc_html__( 'Deaktivert', 'snippen-booking' ) . '</span>';
+				$is_active = (int) $rule->is_active === 1;
 
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
@@ -267,7 +265,7 @@ class PricingPage {
 				echo '<td>' . esc_html( number_format( $rule->price, 0, ',', ' ' ) ) . ' kr</td>';
 				echo '<td>' . esc_html( $rule->priority ) . '</td>';
 				echo '<td>' . esc_html( $period ) . '</td>';
-				echo '<td>' . wp_kses_post( $status ) . '</td>';
+				echo '<td><label class="snippen-switch"><input type="checkbox" class="snippen-toggle-status" data-entity-type="pricing_rule" data-id="' . intval( $rule->id ) . '" ' . checked( $is_active, true, false ) . '><span class="snippen-slider"></span></label></td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;" title="' . esc_attr__( 'Rediger', 'snippen-booking' ) . '"><span class="dashicons dashicons-edit"></span></a>';
 				echo '<a href="' . esc_url( $duplicate_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;" title="' . esc_attr__( 'Dupliser', 'snippen-booking' ) . '"><span class="dashicons dashicons-admin-page"></span></a>';
@@ -295,7 +293,7 @@ class PricingPage {
 		echo '<div class="snippen-form-group" style="display:flex; justify-content:space-between; align-items:center;">';
 		echo '<div><label for="name">' . esc_html__( 'Navn på prisregel', 'snippen-booking' ) . '</label>';
 		echo '<input type="text" name="name" id="name" value="' . esc_attr( $rule ? $rule->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Helgepris Festsalen', 'snippen-booking' ) . '"></div>';
-		
+
 		echo '<div><label style="font-weight:bold; display:flex; align-items:center; gap:8px;">';
 		$is_active = $rule ? (int) $rule->is_active : 1;
 		echo '<input type="checkbox" name="is_active" value="1" ' . checked( $is_active, 1, false ) . '>';
@@ -319,12 +317,12 @@ class PricingPage {
 		echo '<hr><h3 style="margin-top:25px;">' . esc_html__( 'Omfang', 'snippen-booking' ) . '</h3>';
 
 		echo '<div style="display:flex; gap:40px;">';
-		
+
 		// Booking Objects
 		echo '<div class="snippen-form-group" style="flex:1;">';
 		echo '<label>' . esc_html__( 'Gjelder for lokaler:', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">';
-		$objects = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
+		$objects          = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
 		$selected_objects = $id > 0 ? $repo->get_rule_objects( $id ) : array();
 		foreach ( $objects as $obj ) {
 			echo '<label style="font-weight:normal;">';
@@ -338,7 +336,7 @@ class PricingPage {
 		echo '<div class="snippen-form-group" style="flex:1;">';
 		echo '<label>' . esc_html__( 'Gjelder for bookingblokker:', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-direction:column; gap:5px; margin-top:5px; max-height:200px; overflow-y:auto; padding:10px; border:1px solid #ddd; background:#fff;">';
-		$blocks = $wpdb->get_results( "SELECT id, name, start_time, end_time FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
+		$blocks          = $wpdb->get_results( "SELECT id, name, start_time, end_time FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
 		$selected_blocks = $id > 0 ? $repo->get_rule_blocks( $id ) : array();
 		foreach ( $blocks as $b ) {
 			echo '<label style="font-weight:normal;">';
@@ -362,7 +360,7 @@ class PricingPage {
 		echo '<div class="snippen-form-group">';
 		echo '<label>' . esc_html__( 'Gjelder kun disse ukedagene:', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:5px;">';
-		$days = array(
+		$days          = array(
 			'1' => __( 'Mandag', 'snippen-booking' ),
 			'2' => __( 'Tirsdag', 'snippen-booking' ),
 			'3' => __( 'Onsdag', 'snippen-booking' ),
@@ -400,14 +398,14 @@ class PricingPage {
 	private function render_preview_tool() {
 		global $wpdb;
 		$objects = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
-		$blocks = $wpdb->get_results( "SELECT id, name, start_time, end_time FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
+		$blocks  = $wpdb->get_results( "SELECT id, name, start_time, end_time FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
 
 		echo '<div class="snippen-card" style="margin-top: 30px; border-top: 4px solid #3b82f6;">';
 		echo '<h2>' . esc_html__( 'Prisforhåndsvisning (Test av regler)', 'snippen-booking' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Bruk dette verktøyet for å teste hvilken prisregel som vil vinne i et gitt scenario.', 'snippen-booking' ) . '</p>';
-		
+
 		echo '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom: 20px;">';
-		
+
 		echo '<div>';
 		echo '<label style="display:block; margin-bottom:5px; font-weight:600;">' . esc_html__( 'Dato', 'snippen-booking' ) . '</label>';
 		echo '<input type="date" id="preview-date" value="' . esc_attr( date( 'Y-m-d' ) ) . '">';

@@ -35,7 +35,7 @@ class BookingShortcode {
 
 		if ( empty( $atts['object_id'] ) ) {
 			// Fetch all active objects
-			$objects   = $wpdb->get_results( "SELECT * FROM $table_objects WHERE deleted_at IS NULL ORDER BY id ASC" );
+			$objects    = $wpdb->get_results( "SELECT * FROM $table_objects WHERE deleted_at IS NULL ORDER BY id ASC" );
 			$object_ids = wp_list_pluck( $objects, 'id' );
 			$object_ids = array_map( 'intval', $object_ids );
 		} else {
