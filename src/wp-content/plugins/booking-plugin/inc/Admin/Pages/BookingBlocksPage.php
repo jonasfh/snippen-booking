@@ -278,8 +278,8 @@ class BookingBlocksPage {
 						continue;
 					}
 
-					// Time overlap check
-					if ( ( $block->start_time < $other->end_time && $block->end_time > $other->start_time ) || ( $block->start_time >= $other->start_time && $block->start_time < $other->end_time ) ) {
+					// Time overlap check (two time intervals [A_start, A_end) and [B_start, B_end) overlap iff A_start < B_end AND A_end > B_start)
+					if ( $block->start_time < $other->end_time && $block->end_time > $other->start_time ) {
 						$other_objs   = $block_objects[ $other->id ] ?? array();
 						$shared_objs = array_intersect( $this_objs, $other_objs );
 
