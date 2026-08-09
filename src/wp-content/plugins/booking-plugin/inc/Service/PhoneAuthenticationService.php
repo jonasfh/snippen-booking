@@ -182,7 +182,7 @@ class PhoneAuthenticationService {
 		);
 
 		// Always use the user's registered phone number to determine SMS routing.
-		$user_phone    = get_user_meta( $user_data->ID, 'snippen_phone', true );
+		$user_phone = get_user_meta( $user_data->ID, 'snippen_phone', true );
 
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_password_reset_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_password_reset_enabled', 'yes' );

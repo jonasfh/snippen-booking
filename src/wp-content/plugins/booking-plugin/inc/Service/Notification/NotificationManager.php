@@ -82,8 +82,8 @@ class NotificationManager {
 			'user_name'         => $user->display_name ?: $user->user_login,
 			'confirmation_code' => $code,
 		);
-		$rendered_sms   = $template_service->render_template( 'user_activation', 'sms', $context );
-		$rendered_email = $template_service->render_template( 'user_activation', 'email', $context );
+		$rendered_sms     = $template_service->render_template( 'user_activation', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'user_activation', 'email', $context );
 
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_user_activation_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_user_activation_enabled', 'yes' );
@@ -158,7 +158,7 @@ class NotificationManager {
 		$email_provider   = $this->get_provider( 'email' );
 		$template_service = new NotificationTemplateService();
 
-		$admin_context = array(
+		$admin_context        = array(
 			'user_name'           => $booking->customer_name,
 			'user_email'          => $booking->customer_email,
 			'user_phone'          => $booking->customer_phone,
@@ -241,9 +241,9 @@ class NotificationManager {
 		$sms_sent   = false;
 		$email_sent = false;
 
-		$template_service = new NotificationTemplateService();
+		$template_service             = new NotificationTemplateService();
 		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
-		$context          = array(
+		$context                      = array(
 			'user_name'            => $booking->customer_name,
 			'booking_objects'      => $object_names,
 			'booking_date'         => $booking->booking_date,

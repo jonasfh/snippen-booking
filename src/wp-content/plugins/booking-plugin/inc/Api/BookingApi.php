@@ -62,7 +62,7 @@ class BookingApi {
 		$block_ids = array_map( 'intval', $block_ids_raw );
 		$block_ids = array_filter( $block_ids );
 
-		$slot_id = isset( $_POST['slot_id'] ) ? intval( $_POST['slot_id'] ) : 0;
+		$slot_id              = isset( $_POST['slot_id'] ) ? intval( $_POST['slot_id'] ) : 0;
 		$availability_service = new AvailabilityService();
 
 		if ( empty( $block_ids ) && $slot_id > 0 ) {
@@ -80,7 +80,7 @@ class BookingApi {
 
 			// Perform legacy slot checks
 			$table_slots = $wpdb->prefix . 'snippen_time_slots';
-			$slot = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_slots WHERE id = %d AND deleted_at IS NULL", $slot_id ) );
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_slots WHERE id = %d AND deleted_at IS NULL", $slot_id ) );
 			if ( ! $slot ) {
 				wp_send_json_error( array( 'message' => __( 'Tidsluken finnes ikke.', 'snippen-booking' ) ) );
 			}
@@ -92,8 +92,8 @@ class BookingApi {
 			}
 
 			$table_time_slot_objects = $wpdb->prefix . 'snippen_time_slot_booking_objects';
-			$required_objects = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM $table_time_slot_objects WHERE time_slot_id = %d", $slot_id ) );
-			$required_objects = array_map( 'intval', $required_objects );
+			$required_objects        = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM $table_time_slot_objects WHERE time_slot_id = %d", $slot_id ) );
+			$required_objects        = array_map( 'intval', $required_objects );
 			sort( $required_objects );
 			sort( $booking_object_ids );
 			if ( $required_objects !== $booking_object_ids ) {
@@ -122,7 +122,7 @@ class BookingApi {
 			$description    = sanitize_textarea_field( $_POST['description'] ?? '' );
 
 			$pricing_service = new PricingService();
-			$base_price = $pricing_service->getPrice( $booking_object_ids, array( $slot_id ), $booking_date );
+			$base_price      = $pricing_service->getPrice( $booking_object_ids, array( $slot_id ), $booking_date );
 			if ( $base_price === null ) {
 				$base_price = 0.0;
 			}
@@ -130,20 +130,20 @@ class BookingApi {
 			// For legacy slots, we can calculate duration from slot start and end
 			$duration = 0;
 			if ( $slot ) {
-				$start = strtotime($slot->start_time);
-				$end = strtotime($slot->end_time);
-				if ($end <= $start) {
+				$start = strtotime( $slot->start_time );
+				$end   = strtotime( $slot->end_time );
+				if ( $end <= $start ) {
 					$end += 24 * 3600;
 				}
-				$duration = round(($end - $start) / 3600, 2);
+				$duration = round( ( $end - $start ) / 3600, 2 );
 			}
 
 			$discount_service = new DiscountService();
 			$discount_repo    = new \SnippenBooking\Database\Repository\DiscountRuleRepository();
-			$rule = $discount_repo->find_applicable_rule( $booking_object_ids, $duration );
-			
-			$discount_amount = 0.0;
-			$final_price = $base_price;
+			$rule             = $discount_repo->find_applicable_rule( $booking_object_ids, $duration );
+
+			$discount_amount  = 0.0;
+			$final_price      = $base_price;
 			$discount_rule_id = null;
 
 			if ( $rule ) {
@@ -155,7 +155,7 @@ class BookingApi {
 				if ( $discount_amount > $base_price ) {
 					$discount_amount = $base_price;
 				}
-				$final_price = $base_price - $discount_amount;
+				$final_price      = $base_price - $discount_amount;
 				$discount_rule_id = $rule->id;
 			}
 
@@ -179,17 +179,15 @@ class BookingApi {
 			);
 
 			$booking_repository = new BookingRepository();
-			$booking_id = $booking_repository->create( $booking_data, $booking_object_ids, array() );
+			$booking_id         = $booking_repository->create( $booking_data, $booking_object_ids, array() );
 
 			if ( $booking_id ) {
 				$dispatch_method = get_option( 'snippen_notification_dispatch_method', 'async' );
 				if ( 'sync' === $dispatch_method ) {
 					$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
 					$notification_manager->send_booking_notifications( $booking_id, $uuid );
-				} else {
-					if ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
+				} elseif ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
 						wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
-					}
 				}
 				wp_send_json_success( array( 'message' => __( 'Bookingforespørsel sendt! Vi kontakter deg snart.', 'snippen-booking' ) ) );
 			} else {

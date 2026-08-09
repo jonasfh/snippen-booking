@@ -208,7 +208,7 @@ class UserBookingsPage {
 		if ( $door_code_enabled ) {
 			echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>' . $door_code_display . '</div>';
 		}
-		
+
 		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Pris:', 'snippen-booking' ) . '</strong><br>' . number_format( $booking->price, 0, ',', ' ' ) . ',-</div>';
 		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Status:', 'snippen-booking' ) . '</strong><br><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></div>';
 		echo '</div>';
@@ -220,7 +220,7 @@ class UserBookingsPage {
 
 		echo '<div class="snippen-payment-box" style="padding:15px; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; margin-top:10px;">';
 		echo '<h4 style="margin:0 0 10px 0; font-size:14px;">' . esc_html__( 'Betalingsinformasjon', 'snippen-booking' ) . '</h4>';
-		
+
 		if ( $bank_acc || $vipps_no || $instructs ) {
 			echo '<div style="font-size:13px; line-height:1.4; margin-bottom:10px; color:#334155;">';
 			if ( $bank_acc ) {

@@ -27,7 +27,7 @@ class DiscountService {
 
 	/**
 	 * Calculate total duration in hours for a set of blocks.
-	 * 
+	 *
 	 * Duration is calculated from the earliest start time to the latest end time.
 	 *
 	 * @param array $block_ids
@@ -49,7 +49,7 @@ class DiscountService {
 		foreach ( $blocks as $block ) {
 			$start = strtotime( $block->start_time );
 			$end   = strtotime( $block->end_time );
-			
+
 			// Handle blocks ending at midnight or later
 			if ( $end <= $start ) {
 				$end += 24 * 3600; // Add 24 hours
@@ -73,15 +73,15 @@ class DiscountService {
 	/**
 	 * Calculate discount for a booking.
 	 *
-	 * @param float $base_price The price before discount.
-	 * @param array $object_ids Array of object IDs.
-	 * @param array $block_ids Array of block IDs.
+	 * @param float       $base_price The price before discount.
+	 * @param array       $object_ids Array of object IDs.
+	 * @param array       $block_ids Array of block IDs.
 	 * @param string|null $date The booking date (Y-m-d).
 	 * @return array Associative array with 'final_price', 'discount_amount', and 'discount_rule'.
 	 */
 	public function applyDiscount( $base_price, array $object_ids, array $block_ids, $date = null ) {
 		$repo = new DiscountRuleRepository();
-		
+
 		$duration = $this->calculateDuration( $block_ids );
 
 		$rule = $repo->find_applicable_rule( $object_ids, $duration, $date );

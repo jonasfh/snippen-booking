@@ -27,9 +27,24 @@ class Migration_2_6_1 {
 
 		// 2. Ensure canonical status IDs (1 = UNPAID, 2 = PAID, 3 = EXEMPT)
 		$statuses = array(
-			array( 'id' => 1, 'slug' => 'UNPAID', 'name' => 'Mangler betaling', 'is_settled' => 0 ),
-			array( 'id' => 2, 'slug' => 'PAID', 'name' => 'Betalt', 'is_settled' => 1 ),
-			array( 'id' => 3, 'slug' => 'EXEMPT', 'name' => 'Fritatt / Gratis', 'is_settled' => 1 ),
+			array(
+				'id'         => 1,
+				'slug'       => 'UNPAID',
+				'name'       => 'Mangler betaling',
+				'is_settled' => 0,
+			),
+			array(
+				'id'         => 2,
+				'slug'       => 'PAID',
+				'name'       => 'Betalt',
+				'is_settled' => 1,
+			),
+			array(
+				'id'         => 3,
+				'slug'       => 'EXEMPT',
+				'name'       => 'Fritatt / Gratis',
+				'is_settled' => 1,
+			),
 		);
 
 		foreach ( $statuses as $st ) {
@@ -37,7 +52,15 @@ class Migration_2_6_1 {
 			if ( ! $exists ) {
 				$wpdb->insert( $table_payment_statuses, $st );
 			} else {
-				$wpdb->update( $table_payment_statuses, array( 'id' => $st['id'], 'name' => $st['name'], 'is_settled' => $st['is_settled'] ), array( 'slug' => $st['slug'] ) );
+				$wpdb->update(
+					$table_payment_statuses,
+					array(
+						'id'         => $st['id'],
+						'name'       => $st['name'],
+						'is_settled' => $st['is_settled'],
+					),
+					array( 'slug' => $st['slug'] )
+				);
 			}
 		}
 

@@ -90,6 +90,7 @@ class TimeSlotsPage {
 		$start_time    = sanitize_text_field( $_POST['start_time'] );
 		$end_time      = sanitize_text_field( $_POST['end_time'] );
 		$cleanup_hours = intval( $_POST['cleanup_hours'] );
+		$is_active     = isset( $_POST['is_active'] ) ? 1 : 0;
 		$object_ids    = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
 		$days_of_week  = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
 		$days_of_week  = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
@@ -102,6 +103,7 @@ class TimeSlotsPage {
 			'start_time'    => $start_time,
 			'end_time'      => $end_time,
 			'cleanup_hours' => $cleanup_hours,
+			'is_active'     => $is_active,
 			'days_of_week'  => $days_of_week,
 			'date_start'    => $start_date,
 			'date_end'      => $end_date,
@@ -197,12 +199,13 @@ class TimeSlotsPage {
 		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Vask (t)', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Betingelser', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Tilknyttet Pris', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="select" data-sort-type="string">' . esc_html__( 'Status', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
 
 		if ( empty( $slots ) ) {
-			echo '<tr><td colspan="7">' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</td></tr>';
+			echo '<tr><td colspan="8">' . esc_html__( 'Ingen tidsluker funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			foreach ( $slots as $slot ) {
 				$edit_url   = admin_url( 'admin.php?page=snippen-booking-slots&action=edit&id=' . $slot->id );
@@ -233,6 +236,8 @@ class TimeSlotsPage {
 					$conditions[] = substr( $slot->date_start, 5 ) . ' til ' . substr( $slot->date_end, 5 );
 				}
 
+				$is_active = ! isset( $slot->is_active ) || (int) $slot->is_active === 1;
+
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $slot->name ) . '</a></strong></td>';
 				echo '<td>' . esc_html( $slot->object_names ?: '-' ) . '</td>';
@@ -240,6 +245,7 @@ class TimeSlotsPage {
 				echo '<td>' . esc_html( $slot->cleanup_hours ) . '</td>';
 				echo '<td><small>' . esc_html( implode( ' | ', $conditions ) ?: '-' ) . '</small></td>';
 				echo '<td>' . esc_html( $slot->price_name ?: '-' ) . '</td>';
+				echo '<td><label class="snippen-switch"><input type="checkbox" class="snippen-toggle-status" data-entity-type="time_slot" data-id="' . intval( $slot->id ) . '" ' . checked( $is_active, true, false ) . '><span class="snippen-slider"></span></label></td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
 				echo '<a href="' . esc_url( $delete_url ) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Slett', 'snippen-booking' ) . '</a>';
@@ -267,9 +273,15 @@ class TimeSlotsPage {
 		wp_nonce_field( 'snippen_save_slot', 'snippen_slot_nonce' );
 		echo '<input type="hidden" name="id" value="' . esc_attr( $id ) . '">';
 
-		echo '<div class="snippen-form-group">';
-		echo '<label for="name">' . esc_html__( 'Navn på tidsluke', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="name" id="name" value="' . esc_attr( $slot ? $slot->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Hele dagen', 'snippen-booking' ) . '">';
+		echo '<div class="snippen-form-group" style="display:flex; justify-content:space-between; align-items:center;">';
+		echo '<div><label for="name">' . esc_html__( 'Navn på tidsluke', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="name" id="name" value="' . esc_attr( $slot ? $slot->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Hele dagen', 'snippen-booking' ) . '"></div>';
+
+		echo '<div><label style="font-weight:bold; display:flex; align-items:center; gap:8px;">';
+		$is_active = ! $slot || ! isset( $slot->is_active ) || (int) $slot->is_active === 1;
+		echo '<input type="checkbox" name="is_active" value="1" ' . checked( $is_active, true, false ) . '>';
+		echo esc_html__( 'Tidsluken er aktiv', 'snippen-booking' );
+		echo '</label></div>';
 		echo '</div>';
 
 		if ( $id > 0 ) {

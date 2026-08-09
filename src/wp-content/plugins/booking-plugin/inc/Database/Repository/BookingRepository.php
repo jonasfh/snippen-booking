@@ -210,7 +210,7 @@ class BookingRepository {
 		}
 
 		if ( empty( $data['booking_snapshot'] ) ) {
-			$snapshot                = $this->build_snapshot( $data, $object_ids, $block_ids );
+			$snapshot                 = $this->build_snapshot( $data, $object_ids, $block_ids );
 			$data['booking_snapshot'] = wp_json_encode( $snapshot );
 		}
 
@@ -224,7 +224,7 @@ class BookingRepository {
 		$booking_id = $wpdb->insert_id;
 
 		// Link objects
-		$table_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_booking_objects          = $wpdb->prefix . 'snippen_booking_booking_objects';
 		$table_bookings_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
 		foreach ( $object_ids as $obj_id ) {
 			$wpdb->insert(

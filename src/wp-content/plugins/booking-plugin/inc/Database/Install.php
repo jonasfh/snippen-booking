@@ -52,6 +52,7 @@ class Install {
             end_time TIME DEFAULT '23:59:59',
             days_of_week VARCHAR(50) DEFAULT NULL,
             sort_order INT DEFAULT 0,
+            is_active TINYINT(1) DEFAULT 1,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
@@ -126,6 +127,7 @@ class Install {
             days_of_week VARCHAR(50) NULL,
             holiday_only TINYINT(1) DEFAULT 0,
             priority INT DEFAULT 10,
+            is_active TINYINT(1) DEFAULT 1,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
@@ -160,9 +162,24 @@ class Install {
 		dbDelta( $sql_payment_statuses );
 
 		$default_statuses = array(
-			array( 'id' => 1, 'slug' => 'UNPAID', 'name' => 'Mangler betaling', 'is_settled' => 0 ),
-			array( 'id' => 2, 'slug' => 'PAID', 'name' => 'Betalt', 'is_settled' => 1 ),
-			array( 'id' => 3, 'slug' => 'EXEMPT', 'name' => 'Fritatt / Gratis', 'is_settled' => 1 ),
+			array(
+				'id'         => 1,
+				'slug'       => 'UNPAID',
+				'name'       => 'Mangler betaling',
+				'is_settled' => 0,
+			),
+			array(
+				'id'         => 2,
+				'slug'       => 'PAID',
+				'name'       => 'Betalt',
+				'is_settled' => 1,
+			),
+			array(
+				'id'         => 3,
+				'slug'       => 'EXEMPT',
+				'name'       => 'Fritatt / Gratis',
+				'is_settled' => 1,
+			),
 		);
 		foreach ( $default_statuses as $st ) {
 			$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table_payment_statuses WHERE slug = %s", $st['slug'] ) );
@@ -242,6 +259,7 @@ class Install {
             date_start DATE DEFAULT NULL,
             date_end DATE DEFAULT NULL,
             price_id INT DEFAULT NULL,
+            is_active TINYINT(1) DEFAULT 1,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,

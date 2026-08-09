@@ -31,7 +31,7 @@ class BookingBlocksPage {
 				$this->show_message( __( 'Bookingblokk slettet.', 'snippen-booking' ) );
 			}
 		}
-		
+
 		if ( isset( $_GET['error'] ) ) {
 			$error = sanitize_text_field( $_GET['error'] );
 			if ( $error === 'overlap' ) {
@@ -89,21 +89,21 @@ class BookingBlocksPage {
 			return;
 		}
 
-		$id            = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name          = sanitize_text_field( $_POST['name'] );
-		$description   = sanitize_textarea_field( $_POST['description'] );
-		$start_time    = sanitize_text_field( $_POST['start_time'] );
-		$end_time      = sanitize_text_field( $_POST['end_time'] );
-		$sort_order    = isset( $_POST['sort_order'] ) ? intval( $_POST['sort_order'] ) : 0;
-		$object_ids    = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
-		$days_of_week  = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
-		$days_of_week  = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
+		$id           = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name         = sanitize_text_field( $_POST['name'] );
+		$description  = sanitize_textarea_field( $_POST['description'] );
+		$start_time   = sanitize_text_field( $_POST['start_time'] );
+		$end_time     = sanitize_text_field( $_POST['end_time'] );
+		$sort_order   = isset( $_POST['sort_order'] ) ? intval( $_POST['sort_order'] ) : 0;
+		$object_ids   = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
+		$days_of_week = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
+		$days_of_week = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
 
 		$repo = new BookingBlockRepository();
-		
+
 		if ( $repo->has_overlap( $id, $start_time, $end_time, $object_ids, $days_of_week ) ) {
 			$action = $id > 0 ? 'edit' : 'add';
-			$url = admin_url( 'admin.php?page=snippen-booking-blocks&action=' . $action . '&error=overlap' );
+			$url    = admin_url( 'admin.php?page=snippen-booking-blocks&action=' . $action . '&error=overlap' );
 			if ( $id > 0 ) {
 				$url .= '&id=' . $id;
 			}
@@ -112,12 +112,12 @@ class BookingBlocksPage {
 		}
 
 		$data = array(
-			'name'          => $name,
-			'description'   => $description,
-			'start_time'    => $start_time,
-			'end_time'      => $end_time,
-			'days_of_week'  => $days_of_week,
-			'sort_order'    => $sort_order,
+			'name'         => $name,
+			'description'  => $description,
+			'start_time'   => $start_time,
+			'end_time'     => $end_time,
+			'days_of_week' => $days_of_week,
+			'sort_order'   => $sort_order,
 		);
 
 		$saved_id = $repo->save( $data, $id > 0 ? $id : null );
@@ -156,9 +156,9 @@ class BookingBlocksPage {
 	 */
 	private function render_list() {
 		global $wpdb;
-		$table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_blocks   = $wpdb->prefix . 'snippen_booking_blocks';
 		$table_junction = $wpdb->prefix . 'snippen_booking_object_booking_blocks';
-		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 
 		$query = "SELECT b.*, GROUP_CONCAT(bo.name SEPARATOR ', ') as object_names 
                   FROM $table_blocks b 
@@ -188,7 +188,14 @@ class BookingBlocksPage {
 			echo '<tr><td colspan="6">' . esc_html__( 'Ingen bookingblokker funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			$days_map = array(
-				1 => 'Man', 2 => 'Tir', 3 => 'Ons', 4 => 'Tor', 5 => 'Fre', 6 => 'Lør', 0 => 'Søn', 7 => 'Helligdag',
+				1 => 'Man',
+				2 => 'Tir',
+				3 => 'Ons',
+				4 => 'Tor',
+				5 => 'Fre',
+				6 => 'Lør',
+				0 => 'Søn',
+				7 => 'Helligdag',
 			);
 
 			foreach ( $blocks as $block ) {
@@ -198,7 +205,7 @@ class BookingBlocksPage {
 				$days_text = '-';
 				if ( $block->days_of_week !== null && $block->days_of_week !== '' ) {
 					$selected_days = explode( ',', $block->days_of_week );
-					$day_labels = array();
+					$day_labels    = array();
 					foreach ( $selected_days as $d ) {
 						if ( isset( $days_map[ $d ] ) ) {
 							$day_labels[] = $days_map[ $d ];
@@ -249,13 +256,13 @@ class BookingBlocksPage {
 		foreach ( $blocks as $block ) {
 			echo '<tr>';
 			echo '<td><strong>' . esc_html( $block->name ) . '</strong><br><small>' . esc_html( substr( $block->start_time, 0, 5 ) . '-' . substr( $block->end_time, 0, 5 ) ) . '</small></td>';
-			
-			$block_days = $block->days_of_week !== null && $block->days_of_week !== '' 
-				? explode( ',', $block->days_of_week ) 
+
+			$block_days = $block->days_of_week !== null && $block->days_of_week !== ''
+				? explode( ',', $block->days_of_week )
 				: array( '0', '1', '2', '3', '4', '5', '6', '7' );
-				
+
 			foreach ( $days_cols as $day ) {
-				if ( in_array( (string)$day, $block_days, true ) ) {
+				if ( in_array( (string) $day, $block_days, true ) ) {
 					echo '<td style="text-align:center; color: #46b450; font-weight:bold;">✓</td>';
 				} else {
 					echo '<td></td>';
@@ -272,7 +279,7 @@ class BookingBlocksPage {
 	 */
 	private function render_form( $id = 0 ) {
 		global $wpdb;
-		$repo = new BookingBlockRepository();
+		$repo  = new BookingBlockRepository();
 		$block = $id > 0 ? $repo->find( $id ) : null;
 
 		echo '<div class="snippen-card"><form method="post" action="">';
@@ -300,7 +307,7 @@ class BookingBlocksPage {
 		echo '<label>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">';
 
-		$objects = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
+		$objects          = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
 		$selected_objects = array();
 		if ( $id > 0 ) {
 			$selected_objects = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM {$wpdb->prefix}snippen_booking_object_booking_blocks WHERE booking_block_id = %d", $id ) );
@@ -319,7 +326,7 @@ class BookingBlocksPage {
 		echo '<div class="snippen-form-group">';
 		echo '<label>' . esc_html__( 'Gyldige dager', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:5px;">';
-		$days = array(
+		$days          = array(
 			'1' => __( 'Mandag', 'snippen-booking' ),
 			'2' => __( 'Tirsdag', 'snippen-booking' ),
 			'3' => __( 'Onsdag', 'snippen-booking' ),
@@ -336,7 +343,7 @@ class BookingBlocksPage {
 		echo '</div>';
 		echo '<p class="description">' . esc_html__( 'La alle stå tomme hvis bookingblokken gjelder alle dager.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
-		
+
 		echo '<div class="snippen-form-group">';
 		echo '<label for="sort_order">' . esc_html__( 'Sorteringsrekkefølge', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="sort_order" id="sort_order" value="' . esc_attr( $block ? $block->sort_order : 0 ) . '" style="max-width:100px;">';

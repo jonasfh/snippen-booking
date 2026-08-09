@@ -671,13 +671,49 @@ class SetupWizard {
 			// Link the rules to their respective blocks
 			foreach ( $created_blocks as $cb ) {
 				if ( $cb['type'] === 'day' ) {
-					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekday_day_rule_id, 'booking_block_id' => $cb['id'], ) );
-					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekend_day_rule_id, 'booking_block_id' => $cb['id'], ) );
-					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $holiday_day_rule_id, 'booking_block_id' => $cb['id'], ) );
+					$wpdb->insert(
+						$table_rule_blocks,
+						array(
+							'pricing_rule_id'  => $weekday_day_rule_id,
+							'booking_block_id' => $cb['id'],
+						)
+					);
+					$wpdb->insert(
+						$table_rule_blocks,
+						array(
+							'pricing_rule_id'  => $weekend_day_rule_id,
+							'booking_block_id' => $cb['id'],
+						)
+					);
+					$wpdb->insert(
+						$table_rule_blocks,
+						array(
+							'pricing_rule_id'  => $holiday_day_rule_id,
+							'booking_block_id' => $cb['id'],
+						)
+					);
 				} elseif ( $cb['type'] === 'evening' ) {
-					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekday_evening_rule_id, 'booking_block_id' => $cb['id'], ) );
-					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $weekend_evening_rule_id, 'booking_block_id' => $cb['id'], ) );
-					$wpdb->insert( $table_rule_blocks, array( 'pricing_rule_id'  => $holiday_evening_rule_id, 'booking_block_id' => $cb['id'], ) );
+					$wpdb->insert(
+						$table_rule_blocks,
+						array(
+							'pricing_rule_id'  => $weekday_evening_rule_id,
+							'booking_block_id' => $cb['id'],
+						)
+					);
+					$wpdb->insert(
+						$table_rule_blocks,
+						array(
+							'pricing_rule_id'  => $weekend_evening_rule_id,
+							'booking_block_id' => $cb['id'],
+						)
+					);
+					$wpdb->insert(
+						$table_rule_blocks,
+						array(
+							'pricing_rule_id'  => $holiday_evening_rule_id,
+							'booking_block_id' => $cb['id'],
+						)
+					);
 				}
 			}
 		}
@@ -792,4 +828,3 @@ class SetupWizard {
 		);
 	}
 }
-
