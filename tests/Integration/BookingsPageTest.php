@@ -98,4 +98,55 @@ class BookingsPageTest extends TestCase {
         $this->assertStringContainsString( '<input type="hidden" name="page" value="snippen-booking">', $output );
         $this->assertStringNotContainsString( 'value="snippen-booking-oversikt"', $output );
     }
+
+    /**
+     * Test that render_list renders time range for booking block bookings
+     */
+    public function test_render_list_time_range() {
+        global $wpdb;
+
+        // 1. Insert test booking block
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_booking_blocks',
+            array(
+                'name'       => 'Morgenblokk',
+                'start_time' => '09:00:00',
+                'end_time'   => '12:00:00',
+            )
+        );
+        $block_id = $wpdb->insert_id;
+
+        // 2. Insert test booking
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_bookings',
+            array(
+                'booking_date'  => '2026-09-01',
+                'customer_name' => 'Kjell Test',
+                'customer_email'=> 'kjell@example.com',
+                'status'        => 'confirmed',
+            )
+        );
+        $booking_id = $wpdb->insert_id;
+
+        // 3. Link booking to block
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_booking_booking_blocks',
+            array(
+                'booking_id'       => $booking_id,
+                'booking_block_id' => $block_id,
+            )
+        );
+
+        $bookings_page = new BookingsPage();
+        $reflection    = new \ReflectionClass( BookingsPage::class );
+        $method        = $reflection->getMethod( 'render_list' );
+        $method->setAccessible( true );
+
+        ob_start();
+        $method->invoke( $bookings_page, '', '', 0, 'Kjell Test', 'booking_date', 'ASC', true );
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString( 'Tidsrom:', $output );
+        $this->assertStringContainsString( '09:00 - 12:00', $output );
+    }
 }
