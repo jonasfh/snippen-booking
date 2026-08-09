@@ -19,6 +19,7 @@ class SetupWizardTest extends TestCase {
 		// Clean up options after each test
 		SetupWizard::reset();
 		$this->cleanup_setup_data();
+		self::$db_seeded = false;
 	}
 
 	private function cleanup_setup_data() {
