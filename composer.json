@@ -32,6 +32,7 @@
     "scripts": {
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
+        "test:fast": "phpunit --testsuite=Unit --stop-on-failure",
         "test:integration": "phpunit --testsuite=Integration",
         "demo:bookings": "php bin/demo-data.php generate",
         "demo:wizard": "php bin/demo-data.php wizard",

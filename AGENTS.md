@@ -75,11 +75,14 @@ Composer is available and configured with correct paths in the devcontainer, so 
 # Install dependencies first
 composer install
 
-# Run all tests
+# Run all tests (Unit + Integration - used in CI/CD)
 composer test
 
-# Run only unit tests
+# Run only unit tests (fast local feedback)
 composer test:unit
+
+# Run fast unit tests (stops on first failure)
+composer test:fast
 
 # Run only integration tests
 composer test:integration
