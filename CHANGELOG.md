@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.7.1] - 2026-08-09
+- Simplified CSS styling to align with active WordPress default theme (Twenty Twenty-Five) and added design guidelines to `AGENTS.md`.
+
 ## [2.7.0] - 2026-08-08
 - (#187) Fixed login authentication for username and email identifiers by tuning authentication filter priority and handling in `PhoneHelper::normalize_phone`.
 - (#194) Moved payment instructions/deadline to a dedicated Notification Template (`payment_instructions`) with placeholders (`{{bank_account}}`, `{{vipps_number}}`, `{{user_name}}`, `{{booking_objects}}`, `{{booking_date}}`, `{{booking_price}}`).

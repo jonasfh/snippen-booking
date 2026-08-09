@@ -263,6 +263,10 @@ Before committing Mermaid diagrams:
 - Validate them in Mermaid Live Editor.
 - Ensure no automatic formatter has wrapped relationship lines.
 
+## Design & Styling
+- Keep custom CSS minimal: Only apply styles that are strictly necessary for functionality.
+- Inherit and follow the active WordPress default theme (Twenty Twenty-Five) styling rather than overriding theme defaults with unnecessary custom styles.
+
 ## Versioning & Changelog
 - **Version Bump**: When making functional changes, you must bump the version number in `src/wp-content/plugins/booking-plugin/booking-plugin.php`, UNLESS this is already done in the current branch.
 - **CHANGELOG.md**: Every version bump must be accompanied by an entry in `CHANGELOG.md` under a header like `## [X.Y.Z] - YYYY-MM-DD`.
