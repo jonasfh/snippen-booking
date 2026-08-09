@@ -35,7 +35,7 @@ class ToggleStatusApi {
 		if ( $entity_type === 'pricing_rule' ) {
 			$table = $wpdb->prefix . 'snippen_pricing_rules';
 		} elseif ( $entity_type === 'time_slot' ) {
-			$table = $wpdb->prefix . 'snippen_time_slots';
+			$table = $wpdb->prefix . 'snippen_booking_blocks';
 		} elseif ( $entity_type === 'discount_rule' ) {
 			$table = $wpdb->prefix . 'snippen_discount_rules';
 		}
@@ -44,12 +44,12 @@ class ToggleStatusApi {
 		if ( $entity_type === 'time_slot' && $is_active === 1 ) {
 			$slot = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d AND deleted_at IS NULL", $id ) );
 			if ( $slot ) {
-				$object_ids = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM {$wpdb->prefix}snippen_time_slot_booking_objects WHERE time_slot_id = %d", $id ) );
+				$object_ids = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM {$wpdb->prefix}snippen_booking_object_booking_blocks WHERE booking_block_id = %d", $id ) );
 				if ( ! empty( $object_ids ) ) {
 					// Check if activating this slot causes an overlap with another active slot
 					$placeholders = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
 					$query        = "SELECT s.id FROM $table s
-					          JOIN {$wpdb->prefix}snippen_time_slot_booking_objects tso ON s.id = tso.time_slot_id
+					          JOIN {$wpdb->prefix}snippen_booking_object_booking_blocks tso ON s.id = tso.booking_block_id
 					          WHERE tso.booking_object_id IN ($placeholders)
 					          AND s.deleted_at IS NULL
 					          AND s.id != %d

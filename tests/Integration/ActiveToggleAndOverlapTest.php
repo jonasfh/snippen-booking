@@ -78,7 +78,7 @@ class ActiveToggleAndOverlapTest extends TestCase {
 		wp_set_current_user( $admin_id );
 
 		global $wpdb;
-		$table_slots = $wpdb->prefix . 'snippen_time_slots';
+		$table_slots = $wpdb->prefix . 'snippen_booking_blocks';
 
 		// Insert time slot
 		$wpdb->insert(
