@@ -113,4 +113,57 @@ class ActiveToggleAndOverlapTest extends TestCase {
 		$updated_is_active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT is_active FROM $table_slots WHERE id = %d", $slot_id ) );
 		$this->assertEquals( 0, $updated_is_active, 'Status should be toggled to 0 in DB' );
 	}
+
+	public function test_weekly_preview_overlap_detection() {
+		$page = new \SnippenBooking\Admin\Pages\BookingBlocksPage();
+		$reflection = new \ReflectionClass( $page );
+		$method = $reflection->getMethod( 'render_weekly_preview' );
+		$method->setAccessible( true );
+
+		$block_morning = (object) array(
+			'id'           => 1,
+			'name'         => 'Morgen 08-11',
+			'start_time'   => '08:00:00',
+			'end_time'     => '11:00:00',
+			'days_of_week' => '6,0,7',
+			'is_active'    => 1,
+		);
+
+		$block_day = (object) array(
+			'id'           => 2,
+			'name'         => 'Dag 08-16',
+			'start_time'   => '08:00:00',
+			'end_time'     => '16:00:00',
+			'days_of_week' => '6,0,7',
+			'is_active'    => 1,
+		);
+
+		$block_evening = (object) array(
+			'id'           => 3,
+			'name'         => 'Kveld 16-23',
+			'start_time'   => '16:00:00',
+			'end_time'     => '23:00:00',
+			'days_of_week' => '6,0,7',
+			'is_active'    => 1,
+		);
+
+		global $wpdb;
+		$table_junction = $wpdb->prefix . 'snippen_booking_object_booking_blocks';
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 1 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 2 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 3 ) );
+
+		ob_start();
+		$method->invoke( $page, array( $block_morning, $block_day, $block_evening ) );
+		$output = ob_get_clean();
+
+		// Morgen (08-11) and Dag (08-16) overlap -> Morgen must have Overlapp tag
+		$this->assertStringContainsString( 'Morgen 08-11</strong> <span class="snippen-badge snippen-status-pending"', $output );
+
+		// Dag (08-16) and Morgen (08-11) overlap -> Dag must have Overlapp tag
+		$this->assertStringContainsString( 'Dag 08-16</strong> <span class="snippen-badge snippen-status-pending"', $output );
+
+		// Kveld (16-23) starts at 16:00, Dag ends at 16:00 (adjacent, not overlapping) -> Kveld must NOT have Overlapp tag
+		$this->assertStringNotContainsString( 'Kveld 16-23</strong> <span class="snippen-badge snippen-status-pending"', $output );
+	}
 }
