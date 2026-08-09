@@ -1,4 +1,4 @@
-/* Snippen Booking Plugin Styles - Premium & Responsive */
+/* Snippen Booking Plugin Styles - Minimal & Theme-Aligned */
 
 :root {
     --primary-color: #2563eb;
@@ -7,39 +7,31 @@
     --error-color: #dc2626;
     --bg-light: #f8fafc;
     --border-color: #e2e8f0;
-    --text-main: #1e293b;
+    --text-main: inherit;
     --text-muted: #64748b;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
-.snippen-booking-container {
+/* Container layout - inherit theme typography and backgrounds */
+.snippen-booking-container,
+.snippen-booking-list-container {
     max-width: 1100px;
-    margin: 40px auto;
-    padding: 30px;
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: var(--shadow-lg);
-    font-family: 'Inter', -apple-system, system-ui, sans-serif;
-    color: var(--text-main);
+    margin: 20px auto;
+    padding: 20px;
+    color: inherit;
 }
 
 .booking-header-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 16px;
 }
 
 .booking-header-section h3 {
     margin: 0;
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #0f172a;
 }
 
 .multiple-objects-header {
@@ -47,29 +39,25 @@
 }
 
 .multiple-objects-header h4 {
-    margin: 0 0 12px 0;
-    font-size: 15px;
-    font-weight: 600;
+    margin: 0 0 8px 0;
     color: var(--text-muted);
 }
 
 .object-buttons-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .object-selector-btn {
-    padding: 8px 16px;
-    border: 2px solid var(--border-color);
-    background: #ffffff;
-    color: var(--text-main);
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: inherit;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .object-selector-btn:hover {
@@ -81,7 +69,6 @@
     background: var(--primary-color);
     color: #ffffff;
     border-color: var(--primary-color);
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .facility-selector {
@@ -91,27 +78,21 @@
 }
 
 .facility-selector label {
-    font-weight: 600;
     color: var(--text-muted);
-    font-size: 14px;
 }
 
 .select-wrapper select {
-    appearance: none;
-    padding: 12px 40px 12px 16px;
-    border: 2px solid var(--border-color);
-    border-radius: 14px;
-    background: #fff;
-    font-size: 16px;
-    font-weight: 600;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: inherit;
+    color: inherit;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 .select-wrapper select:focus {
     border-color: var(--primary-color);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 /* Calendar Header */
@@ -119,103 +100,86 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     background: var(--bg-light);
-    padding: 20px;
-    border-radius: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
     position: relative;
 }
 
 .week-nav-btn {
-    background: #fff;
+    background: inherit;
     border: 1px solid var(--border-color);
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
-    font-size: 20px;
+    transition: background 0.15s ease;
+    font-size: 18px;
 }
 
 .week-nav-btn:hover {
     background: var(--primary-color);
     color: #fff;
     border-color: var(--primary-color);
-    transform: translateY(-2px);
 }
 
 .current-week-range {
-    font-size: 20px;
-    font-weight: 800;
-    color: #334155;
+    font-size: 16px;
+    color: inherit;
     cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 12px;
-    transition: all 0.2s;
+    padding: 6px 12px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     position: relative;
 }
 
 .current-week-range:hover {
-    background: #e2e8f0;
+    background: var(--border-color);
 }
 
 .current-week-range::after {
     content: '▾';
-    font-size: 16px;
-    opacity: 0.5;
+    font-size: 14px;
+    opacity: 0.6;
 }
 
 .week-picker-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 6px);
     left: 50%;
     transform: translateX(-50%);
-    width: 320px;
-    max-height: 400px;
+    width: 300px;
+    max-height: 350px;
     background: #fff;
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    box-shadow: var(--shadow-lg);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
     z-index: 1001;
     overflow-y: auto;
     display: none;
-    animation: dropdownAnim 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes dropdownAnim {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
 }
 
 .week-picker-dropdown ul {
     list-style: none;
-    padding: 10px;
+    padding: 6px;
     margin: 0;
 }
 
 .week-picker-dropdown li {
-    padding: 12px 16px;
-    border-radius: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 14px;
-    transition: all 0.2s;
 }
 
 .week-picker-dropdown li:hover {
@@ -226,14 +190,14 @@
 .week-picker-dropdown li.active {
     background: #eff6ff;
     color: var(--primary-color);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .week-nr-badge {
     font-size: 11px;
     background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
     color: var(--text-muted);
 }
 
@@ -243,28 +207,26 @@
 }
 
 .slot-description-text {
-    margin: 6px 0 0 0;
-    font-size: 14px;
+    margin: 4px 0 0 0;
+    font-size: 13px;
     color: var(--text-muted);
     font-style: italic;
-    line-height: 1.4;
 }
 
 /* Week Grid */
 .week-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 15px;
-    margin-bottom: 40px;
+    gap: 10px;
+    margin-bottom: 24px;
 }
 
 .day-column {
-    background: #fff;
-    border: 2px solid var(--border-color);
-    border-radius: 20px;
+    background: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     padding: 0;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
 }
@@ -275,38 +237,33 @@
 
 .day-column.selected-day {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .day-header {
-    padding: 20px 10px;
+    padding: 12px 6px;
     text-align: center;
     background: var(--bg-light);
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .day-name {
     display: block;
     font-size: 11px;
-    font-weight: 700;
     text-transform: uppercase;
     color: var(--text-muted);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
 }
 
 .day-date {
     display: block;
-    font-size: 24px;
-    font-weight: 800;
-    margin-top: 6px;
-    color: #1e293b;
+    font-size: 20px;
+    margin-top: 4px;
 }
 
 .day-column.past {
     opacity: 0.5;
-    background: #f8fafc;
+    background: var(--bg-light);
     cursor: not-allowed;
 }
 
@@ -315,45 +272,30 @@
 }
 
 .slots-container {
-    padding: 8px;
+    padding: 6px;
     flex-grow: 1;
     display: block;
 }
 
-
-
 .slot-item {
-    padding: 8px 6px;
-    border-radius: 0;
-    margin-bottom: 0;
+    padding: 6px;
     font-size: 12px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s;
     border: 1px solid transparent;
-}
-
-.slot-item:first-child {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-}
-
-.slot-item:last-child {
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
 }
 
 .slot-item.available {
     background: #eff6ff;
     color: #1e40af;
     border-color: #dbeafe;
-    font-weight: 600;
 }
 
 .slot-item.available:hover {
     background: #dbeafe;
     border-color: var(--primary-color);
-    transform: translateY(-2px);
 }
 
 .slot-item.selected {
@@ -388,13 +330,11 @@
 
 .slot-item.booked .slot-name {
     display: block;
-    font-weight: 700;
     margin-bottom: 4px;
 }
 
 .slot-name {
     display: block;
-    font-weight: 700;
     margin-bottom: 2px;
 }
 
@@ -402,8 +342,7 @@
 .block-time {
     display: inline-block;
     font-size: 11px;
-    font-weight: 500;
-    opacity: 0.8;
+    opacity: 0.85;
     margin-top: 1px;
 }
 
@@ -411,93 +350,72 @@
     display: block;
     font-size: 11px;
     color: var(--text-muted);
-    font-weight: 500;
 }
 
 .slot-item.selected .slot-price {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .booking-info {
     font-size: 11px;
-    font-weight: 500;
     opacity: 0.9;
     display: block;
 }
 
 .cleanup-tag {
     font-size: 10px;
-    font-weight: 600;
     color: #e11d48;
     background: #fff;
     border: 1px solid #fda4af;
     padding: 2px 6px;
-    border-radius: 6px;
-    margin-top: 6px;
+    border-radius: 4px;
+    margin-top: 4px;
     display: inline-block;
 }
 
 /* Form Styles */
 .snippen-booking-form-wrapper {
-    margin-top: 40px;
-    padding: 40px;
-    background: #fff;
-    border: 2px solid var(--primary-color);
-    border-radius: 28px;
-    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1);
-    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(30px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    margin-top: 24px;
+    padding: 24px;
+    background: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
 .form-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .form-header h4 {
     margin: 0;
-    font-size: 22px;
-    font-weight: 800;
-    color: #0f172a;
 }
 
 .close-form {
-    background: #f1f5f9;
-    border: none;
-    width: 36px;
-    height: 36px;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     color: var(--text-muted);
-    transition: all 0.2s;
 }
 
 .close-form:hover {
-    background: #e2e8f0;
-    color: #0f172a;
+    background: var(--border-color);
+    color: inherit;
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 16px;
 }
 
 .full-width {
@@ -506,78 +424,69 @@
 
 .form-group label {
     display: block;
-    margin-bottom: 6px;
-    font-weight: 700;
+    margin-bottom: 4px;
     font-size: 14px;
-    color: #475569;
+    color: var(--text-muted);
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
     box-sizing: border-box;
-    padding: 10px 14px;
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    font-size: 16px;
-    transition: all 0.2s;
-    background: #fff;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 15px;
+    background: inherit;
+    color: inherit;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     border-color: var(--primary-color);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .booking-submit {
-    margin-top: 30px;
+    margin-top: 20px;
     background: var(--primary-color);
     color: white;
-    padding: 18px;
+    padding: 12px 20px;
     border: none;
-    border-radius: 16px;
-    font-size: 18px;
-    font-weight: 800;
+    border-radius: 6px;
+    font-size: 16px;
     width: 100%;
     cursor: pointer;
-    transition: all 0.3s;
 }
 
 .booking-submit:hover {
     background: var(--primary-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
 }
 
 .booking-submit:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
 .terms-acceptance {
     margin-top: 15px;
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 12px;
-    border: 2px dashed var(--border-color);
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px dashed var(--border-color);
 }
 
 .terms-acceptance label {
-    font-weight: normal;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     cursor: pointer;
     margin: 0;
 }
 
 .terms-acceptance input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     margin: 0;
     flex-shrink: 0;
     accent-color: var(--primary-color);
@@ -586,7 +495,6 @@
 .terms-link {
     text-decoration: underline;
     color: var(--primary-color);
-    font-weight: 600;
 }
 
 .terms-link:hover {
@@ -594,11 +502,10 @@
 }
 
 #booking-response {
-    margin-top: 25px;
-    padding: 20px;
-    border-radius: 16px;
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 6px;
     text-align: center;
-    font-weight: 700;
 }
 
 #booking-response.success {
@@ -626,16 +533,12 @@
         gap: 10px;
     }
 
-    .day-column {
-        border-radius: 16px;
-    }
-
     .day-column.past {
-        display: none;
+        display: none !important;
     }
 
     .day-header {
-        padding: 15px;
+        padding: 12px;
         text-align: center;
         background: var(--bg-light);
         border-bottom: 1px solid var(--border-color);
@@ -643,7 +546,7 @@
     }
 
     .day-date {
-        font-size: 20px;
+        font-size: 18px;
         margin-top: 4px;
         display: block;
     }
@@ -658,12 +561,8 @@
 
     .snippen-booking-container,
     .snippen-booking-list-container {
-        padding: 20px;
-        margin: 20px 10px;
-    }
-
-    .booking-header-section h3 {
-        font-size: 24px;
+        padding: 12px;
+        margin: 10px 0;
     }
 }
 
@@ -672,8 +571,8 @@
     background-color: #fff3cd;
     border: 1px solid #ffeeba;
     color: #856404;
-    padding: 15px;
-    margin-bottom: 20px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
     border-radius: 6px;
     display: flex;
     justify-content: space-between;
@@ -682,19 +581,16 @@
 
 .snippen-login-prompt p {
     margin: 0;
-    font-weight: 500;
 }
 
 .snippen-login-btn {
     background-color: var(--primary-color);
     color: white !important;
-    padding: 10px 20px;
-    border-radius: 50px;
+    padding: 8px 16px;
+    border-radius: 6px;
     text-decoration: none;
-    font-weight: bold;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s;
 }
 
 .snippen-login-btn:hover {
@@ -718,19 +614,18 @@
     left: 0;
     width: 100%;
     background: #fff;
-    border: 2px solid var(--primary-color);
-    border-radius: 12px;
-    margin-top: 5px;
-    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    margin-top: 4px;
+    box-shadow: var(--shadow-sm);
     z-index: 10;
     max-height: 250px;
     overflow-y: auto;
 }
 
 .user-result-item {
-    padding: 12px 16px;
+    padding: 10px 14px;
     cursor: pointer;
-    transition: all 0.2s;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -753,16 +648,16 @@
 }
 
 .no-results {
-    padding: 16px;
+    padding: 14px;
     color: var(--text-muted);
     font-size: 14px;
     text-align: center;
 }
 
 .admin-only-field {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 18px;
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 6px;
     border: 1px dashed var(--primary-color);
 }
 
@@ -773,7 +668,6 @@
 /* Modal & Customer Name Label */
 .customer-name-label {
     display: block;
-    font-weight: 800;
     font-size: 13px;
     color: #b91c1c;
     margin: 4px 0;
@@ -782,7 +676,6 @@
 
 .slot-item.booked {
     cursor: pointer !important;
-    /* Admins can click booked slots */
 }
 
 .snippen-modal {
@@ -803,8 +696,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
 }
 
 .modal-content {
@@ -812,26 +704,13 @@
     background: #fff;
     width: 90%;
     max-width: 500px;
-    border-radius: 24px;
-    box-shadow: var(--shadow-lg);
-    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
 
-@keyframes modalSlideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
 .modal-header {
-    padding: 24px 30px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -840,26 +719,24 @@
 
 .modal-header h4 {
     margin: 0;
-    font-size: 20px;
-    font-weight: 800;
 }
 
 .close-modal {
     background: none;
     border: none;
-    font-size: 28px;
+    font-size: 24px;
     cursor: pointer;
     color: var(--text-muted);
 }
 
 .modal-body {
-    padding: 30px;
+    padding: 20px;
 }
 
 .booking-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 16px;
 }
 
 .detail-item strong {
@@ -870,7 +747,7 @@
 }
 
 .detail-item {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-main);
 }
 
@@ -887,77 +764,48 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 100000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    animation: fadeInModal 0.25s ease-out;
 }
 
 .snippen-booking-modal-content {
     position: relative;
-    background: rgba(255, 255, 255, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
     width: 100%;
     max-width: 550px;
-    border-radius: 28px;
-    padding: 35px;
+    border-radius: 8px;
+    padding: 24px;
     box-sizing: border-box;
-    font-family: 'Inter', -apple-system, system-ui, sans-serif;
-    color: var(--text-main);
-    animation: slideUpModal 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeInModal {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideUpModal {
-    from {
-        transform: translateY(30px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    color: inherit;
 }
 
 .snippen-booking-modal-close {
     position: absolute;
-    top: 25px;
-    right: 25px;
-    width: 36px;
-    height: 36px;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: #f1f5f9;
-    border: none;
-    font-size: 24px;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    font-size: 20px;
     line-height: 1;
     color: var(--text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
 }
 
 .snippen-booking-modal-close:hover {
-    background: #e2e8f0;
+    background: var(--border-color);
     color: var(--text-main);
-    transform: rotate(90deg);
 }
 
 /* Modal Headers */
@@ -965,57 +813,38 @@
 .snippen-modal-error-content h2,
 .snippen-modal-login-content h2 {
     margin-top: 0;
-    margin-bottom: 24px;
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #0f172a;
-    padding-right: 40px;
+    margin-bottom: 20px;
+    padding-right: 32px;
 }
 
-/* Error/Not Found & Unauthorized */
 .snippen-modal-error-content p,
 .snippen-modal-login-content p {
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.5;
     color: var(--text-muted);
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
-/* Modal Login Button styling */
 .snippen-booking-modal-content .snippen-login-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 16px 24px;
-    border-radius: 16px;
-    font-size: 16px;
-    font-weight: 700;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -2px rgba(37, 99, 235, 0.2);
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 15px;
 }
 
-.snippen-booking-modal-content .snippen-login-btn:hover {
-    transform: translateY(-1px);
-}
-
-.snippen-booking-modal-content .snippen-login-btn:active {
-    transform: translateY(0);
-}
-
-/* Badges */
 .snippen-modal-badge-wrapper {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .snippen-badge {
     display: inline-flex;
     align-items: center;
-    padding: 6px 14px;
-    border-radius: 9999px;
-    font-size: 13px;
-    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -1039,9 +868,9 @@
 .snippen-booking-details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 16px;
     border-top: 1px solid var(--border-color);
-    padding-top: 25px;
+    padding-top: 20px;
 }
 
 .snippen-booking-details-grid .detail-item {
@@ -1056,44 +885,41 @@
 
 .snippen-booking-details-grid .detail-item strong {
     font-size: 11px;
-    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
 }
 
 .snippen-booking-details-grid .detail-item span {
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 14px;
     color: var(--text-main);
 }
 
 .snippen-booking-details-grid .detail-item .detail-price {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
     color: var(--primary-color);
 }
 
 .snippen-booking-details-grid .detail-item .detail-desc {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 12px 16px;
-    font-size: 14px;
-    line-height: 1.5;
+    background: var(--bg-light);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.4;
     color: #475569;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--border-color);
 }
 
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
     .snippen-booking-modal-content {
-        padding: 25px;
-        border-radius: 20px;
+        padding: 16px;
+        border-radius: 8px;
     }
 
     .snippen-booking-details-grid {
         grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 12px;
     }
 
     .snippen-booking-details-grid .detail-item.full-width {
@@ -1107,33 +933,28 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .snippen-booking-list-container h3 {
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #0f172a;
     margin: 0;
 }
 
 .booking-view-toggle {
     display: flex;
-    background: #f1f5f9;
+    background: var(--bg-light);
     padding: 4px;
-    border-radius: 12px;
+    border-radius: 6px;
     gap: 4px;
+    border: 1px solid var(--border-color);
 }
 
 .booking-view-toggle .view-toggle-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
     color: var(--text-muted);
     text-decoration: none;
-    transition: all 0.2s ease;
 }
 
 .booking-view-toggle .view-toggle-btn:hover {
@@ -1143,30 +964,28 @@
 .booking-view-toggle .view-toggle-btn.active {
     background: #ffffff;
     color: var(--primary-color);
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
 /* Compact Booking List View */
 .booking-compact-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .booking-compact-row {
-    background: #ffffff;
+    background: inherit;
     border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 16px 20px;
+    border-radius: 6px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    transition: all 0.2s ease;
+    gap: 10px;
 }
 
 .booking-compact-row:hover {
     border-color: #cbd5e1;
-    box-shadow: var(--shadow-sm);
 }
 
 .booking-compact-main {
@@ -1184,15 +1003,13 @@
 }
 
 .booking-compact-date-slot .booking-date {
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
+    font-size: 14px;
+    color: inherit;
 }
 
 .booking-compact-date-slot .booking-slot-name {
     font-size: 13px;
     color: var(--text-muted);
-    font-weight: 500;
 }
 
 .booking-compact-objects {
@@ -1204,14 +1021,14 @@
 .booking-compact-desc {
     font-size: 13px;
     color: #475569;
-    background: #f8fafc;
-    padding: 6px 12px;
-    border-radius: 8px;
+    background: var(--bg-light);
+    padding: 4px 10px;
+    border-radius: 4px;
     max-width: 300px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--border-color);
 }
 
 .booking-compact-meta {
@@ -1222,8 +1039,7 @@
 }
 
 .booking-compact-meta .booking-price {
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
     color: var(--primary-color);
 }
 
@@ -1232,7 +1048,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-top: 10px;
+    padding-top: 8px;
     border-top: 1px dashed var(--border-color);
     flex-wrap: wrap;
 }
@@ -1241,8 +1057,8 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 12px;
-    border-radius: 8px;
+    padding: 4px 10px;
+    border-radius: 4px;
     font-size: 13px;
 }
 
@@ -1253,8 +1069,8 @@
 }
 
 .booking-door-code-badge.hidden-code {
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
     color: var(--text-muted);
 }
 
@@ -1269,7 +1085,7 @@
 
 .booking-compact-actions .snippen-btn-cancel-booking {
     width: auto;
-    padding: 6px 14px;
+    padding: 4px 12px;
 }
 
 @media (max-width: 768px) {
@@ -1313,11 +1129,10 @@
 
 .booking-list-card .snippen-tag {
     font-size: 11px;
-    font-weight: 700;
     background: #eff6ff;
     color: var(--primary-color);
-    padding: 4px 10px;
-    border-radius: 8px;
+    padding: 2px 8px;
+    border-radius: 4px;
     border: 1px solid #dbeafe;
 }
 
@@ -1325,10 +1140,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 12px;
-    border: 1px solid #f1f5f9;
+    background: var(--bg-light);
+    border-radius: 6px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
 }
 
 .booking-list-card .detail-row.description-row .value {
@@ -1339,16 +1154,14 @@
 }
 
 .booking-list-card .detail-row .price {
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 15px;
     color: var(--primary-color);
 }
 
 .booking-list-card .door-code-row {
-    padding: 12px;
-    border-radius: 12px;
-    margin-top: 5px;
-    transition: all 0.2s;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 4px;
     border: 1px solid transparent;
 }
 
@@ -1363,8 +1176,8 @@
 }
 
 .booking-list-card .door-code-row.hidden-code {
-    background: #f8fafc;
-    border-color: #f1f5f9;
+    background: var(--bg-light);
+    border-color: var(--border-color);
 }
 
 .booking-list-card .door-code-row .code-unavailable {
@@ -1374,9 +1187,9 @@
 }
 
 .booking-list-card .card-footer {
-    padding: 16px 24px;
+    padding: 12px 16px;
     border-top: 1px solid var(--border-color);
-    background: #ffffff;
+    background: inherit;
 }
 
 .booking-list-card .footer-actions {
@@ -1385,42 +1198,38 @@
 }
 
 .snippen-btn-cancel-booking {
-    background: #fff;
+    background: inherit;
     color: var(--error-color);
     border: 1px solid #fecaca;
-    padding: 10px 18px;
-    border-radius: 12px;
+    padding: 8px 14px;
+    border-radius: 6px;
     font-size: 13px;
-    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
     width: 100%;
 }
 
 .snippen-btn-cancel-booking:hover {
     background: #fef2f2;
     border-color: var(--error-color);
-    transform: translateY(-1px);
 }
 
 /* Empty Bookings State */
 .snippen-empty-bookings-card {
     background: transparent;
     border: none;
-    padding: 40px 20px;
+    padding: 30px 16px;
     text-align: center;
     max-width: 100%;
-    margin: 20px 0;
-    box-shadow: none;
+    margin: 16px 0;
 }
 
 .snippen-empty-bookings-card .empty-icon {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 36px;
-    height: 36px;
-    margin-bottom: 12px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
     color: var(--text-muted);
     opacity: 0.7;
 }
@@ -1431,67 +1240,58 @@
 }
 
 .snippen-empty-bookings-card p {
-    font-size: 15px;
-    font-weight: 400;
+    font-size: 14px;
     color: var(--text-muted);
     margin: 0;
 }
 
-/* Premium Login Form Styling */
+/* Login Form Styling */
 .snippen-booking-login-card {
     max-width: 440px;
-    margin: 40px auto;
-    background: #ffffff;
+    margin: 20px auto;
+    background: inherit;
     border: 1px solid var(--border-color);
-    border-radius: 24px;
-    box-shadow: var(--shadow-lg);
-    padding: 40px;
-    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    border-radius: 8px;
+    padding: 24px;
 }
 
 .login-card-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .login-card-header h3 {
-    margin: 0 0 10px 0;
-    font-size: 26px;
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.02em;
+    margin: 0 0 8px 0;
 }
 
 .login-card-header p {
     margin: 0;
     font-size: 14px;
     color: var(--text-muted);
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .snippen-login-form .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .snippen-login-form label {
     font-size: 13px;
-    font-weight: 700;
-    color: #475569;
+    color: var(--text-muted);
 }
 
 .snippen-login-form input[type="text"],
 .snippen-login-form input[type="password"] {
     width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    font-size: 15px;
-    transition: all 0.2s;
-    background: #fff;
-    color: var(--text-main);
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background: inherit;
+    color: inherit;
     box-sizing: border-box;
 }
 
@@ -1499,11 +1299,10 @@
 .snippen-login-form input[type="password"]:focus {
     border-color: var(--primary-color);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .snippen-login-form .form-row-remember {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .snippen-login-form .form-row-remember label {
@@ -1511,7 +1310,6 @@
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
 }
@@ -1519,92 +1317,73 @@
 .snippen-login-form .form-row-remember input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    border-radius: 4px;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     cursor: pointer;
 }
 
-
 @media (max-width: 480px) {
     .snippen-booking-login-card {
-        padding: 30px 20px;
-        margin: 20px 10px;
+        padding: 16px;
+        margin: 10px 0;
     }
 }
 
 /* Wizard Steps & Interactive Booking Flow */
 .snippen-booking-wizard {
-    margin-top: 40px;
-    padding: 35px;
-    background: #fff;
-    border: 2px solid var(--primary-color);
-    border-radius: 28px;
-    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1);
-    animation: wizardSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes wizardSlideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    margin-top: 24px;
+    padding: 24px;
+    background: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
 .wizard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
+    padding-bottom: 12px;
 }
 
 .wizard-header h4 {
     margin: 0;
-    font-size: 22px;
-    font-weight: 800;
 }
 
 .close-wizard {
-    background: #f1f5f9;
-    border: none;
-    width: 36px;
-    height: 36px;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     color: var(--text-muted);
 }
 
 .close-wizard:hover {
-    background: #e2e8f0;
-    color: #000;
+    background: var(--border-color);
+    color: inherit;
 }
 
 .wizard-steps-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 20px;
 }
 
 .wizard-step h5 {
-    margin: 0 0 8px 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #0f172a;
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    color: inherit;
 }
 
 .step-desc {
-    margin: 0 0 16px 0;
-    font-size: 14px;
+    margin: 0 0 12px 0;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
@@ -1612,19 +1391,17 @@
 .blocks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
 
 .block-select-item {
-    padding: 14px 10px;
-    border-radius: 12px;
-    border: 2px solid var(--border-color);
-    background: #fff;
+    padding: 10px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: inherit;
     text-align: center;
-    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .block-select-item.available:hover {
@@ -1639,8 +1416,8 @@
 }
 
 .block-select-item.booked {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
+    background: var(--bg-light);
+    border-color: var(--border-color);
     color: #94a3b8;
     cursor: not-allowed;
     text-decoration: line-through;
@@ -1650,20 +1427,18 @@
 .rooms-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px;
 }
 
 .room-select-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    border-radius: 12px;
-    border: 2px solid var(--border-color);
-    background: #fff;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: inherit;
     cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
 }
 
 .room-select-item.available:hover {
@@ -1684,8 +1459,8 @@
 }
 
 .room-status-dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
 }
 
@@ -1699,17 +1474,17 @@
 
 /* Summary Card */
 .booking-summary-card {
-    background: #f8fafc;
+    background: var(--bg-light);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 30px;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
 }
 
 .summary-details {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
 }
 
 .summary-item {
@@ -1719,33 +1494,24 @@
 }
 
 .summary-item strong {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
     color: var(--text-muted);
 }
 
 .summary-item span {
-    font-size: 16px;
-    font-weight: 700;
-    color: #0f172a;
+    font-size: 15px;
+    color: inherit;
 }
 
 .price-item span {
     color: var(--success-color) !important;
-    font-size: 20px !important;
 }
 
 .wizard-separator {
     border: 0;
     border-top: 1px solid var(--border-color);
-    margin: 30px 0;
-}
-
-/* Responsive Past-day hiding on mobile */
-@media (max-width: 600px) {
-    .day-column.past {
-        display: none !important;
-    }
+    margin: 20px 0;
 }
 
 /* Capacity Indicator */
@@ -1762,16 +1528,15 @@
 }
 
 .capacity-segment.occupied {
-    color: #ef4444; /* red-500 */
+    color: #ef4444;
 }
 
 .capacity-segment.available {
-    color: #10b981; /* emerald-500 */
+    color: #10b981;
 }
 
 .capacity-text {
     font-size: 11px;
-    font-weight: 600;
     margin-bottom: 4px;
 }
 
