@@ -193,6 +193,7 @@ class Install {
             payment_notes TEXT NULL,
             payment_updated_at DATETIME NULL,
             door_code VARCHAR(255) NULL,
+            booking_snapshot LONGTEXT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,

@@ -11,7 +11,7 @@ class BookingsPageTest extends TestCase {
 
     protected function setUp(): void {
         parent::setUp();
-        
+
         // Ensure post_tag taxonomy is registered for pages
         register_taxonomy_for_object_type( 'post_tag', 'page' );
     }
@@ -35,7 +35,7 @@ class BookingsPageTest extends TestCase {
             'post_status'  => 'publish',
             'post_type'    => 'page',
         ) );
-        
+
         if ( is_wp_error( $page_id ) ) {
             $this->fail( 'Failed to create test page: ' . $page_id->get_error_message() );
         }
@@ -46,7 +46,7 @@ class BookingsPageTest extends TestCase {
 
         // 3. Instantiate BookingsPage and capture output of the private method via reflection
         $bookings_page = new BookingsPage();
-        
+
         $reflection = new \ReflectionClass( BookingsPage::class );
         $method = $reflection->getMethod( 'render_tagged_pages' );
         $method->setAccessible( true );
@@ -68,7 +68,7 @@ class BookingsPageTest extends TestCase {
         $existing = get_posts( array( 'post_type' => 'page', 'posts_per_page' => -1, 'tax_query' => array( array( 'taxonomy' => 'post_tag', 'field' => 'slug', 'terms' => 'snippen-booking' ) ) ) );
         foreach( $existing as $p ) { wp_delete_post( $p->ID, true ); }
         $bookings_page = new BookingsPage();
-        
+
         $reflection = new \ReflectionClass( BookingsPage::class );
         $method = $reflection->getMethod( 'render_tagged_pages' );
         $method->setAccessible( true );
@@ -85,7 +85,7 @@ class BookingsPageTest extends TestCase {
      */
     public function test_render_filters_page_parameter() {
         $bookings_page = new BookingsPage();
-        
+
         $reflection = new \ReflectionClass( BookingsPage::class );
         $method = $reflection->getMethod( 'render_filters' );
         $method->setAccessible( true );
@@ -148,5 +148,61 @@ class BookingsPageTest extends TestCase {
 
         $this->assertStringContainsString( 'Tidsrom:', $output );
         $this->assertStringContainsString( '09:00 - 12:00', $output );
+    }
+
+    /**
+     * Test that Migration_2_9_0 adds column and backfills existing booking_snapshot
+     */
+    public function test_migration_2_9_0_backfills_booking_snapshot() {
+        global $wpdb;
+
+        // Create block
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_booking_blocks',
+            array(
+                'name'       => 'Kveldsblokk',
+                'start_time' => '17:00:00',
+                'end_time'   => '22:00:00',
+            )
+        );
+        $block_id = $wpdb->insert_id;
+
+        // Create booking without snapshot
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_bookings',
+            array(
+                'booking_date'  => '2026-10-15',
+                'customer_name' => 'Kari Nordmann',
+                'customer_email'=> 'kari@example.com',
+                'status'        => 'confirmed',
+                'price'         => 1200,
+            )
+        );
+        $booking_id = $wpdb->insert_id;
+
+        // Link block
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_booking_booking_blocks',
+            array(
+                'booking_id'       => $booking_id,
+                'booking_block_id' => $block_id,
+            )
+        );
+
+        // Run Migration_2_9_0
+        $migration = new \SnippenBooking\Database\Migrations\Migration_2_9_0();
+        $migration->up();
+
+        $snapshot_raw = $wpdb->get_var(
+            $wpdb->prepare( "SELECT booking_snapshot FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id )
+        );
+
+        $this->assertNotEmpty( $snapshot_raw );
+        $snapshot = json_decode( $snapshot_raw, true );
+
+        $this->assertEquals( '17:00:00', $snapshot['start_time'] );
+        $this->assertEquals( '22:00:00', $snapshot['end_time'] );
+        $this->assertEquals( '17:00 - 22:00', $snapshot['time_range_formatted'] );
+        $this->assertEquals( 'Kveldsblokk', $snapshot['blocks'][0]['name'] );
     }
 }
