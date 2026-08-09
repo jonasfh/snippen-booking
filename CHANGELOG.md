@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.9.0] - 2026-08-09
+- (#204) Added `booking_snapshot` JSON column to `wp_snippen_bookings` and migration `Migration_2_9_0` to freeze booking details (times, objects, blocks) and prevent double bookings when block configurations change.
+
 ## [2.8.3] - 2026-08-09
 - (#202) Fixed missing time range (`Tidsrom:`) in admin bookings list when using booking blocks.
 

@@ -71,19 +71,34 @@ class AvailabilityService {
 			$proposed_end->modify( '-1 second' );
 
 			foreach ( $existing_bookings as $booking ) {
-				$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
-				foreach ( $booked_blocks as $booked ) {
-					$booked_start = new \DateTime( $date . ' ' . $booked->start_time );
-					$booked_end   = new \DateTime( $date . ' ' . $booked->end_time );
+				// Use snapshot start/end time if available to prevent double bookings when block definitions change
+				if ( ! empty( $booking->snapshot['start_time'] ) && ! empty( $booking->snapshot['end_time'] ) ) {
+					$booked_start = new \DateTime( $date . ' ' . $booking->snapshot['start_time'] );
+					$booked_end   = new \DateTime( $date . ' ' . $booking->snapshot['end_time'] );
 
 					if ( $booked_end <= $booked_start ) {
 						$booked_end->modify( '+1 day' );
 					}
 					$booked_end->modify( '-1 second' );
 
-					// Overlap condition: (start1 < end2) && (start2 < end1)
 					if ( ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end ) ) {
 						return false; // Time conflict
+					}
+				} else {
+					$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
+					foreach ( $booked_blocks as $booked ) {
+						$booked_start = new \DateTime( $date . ' ' . $booked->start_time );
+						$booked_end   = new \DateTime( $date . ' ' . $booked->end_time );
+
+						if ( $booked_end <= $booked_start ) {
+							$booked_end->modify( '+1 day' );
+						}
+						$booked_end->modify( '-1 second' );
+
+						// Overlap condition: (start1 < end2) && (start2 < end1)
+						if ( ( $proposed_start < $booked_end ) && ( $booked_start < $proposed_end ) ) {
+							return false; // Time conflict
+						}
 					}
 				}
 			}

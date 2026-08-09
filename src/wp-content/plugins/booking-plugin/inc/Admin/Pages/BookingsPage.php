@@ -274,7 +274,17 @@ class BookingsPage {
 		$status_class = 'snippen-status-' . $booking->status;
 		$booking_date = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
 		$time_range   = '';
-		if ( ! empty( $booking->start_time ) && ! empty( $booking->end_time ) ) {
+
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( ! empty( $snapshot['time_range_formatted'] ) ) {
+				$time_range = $snapshot['time_range_formatted'];
+			} elseif ( ! empty( $snapshot['start_time'] ) && ! empty( $snapshot['end_time'] ) ) {
+				$time_range = date_i18n( 'H:i', strtotime( $snapshot['start_time'] ) ) . ' - ' . date_i18n( 'H:i', strtotime( $snapshot['end_time'] ) );
+			}
+		}
+
+		if ( empty( $time_range ) && ! empty( $booking->start_time ) && ! empty( $booking->end_time ) ) {
 			$time_range = date_i18n( 'H:i', strtotime( $booking->start_time ) ) . ' - ' . date_i18n( 'H:i', strtotime( $booking->end_time ) );
 		}
 
