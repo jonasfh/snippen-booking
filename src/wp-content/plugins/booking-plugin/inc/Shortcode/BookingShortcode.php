@@ -79,24 +79,27 @@ class BookingShortcode {
 				<?php if ( $is_multiple_objects ) : ?>
 					<div class="multiple-objects-header">
 						<h4><?php esc_html_e( 'Objekter tilgjengelige for booking i denne kalenderen:', 'snippen-booking' ); ?></h4>
-						<div class="object-buttons-list">
+						<div class="object-drawers-list">
 							<?php foreach ( $objects as $index => $obj ) : ?>
-								<button type="button" 
-									class="object-selector-btn <?php echo 0 === $index ? 'active' : ''; ?>" 
-									data-object-id="<?php echo esc_attr( $obj->id ); ?>"
-									data-object-name="<?php echo esc_attr( $obj->name ); ?>"
-									data-object-description="<?php echo esc_attr( $obj->description ); ?>"
-									data-info-link="<?php echo esc_attr( $obj->info_link ); ?>">
-									<?php echo esc_html( $obj->name ); ?>
-								</button>
+								<div class="object-drawer">
+									<button type="button" 
+										class="object-drawer-toggle" 
+										aria-expanded="false">
+										<span class="drawer-title"><?php echo esc_html( $obj->name ); ?></span>
+										<span class="drawer-icon" aria-hidden="true">v</span>
+									</button>
+									<div class="object-drawer-content" style="display: none;">
+										<?php if ( ! empty( $obj->description ) ) : ?>
+											<p class="object-summary"><?php echo esc_html( $obj->description ); ?></p>
+										<?php endif; ?>
+										<?php if ( ! empty( $obj->info_link ) ) : ?>
+											<p class="object-infolink-wrapper">
+												<a href="<?php echo esc_url( $obj->info_link ); ?>" class="info-link" target="_blank"><?php esc_html_e( 'Mer info &rarr;', 'snippen-booking' ); ?></a>
+											</p>
+										<?php endif; ?>
+									</div>
+								</div>
 							<?php endforeach; ?>
-						</div>
-						<div class="selected-object-details">
-							<div class="header-main">
-								<h3 class="selected-object-title"><?php echo esc_html( $objects[0]->name ); ?></h3>
-								<a href="<?php echo esc_url( $objects[0]->info_link ); ?>" class="info-link selected-object-infolink" target="_blank" <?php echo empty( $objects[0]->info_link ) ? 'style="display:none;"' : ''; ?>><?php esc_html_e( 'Mer info &rarr;', 'snippen-booking' ); ?></a>
-							</div>
-							<p class="object-summary selected-object-desc" <?php echo empty( $objects[0]->description ) ? 'style="display:none;"' : ''; ?>><?php echo esc_html( $objects[0]->description ); ?></p>
 						</div>
 					</div>
 				<?php else : ?>

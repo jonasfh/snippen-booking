@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.8.0] - 2026-08-09
+- (#197) Changed booking object tabs in booking shortcode to closed horizontal collapsible accordion drawers that toggle open/closed on click with indicator icons (v / ^).
+
 ## [2.7.1] - 2026-08-09
 - Simplified CSS styling to align with active WordPress default theme (Twenty Twenty-Five) and added design guidelines to `AGENTS.md`.
 
