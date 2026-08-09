@@ -82,8 +82,9 @@
 }
 
 .object-drawer-toggle .drawer-icon {
-    font-size: 0.85em;
-    color: var(--text-muted);
+    font-size: 14px;
+    opacity: 0.6;
+    color: inherit;
     transition: transform 0.15s ease;
 }
 
