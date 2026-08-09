@@ -54,17 +54,35 @@ class LoginApiTest extends TestCase {
 	 * @return array
 	 */
 	private function call_ajax_login() {
+		$_REQUEST['nonce']  = $_POST['nonce'] ?? '';
+		$_REQUEST['action'] = $_POST['action'] ?? '';
+		$output             = '';
+
+		add_filter(
+			'wp_die_ajax_handler',
+			function() {
+				return function( $message, $title, $args ) {
+					throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
+				};
+			}
+		);
+
+		ob_start();
 		try {
-			ob_start();
 			UserApi::login();
-			$output = ob_get_clean();
 		} catch ( \WPAjaxDieContinueException $e ) {
-			$output = ob_get_clean();
+			// wp_send_json called wp_die
 		} catch ( \Exception $e ) {
+			$output = $e->getMessage();
+		}
+		if ( empty( $output ) ) {
 			$output = ob_get_clean();
+		} else {
+			ob_end_clean();
 		}
 
-		return json_decode( $output, true );
+		$json = json_decode( $output, true );
+		return $json;
 	}
 
 	/**
