@@ -34,7 +34,7 @@ class BookingBlockRepository {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_booking_blocks';
 		return $wpdb->get_results(
-			"SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY sort_order ASC"
+			"SELECT * FROM $table WHERE deleted_at IS NULL AND (is_active IS NULL OR is_active = 1) ORDER BY sort_order ASC"
 		);
 	}
 
@@ -54,7 +54,7 @@ class BookingBlockRepository {
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM $table WHERE id IN ($placeholders) AND deleted_at IS NULL ORDER BY sort_order ASC",
+				"SELECT * FROM $table WHERE id IN ($placeholders) AND deleted_at IS NULL AND (is_active IS NULL OR is_active = 1) ORDER BY sort_order ASC",
 				...$ids
 			)
 		);
@@ -74,7 +74,7 @@ class BookingBlockRepository {
 			$wpdb->prepare(
 				"SELECT b.* FROM $table_blocks b
 				 JOIN $table_junction j ON b.id = j.booking_block_id
-				 WHERE j.booking_object_id = %d AND b.deleted_at IS NULL
+				 WHERE j.booking_object_id = %d AND b.deleted_at IS NULL AND (b.is_active IS NULL OR b.is_active = 1)
 				 ORDER BY b.sort_order ASC",
 				(int) $object_id
 			)
