@@ -58,10 +58,13 @@ class BookingListShortcode {
 	 * @return string
 	 */
 	private static function render_login_form() {
+		\SnippenBooking\Assets\AssetLoader::enqueue();
 		$redirect_url = get_permalink();
 		if ( ! $redirect_url ) {
 			$redirect_url = home_url( '/' );
 		}
+
+		$login_nonce = wp_create_nonce( 'snippen_login_nonce' );
 
 		ob_start();
 		?>
@@ -71,7 +74,11 @@ class BookingListShortcode {
 				<p><?php esc_html_e( 'Logg inn med din beboerkonto for å se dine bookinger.', 'snippen-booking' ); ?></p>
 			</div>
 
-			<form name="loginform" id="loginform" action="<?php echo esc_url( site_url( 'wp-login.php', 'login_post' ) ); ?>" method="post" class="snippen-login-form">
+			<div id="snippen-login-error" class="snippen-login-error" style="display:none; background-color:#fee2e2; border:1px solid #fca5a5; color:#991b1b; padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:14px;"></div>
+
+			<form name="loginform" id="snippen-shortcode-loginform" action="<?php echo esc_url( site_url( 'wp-login.php', 'login_post' ) ); ?>" method="post" class="snippen-login-form">
+				<input type="hidden" name="action" value="snippen_login" />
+				<input type="hidden" name="nonce" value="<?php echo esc_attr( $login_nonce ); ?>" />
 				<input type="hidden" name="redirect_to" value="<?php echo esc_url( $redirect_url ); ?>" />
 				
 				<div class="form-group">
@@ -99,6 +106,51 @@ class BookingListShortcode {
 				</button>
 			</form>
 		</div>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var form = document.getElementById('snippen-shortcode-loginform');
+			if (!form) return;
+			form.addEventListener('submit', function(e) {
+				e.preventDefault();
+				var errorDiv = document.getElementById('snippen-login-error');
+				var submitBtn = document.getElementById('wp-submit');
+				if (errorDiv) {
+					errorDiv.style.display = 'none';
+					errorDiv.textContent = '';
+				}
+				if (submitBtn) {
+					submitBtn.disabled = true;
+				}
+
+				var formData = new FormData(form);
+				var ajaxUrl = typeof snippenBookingAjax !== 'undefined' ? snippenBookingAjax.ajaxurl : '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
+
+				fetch(ajaxUrl, {
+					method: 'POST',
+					body: formData
+				})
+				.then(function(res) { return res.json(); })
+				.then(function(data) {
+					if (data.success) {
+						window.location.href = data.data.redirect_url || '<?php echo esc_url( $redirect_url ); ?>';
+					} else {
+						if (submitBtn) submitBtn.disabled = false;
+						if (errorDiv) {
+							errorDiv.textContent = data.data && data.data.message ? data.data.message : '<?php echo esc_js( __( 'Innlogging feilet.', 'snippen-booking' ) ); ?>';
+							errorDiv.style.display = 'block';
+						}
+					}
+				})
+				.catch(function() {
+					if (submitBtn) submitBtn.disabled = false;
+					if (errorDiv) {
+						errorDiv.textContent = '<?php echo esc_js( __( 'Tilkoblingsfeil ved innlogging.', 'snippen-booking' ) ); ?>';
+						errorDiv.style.display = 'block';
+					}
+				});
+			});
+		});
+		</script>
 		<?php
 		return ob_get_clean();
 	}
@@ -119,7 +171,7 @@ class BookingListShortcode {
 		$view = isset( $_GET['booking_view'] ) && 'archive' === $_GET['booking_view'] ? 'archive' : 'upcoming';
 
 		if ( 'archive' === $view ) {
-			// Archive view: bookings before CURDATE(), sorted DESC
+			// Archive view: bookings before CURDATE(), sorted DESC.
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$query = $wpdb->prepare(
 				"
@@ -132,7 +184,7 @@ class BookingListShortcode {
 			);
 			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		} else {
-			// Upcoming view: bookings today and future (>= CURDATE()), sorted ASC
+			// Upcoming view: bookings today and future (>= CURDATE()), sorted ASC.
 			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$query = $wpdb->prepare(
 				"
