@@ -40,49 +40,6 @@ class ToggleStatusApi {
 			$table = $wpdb->prefix . 'snippen_discount_rules';
 		}
 
-		// Validation when activating a time slot to prevent overlaps
-		if ( $entity_type === 'time_slot' && $is_active === 1 ) {
-			$slot = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d AND deleted_at IS NULL", $id ) );
-			if ( $slot ) {
-				$object_ids = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM {$wpdb->prefix}snippen_booking_object_booking_blocks WHERE booking_block_id = %d", $id ) );
-				if ( ! empty( $object_ids ) ) {
-					// Check if activating this slot causes an overlap with another active slot
-					$placeholders = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
-					$query        = "SELECT s.id FROM $table s
-					          JOIN {$wpdb->prefix}snippen_booking_object_booking_blocks tso ON s.id = tso.booking_block_id
-					          WHERE tso.booking_object_id IN ($placeholders)
-					          AND s.deleted_at IS NULL
-					          AND s.id != %d
-					          AND (s.is_active IS NULL OR s.is_active = 1)
-					          AND (
-					            (s.start_time < %s AND s.end_time > %s) OR
-					            (s.start_time >= %s AND s.start_time < %s)
-					          )";
-					$args         = array_merge( $object_ids, array( $id, $slot->end_time, $slot->start_time, $slot->start_time, $slot->end_time ) );
-					$overlapping  = $wpdb->get_results( $wpdb->prepare( $query, ...$args ) );
-
-					if ( ! empty( $overlapping ) ) {
-						// Check days overlap
-						$slot_days    = empty( $slot->days_of_week ) ? array() : explode( ',', $slot->days_of_week );
-						$has_conflict = false;
-						foreach ( $overlapping as $ov ) {
-							$ov_slot = $wpdb->get_row( $wpdb->prepare( "SELECT days_of_week FROM $table WHERE id = %d", $ov->id ) );
-							$ov_days = empty( $ov_slot->days_of_week ) ? array() : explode( ',', $ov_slot->days_of_week );
-
-							if ( empty( $slot_days ) || empty( $ov_days ) || ! empty( array_intersect( $slot_days, $ov_days ) ) ) {
-								$has_conflict = true;
-								break;
-							}
-						}
-
-						if ( $has_conflict ) {
-							wp_send_json_error( array( 'message' => __( 'Kan ikke aktivere tidsluke: Den overlapper med en annen aktiv tidsluke.', 'snippen-booking' ) ) );
-						}
-					}
-				}
-			}
-		}
-
 		$updated = $wpdb->update(
 			$table,
 			array(

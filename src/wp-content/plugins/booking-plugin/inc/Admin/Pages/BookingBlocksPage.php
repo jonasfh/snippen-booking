@@ -102,16 +102,6 @@ class BookingBlocksPage {
 
 		$repo = new BookingBlockRepository();
 
-		if ( $is_active === 1 && $repo->has_overlap( $id, $start_time, $end_time, $object_ids, $days_of_week ) ) {
-			$action = $id > 0 ? 'edit' : 'add';
-			$url    = admin_url( 'admin.php?page=snippen-booking-blocks&action=' . $action . '&error=overlap' );
-			if ( $id > 0 ) {
-				$url .= '&id=' . $id;
-			}
-			wp_safe_redirect( $url );
-			exit;
-		}
-
 		$data = array(
 			'name'         => $name,
 			'description'  => $description,
@@ -247,6 +237,15 @@ class BookingBlocksPage {
 			return;
 		}
 
+		global $wpdb;
+		$table_junction = $wpdb->prefix . 'snippen_booking_object_booking_blocks';
+
+		// Pre-fetch associated booking objects for each block
+		$block_objects = array();
+		foreach ( $blocks as $block ) {
+			$block_objects[ $block->id ] = $wpdb->get_col( $wpdb->prepare( "SELECT booking_object_id FROM $table_junction WHERE booking_block_id = %d", $block->id ) );
+		}
+
 		echo '<div class="snippen-card">';
 		echo '<h2>' . esc_html__( 'Ukesoversikt', 'snippen-booking' ) . '</h2>';
 		echo '<div style="overflow-x: auto;">';
@@ -263,6 +262,43 @@ class BookingBlocksPage {
 			$is_active  = ! isset( $block->is_active ) || (int) $block->is_active === 1;
 			$row_style  = $is_active ? '' : ' style="opacity: 0.55; background-color: #f8fafc;"';
 			$status_tag = $is_active ? '' : ' <span class="snippen-badge snippen-status-cancelled" style="font-size:10px; padding:2px 6px; margin-left:4px;">' . esc_html__( 'Deaktivert', 'snippen-booking' ) . '</span>';
+
+			// Check if this active block overlaps with any other active block sharing the same object and days
+			$has_active_overlap = false;
+			if ( $is_active ) {
+				$this_objs = $block_objects[ $block->id ] ?? array();
+				$this_days = $block->days_of_week !== null && $block->days_of_week !== '' ? explode( ',', $block->days_of_week ) : array( '0', '1', '2', '3', '4', '5', '6', '7' );
+
+				foreach ( $blocks as $other ) {
+					if ( (int) $other->id === (int) $block->id ) {
+						continue;
+					}
+					$other_active = ! isset( $other->is_active ) || (int) $other->is_active === 1;
+					if ( ! $other_active ) {
+						continue;
+					}
+
+					// Time overlap check
+					if ( ( $block->start_time < $other->end_time && $block->end_time > $other->start_time ) || ( $block->start_time >= $other->start_time && $block->start_time < $other->end_time ) ) {
+						$other_objs   = $block_objects[ $other->id ] ?? array();
+						$shared_objs = array_intersect( $this_objs, $other_objs );
+
+						if ( ! empty( $shared_objs ) ) {
+							$other_days  = $other->days_of_week !== null && $other->days_of_week !== '' ? explode( ',', $other->days_of_week ) : array( '0', '1', '2', '3', '4', '5', '6', '7' );
+							$shared_days = array_intersect( $this_days, $other_days );
+
+							if ( ! empty( $shared_days ) ) {
+								$has_active_overlap = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if ( $has_active_overlap ) {
+				$status_tag .= ' <span class="snippen-badge snippen-status-pending" style="font-size:10px; padding:2px 6px; margin-left:4px; background:#f59e0b; color:#fff;" title="' . esc_attr__( 'Overlapper med en annen aktiv blokk', 'snippen-booking' ) . '">' . esc_html__( 'Overlapp', 'snippen-booking' ) . '</span>';
+			}
 
 			echo '<tr' . $row_style . '>';
 			echo '<td><strong>' . esc_html( $block->name ) . '</strong>' . $status_tag . '<br><small>' . esc_html( substr( $block->start_time, 0, 5 ) . '-' . substr( $block->end_time, 0, 5 ) ) . '</small></td>';
