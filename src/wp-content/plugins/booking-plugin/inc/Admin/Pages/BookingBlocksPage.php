@@ -278,8 +278,14 @@ class BookingBlocksPage {
 						continue;
 					}
 
+					// Normalize time strings to HH:MM:SS for robust string comparison
+					$b_start = strlen( $block->start_time ) === 5 ? $block->start_time . ':00' : $block->start_time;
+					$b_end   = strlen( $block->end_time ) === 5 ? $block->end_time . ':00' : $block->end_time;
+					$o_start = strlen( $other->start_time ) === 5 ? $other->start_time . ':00' : $other->start_time;
+					$o_end   = strlen( $other->end_time ) === 5 ? $other->end_time . ':00' : $other->end_time;
+
 					// Time overlap check (two time intervals [A_start, A_end) and [B_start, B_end) overlap iff A_start < B_end AND A_end > B_start)
-					if ( $block->start_time < $other->end_time && $block->end_time > $other->start_time ) {
+					if ( $b_start < $o_end && $b_end > $o_start ) {
 						$other_objs   = $block_objects[ $other->id ] ?? array();
 						$shared_objs = array_intersect( $this_objs, $other_objs );
 

@@ -121,17 +121,17 @@ class ActiveToggleAndOverlapTest extends TestCase {
 		$method->setAccessible( true );
 
 		$block_morning = (object) array(
-			'id'           => 1,
+			'id'           => 10,
 			'name'         => 'Morgen 08-11',
 			'start_time'   => '08:00:00',
 			'end_time'     => '11:00:00',
-			'days_of_week' => '6,0,7',
+			'days_of_week' => '5,6,0,7',
 			'is_active'    => 1,
 		);
 
 		$block_day = (object) array(
-			'id'           => 2,
-			'name'         => 'Dag 08-16',
+			'id'           => 20,
+			'name'         => 'Day 08-16',
 			'start_time'   => '08:00:00',
 			'end_time'     => '16:00:00',
 			'days_of_week' => '6,0,7',
@@ -139,31 +139,34 @@ class ActiveToggleAndOverlapTest extends TestCase {
 		);
 
 		$block_evening = (object) array(
-			'id'           => 3,
-			'name'         => 'Kveld 16-23',
+			'id'           => 30,
+			'name'         => 'Evening 16-23',
 			'start_time'   => '16:00:00',
 			'end_time'     => '23:00:00',
-			'days_of_week' => '6,0,7',
+			'days_of_week' => '5,6,0,7',
 			'is_active'    => 1,
 		);
 
 		global $wpdb;
 		$table_junction = $wpdb->prefix . 'snippen_booking_object_booking_blocks';
-		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 1 ) );
-		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 2 ) );
-		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 3 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 10 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 2, 'booking_block_id' => 10 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 20 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 2, 'booking_block_id' => 20 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 1, 'booking_block_id' => 30 ) );
+		$wpdb->insert( $table_junction, array( 'booking_object_id' => 2, 'booking_block_id' => 30 ) );
 
 		ob_start();
 		$method->invoke( $page, array( $block_morning, $block_day, $block_evening ) );
 		$output = ob_get_clean();
 
-		// Morgen (08-11) and Dag (08-16) overlap -> Morgen must have Overlapp tag
+		// Morgen (08-11) and Day (08-16) overlap on Saturday (6), Sunday (0), Holiday (7) -> Morgen must have Overlapp tag
 		$this->assertStringContainsString( 'Morgen 08-11</strong> <span class="snippen-badge snippen-status-pending"', $output );
 
-		// Dag (08-16) and Morgen (08-11) overlap -> Dag must have Overlapp tag
-		$this->assertStringContainsString( 'Dag 08-16</strong> <span class="snippen-badge snippen-status-pending"', $output );
+		// Day (08-16) and Morgen (08-11) overlap -> Day must have Overlapp tag
+		$this->assertStringContainsString( 'Day 08-16</strong> <span class="snippen-badge snippen-status-pending"', $output );
 
-		// Kveld (16-23) starts at 16:00, Dag ends at 16:00 (adjacent, not overlapping) -> Kveld must NOT have Overlapp tag
-		$this->assertStringNotContainsString( 'Kveld 16-23</strong> <span class="snippen-badge snippen-status-pending"', $output );
+		// Evening (16-23) starts at 16:00, Day ends at 16:00 and Morgen ends at 11:00 (no time overlap with Evening) -> Evening must NOT have Overlapp tag
+		$this->assertStringNotContainsString( 'Evening 16-23</strong> <span class="snippen-badge snippen-status-pending"', $output );
 	}
 }
