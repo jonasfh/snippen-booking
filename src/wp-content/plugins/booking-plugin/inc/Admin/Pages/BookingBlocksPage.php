@@ -355,11 +355,27 @@ class BookingBlocksPage {
 		echo '<textarea name="description" id="description" rows="3" class="large-text">' . esc_textarea( $block ? $block->description : '' ) . '</textarea>';
 		echo '</div>';
 
+		$current_start = $block ? substr( $block->start_time, 0, 5 ) : '08:00';
+		$current_end   = $block ? substr( $block->end_time, 0, 5 ) : '16:00';
+
 		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
-		echo '<div><label for="start_time">' . esc_html__( 'Starttid (HH:MM, 00:00-23:59)', 'snippen-booking' ) . '</label>';
-		echo '<input type="time" name="start_time" id="start_time" value="' . esc_attr( $block ? substr( $block->start_time, 0, 5 ) : '08:00' ) . '" step="60" required style="max-width:160px;"></div>';
-		echo '<div><label for="end_time">' . esc_html__( 'Sluttid (HH:MM, 00:00-23:59)', 'snippen-booking' ) . '</label>';
-		echo '<input type="time" name="end_time" id="end_time" value="' . esc_attr( $block ? substr( $block->end_time, 0, 5 ) : '16:00' ) . '" step="60" required style="max-width:160px;"></div>';
+		echo '<div><label for="start_time">' . esc_html__( 'Starttid', 'snippen-booking' ) . '</label>';
+		echo '<select name="start_time" id="start_time" style="max-width:160px;">';
+		for ( $h = 0; $h < 24; $h++ ) {
+			$time_val = sprintf( '%02d:00', $h );
+			echo '<option value="' . esc_attr( $time_val ) . '" ' . selected( $current_start, $time_val, false ) . '>' . esc_html( $time_val ) . '</option>';
+		}
+		echo '</select></div>';
+
+		echo '<div><label for="end_time">' . esc_html__( 'Sluttid', 'snippen-booking' ) . '</label>';
+		echo '<select name="end_time" id="end_time" style="max-width:160px;">';
+		for ( $h = 0; $h < 24; $h++ ) {
+			$time_val = sprintf( '%02d:00', $h );
+			echo '<option value="' . esc_attr( $time_val ) . '" ' . selected( $current_end, $time_val, false ) . '>' . esc_html( $time_val ) . '</option>';
+		}
+		// Also add 23:59 as a convenient end-of-day option
+		echo '<option value="23:59" ' . selected( $current_end, '23:59', false ) . '>23:59</option>';
+		echo '</select></div>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
