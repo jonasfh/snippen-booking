@@ -20,6 +20,10 @@ class UserApi {
 		add_action( 'wp_ajax_nopriv_snippen_request_confirmation_code', array( __CLASS__, 'request_confirmation_code' ) );
 		add_action( 'wp_ajax_snippen_verify_confirmation_code', array( __CLASS__, 'verify_confirmation_code' ) );
 		add_action( 'wp_ajax_nopriv_snippen_verify_confirmation_code', array( __CLASS__, 'verify_confirmation_code' ) );
+
+		// AJAX Login endpoint
+		add_action( 'wp_ajax_snippen_login', array( __CLASS__, 'login' ) );
+		add_action( 'wp_ajax_nopriv_snippen_login', array( __CLASS__, 'login' ) );
 	}
 
 	/**
@@ -146,5 +150,44 @@ class UserApi {
 		}
 
 		wp_send_json_success( array( 'message' => __( 'Din konto er nå bekreftet! Du kan nå logge inn.', 'snippen-booking' ) ) );
+	}
+
+	/**
+	 * Process AJAX login
+	 */
+	public static function login() {
+		if ( false === check_ajax_referer( 'snippen_login_nonce', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Sikkerhetssjekk feilet (ugyldig nonce). Vennligst laste siden på nytt.', 'snippen-booking' ) ) );
+		}
+
+		$log         = isset( $_POST['log'] ) ? sanitize_text_field( wp_unslash( $_POST['log'] ) ) : '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotUnslashed
+		$pwd         = isset( $_POST['pwd'] ) ? $_POST['pwd'] : '';
+		$rememberme  = isset( $_POST['rememberme'] ) && 'forever' === $_POST['rememberme'];
+		$redirect_to = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : home_url( '/' );
+
+		if ( empty( $log ) || empty( $pwd ) ) {
+			wp_send_json_error( array( 'message' => __( 'Vennligst oppgi brukernavn/e-post/telefonnummer og passord.', 'snippen-booking' ) ) );
+		}
+
+		$credentials = array(
+			'user_login'    => $log,
+			'user_password' => $pwd,
+			'remember'      => $rememberme,
+		);
+
+		$user = wp_signon( $credentials, is_ssl() );
+
+		if ( is_wp_error( $user ) ) {
+			$error_message = wp_strip_all_tags( $user->get_error_message() );
+			wp_send_json_error( array( 'message' => $error_message ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'message'      => __( 'Innlogging vellykket! Omdirigerer...', 'snippen-booking' ),
+				'redirect_url' => $redirect_to,
+			)
+		);
 	}
 }

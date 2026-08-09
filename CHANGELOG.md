@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.8.1] - 2026-08-09
+- (#187) Changed login form in `[snippen_booking_list login-form="1"]` shortcode to use AJAX authentication (`UserApi::login`) to resolve server 503 Service Unavailable errors on POST to `wp-login.php`.
+
 ## [2.8.0] - 2026-08-09
 - (#197) Changed booking object tabs in booking shortcode to closed horizontal collapsible accordion drawers that toggle open/closed on click with indicator icons (v / ^).
 
