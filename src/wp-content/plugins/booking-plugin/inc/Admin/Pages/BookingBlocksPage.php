@@ -211,10 +211,13 @@ class BookingBlocksPage {
 
 				$is_active = ! isset( $block->is_active ) || (int) $block->is_active === 1;
 
+				$display_start = substr( $block->start_time, 0, 5 );
+				$display_end   = ( substr( $block->end_time, 0, 5 ) === '23:59' || $block->end_time === '23:59:59' ) ? '24:00' : substr( $block->end_time, 0, 5 );
+
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $block->name ) . '</a></strong></td>';
 				echo '<td>' . esc_html( $block->object_names ?: '-' ) . '</td>';
-				echo '<td>' . esc_html( substr( $block->start_time, 0, 5 ) . ' - ' . substr( $block->end_time, 0, 5 ) ) . '</td>';
+				echo '<td>' . esc_html( $display_start . ' - ' . $display_end ) . '</td>';
 				echo '<td>' . esc_html( $days_text ) . '</td>';
 				echo '<td>' . esc_html( $block->sort_order ) . '</td>';
 				echo '<td><label class="snippen-switch"><input type="checkbox" class="snippen-toggle-status" data-entity-type="time_slot" data-id="' . intval( $block->id ) . '" ' . checked( $is_active, true, false ) . '><span class="snippen-slider"></span></label></td>';
@@ -306,8 +309,11 @@ class BookingBlocksPage {
 				$status_tag .= ' <span class="snippen-badge snippen-status-pending" style="font-size:10px; padding:2px 6px; margin-left:4px; background:#f59e0b; color:#fff;" title="' . esc_attr__( 'Overlapper med en annen aktiv blokk', 'snippen-booking' ) . '">' . esc_html__( 'Overlapp', 'snippen-booking' ) . '</span>';
 			}
 
+			$preview_start = substr( $block->start_time, 0, 5 );
+			$preview_end   = ( substr( $block->end_time, 0, 5 ) === '23:59' || $block->end_time === '23:59:59' ) ? '24:00' : substr( $block->end_time, 0, 5 );
+
 			echo '<tr' . $row_style . '>';
-			echo '<td><strong>' . esc_html( $block->name ) . '</strong>' . $status_tag . '<br><small>' . esc_html( substr( $block->start_time, 0, 5 ) . '-' . substr( $block->end_time, 0, 5 ) ) . '</small></td>';
+			echo '<td><strong>' . esc_html( $block->name ) . '</strong>' . $status_tag . '<br><small>' . esc_html( $preview_start . '-' . $preview_end ) . '</small></td>';
 
 			$block_days = $block->days_of_week !== null && $block->days_of_week !== ''
 				? explode( ',', $block->days_of_week )
@@ -373,8 +379,9 @@ class BookingBlocksPage {
 			$time_val = sprintf( '%02d:00', $h );
 			echo '<option value="' . esc_attr( $time_val ) . '" ' . selected( $current_end, $time_val, false ) . '>' . esc_html( $time_val ) . '</option>';
 		}
-		// Also add 23:59 as a convenient end-of-day option
-		echo '<option value="23:59" ' . selected( $current_end, '23:59', false ) . '>23:59</option>';
+		// Add 24:00 option for end of day (saved as 23:59:59 in DB)
+		$is_2359 = $current_end === '23:59' || $current_end === '23:59:59';
+		echo '<option value="23:59" ' . selected( $is_2359, true, false ) . '>24:00</option>';
 		echo '</select></div>';
 		echo '</div>';
 
