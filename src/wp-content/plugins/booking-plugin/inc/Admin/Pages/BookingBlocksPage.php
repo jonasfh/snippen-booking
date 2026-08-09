@@ -95,13 +95,14 @@ class BookingBlocksPage {
 		$start_time   = sanitize_text_field( $_POST['start_time'] );
 		$end_time     = sanitize_text_field( $_POST['end_time'] );
 		$sort_order   = isset( $_POST['sort_order'] ) ? intval( $_POST['sort_order'] ) : 0;
+		$is_active    = isset( $_POST['is_active'] ) ? 1 : 0;
 		$object_ids   = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
 		$days_of_week = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
 		$days_of_week = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
 
 		$repo = new BookingBlockRepository();
 
-		if ( $repo->has_overlap( $id, $start_time, $end_time, $object_ids, $days_of_week ) ) {
+		if ( $is_active === 1 && $repo->has_overlap( $id, $start_time, $end_time, $object_ids, $days_of_week ) ) {
 			$action = $id > 0 ? 'edit' : 'add';
 			$url    = admin_url( 'admin.php?page=snippen-booking-blocks&action=' . $action . '&error=overlap' );
 			if ( $id > 0 ) {
@@ -118,6 +119,7 @@ class BookingBlocksPage {
 			'end_time'     => $end_time,
 			'days_of_week' => $days_of_week,
 			'sort_order'   => $sort_order,
+			'is_active'    => $is_active,
 		);
 
 		$saved_id = $repo->save( $data, $id > 0 ? $id : null );
@@ -180,12 +182,13 @@ class BookingBlocksPage {
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Tid', 'snippen-booking' ) . '</th>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Dager', 'snippen-booking' ) . '</th>';
 		echo '<th data-sort-type="number">' . esc_html__( 'Sortering', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="select" data-sort-type="string">' . esc_html__( 'Status', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
 
 		if ( empty( $blocks ) ) {
-			echo '<tr><td colspan="6">' . esc_html__( 'Ingen bookingblokker funnet.', 'snippen-booking' ) . '</td></tr>';
+			echo '<tr><td colspan="7">' . esc_html__( 'Ingen bookingblokker funnet.', 'snippen-booking' ) . '</td></tr>';
 		} else {
 			$days_map = array(
 				1 => 'Man',
@@ -216,12 +219,15 @@ class BookingBlocksPage {
 					$days_text = __( 'Alle dager', 'snippen-booking' );
 				}
 
+				$is_active = ! isset( $block->is_active ) || (int) $block->is_active === 1;
+
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $block->name ) . '</a></strong></td>';
 				echo '<td>' . esc_html( $block->object_names ?: '-' ) . '</td>';
 				echo '<td>' . esc_html( substr( $block->start_time, 0, 5 ) . ' - ' . substr( $block->end_time, 0, 5 ) ) . '</td>';
 				echo '<td>' . esc_html( $days_text ) . '</td>';
 				echo '<td>' . esc_html( $block->sort_order ) . '</td>';
+				echo '<td><label class="snippen-switch"><input type="checkbox" class="snippen-toggle-status" data-entity-type="time_slot" data-id="' . intval( $block->id ) . '" ' . checked( $is_active, true, false ) . '><span class="snippen-slider"></span></label></td>';
 				echo '<td style="text-align:right;">';
 				echo '<a href="' . esc_url( $edit_url ) . '" class="snippen-btn snippen-btn-outline" style="margin-right:5px;">' . esc_html__( 'Rediger', 'snippen-booking' ) . '</a>';
 				echo '<a href="' . esc_url( $delete_url ) . '" class="snippen-btn snippen-btn-outline snippen-btn-danger snippen-delete-confirm">' . esc_html__( 'Slett', 'snippen-booking' ) . '</a>';
@@ -286,9 +292,15 @@ class BookingBlocksPage {
 		wp_nonce_field( 'snippen_save_block', 'snippen_block_nonce' );
 		echo '<input type="hidden" name="id" value="' . esc_attr( $id ) . '">';
 
-		echo '<div class="snippen-form-group">';
-		echo '<label for="name">' . esc_html__( 'Navn på bookingblokk', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="name" id="name" value="' . esc_attr( $block ? $block->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Hele dagen', 'snippen-booking' ) . '">';
+		echo '<div class="snippen-form-group" style="display:flex; justify-content:space-between; align-items:center;">';
+		echo '<div><label for="name">' . esc_html__( 'Navn på bookingblokk', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="name" id="name" value="' . esc_attr( $block ? $block->name : '' ) . '" required class="regular-text" placeholder="' . esc_attr__( 'F.eks. Hele dagen', 'snippen-booking' ) . '"></div>';
+
+		echo '<div><label style="font-weight:bold; display:flex; align-items:center; gap:8px;">';
+		$is_active = ! $block || ! isset( $block->is_active ) || (int) $block->is_active === 1;
+		echo '<input type="checkbox" name="is_active" value="1" ' . checked( $is_active, true, false ) . '>';
+		echo esc_html__( 'Tidsluken er aktiv', 'snippen-booking' );
+		echo '</label></div>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
