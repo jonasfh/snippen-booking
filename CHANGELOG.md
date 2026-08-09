@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.8.2] - 2026-08-09
+- (#108) Added `composer test:fast` script for fast unit testing, optimized `TestCase.php` to skip DB operations for non-DB unit tests, enabled PHPUnit result caching, and updated developer documentation.
+
 ## [2.8.1] - 2026-08-09
 - (#187) Changed login form in `[snippen_booking_list login-form="1"]` shortcode to use AJAX authentication (`UserApi::login`) to resolve server 503 Service Unavailable errors on POST to `wp-login.php`.
 
