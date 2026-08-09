@@ -356,10 +356,10 @@ class BookingBlocksPage {
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="display:flex; gap:20px;">';
-		echo '<div><label for="start_time">' . esc_html__( 'Starttid (HH:MM)', 'snippen-booking' ) . '</label>';
-		echo '<input type="time" name="start_time" id="start_time" value="' . esc_attr( $block ? substr( $block->start_time, 0, 5 ) : '08:00' ) . '" required style="max-width:150px;"></div>';
-		echo '<div><label for="end_time">' . esc_html__( 'Sluttid (HH:MM)', 'snippen-booking' ) . '</label>';
-		echo '<input type="time" name="end_time" id="end_time" value="' . esc_attr( $block ? substr( $block->end_time, 0, 5 ) : '16:00' ) . '" required style="max-width:150px;"></div>';
+		echo '<div><label for="start_time">' . esc_html__( 'Starttid (HH:MM, 00:00-23:59)', 'snippen-booking' ) . '</label>';
+		echo '<input type="time" name="start_time" id="start_time" value="' . esc_attr( $block ? substr( $block->start_time, 0, 5 ) : '08:00' ) . '" step="60" required style="max-width:160px;"></div>';
+		echo '<div><label for="end_time">' . esc_html__( 'Sluttid (HH:MM, 00:00-23:59)', 'snippen-booking' ) . '</label>';
+		echo '<input type="time" name="end_time" id="end_time" value="' . esc_attr( $block ? substr( $block->end_time, 0, 5 ) : '16:00' ) . '" step="60" required style="max-width:160px;"></div>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
