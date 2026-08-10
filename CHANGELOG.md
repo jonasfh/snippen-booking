@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.11.0] - 2026-08-10
+- (#214) Added confirmation modal/dialog for customer email and SMS manual dispatch in admin booking overview, allowing admins to review and edit message text before sending.
+
 ## [2.10.2] - 2026-08-10
 - (#212) Updated booking block listings in Pricing Rule UI (form checkboxes and price preview dropdown) to display block name, description, active status, and time range.
 
