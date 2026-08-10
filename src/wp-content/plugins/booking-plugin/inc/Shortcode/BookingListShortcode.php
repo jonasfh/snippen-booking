@@ -258,22 +258,57 @@ class BookingListShortcode {
 	 */
 	private static function render_booking_row( $booking ) {
 		global $wpdb;
-		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
-		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+		$table_junction_new    = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_junction_legacy = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects         = $wpdb->prefix . 'snippen_booking_objects';
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$objs = $wpdb->get_col(
-			$wpdb->prepare(
-				"
-				SELECT o.name 
-				FROM $table_junction bo 
-				JOIN $table_objects o ON bo.booking_object_id = o.id 
-				WHERE bo.booking_id = %d",
-				$booking->id
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$objs       = array();
+		$time_range = '';
+
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) ) {
+				if ( ! empty( $snapshot['objects'] ) && is_array( $snapshot['objects'] ) ) {
+					foreach ( $snapshot['objects'] as $obj_item ) {
+						if ( ! empty( $obj_item['name'] ) ) {
+							$objs[] = $obj_item['name'];
+						}
+					}
+				}
+				if ( ! empty( $snapshot['time_range_formatted'] ) ) {
+					$time_range = $snapshot['time_range_formatted'];
+				} elseif ( ! empty( $snapshot['blocks'] ) && is_array( $snapshot['blocks'] ) ) {
+					$block_names = array_column( $snapshot['blocks'], 'name' );
+					$time_range  = implode( ', ', array_filter( $block_names ) );
+				} elseif ( ! empty( $snapshot['start_time'] ) && ! empty( $snapshot['end_time'] ) ) {
+					$time_range = date_i18n( 'H:i', strtotime( $snapshot['start_time'] ) ) . ' - ' . date_i18n( 'H:i', strtotime( $snapshot['end_time'] ) );
+				}
+			}
+		}
+
+		if ( empty( $objs ) ) {
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$objs = $wpdb->get_col(
+				$wpdb->prepare(
+					"
+					SELECT DISTINCT o.name 
+					FROM $table_objects o
+					JOIN (
+						SELECT booking_id, booking_object_id FROM $table_junction_new
+						UNION
+						SELECT booking_id, booking_object_id FROM $table_junction_legacy
+					) bo ON o.id = bo.booking_object_id
+					WHERE bo.booking_id = %d",
+					$booking->id
+				)
+			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		}
+
+		if ( empty( $time_range ) ) {
+			$time_range = ! empty( $booking->slot_name ) ? $booking->slot_name : '';
+		}
 
 		// Synchronize/get door code.
 		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
@@ -318,7 +353,7 @@ class BookingListShortcode {
 			<div class="booking-compact-main">
 				<div class="booking-compact-date-slot">
 					<span class="booking-date"><?php echo esc_html( $booking_date_formatted ); ?></span>
-					<span class="booking-slot-name"><?php echo esc_html( $booking->slot_name ); ?></span>
+					<span class="booking-slot-name"><?php echo esc_html( $time_range ); ?></span>
 				</div>
 
 				<div class="booking-compact-objects">

@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.10.1] - 2026-08-10
+- (#209) Fixed user booking list views (`UserBookingsPage` admin menu and `BookingListShortcode` shortcode) to parse and display time range and venue object names from `booking_snapshot`.
+
 ## [2.10.0] - 2026-08-09
 - (#206) Added `isActive` (`is_active`) state and inline AJAX toggle switch to Time Slots, Discount Rules, and Pricing Rules in admin list views.
 - (#206) Updated time slot overlap validation so that deactivated time slots do not trigger overlap errors, allowing overlapping time slots as long as no more than 1 of them is active.
