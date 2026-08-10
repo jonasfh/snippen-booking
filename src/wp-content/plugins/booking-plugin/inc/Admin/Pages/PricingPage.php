@@ -336,12 +336,16 @@ class PricingPage {
 		echo '<div class="snippen-form-group" style="flex:1;">';
 		echo '<label>' . esc_html__( 'Gjelder for bookingblokker:', 'snippen-booking' ) . '</label>';
 		echo '<div style="display:flex; flex-direction:column; gap:5px; margin-top:5px; max-height:200px; overflow-y:auto; padding:10px; border:1px solid #ddd; background:#fff;">';
-		$blocks          = $wpdb->get_results( "SELECT id, name, start_time, end_time FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
+		$blocks          = $wpdb->get_results( "SELECT id, name, description, start_time, end_time, is_active FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
 		$selected_blocks = $id > 0 ? $repo->get_rule_blocks( $id ) : array();
 		foreach ( $blocks as $b ) {
+			$time_str   = substr( $b->start_time, 0, 5 ) . '-' . substr( $b->end_time, 0, 5 );
+			$desc_str   = ! empty( $b->description ) ? ' - ' . $b->description : '';
+			$active_str = empty( $b->is_active ) ? ' [' . __( 'Inaktiv', 'snippen-booking' ) . ']' : '';
+			$label_text = $b->name . ' (' . $time_str . ')' . $desc_str . $active_str;
 			echo '<label style="font-weight:normal;">';
 			echo '<input type="checkbox" name="booking_blocks[]" value="' . esc_attr( $b->id ) . '" ' . checked( in_array( $b->id, $selected_blocks ), true, false ) . '> ';
-			echo esc_html( $b->name ) . ' (' . esc_html( substr( $b->start_time, 0, 5 ) . '-' . substr( $b->end_time, 0, 5 ) ) . ')';
+			echo esc_html( $label_text );
 			echo '</label>';
 		}
 		echo '</div></div>';
@@ -398,7 +402,7 @@ class PricingPage {
 	private function render_preview_tool() {
 		global $wpdb;
 		$objects = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE deleted_at IS NULL" );
-		$blocks  = $wpdb->get_results( "SELECT id, name, start_time, end_time FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
+		$blocks  = $wpdb->get_results( "SELECT id, name, description, start_time, end_time, is_active FROM {$wpdb->prefix}snippen_booking_blocks WHERE deleted_at IS NULL ORDER BY sort_order ASC" );
 
 		echo '<div class="snippen-card" style="margin-top: 30px; border-top: 4px solid #3b82f6;">';
 		echo '<h2>' . esc_html__( 'Prisforhåndsvisning (Test av regler)', 'snippen-booking' ) . '</h2>';
@@ -424,7 +428,11 @@ class PricingPage {
 		echo '<label style="display:block; margin-bottom:5px; font-weight:600;">' . esc_html__( 'Bookingblokk', 'snippen-booking' ) . '</label>';
 		echo '<select id="preview-block">';
 		foreach ( $blocks as $b ) {
-			echo '<option value="' . esc_attr( $b->id ) . '">' . esc_html( $b->name ) . '</option>';
+			$time_str   = substr( $b->start_time, 0, 5 ) . '-' . substr( $b->end_time, 0, 5 );
+			$desc_str   = ! empty( $b->description ) ? ' - ' . $b->description : '';
+			$active_str = empty( $b->is_active ) ? ' [' . __( 'Inaktiv', 'snippen-booking' ) . ']' : '';
+			$label_text = $b->name . ' (' . $time_str . ')' . $desc_str . $active_str;
+			echo '<option value="' . esc_attr( $b->id ) . '">' . esc_html( $label_text ) . '</option>';
 		}
 		echo '</select>';
 		echo '</div>';
