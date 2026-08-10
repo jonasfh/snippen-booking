@@ -183,4 +183,113 @@ class BookingAssistantTest extends TestCase {
 
 		wp_delete_user( $user_id );
 	}
+
+	public function test_get_notification_preview_success() {
+		global $wpdb;
+
+		$uniq = uniqid();
+		$user_id = wp_insert_user( array(
+			'user_login' => 'adm_test_' . $uniq,
+			'user_pass'  => 'password123',
+			'user_email' => 'admin_' . $uniq . '@example.com',
+			'role'       => 'administrator',
+		) );
+		$user = get_userdata( $user_id );
+		$user->add_cap( Capabilities::MANAGE_BOOKINGS );
+		wp_set_current_user( $user_id );
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'           => wp_generate_uuid4(),
+				'booking_date'   => '2026-06-20',
+				'user_id'        => $user_id,
+				'slot_id'        => 1,
+				'customer_name'  => 'Test Customer',
+				'customer_email' => 'customer@example.com',
+				'customer_phone' => '+4790000000',
+				'status'         => 'confirmed',
+				'created_at'     => current_time( 'mysql' ),
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		$_POST['nonce']    = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce'] = $_POST['nonce'];
+		$_POST['id']       = $booking_id;
+		$_POST['channel']  = 'email_customer';
+
+		ob_start();
+		try {
+			BookingActionsApi::get_notification_preview();
+		} catch ( \Throwable $e ) {
+		}
+		$output = ob_get_clean();
+
+		$response = json_decode( trim( $output ), true );
+		$this->assertIsArray( $response );
+		$this->assertTrue( $response['success'] );
+		$this->assertEquals( 'customer@example.com', $response['data']['recipient'] );
+		$this->assertEquals( 'Bekreftelse på din bookingforespørsel', $response['data']['subject'] );
+		$this->assertStringContainsString( 'Takk for din bookingforespørsel', $response['data']['message'] );
+
+		wp_delete_user( $user_id );
+	}
+
+	public function test_dispatch_customer_email_with_custom_message() {
+		global $wpdb;
+
+		$uniq = uniqid();
+		$user_id = wp_insert_user( array(
+			'user_login' => 'adm_test_' . $uniq,
+			'user_pass'  => 'password123',
+			'user_email' => 'admin_' . $uniq . '@example.com',
+			'role'       => 'administrator',
+		) );
+		$user = get_userdata( $user_id );
+		$user->add_cap( Capabilities::MANAGE_BOOKINGS );
+		wp_set_current_user( $user_id );
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'           => wp_generate_uuid4(),
+				'booking_date'   => '2026-06-20',
+				'user_id'        => $user_id,
+				'slot_id'        => 1,
+				'customer_name'  => 'Test Customer',
+				'customer_email' => 'customer@example.com',
+				'customer_phone' => '+4790000000',
+				'status'         => 'confirmed',
+				'created_at'     => current_time( 'mysql' ),
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		$_POST['nonce']    = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce'] = $_POST['nonce'];
+		$_POST['id']       = $booking_id;
+		$_POST['channel']  = 'email_customer';
+		$_POST['subject']  = 'Tilpasset Emne';
+		$_POST['message']  = 'Dette er en tilpasset melding til kunden.';
+
+		ob_start();
+		try {
+			BookingActionsApi::dispatch_notification_manually();
+		} catch ( \Throwable $e ) {
+		}
+		$output = ob_get_clean();
+
+		$response = json_decode( trim( $output ), true );
+		$this->assertIsArray( $response );
+		$this->assertTrue( $response['success'] );
+
+		$this->assertCount( 1, self::$sent_mails );
+		$mail = self::$sent_mails[0];
+		$this->assertEquals( 'customer@example.com', $mail['to'] );
+		$this->assertEquals( 'Tilpasset Emne', $mail['subject'] );
+		$this->assertEquals( 'Dette er en tilpasset melding til kunden.', $mail['message'] );
+
+		wp_delete_user( $user_id );
+	}
 }

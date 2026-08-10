@@ -68,7 +68,9 @@
             });
         });
 
-        // AJAX Notification Manual Dispatch
+        // AJAX Notification Manual Dispatch (Opens Modal Dialog)
+        let activeDispatchData = null;
+
         $('.bookings-table').on('click', '.snippen-btn-dispatch', function(e) {
             e.preventDefault();
             const $btn = $(this);
@@ -79,23 +81,111 @@
 
             $feedback.text('').css('color', 'inherit');
             $container.find('.snippen-btn-dispatch').prop('disabled', true).css('opacity', '0.5');
-            $feedback.html('<span class="spinner is-active" style="float:none; margin:0 4px 0 0; vertical-align:middle; display:inline-block; visibility:visible;"></span> ' + (typeof snippenAdmin !== 'undefined' && snippenAdmin.strings.sending ? snippenAdmin.strings.sending : 'Sender...'));
+            $feedback.html('<span class="spinner is-active" style="float:none; margin:0 4px 0 0; vertical-align:middle; display:inline-block; visibility:visible;"></span> Henter melding...');
 
             $.post(snippenAdmin.ajaxUrl, {
-                action: 'snippen_dispatch_notification_manually',
+                action: 'snippen_get_notification_preview',
                 nonce: snippenAdmin.nonce,
                 id: id,
                 channel: channel
             }, function(response) {
                 if (response.success) {
-                    $feedback.text(response.data.message).css('color', '#15803d');
+                    $feedback.text('');
+                    activeDispatchData = {
+                        id: id,
+                        channel: channel,
+                        $feedback: $feedback
+                    };
+
+                    const data = response.data;
+                    const $modal = $('#snippen-dispatch-modal');
+                    $modal.find('.snippen-modal-feedback').text('').css('color', 'inherit');
+                    $modal.find('.snippen-modal-recipient').val(data.recipient || '');
+                    $modal.find('.snippen-modal-message').val(data.message || '');
+
+                    if (channel === 'email_customer' || channel === 'email_admin') {
+                        $modal.find('.snippen-modal-subject-wrap').show();
+                        $modal.find('.snippen-modal-subject').val(data.subject || '');
+                        if (channel === 'email_customer') {
+                            $modal.find('.snippen-modal-title').text('Send e-post til kunde');
+                            $modal.find('.snippen-modal-submit').text('Send e-post');
+                        } else {
+                            $modal.find('.snippen-modal-title').text('Send varsel til admin');
+                            $modal.find('.snippen-modal-submit').text('Send e-post');
+                        }
+                    } else if (channel === 'sms_customer') {
+                        $modal.find('.snippen-modal-subject-wrap').hide();
+                        $modal.find('.snippen-modal-subject').val('');
+                        $modal.find('.snippen-modal-title').text('Send SMS til kunde');
+                        $modal.find('.snippen-modal-submit').text('Send SMS');
+                    }
+
+                    $modal.fadeIn(200);
                 } else {
-                    $feedback.text(response.data.message || 'Sending feilet.').css('color', '#b91c1c');
+                    $feedback.text(response.data.message || 'Kunne ikke hente forhåndsvisning.').css('color', '#b91c1c');
                 }
             }).fail(function() {
                 $feedback.text('En ukjent feil oppstod.').css('color', '#b91c1c');
             }).always(function() {
                 $container.find('.snippen-btn-dispatch').prop('disabled', false).css('opacity', '1');
+            });
+        });
+
+        // Modal Close/Cancel handlers
+        $('#snippen-dispatch-modal').on('click', '.snippen-modal-close, .snippen-modal-cancel', function(e) {
+            e.preventDefault();
+            $('#snippen-dispatch-modal').fadeOut(200);
+            activeDispatchData = null;
+        });
+
+        // Close modal when clicking on backdrop
+        $('#snippen-dispatch-modal').on('click', function(e) {
+            if ($(e.target).is('#snippen-dispatch-modal')) {
+                $('#snippen-dispatch-modal').fadeOut(200);
+                activeDispatchData = null;
+            }
+        });
+
+        // Submit Dispatch from Modal
+        $('#snippen-dispatch-modal').on('click', '.snippen-modal-submit', function(e) {
+            e.preventDefault();
+            if (!activeDispatchData) {
+                return;
+            }
+
+            const $modal = $('#snippen-dispatch-modal');
+            const $submitBtn = $modal.find('.snippen-modal-submit');
+            const $modalFeedback = $modal.find('.snippen-modal-feedback');
+            const editedSubject = $modal.find('.snippen-modal-subject').val();
+            const editedMessage = $modal.find('.snippen-modal-message').val();
+
+            $submitBtn.prop('disabled', true).css('opacity', '0.5');
+            $modalFeedback.text('Sender...').css('color', '#6b7280');
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_dispatch_notification_manually',
+                nonce: snippenAdmin.nonce,
+                id: activeDispatchData.id,
+                channel: activeDispatchData.channel,
+                subject: editedSubject,
+                message: editedMessage
+            }, function(response) {
+                if (response.success) {
+                    $modalFeedback.text(response.data.message).css('color', '#15803d');
+                    if (activeDispatchData.$feedback) {
+                        activeDispatchData.$feedback.text(response.data.message).css('color', '#15803d');
+                    }
+                    setTimeout(function() {
+                        $modal.fadeOut(200);
+                        activeDispatchData = null;
+                    }, 1000);
+                } else {
+                    $modalFeedback.text(response.data.message || 'Sending feilet.').css('color', '#b91c1c');
+                }
+            }).fail(function() {
+                $modalFeedback.text('En ukjent feil oppstod.').css('color', '#b91c1c');
+            }).always(function() {
+                $submitBtn.prop('disabled', false).css('opacity', '1');
             });
         });
 

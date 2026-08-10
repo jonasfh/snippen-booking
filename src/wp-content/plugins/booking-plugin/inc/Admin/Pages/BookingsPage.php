@@ -28,6 +28,7 @@ class BookingsPage {
 		$this->render_tagged_pages();
 		$this->render_filters( $status_filter, $payment_status_filter, $object_filter, $search, $show_all, $door_code_filter );
 		$this->render_list( $status_filter, $payment_status_filter, $object_filter, $search, $orderby, $order, $show_all, $door_code_filter );
+		$this->render_dispatch_modal();
 
 		echo '</div>';
 	}
@@ -377,6 +378,41 @@ class BookingsPage {
 		echo '<div class="assistant-feedback" style="margin-top:6px; font-size:11px; font-weight:600; min-height:15px;"></div>';
 		echo '</div>';
 		echo '</div></td></tr>';
+	}
+
+	/**
+	 * Render dispatch modal markup for editing message before sending
+	 */
+	private function render_dispatch_modal() {
+		?>
+		<div id="snippen-dispatch-modal" class="snippen-modal-backdrop" style="display:none;">
+			<div class="snippen-modal-content">
+				<div class="snippen-modal-header">
+					<h2 class="snippen-modal-title"></h2>
+					<button type="button" class="snippen-modal-close" aria-label="<?php esc_attr_e( 'Lukk', 'snippen-booking' ); ?>">&times;</button>
+				</div>
+				<div class="snippen-modal-body">
+					<div class="snippen-form-group snippen-modal-recipient-wrap">
+						<label><?php esc_html_e( 'Mottaker:', 'snippen-booking' ); ?></label>
+						<input type="text" class="snippen-modal-recipient" readonly style="width:100%; background:#f1f5f9; color:#475569;">
+					</div>
+					<div class="snippen-form-group snippen-modal-subject-wrap">
+						<label><?php esc_html_e( 'Emne:', 'snippen-booking' ); ?></label>
+						<input type="text" class="snippen-modal-subject" style="width:100%;">
+					</div>
+					<div class="snippen-form-group">
+						<label><?php esc_html_e( 'Melding:', 'snippen-booking' ); ?></label>
+						<textarea class="snippen-modal-message" rows="8" style="width:100%; font-family:inherit; font-size:13px; padding:10px; border-radius:6px; border:1px solid #cbd5e1;"></textarea>
+					</div>
+					<div class="snippen-modal-feedback" style="margin-top:10px; font-size:12px; font-weight:600;"></div>
+				</div>
+				<div class="snippen-modal-footer">
+					<button type="button" class="button snippen-modal-cancel"><?php esc_html_e( 'Avbryt', 'snippen-booking' ); ?></button>
+					<button type="button" class="button button-primary snippen-modal-submit"></button>
+				</div>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**

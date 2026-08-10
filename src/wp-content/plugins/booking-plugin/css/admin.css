@@ -531,3 +531,90 @@ input:disabled + .snippen-slider {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Modal Dialog Styling */
+.snippen-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.snippen-modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 580px;
+    overflow: hidden;
+    animation: snippenModalSlide 0.25s ease-out;
+}
+
+@keyframes snippenModalSlide {
+    from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.snippen-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border-color);
+    background: #f8fafc;
+}
+
+.snippen-modal-header h2.snippen-modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.snippen-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.snippen-modal-close:hover {
+    color: #0f172a;
+}
+
+.snippen-modal-body {
+    padding: 24px;
+}
+
+.snippen-modal-body .snippen-form-group {
+    margin-bottom: 16px;
+}
+
+.snippen-modal-body label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #334155;
+}
+
+.snippen-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border-color);
+}
+
