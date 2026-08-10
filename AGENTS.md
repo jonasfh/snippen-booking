@@ -171,6 +171,7 @@ Once a GitHub issue is identified or created, the following workflow **MUST** be
     - Create a Pull Request using `gh`, target `main` (default): `gh pr create --body "Closes #<id>" --title "(#<id>) <Issue Title>"`.
     - Make sure PR has updated version and changelog in `src/inc/booking-plugin.php` and `CHANGELOG.md` if needed.
 5.  **Update github issues with implementation notes**: Add implementation details and a summary of the changes made to resolve the issue.
+6.  **Merging Pull Requests**: When instructed to merge a Pull Request, the agent MUST first check that all PR checks have passed (`gh pr checks <id>`) and that the PR can be merged cleanly. Then execute `gh pr merge <id> --rebase --delete-branch`.
 
 ## Key Classes Overview
 
