@@ -70,6 +70,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rules");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rule_booking_objects");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
                     
                     \SnippenBooking\Admin\SetupWizard::create_starter_setup();
@@ -90,6 +92,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slots");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_prices");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_time_slot_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rules");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rule_booking_objects");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
                 
                 self::$db_seeded = false;

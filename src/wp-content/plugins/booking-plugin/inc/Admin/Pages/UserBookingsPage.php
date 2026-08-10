@@ -137,19 +137,54 @@ class UserBookingsPage {
 	 */
 	private function render_booking_row( $booking ) {
 		global $wpdb;
-		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
-		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+		$table_junction_new    = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_junction_legacy = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects         = $wpdb->prefix . 'snippen_booking_objects';
 
-		$objs = $wpdb->get_col(
-			$wpdb->prepare(
-				"
-            SELECT o.name 
-            FROM $table_junction bo 
-            JOIN $table_objects o ON bo.booking_object_id = o.id 
-            WHERE bo.booking_id = %d",
-				$booking->id
-			)
-		);
+		$objs       = array();
+		$time_range = '';
+
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) ) {
+				if ( ! empty( $snapshot['objects'] ) && is_array( $snapshot['objects'] ) ) {
+					foreach ( $snapshot['objects'] as $obj_item ) {
+						if ( ! empty( $obj_item['name'] ) ) {
+							$objs[] = $obj_item['name'];
+						}
+					}
+				}
+				if ( ! empty( $snapshot['time_range_formatted'] ) ) {
+					$time_range = $snapshot['time_range_formatted'];
+				} elseif ( ! empty( $snapshot['blocks'] ) && is_array( $snapshot['blocks'] ) ) {
+					$block_names = array_column( $snapshot['blocks'], 'name' );
+					$time_range  = implode( ', ', array_filter( $block_names ) );
+				} elseif ( ! empty( $snapshot['start_time'] ) && ! empty( $snapshot['end_time'] ) ) {
+					$time_range = date_i18n( 'H:i', strtotime( $snapshot['start_time'] ) ) . ' - ' . date_i18n( 'H:i', strtotime( $snapshot['end_time'] ) );
+				}
+			}
+		}
+
+		if ( empty( $objs ) ) {
+			$objs = $wpdb->get_col(
+				$wpdb->prepare(
+					"
+					SELECT DISTINCT o.name 
+					FROM $table_objects o
+					JOIN (
+						SELECT booking_id, booking_object_id FROM $table_junction_new
+						UNION
+						SELECT booking_id, booking_object_id FROM $table_junction_legacy
+					) bo ON o.id = bo.booking_object_id
+					WHERE bo.booking_id = %d",
+					$booking->id
+				)
+			);
+		}
+
+		if ( empty( $time_range ) ) {
+			$time_range = ! empty( $booking->slot_name ) ? $booking->slot_name : '';
+		}
 
 		$status_class   = 'snippen-status-' . $booking->status;
 		$booking_date   = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
@@ -162,7 +197,7 @@ class UserBookingsPage {
 			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
 		}
 		echo '</div></td>';
-		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small></td>';
+		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $time_range ) . '</small></td>';
 		echo '<td data-label="' . esc_attr__( 'Lokaler', 'snippen-booking' ) . '">';
 		foreach ( $objs as $oname ) {
 			echo '<span class="snippen-tag">' . esc_html( $oname ) . '</span> ';
