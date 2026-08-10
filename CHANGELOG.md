@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.10.2] - 2026-08-10
+- (#212) Updated booking block listings in Pricing Rule UI (form checkboxes and price preview dropdown) to display block name, description, active status, and time range.
+
 ## [2.10.1] - 2026-08-10
 - (#209) Fixed user booking list views (`UserBookingsPage` admin menu and `BookingListShortcode` shortcode) to parse and display time range and venue object names from `booking_snapshot`.
 
