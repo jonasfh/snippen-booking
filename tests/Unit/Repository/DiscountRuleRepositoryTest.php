@@ -134,4 +134,49 @@ class DiscountRuleRepositoryTest extends TestCase {
 		$this->assertNotNull($matched);
 		$this->assertEquals($rule_holiday, $matched->id);
 	}
+
+	public function test_find_all_filters_inactive() {
+		$active_id = $this->repo->save(array(
+			'name' => 'Active Rule',
+			'discount_type' => 'percentage',
+			'discount_value' => 10.0,
+			'priority' => 10,
+			'is_active' => 1
+		));
+
+		$inactive_id = $this->repo->save(array(
+			'name' => 'Inactive Rule',
+			'discount_type' => 'percentage',
+			'discount_value' => 20.0,
+			'priority' => 20,
+			'is_active' => 0
+		));
+
+		$all_active = $this->repo->find_all(false);
+		$this->assertCount(1, $all_active);
+		$this->assertEquals('Active Rule', $all_active[0]->name);
+
+		$all_with_inactive = $this->repo->find_all(true);
+		$this->assertCount(2, $all_with_inactive);
+	}
+
+	public function test_find_applicable_rule_ignores_inactive() {
+		$rule_id = $this->repo->save(array(
+			'name' => 'Deactivated Rule',
+			'discount_type' => 'percentage',
+			'discount_value' => 15.0,
+			'priority' => 10,
+			'is_active' => 0
+		));
+		$this->repo->sync_booking_objects($rule_id, array(1));
+
+		$matched = $this->repo->find_applicable_rule(array(1), 2.0);
+		$this->assertNull($matched, 'Deactivated rule should not be returned');
+
+		// Enable rule
+		$this->repo->save(array('is_active' => 1), $rule_id);
+		$matched = $this->repo->find_applicable_rule(array(1), 2.0);
+		$this->assertNotNull($matched, 'Activated rule should be returned');
+		$this->assertEquals($rule_id, $matched->id);
+	}
 }

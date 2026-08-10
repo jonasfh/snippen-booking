@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.11.1] - 2026-08-10
+- (#216) Ensured inactive/deactivated discount rules are excluded from `DiscountRuleRepository::find_all()` by default and passed date parameter to `find_applicable_rule` in legacy booking API.
+
 ## [2.11.0] - 2026-08-10
 - (#214) Added confirmation modal/dialog for customer email and SMS manual dispatch in admin booking overview, allowing admins to review and edit message text before sending.
 
