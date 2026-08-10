@@ -28,13 +28,18 @@ class DiscountRuleRepository {
 	/**
 	 * Find all discount rules.
 	 *
+	 * @param bool $include_inactive Whether to include inactive rules.
 	 * @return array
 	 */
-	public function find_all() {
+	public function find_all( $include_inactive = false ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_discount_rules';
 
-		$query = "SELECT * FROM $table WHERE deleted_at IS NULL ORDER BY priority DESC, name ASC";
+		$query = "SELECT * FROM $table WHERE deleted_at IS NULL";
+		if ( ! $include_inactive ) {
+			$query .= ' AND (is_active IS NULL OR is_active = 1)';
+		}
+		$query .= ' ORDER BY priority DESC, name ASC';
 
 		return $wpdb->get_results( $query );
 	}

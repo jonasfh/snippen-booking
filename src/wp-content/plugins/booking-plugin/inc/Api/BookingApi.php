@@ -140,7 +140,7 @@ class BookingApi {
 
 			$discount_service = new DiscountService();
 			$discount_repo    = new \SnippenBooking\Database\Repository\DiscountRuleRepository();
-			$rule             = $discount_repo->find_applicable_rule( $booking_object_ids, $duration );
+			$rule             = $discount_repo->find_applicable_rule( $booking_object_ids, $duration, $booking_date );
 
 			$discount_amount  = 0.0;
 			$final_price      = $base_price;
