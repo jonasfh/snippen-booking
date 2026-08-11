@@ -303,9 +303,52 @@
 }
 
 .slots-container {
-    padding: 6px;
+    padding: 8px 6px;
     flex-grow: 1;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.day-object-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+}
+
+.day-object-summary .object-summary-name {
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.2;
+    opacity: 0.9;
+}
+
+.day-object-summary .object-summary-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.day-object-summary.status-free {
+    background: #ecfdf5;
+    color: #065f46;
+    border-color: #a7f3d0;
+}
+
+.day-object-summary.status-partial {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.day-object-summary.status-busy {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
 }
 
 .slot-item {
