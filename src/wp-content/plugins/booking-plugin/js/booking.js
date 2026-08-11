@@ -350,7 +350,7 @@ jQuery(document).ready(function ($) {
         var blocks = dailyBlocksData[selectedDate] || [];
 
         if (selectedBlockIds.includes(clickedId)) {
-            // Remove from selection
+            // If already selected, remove it (or reset to single selection if clicking in middle)
             var idx = selectedBlockIds.indexOf(clickedId);
             selectedBlockIds.splice(idx, 1);
         } else {
@@ -360,16 +360,29 @@ jQuery(document).ready(function ($) {
         if (selectedBlockIds.length > 1) {
             // Find min/max indices in daily blocks list to fill adjacent blocks
             var blockIndices = selectedBlockIds.map(function (id) {
-                return blocks.findIndex(b => b.id === id);
+                return blocks.findIndex(function (b) { return b.id === id; });
             });
 
-            var minIdx = Math.min(...blockIndices);
-            var maxIdx = Math.max(...blockIndices);
+            var minIdx = Math.min.apply(null, blockIndices);
+            var maxIdx = Math.max.apply(null, blockIndices);
 
-            selectedBlockIds = [];
+            // Check if all blocks in range [minIdx, maxIdx] are available
+            var hasBookedInBetween = false;
             for (var i = minIdx; i <= maxIdx; i++) {
-                if (blocks[i].is_available) {
-                    selectedBlockIds.push(blocks[i].id);
+                if (!blocks[i].is_available) {
+                    hasBookedInBetween = true;
+                    break;
+                }
+            }
+
+            if (hasBookedInBetween) {
+                // Cannot select across booked blocks; set selection to only the clicked block
+                selectedBlockIds = [clickedId];
+            } else {
+                // Expand selection to cover contiguous range
+                selectedBlockIds = [];
+                for (var j = minIdx; j <= maxIdx; j++) {
+                    selectedBlockIds.push(blocks[j].id);
                 }
             }
         }
