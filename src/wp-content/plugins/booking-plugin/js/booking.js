@@ -162,7 +162,7 @@ jQuery(document).ready(function ($) {
     }
 
     /**
-     * Draw weekly grid layout
+     * Draw weekly grid layout with simplified per-object summary
      */
     function drawWeek(data) {
         var $calendar = $('#calendar-container');
@@ -191,64 +191,51 @@ jQuery(document).ready(function ($) {
 
             weekHtml += '<div class="slots-container">';
 
-            if (dayInfo.blocks.length === 0) {
+            if (!dayInfo.blocks || dayInfo.blocks.length === 0) {
                 weekHtml += '<div class="no-slots-info">' + (snippenBookingAjax.strings.noSlotsAvailable || 'Ingen tider') + '</div>';
             } else {
+                // Group blocks/slots by object (if block object_names exist, or summarize overall)
+                // Compute per-object or per-day availability summary
+                var objectSummaries = {};
+
                 dayInfo.blocks.forEach(function (block) {
+                    var objName = block.name || 'Lokale';
+                    if (!objectSummaries[objName]) {
+                        objectSummaries[objName] = {
+                            total: 0,
+                            available: 0,
+                            booked: 0
+                        };
+                    }
                     var total = block.total_capacity || 1;
                     var available = block.available_capacity !== undefined ? block.available_capacity : (block.is_available ? 1 : 0);
-                    var occupied = total - available;
-                    var capacityIndicator = '';
-                    
-                    if (total > 1) {
-                        var indicatorHtml = '<div class="capacity-indicator">';
-                        for (var i = 0; i < occupied; i++) {
-                            indicatorHtml += '<span class="capacity-segment occupied">■</span> ';
-                        }
-                        for (var i = 0; i < available; i++) {
-                            indicatorHtml += '<span class="capacity-segment available">□</span> ';
-                        }
-                        indicatorHtml += '</div>';
-                        
-                        var capacityTextHtml = '<div class="capacity-text">';
-                        if (available === 0) {
-                            capacityTextHtml += 'Fullbooket';
-                        } else {
-                            capacityTextHtml += available + ' av ' + total + ' ledig';
-                        }
-                        capacityTextHtml += '</div>';
-                        
-                        var occupiedNamesHtml = '';
-                        if (occupied > 0 && block.occupied_object_names && block.occupied_object_names.length > 0) {
-                            occupiedNamesHtml = '<div class="occupied-names">Booket: ' + block.occupied_object_names.join(', ') + '</div>';
-                        }
-                        
-                        capacityIndicator = indicatorHtml + capacityTextHtml + occupiedNamesHtml;
-                    }
+                    var booked = total - available;
 
-                    var timeStr = formatTimeInterval(block.start_time, block.end_time);
-                    var timeHtml = timeStr ? '<small class="slot-time">' + timeStr + '</small>' : '';
+                    objectSummaries[objName].total += total;
+                    objectSummaries[objName].available += available;
+                    objectSummaries[objName].booked += booked;
+                });
 
-                    if (block.is_available) {
-                        weekHtml += '<div class="slot-item available" data-date="' + dayInfo.date + '" data-block-id="' + block.id + '">';
-                        weekHtml += '<strong>' + block.name + '</strong>';
-                        if (timeHtml) weekHtml += '<br>' + timeHtml;
-                        weekHtml += capacityIndicator;
-                        weekHtml += '</div>';
+                Object.keys(objectSummaries).forEach(function (objName) {
+                    var summary = objectSummaries[objName];
+                    var statusClass = '';
+                    var statusText = '';
+
+                    if (summary.available === summary.total) {
+                        statusClass = 'status-free';
+                        statusText = 'Ledig';
+                    } else if (summary.available > 0) {
+                        statusClass = 'status-partial';
+                        statusText = 'Delvis opptatt';
                     } else {
-                        var bookingInfoStr = (isAdmin && block.booking_info) ? JSON.stringify(block.booking_info).replace(/"/g, '&quot;') : '';
-                        weekHtml += '<div class="slot-item booked" ' + (isAdmin ? 'data-booking-info="' + bookingInfoStr + '"' : '') + '>';
-                        weekHtml += '<strong>' + block.name + '</strong>';
-                        if (timeHtml) weekHtml += '<br>' + timeHtml;
-                        weekHtml += capacityIndicator;
-                        if (isAdmin && block.booked_by) {
-                            weekHtml += '<span class="customer-name-label">' + block.booked_by + '</span>';
-                        }
-                        if (total <= 1) {
-                            weekHtml += '<span class="booking-info">' + (snippenBookingAjax.strings.bookedLabel || 'Opptatt') + '</span>';
-                        }
-                        weekHtml += '</div>';
+                        statusClass = 'status-busy';
+                        statusText = 'Opptatt';
                     }
+
+                    weekHtml += '<div class="day-object-summary ' + statusClass + '">';
+                    weekHtml += '<span class="object-summary-name">' + escHtml(objName) + '</span>';
+                    weekHtml += '<span class="object-summary-status">' + statusText + '</span>';
+                    weekHtml += '</div>';
                 });
             }
 
@@ -336,10 +323,19 @@ jQuery(document).ready(function ($) {
         blocks.forEach(function (block) {
             var statusClass = block.is_available ? 'available' : 'booked';
             var timeStr = formatTimeInterval(block.start_time, block.end_time);
-            blocksHtml += '<div class="block-select-item ' + statusClass + '" data-id="' + block.id + '" data-start="' + block.start_time + '" data-end="' + block.end_time + '">';
-            blocksHtml += '<strong>' + block.name + '</strong>';
+            var bookingInfoStr = (isAdmin && block.booking_info) ? JSON.stringify(block.booking_info).replace(/"/g, '&quot;') : '';
+            
+            blocksHtml += '<div class="block-select-item ' + statusClass + '" data-id="' + block.id + '" data-start="' + block.start_time + '" data-end="' + block.end_time + '" ' + (isAdmin && bookingInfoStr ? 'data-booking-info="' + bookingInfoStr + '"' : '') + '>';
+            blocksHtml += '<strong>' + escHtml(block.name) + '</strong>';
             if (timeStr) {
                 blocksHtml += '<br><small class="block-time">' + timeStr + '</small>';
+            }
+            if (!block.is_available) {
+                if (isAdmin && block.booked_by) {
+                    blocksHtml += '<br><small class="customer-name-label">Booket av: ' + escHtml(block.booked_by) + '</small>';
+                } else {
+                    blocksHtml += '<br><small class="booking-info">' + (snippenBookingAjax.strings.bookedLabel || 'Opptatt') + '</small>';
+                }
             }
             blocksHtml += '</div>';
         });

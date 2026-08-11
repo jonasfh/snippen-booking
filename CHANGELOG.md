@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.12.0] - 2026-08-11
+- (#220) Simplified weekly calendar view to display per-object availability status badges ("Ledig", "Delvis opptatt", "Opptatt") for better clarity and responsive mobile UX, moving detailed block selection and admin booking info into the day wizard view.
+
 ## [2.11.1] - 2026-08-10
 - (#216) Ensured inactive/deactivated discount rules are excluded from `DiscountRuleRepository::find_all()` by default and passed date parameter to `find_applicable_rule` in legacy booking API.
 
