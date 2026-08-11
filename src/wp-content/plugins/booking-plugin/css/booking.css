@@ -1491,13 +1491,23 @@
 
 .block-select-item.selected {
     border-color: var(--primary-color);
-    background: var(--primary-color);
-    color: #fff;
+    background: var(--primary-color) !important;
+    color: #ffffff !important;
+}
+
+.block-select-item.selected * {
+    color: #ffffff !important;
 }
 
 .block-select-item.selected .block-objects-available,
 .block-select-item.selected .block-time {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+@media (max-width: 600px) {
+    .blocks-grid {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 .block-select-item.booked {
