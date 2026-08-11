@@ -191,52 +191,14 @@ jQuery(document).ready(function ($) {
 
             weekHtml += '<div class="slots-container">';
 
-            if (!dayInfo.blocks || dayInfo.blocks.length === 0) {
-                weekHtml += '<div class="no-slots-info">' + (snippenBookingAjax.strings.noSlotsAvailable || 'Ingen tider') + '</div>';
-            } else {
-                // Group blocks/slots by object (if block object_names exist, or summarize overall)
-                // Compute per-object or per-day availability summary
-                var objectSummaries = {};
-
-                dayInfo.blocks.forEach(function (block) {
-                    var objName = block.name || 'Lokale';
-                    if (!objectSummaries[objName]) {
-                        objectSummaries[objName] = {
-                            total: 0,
-                            available: 0,
-                            booked: 0
-                        };
-                    }
-                    var total = block.total_capacity || 1;
-                    var available = block.available_capacity !== undefined ? block.available_capacity : (block.is_available ? 1 : 0);
-                    var booked = total - available;
-
-                    objectSummaries[objName].total += total;
-                    objectSummaries[objName].available += available;
-                    objectSummaries[objName].booked += booked;
-                });
-
-                Object.keys(objectSummaries).forEach(function (objName) {
-                    var summary = objectSummaries[objName];
-                    var statusClass = '';
-                    var statusText = '';
-
-                    if (summary.available === summary.total) {
-                        statusClass = 'status-free';
-                        statusText = 'Ledig';
-                    } else if (summary.available > 0) {
-                        statusClass = 'status-partial';
-                        statusText = 'Delvis opptatt';
-                    } else {
-                        statusClass = 'status-busy';
-                        statusText = 'Opptatt';
-                    }
-
-                    weekHtml += '<div class="day-object-summary ' + statusClass + '">';
-                    weekHtml += '<span class="object-summary-name">' + escHtml(objName) + '</span>';
-                    weekHtml += '<span class="object-summary-status">' + statusText + '</span>';
+            if (dayInfo.objects_summary && dayInfo.objects_summary.length > 0) {
+                dayInfo.objects_summary.forEach(function (objItem) {
+                    weekHtml += '<div class="day-object-summary ' + objItem.status_key + '">';
+                    weekHtml += '<span class="object-summary-text">' + escHtml(objItem.name) + ' ' + escHtml(objItem.status_text) + '</span>';
                     weekHtml += '</div>';
                 });
+            } else if (!dayInfo.blocks || dayInfo.blocks.length === 0) {
+                weekHtml += '<div class="no-slots-info">' + (snippenBookingAjax.strings.noSlotsAvailable || 'Ingen tider') + '</div>';
             }
 
             weekHtml += '</div>'; // slots-container
