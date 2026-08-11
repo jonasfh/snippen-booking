@@ -599,6 +599,10 @@
         gap: 10px;
     }
 
+    .blocks-grid {
+        grid-template-columns: 1fr;
+    }
+
     .day-column.past {
         display: none !important;
     }
