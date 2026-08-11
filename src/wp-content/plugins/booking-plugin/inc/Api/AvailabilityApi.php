@@ -169,6 +169,50 @@ class AvailabilityApi {
 				);
 			}
 
+			// Fetch objects information for per-object summary
+			$placeholders = implode( ',', array_fill( 0, count( $object_ids ), '%d' ) );
+			$objects_list = $wpdb->get_results( $wpdb->prepare( "SELECT id, name FROM {$wpdb->prefix}snippen_booking_objects WHERE id IN ($placeholders) ORDER BY id ASC", ...$object_ids ) );
+
+			$objects_summary = array();
+			foreach ( $objects_list as $obj ) {
+				$obj_id   = (int) $obj->id;
+				$obj_name = $obj->name;
+
+				$total_blocks_count = 0;
+				$avail_blocks_count = 0;
+
+				foreach ( $day_blocks as $d_block ) {
+					$block_id = $d_block['id'];
+					$total_blocks_count++;
+					if ( $availability_service->isBlockAvailable( $obj_id, $date_str, $block_id ) ) {
+						$avail_blocks_count++;
+					}
+				}
+
+				if ( $total_blocks_count > 0 ) {
+					if ( $avail_blocks_count === $total_blocks_count ) {
+						$status_key  = 'status-free';
+						$status_text = __( 'ledig', 'snippen-booking' );
+					} elseif ( $avail_blocks_count > 0 ) {
+						$status_key  = 'status-partial';
+						$status_text = __( 'delvis opptatt', 'snippen-booking' );
+					} else {
+						$status_key  = 'status-busy';
+						$status_text = __( 'opptatt', 'snippen-booking' );
+					}
+				} else {
+					$status_key  = 'status-none';
+					$status_text = __( 'ingen tider', 'snippen-booking' );
+				}
+
+				$objects_summary[] = array(
+					'id'          => $obj_id,
+					'name'        => $obj_name,
+					'status_key'  => $status_key,
+					'status_text' => $status_text,
+				);
+			}
+
 			$days[] = array(
 				'date'               => $date_str,
 				'day_name'           => $weekdays[ $day_val ],
@@ -176,6 +220,7 @@ class AvailabilityApi {
 				'is_past'            => $is_past,
 				'is_holiday'         => $is_holiday,
 				'blocks'             => $day_blocks,
+				'objects_summary'    => $objects_summary,
 			);
 
 			$current->modify( '+1 day' );
