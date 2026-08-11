@@ -290,13 +290,16 @@ jQuery(document).ready(function ($) {
             blocksHtml += '<div class="block-select-item ' + statusClass + '" data-id="' + block.id + '" data-start="' + block.start_time + '" data-end="' + block.end_time + '" ' + (isAdmin && bookingInfoStr ? 'data-booking-info="' + bookingInfoStr + '"' : '') + '>';
             blocksHtml += '<strong>' + escHtml(block.name) + '</strong>';
             if (timeStr) {
-                blocksHtml += '<br><small class="block-time">' + timeStr + '</small>';
+                blocksHtml += '<div class="block-time">' + timeStr + '</div>';
             }
-            if (!block.is_available) {
+            
+            if (block.is_available && block.available_object_names && block.available_object_names.length > 0) {
+                blocksHtml += '<div class="block-objects-available">' + escHtml(block.available_object_names.join(', ')) + '</div>';
+            } else if (!block.is_available) {
                 if (isAdmin && block.booked_by) {
-                    blocksHtml += '<br><small class="customer-name-label">Booket av: ' + escHtml(block.booked_by) + '</small>';
+                    blocksHtml += '<div class="customer-name-label">Booket av: ' + escHtml(block.booked_by) + '</div>';
                 } else {
-                    blocksHtml += '<br><small class="booking-info">' + (snippenBookingAjax.strings.bookedLabel || 'Opptatt') + '</small>';
+                    blocksHtml += '<div class="booking-info">' + (snippenBookingAjax.strings.bookedLabel || 'Opptatt') + '</div>';
                 }
             }
             blocksHtml += '</div>';

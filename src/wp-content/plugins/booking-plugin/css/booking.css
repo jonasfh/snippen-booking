@@ -1465,13 +1465,23 @@
 }
 
 .block-select-item {
-    padding: 10px 8px;
+    padding: 10px 12px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
     background: inherit;
     text-align: center;
     cursor: pointer;
     font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: center;
+    align-items: center;
+}
+
+.block-select-item.available {
+    background: #f8fafc;
+    border-color: #cbd5e1;
 }
 
 .block-select-item.available:hover {
@@ -1485,12 +1495,22 @@
     color: #fff;
 }
 
+.block-select-item.selected .block-objects-available,
+.block-select-item.selected .block-time {
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .block-select-item.booked {
-    background: var(--bg-light);
-    border-color: var(--border-color);
-    color: #94a3b8;
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
     cursor: not-allowed;
-    text-decoration: line-through;
+}
+
+.block-objects-available {
+    font-size: 12px;
+    font-weight: 500;
+    color: #059669;
 }
 
 /* Rooms Grid & Selection */
