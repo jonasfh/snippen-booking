@@ -104,9 +104,34 @@ class NotificationTemplatesPage {
 
 			<p><?php esc_html_e( 'Configure notification templates for different events and channels. Use placeholders like {{user_name}}, {{booking_date}}, etc.', 'snippen-booking' ); ?></p>
 
+			<?php $this->render_placeholders_summary(); ?>
+
 			<div class="snippen-templates-container">
 				<?php $this->render_templates(); ?>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render summary of all available placeholders top of page
+	 *
+	 * @return void
+	 */
+	private function render_placeholders_summary() {
+		$placeholders = $this->template_service->get_all_placeholders();
+		if ( empty( $placeholders ) ) {
+			return;
+		}
+		?>
+		<div class="snippen-card" style="margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-left: 4px solid #2271b1;">
+			<h3 style="margin-top: 0;"><?php esc_html_e( 'Available Placeholders', 'snippen-booking' ); ?></h3>
+			<p><?php esc_html_e( 'The following placeholders are available for use in all notification templates:', 'snippen-booking' ); ?></p>
+			<ul style="margin: 10px 0; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px;">
+				<?php foreach ( $placeholders as $placeholder => $description ) : ?>
+					<li><code>{{<?php echo esc_html( $placeholder ); ?>}}</code> - <?php echo esc_html( $description ); ?></li>
+				<?php endforeach; ?>
+			</ul>
 		</div>
 		<?php
 	}
@@ -135,19 +160,6 @@ class NotificationTemplatesPage {
 				foreach ( $all_templates[ $event_type ] as $channel => $template ) {
 					$this->render_template_editor( $event_type, $channel, $template );
 				}
-			}
-
-			// Show available placeholders
-			$placeholders = $this->template_service->get_available_placeholders( $event_type );
-			if ( ! empty( $placeholders ) ) {
-				echo '<div style="background: #f1f1f1; padding: 15px; border-radius: 4px; margin-top: 20px;">';
-				echo '<strong>' . esc_html__( 'Available Placeholders:', 'snippen-booking' ) . '</strong>';
-				echo '<ul style="margin: 10px 0; padding-left: 20px;">';
-				foreach ( $placeholders as $placeholder => $description ) {
-					echo '<li><code>{{' . esc_html( $placeholder ) . '}}</code> - ' . esc_html( $description ) . '</li>';
-				}
-				echo '</ul>';
-				echo '</div>';
 			}
 
 			echo '</div>';

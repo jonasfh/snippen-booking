@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.14.0] - 2026-08-20
+- (#222) Harmonized available placeholders across all notification templates, moved placeholder overview box to the top of the Notification Templates admin page, and added `booking_time` placeholder for booking notifications.
+
 ## [2.13.0] - 2026-08-20
 - (#219) Allowed users to delete/cancel their own unconfirmed and unpaid bookings prior to the configurable cancellation deadline (default 14 days before booking start). Added cancellation deadline setting to admin general settings tab, updated frontend booking list shortcode and admin user bookings page, and enforced server-side validation.
 

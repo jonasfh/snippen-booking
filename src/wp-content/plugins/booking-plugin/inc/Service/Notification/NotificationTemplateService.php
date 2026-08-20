@@ -184,41 +184,37 @@ class NotificationTemplateService {
 	}
 
 	/**
-	 * Get available placeholders for a given event type
+	 * Get all available placeholders and their descriptions
 	 *
-	 * @param string $event_type Event type.
 	 * @return array Placeholder => Description pairs.
 	 */
-	public function get_available_placeholders( string $event_type ): array {
-		$placeholders = array(
-			'user_activation'      => array(
-				'user_name'         => __( 'Recipient user name', 'snippen-booking' ),
-				'confirmation_code' => __( '6-digit confirmation code', 'snippen-booking' ),
-			),
-			'booking_confirmation' => array(
-				'user_name'            => __( 'Booking customer name', 'snippen-booking' ),
-				'booking_objects'      => __( 'Booked venue names', 'snippen-booking' ),
-				'booking_date'         => __( 'Booking date', 'snippen-booking' ),
-				'booking_url'          => __( 'Booking details URL', 'snippen-booking' ),
-				'booking_price'        => __( 'Booking total price', 'snippen-booking' ),
-				'bank_account'         => __( 'Payment bank account number', 'snippen-booking' ),
-				'vipps_number'         => __( 'Payment Vipps number / info', 'snippen-booking' ),
-				'payment_instructions' => __( 'Payment instructions / deadline text from payment settings', 'snippen-booking' ),
-			),
-			'admin_booking'        => array(
-				'user_name'           => __( 'Booking customer name', 'snippen-booking' ),
-				'user_email'          => __( 'Booking customer email', 'snippen-booking' ),
-				'user_phone'          => __( 'Booking customer phone', 'snippen-booking' ),
-				'booking_objects'     => __( 'Booked venue names', 'snippen-booking' ),
-				'booking_date'        => __( 'Booking date', 'snippen-booking' ),
-				'booking_description' => __( 'Booking description/notes', 'snippen-booking' ),
-			),
-			'password_reset'       => array(
-				'user_name'  => __( 'Recipient user name', 'snippen-booking' ),
-				'reset_link' => __( 'Password reset URL', 'snippen-booking' ),
-			),
+	public function get_all_placeholders(): array {
+		return array(
+			'user_name'            => __( 'User / Customer name', 'snippen-booking' ),
+			'user_email'           => __( 'Customer email', 'snippen-booking' ),
+			'user_phone'           => __( 'Customer phone number', 'snippen-booking' ),
+			'confirmation_code'    => __( '6-digit confirmation code', 'snippen-booking' ),
+			'booking_objects'      => __( 'Booked venue names', 'snippen-booking' ),
+			'booking_date'         => __( 'Booking date', 'snippen-booking' ),
+			'booking_time'         => __( 'Booking time / time slot', 'snippen-booking' ),
+			'booking_description'  => __( 'Booking description/notes', 'snippen-booking' ),
+			'booking_url'          => __( 'Booking details URL', 'snippen-booking' ),
+			'booking_price'        => __( 'Booking total price', 'snippen-booking' ),
+			'bank_account'         => __( 'Payment bank account number', 'snippen-booking' ),
+			'vipps_number'         => __( 'Payment Vipps number / info', 'snippen-booking' ),
+			'payment_instructions' => __( 'Payment instructions / deadline text from payment settings', 'snippen-booking' ),
+			'reset_link'           => __( 'Password reset URL', 'snippen-booking' ),
 		);
+	}
 
-		return $placeholders[ $event_type ] ?? array();
+	/**
+	 * Get available placeholders for a given event type
+	 *
+	 * @param string $event_type Event type (optional).
+	 * @return array Placeholder => Description pairs.
+	 */
+	public function get_available_placeholders( string $event_type = '' ): array {
+		// phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+		return $this->get_all_placeholders();
 	}
 }

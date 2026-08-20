@@ -124,23 +124,20 @@ class NotificationTemplateServiceTest extends TestCase {
 	}
 
 	/**
-	 * Test get_available_placeholders returns correct placeholders for each event
+	 * Test get_available_placeholders and get_all_placeholders returns all placeholders including booking_time
 	 */
 	public function test_get_available_placeholders() {
 		$placeholders = $this->service->get_available_placeholders( 'user_activation' );
 
 		$this->assertArrayHasKey( 'user_name', $placeholders );
 		$this->assertArrayHasKey( 'confirmation_code', $placeholders );
+		$this->assertArrayHasKey( 'booking_time', $placeholders );
+		$this->assertArrayHasKey( 'booking_date', $placeholders );
+		$this->assertArrayHasKey( 'booking_objects', $placeholders );
+		$this->assertArrayHasKey( 'reset_link', $placeholders );
 
-		$booking_placeholders = $this->service->get_available_placeholders( 'booking_confirmation' );
-		$this->assertArrayHasKey( 'user_name', $booking_placeholders );
-		$this->assertArrayHasKey( 'booking_objects', $booking_placeholders );
-		$this->assertArrayHasKey( 'booking_date', $booking_placeholders );
-		$this->assertArrayHasKey( 'booking_url', $booking_placeholders );
-
-		$admin_placeholders = $this->service->get_available_placeholders( 'admin_booking' );
-		$this->assertArrayHasKey( 'user_email', $admin_placeholders );
-		$this->assertArrayHasKey( 'user_phone', $admin_placeholders );
+		$all_placeholders = $this->service->get_all_placeholders();
+		$this->assertEquals( $placeholders, $all_placeholders );
 	}
 
 	/**

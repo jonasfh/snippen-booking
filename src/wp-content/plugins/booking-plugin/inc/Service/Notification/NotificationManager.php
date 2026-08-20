@@ -158,12 +158,29 @@ class NotificationManager {
 		$email_provider   = $this->get_provider( 'email' );
 		$template_service = new NotificationTemplateService();
 
+		// Fetch booking time string from snapshot or slot
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_slots WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
 		$admin_context        = array(
 			'user_name'           => $booking->customer_name,
 			'user_email'          => $booking->customer_email,
 			'user_phone'          => $booking->customer_phone,
 			'booking_objects'     => $object_names,
 			'booking_date'        => $booking->booking_date,
+			'booking_time'        => $booking_time,
 			'booking_description' => $booking->description,
 		);
 		$rendered_admin_email = $template_service->render_template( 'admin_booking', 'email', $admin_context );
@@ -247,6 +264,7 @@ class NotificationManager {
 			'user_name'            => $booking->customer_name,
 			'booking_objects'      => $object_names,
 			'booking_date'         => $booking->booking_date,
+			'booking_time'         => $booking_time,
 			'booking_url'          => $sms_link,
 			'booking_price'        => number_format( $booking->price, 0, ',', ' ' ),
 			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
