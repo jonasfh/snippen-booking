@@ -411,13 +411,21 @@ class BookingActionsApi {
 		global $wpdb;
 
 		$booking_time = '';
-		if ( ! empty( $booking->slot_id ) ) {
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
 			$table_slots = $wpdb->prefix . 'snippen_time_slots';
 			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			if ( $slot ) {
 				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
 			}
 		}
+
 
 		$sms_link                     = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
 		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
