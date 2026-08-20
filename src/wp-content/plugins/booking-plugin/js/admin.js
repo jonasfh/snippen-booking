@@ -191,13 +191,14 @@
             const tplObj = activeDispatchData.templates.find(t => t.key === selectedKey);
             if (tplObj) {
                 const $modal = $('#snippen-dispatch-modal');
-                $modal.find('.snippen-modal-message').val(tplObj.rendered_body || tplObj.raw_body || '');
+                $modal.find('.snippen-modal-message').val(tplObj.raw_body || '');
                 if (activeDispatchData.channel !== 'sms_customer') {
-                    $modal.find('.snippen-modal-subject').val(tplObj.rendered_subject || tplObj.raw_subject || '');
+                    $modal.find('.snippen-modal-subject').val(tplObj.raw_subject || '');
                 }
                 isMessageEdited = false;
             }
         });
+
 
         // Handle Placeholder Chip Click (Copies to Clipboard + Inserts at cursor)
         $('#snippen-dispatch-modal').on('click', '.snippen-placeholder-btn', function(e) {
