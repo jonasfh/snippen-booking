@@ -400,7 +400,67 @@ class BookingActionsApi {
 	}
 
 	/**
+	 * Build template context array from booking object and object names
+	 *
+	 * @param object $booking      Booking database record.
+	 * @param string $object_names Names of booked objects.
+	 * @return array Context key-value pairs.
+	 */
+	private static function get_booking_context( $booking, $object_names ) {
+		global $wpdb;
+
+		$booking_time = '';
+		if ( ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
+		$sms_link                     = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
+
+		return array(
+			'user_name'            => $booking->customer_name,
+			'user_email'           => $booking->customer_email,
+			'user_phone'           => $booking->customer_phone,
+			'booking_objects'      => $object_names,
+			'booking_date'         => $booking->booking_date,
+			'booking_time'         => $booking_time,
+			'booking_description'  => $booking->description,
+			'booking_url'          => $sms_link,
+			'booking_price'        => number_format( $booking->price, 0, ',', ' ' ),
+			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
+			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
+			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
+		);
+	}
+
+	/**
+	 * Replace {{placeholder}} tokens in text with context values
+	 *
+	 * @param string $text    Text with placeholders.
+	 * @param array  $context Replacement values indexed by token key.
+	 * @return string Text with replaced placeholders.
+	 */
+	private static function replace_placeholders( $text, $context ) {
+		if ( empty( $text ) ) {
+			return '';
+		}
+
+		foreach ( $context as $key => $value ) {
+			$text = str_replace( '{{' . $key . '}}', (string) $value, $text );
+		}
+
+		return $text;
+	}
+
+	/**
 	 * Get status label
+	 *
+	 * @param string $status Status key.
+	 * @return string Translated status label.
 	 */
 	private static function get_status_label( $status ) {
 		$labels = array(
