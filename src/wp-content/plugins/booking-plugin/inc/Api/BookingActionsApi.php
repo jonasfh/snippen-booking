@@ -200,11 +200,11 @@ class BookingActionsApi {
 			}
 		}
 
-		$default_template_key = ( $channel === 'email_admin' ) ? 'admin_booking' : 'booking_confirmation';
-		$selected_template   = $template_service->render_template( $default_template_key, $raw_channel, $context );
+		$default_template_key = ( 'email_admin' === $channel ) ? 'admin_booking' : 'booking_confirmation';
+		$default_template     = $template_service->get_template( $default_template_key, $raw_channel );
 
 		$recipient = '';
-		if ( $channel === 'email_admin' ) {
+		if ( 'email_admin' === $channel ) {
 			$admin_users  = get_users( array( 'capability' => Capabilities::MANAGE_BOOKINGS ) );
 			$admin_emails = array();
 			foreach ( $admin_users as $admin ) {
@@ -213,7 +213,7 @@ class BookingActionsApi {
 				}
 			}
 			$recipient = implode( ', ', $admin_emails );
-		} elseif ( $channel === 'email_customer' ) {
+		} elseif ( 'email_customer' === $channel ) {
 			$recipient = $booking->customer_email;
 			if ( empty( $recipient ) ) {
 				$user = get_userdata( $booking->user_id );
@@ -221,21 +221,22 @@ class BookingActionsApi {
 					$recipient = $user->user_email;
 				}
 			}
-		} elseif ( $channel === 'sms_customer' ) {
+		} elseif ( 'sms_customer' === $channel ) {
 			$recipient = $booking->customer_phone ?: '';
 		}
 
 		wp_send_json_success(
 			array(
 				'recipient'            => $recipient,
-				'subject'              => $selected_template['subject'],
-				'message'              => $selected_template['body'],
+				'subject'              => $default_template['subject'] ?? '',
+				'message'              => $default_template['body'] ?? '',
 				'default_template_key' => $default_template_key,
 				'templates'            => $template_options,
 				'placeholders'         => $placeholders,
 			)
 		);
 	}
+
 
 	/**
 	 * Manually dispatch a notification for a booking
