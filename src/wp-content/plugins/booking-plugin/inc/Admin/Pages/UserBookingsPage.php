@@ -190,10 +190,25 @@ class UserBookingsPage {
 		$booking_date   = date_i18n( get_option( 'date_format' ), strtotime( $booking->booking_date ) );
 		$payment_status = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
 
+		$can_user_cancel = false;
+		if ( $booking->status !== 'cancelled' ) {
+			if ( \SnippenBooking\Helper\Capabilities::can_manage_bookings() ) {
+				$can_user_cancel = true;
+			} elseif ( 'confirmed' !== $booking->status && ! $payment_status->is_settled ) {
+				$cancellation_days = intval( get_option( 'snippen_user_cancellation_days', 14 ) );
+				$today             = new \DateTime( 'today' );
+				$booking_start     = new \DateTime( $booking->booking_date );
+				$days_until_start  = (int) $today->diff( $booking_start )->format( '%r%a' );
+				if ( $days_until_start >= $cancellation_days ) {
+					$can_user_cancel = true;
+				}
+			}
+		}
+
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
 		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
 		echo '<div style="display:flex; justify-content:flex-start; gap:8px;">';
-		if ( $booking->status !== 'cancelled' ) {
+		if ( $can_user_cancel ) {
 			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
 		}
 		echo '</div></td>';
