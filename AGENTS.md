@@ -148,6 +148,22 @@ wp plugin list --allow-root
 /entrypoint.sh setup
 ```
 
+## Debugging & Logging
+
+When investigating runtime errors or HTTP 500 AJAX failures in the devcontainer:
+
+- **PHP / Web Server Errors**: Apache error log contains PHP notices, warnings, and uncaught fatal stack traces.
+  ```bash
+  tail -f /var/log/apache2/error.log
+  ```
+- **WordPress Debug Log**: If `WP_DEBUG_LOG` is enabled in `wp-config.php`, output written via `error_log()` will be saved to `/wordpress/wp-content/debug.log`.
+- **Nginx Errors**: If running under Nginx, logs are located at `/var/log/nginx/error.log`.
+- **Inspection tip**: Filter recent PHP fatal errors quickly:
+  ```bash
+  tail -n 100 /var/log/apache2/error.log | grep -i "fatal error"
+  ```
+
+
 ## GitHub Issue Workflow
 
 All changes made to the project MUST be based on a GitHub issue. If a task or instruction is given without an associated issue, the agent MUST first create a GitHub issue containing the details of the work to be done (using `gh issue create`) before starting execution.
