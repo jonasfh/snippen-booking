@@ -113,11 +113,13 @@
                     if (data.templates && data.templates.length > 0) {
                         data.templates.forEach(function(tpl) {
                             const isSel = (tpl.key === data.default_template_key);
-                            $select.append($('<option>', {
-                                value: tpl.key,
-                                text: tpl.label,
-                                selected: isSel
-                            }));
+                            const $opt = $('<option></option>')
+                                .val(tpl.key)
+                                .text(tpl.label);
+                            if (isSel) {
+                                $opt.prop('selected', true);
+                            }
+                            $select.append($opt);
                         });
                     }
 
@@ -127,16 +129,23 @@
                     if (data.placeholders) {
                         $.each(data.placeholders, function(key, desc) {
                             const phCode = '{{' + key + '}}';
-                            const $chip = $('<button>', {
-                                type: 'button',
-                                class: 'button button-small snippen-placeholder-btn',
-                                text: phCode,
-                                title: desc,
-                                style: 'font-size:11px; height:24px; line-height:22px; padding:0 6px; border-radius:3px; font-family:monospace;'
-                            }).data('code', phCode);
+                            const $chip = $('<button type="button" class="button button-small snippen-placeholder-btn"></button>')
+                                .text(phCode)
+                                .attr('title', desc)
+                                .attr('data-code', phCode)
+                                .data('code', phCode)
+                                .css({
+                                    'font-size': '11px',
+                                    'height': '24px',
+                                    'line-height': '22px',
+                                    'padding': '0 6px',
+                                    'border-radius': '3px',
+                                    'font-family': 'monospace'
+                                });
                             $placeholdersWrap.append($chip);
                         });
                     }
+
 
                     if (channel === 'email_customer' || channel === 'email_admin') {
                         $modal.find('.snippen-modal-subject-wrap').show();
