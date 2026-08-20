@@ -127,6 +127,94 @@ class BookingActionsTest extends TestCase {
     }
 
     /**
+     * Test that a subscriber cannot cancel a confirmed booking
+     */
+    public function test_user_cannot_cancel_confirmed_booking() {
+        $user_id = wp_insert_user([
+            'user_login' => 'user_test_confirmed',
+            'user_pass' => 'password',
+            'role' => 'subscriber'
+        ]);
+        wp_set_current_user($user_id);
+
+        $booking_id = $this->create_test_booking($user_id);
+        global $wpdb;
+        $wpdb->update($wpdb->prefix . 'snippen_bookings', ['status' => 'confirmed'], ['id' => $booking_id]);
+
+        $_POST['id'] = $booking_id;
+        $_POST['status'] = 'cancelled';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+
+        ob_start();
+        try {
+            BookingActionsApi::update_status();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $this->assertEquals('confirmed', $status);
+    }
+
+    /**
+     * Test that a subscriber cannot cancel a paid booking
+     */
+    public function test_user_cannot_cancel_paid_booking() {
+        $user_id = wp_insert_user([
+            'user_login' => 'user_test_paid',
+            'user_pass' => 'password',
+            'role' => 'subscriber'
+        ]);
+        wp_set_current_user($user_id);
+
+        $booking_id = $this->create_test_booking($user_id);
+        global $wpdb;
+        $wpdb->update($wpdb->prefix . 'snippen_bookings', ['payment_status_id' => 3], ['id' => $booking_id]); // PAID status
+
+        $_POST['id'] = $booking_id;
+        $_POST['status'] = 'cancelled';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+
+        ob_start();
+        try {
+            BookingActionsApi::update_status();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $this->assertEquals('pending', $status);
+    }
+
+    /**
+     * Test that a subscriber cannot cancel booking closer than configured cancellation deadline
+     */
+    public function test_user_cannot_cancel_past_deadline_booking() {
+        $user_id = wp_insert_user([
+            'user_login' => 'user_test_deadline',
+            'user_pass' => 'password',
+            'role' => 'subscriber'
+        ]);
+        wp_set_current_user($user_id);
+
+        $booking_id = $this->create_test_booking($user_id);
+        global $wpdb;
+        // Set date to 5 days in future (default limit is 14 days)
+        $wpdb->update($wpdb->prefix . 'snippen_bookings', ['booking_date' => date('Y-m-d', strtotime('+5 days'))], ['id' => $booking_id]);
+
+        $_POST['id'] = $booking_id;
+        $_POST['status'] = 'cancelled';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+
+        ob_start();
+        try {
+            BookingActionsApi::update_status();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $this->assertEquals('pending', $status);
+    }
+
+    /**
      * Test that an admin can update door code
      */
     public function test_admin_can_update_door_code() {
@@ -195,7 +283,7 @@ class BookingActionsTest extends TestCase {
         $wpdb->insert($table, [
             'user_id' => $user_id,
             'slot_id' => 1,
-            'booking_date' => date('Y-m-d'),
+            'booking_date' => date('Y-m-d', strtotime('+30 days')),
             'status' => 'pending',
             'customer_name' => 'Test',
             'customer_email' => 'test@test.com',

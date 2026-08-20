@@ -36,9 +36,31 @@ class BookingActionsApi {
 				wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
 			}
 
-			$booking_user_id = $wpdb->get_var( $wpdb->prepare( "SELECT user_id FROM $table WHERE id = %d", $id ) );
-			if ( intval( $booking_user_id ) !== get_current_user_id() ) {
+			$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d AND deleted_at IS NULL", $id ) );
+			if ( ! $booking || intval( $booking->user_id ) !== get_current_user_id() ) {
 				wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
+			}
+
+			// Must not be confirmed by administrator
+			if ( 'confirmed' === $booking->status ) {
+				wp_send_json_error( array( 'message' => __( 'Du kan ikke slette en bekreftet booking.', 'snippen-booking' ) ) );
+			}
+
+			// Must not be marked as paid
+			$payment_status = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
+			if ( $payment_status->is_settled ) {
+				wp_send_json_error( array( 'message' => __( 'Du kan ikke slette en betalt booking.', 'snippen-booking' ) ) );
+			}
+
+			// Check cancellation deadline window
+			$cancellation_days = intval( get_option( 'snippen_user_cancellation_days', 14 ) );
+			$today             = new \DateTime( 'today' );
+			$booking_start     = new \DateTime( $booking->booking_date );
+			$days_until_start  = (int) $today->diff( $booking_start )->format( '%r%a' );
+
+			if ( $days_until_start < $cancellation_days ) {
+				/* translators: %d: number of days */
+				wp_send_json_error( array( 'message' => sprintf( __( 'Booking kan ikke slettes mindre enn %d dager før start.', 'snippen-booking' ), $cancellation_days ) ) );
 			}
 		}
 

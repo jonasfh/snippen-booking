@@ -458,21 +458,85 @@ class BookingListShortcode {
 				<?php endif; ?>
 			</div>
 
-			<?php if ( $door_code_enabled ) : ?>
-				<div class="booking-compact-sub">
-					<div class="booking-door-code-badge <?php echo $door_code_active ? 'active-code' : 'hidden-code'; ?>">
-						<span class="label"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></span>
-						<span class="value">
-							<?php if ( $door_code_active ) : ?>
-								<span class="lock-icon">🔓</span> <strong><?php echo esc_html( $door_code_display ); ?></strong>
-							<?php else : ?>
-								<span class="lock-icon">🔒</span> <span class="code-unavailable"><?php echo esc_html( $door_code_display ); ?></span>
-							<?php endif; ?>
-						</span>
-					</div>
+			<?php
+			$can_user_delete = false;
+			if ( 'cancelled' !== $booking->status && 'confirmed' !== $booking->status && ! $payment_status->is_settled ) {
+				$cancellation_days = intval( get_option( 'snippen_user_cancellation_days', 14 ) );
+				$today             = new \DateTime( 'today' );
+				$booking_start     = new \DateTime( $booking->booking_date );
+				$days_until_start  = (int) $today->diff( $booking_start )->format( '%r%a' );
+				if ( $days_until_start >= $cancellation_days ) {
+					$can_user_delete = true;
+				}
+			}
+			?>
+
+			<?php if ( $can_user_delete || $door_code_enabled ) : ?>
+				<div class="booking-compact-sub" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
+					<?php if ( $door_code_enabled ) : ?>
+						<div class="booking-door-code-badge <?php echo $door_code_active ? 'active-code' : 'hidden-code'; ?>">
+							<span class="label"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></span>
+							<span class="value">
+								<?php if ( $door_code_active ) : ?>
+									<span class="lock-icon">🔓</span> <strong><?php echo esc_html( $door_code_display ); ?></strong>
+								<?php else : ?>
+									<span class="lock-icon">🔒</span> <span class="code-unavailable"><?php echo esc_html( $door_code_display ); ?></span>
+								<?php endif; ?>
+							</span>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( $can_user_delete ) : ?>
+						<div class="booking-user-actions" style="margin-left:auto;">
+							<button type="button" class="snippen-delete-booking-btn" data-id="<?php echo esc_attr( $booking->id ); ?>" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-size:12px; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+								<span>🗑️</span> <?php esc_html_e( 'Slett booking', 'snippen-booking' ); ?>
+							</button>
+						</div>
+					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 		</div>
+		<script>
+		if (typeof window.snippenDeleteBookingInit === 'undefined') {
+			window.snippenDeleteBookingInit = true;
+			document.addEventListener('click', function(e) {
+				var btn = e.target.closest('.snippen-delete-booking-btn');
+				if (!btn) return;
+				e.preventDefault();
+				var bookingId = btn.getAttribute('data-id');
+				if (!bookingId) return;
+
+				if (!confirm('<?php echo esc_js( __( 'Er du sikker på at du vil slette denne bookingen?', 'snippen-booking' ) ); ?>')) {
+					return;
+				}
+
+				btn.disabled = true;
+				var formData = new FormData();
+				formData.append('action', 'snippen_update_booking_status');
+				formData.append('id', bookingId);
+				formData.append('status', 'cancelled');
+				formData.append('nonce', typeof snippenBookingAjax !== 'undefined' ? snippenBookingAjax.admin_nonce : '<?php echo esc_js( wp_create_nonce( 'snippen_admin_nonce' ) ); ?>');
+
+				fetch(typeof snippenBookingAjax !== 'undefined' ? snippenBookingAjax.ajaxurl : '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+					method: 'POST',
+					body: formData
+				})
+				.then(function(res) { return res.json(); })
+				.then(function(data) {
+					if (data.success) {
+						window.location.reload();
+					} else {
+						btn.disabled = false;
+						alert(data.data && data.data.message ? data.data.message : '<?php echo esc_js( __( 'Kunne ikke slette booking.', 'snippen-booking' ) ); ?>');
+					}
+				})
+				.catch(function() {
+					btn.disabled = false;
+					alert('<?php echo esc_js( __( 'Tilkoblingsfeil.', 'snippen-booking' ) ); ?>');
+				});
+			});
+		}
+		</script>
 		<?php
 	}
 }

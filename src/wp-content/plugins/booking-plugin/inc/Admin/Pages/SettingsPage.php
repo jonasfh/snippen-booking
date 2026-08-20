@@ -71,6 +71,9 @@ class SettingsPage {
 		$disable_all_emails = isset( $_POST['snippen_disable_all_emails'] ) ? 'yes' : 'no';
 		update_option( 'snippen_disable_all_emails', $disable_all_emails );
 
+		$user_cancellation_days = isset( $_POST['snippen_user_cancellation_days'] ) ? intval( $_POST['snippen_user_cancellation_days'] ) : 14;
+		update_option( 'snippen_user_cancellation_days', $user_cancellation_days );
+
 		// Save Payment Settings
 		$payment_bank_account = isset( $_POST['snippen_payment_bank_account'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_bank_account'] ) ) : '';
 		update_option( 'snippen_payment_bank_account', $payment_bank_account );
@@ -311,6 +314,13 @@ class SettingsPage {
 		echo '<label for="snippen_booking_horizon_weeks" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Hvor mange uker frem i tid skal kalenderen vise?', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="snippen_booking_horizon_weeks" id="snippen_booking_horizon_weeks" value="' . esc_attr( $horizon_weeks ) . '" class="small-text" min="1" max="520">';
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Standard er 52 uker (1 år). Kalender-nedtrekksmenyen vil vise dette antallet uker frem i tid.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		$user_cancellation_days = get_option( 'snippen_user_cancellation_days', 14 );
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_user_cancellation_days" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Frist for avbestilling (dager før booking start)', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_user_cancellation_days" id="snippen_user_cancellation_days" value="' . esc_attr( $user_cancellation_days ) . '" class="small-text" min="0">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Antall dager før booking start at bruker kan slette egne ubekreftede og ubetalte bookinger. Standard er 14 dager.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="background:#fff1f2; border:1px solid #fecdd3; padding:16px; border-radius:8px; margin-top:20px;">';

@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.13.0] - 2026-08-20
+- (#219) Allowed users to delete/cancel their own unconfirmed and unpaid bookings prior to the configurable cancellation deadline (default 14 days before booking start). Added cancellation deadline setting to admin general settings tab, updated frontend booking list shortcode and admin user bookings page, and enforced server-side validation.
+
 ## [2.12.0] - 2026-08-11
 - (#220) Simplified weekly calendar view to display per-object availability status badges ("Ledig", "Delvis opptatt", "Opptatt") for better clarity and responsive mobile UX, moving detailed block selection and admin booking info into the day wizard view.
 
