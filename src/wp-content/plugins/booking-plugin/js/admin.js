@@ -70,6 +70,7 @@
 
         // AJAX Notification Manual Dispatch (Opens Modal Dialog)
         let activeDispatchData = null;
+        let isMessageEdited = false;
 
         $('.bookings-table').on('click', '.snippen-btn-dispatch', function(e) {
             e.preventDefault();
@@ -94,14 +95,48 @@
                     activeDispatchData = {
                         id: id,
                         channel: channel,
-                        $feedback: $feedback
+                        $feedback: $feedback,
+                        templates: response.data.templates || []
                     };
 
                     const data = response.data;
                     const $modal = $('#snippen-dispatch-modal');
+                    isMessageEdited = false;
+
                     $modal.find('.snippen-modal-feedback').text('').css('color', 'inherit');
                     $modal.find('.snippen-modal-recipient').val(data.recipient || '');
                     $modal.find('.snippen-modal-message').val(data.message || '');
+
+                    // Populate template dropdown
+                    const $select = $modal.find('.snippen-modal-template-select');
+                    $select.empty();
+                    if (data.templates && data.templates.length > 0) {
+                        data.templates.forEach(function(tpl) {
+                            const isSel = (tpl.key === data.default_template_key);
+                            $select.append($('<option>', {
+                                value: tpl.key,
+                                text: tpl.label,
+                                selected: isSel
+                            }));
+                        });
+                    }
+
+                    // Populate placeholders
+                    const $placeholdersWrap = $modal.find('.snippen-modal-placeholders-wrap');
+                    $placeholdersWrap.empty();
+                    if (data.placeholders) {
+                        $.each(data.placeholders, function(key, desc) {
+                            const phCode = '{{' + key + '}}';
+                            const $chip = $('<button>', {
+                                type: 'button',
+                                class: 'button button-small snippen-placeholder-btn',
+                                text: phCode,
+                                title: desc,
+                                style: 'font-size:11px; height:24px; line-height:22px; padding:0 6px; border-radius:3px; font-family:monospace;'
+                            }).data('code', phCode);
+                            $placeholdersWrap.append($chip);
+                        });
+                    }
 
                     if (channel === 'email_customer' || channel === 'email_admin') {
                         $modal.find('.snippen-modal-subject-wrap').show();
@@ -129,6 +164,70 @@
             }).always(function() {
                 $container.find('.snippen-btn-dispatch').prop('disabled', false).css('opacity', '1');
             });
+        });
+
+        // Track editing of textarea or subject
+        $('#snippen-dispatch-modal').on('input', '.snippen-modal-message, .snippen-modal-subject', function() {
+            isMessageEdited = true;
+        });
+
+        // Handle template select change with warning if edited
+        $('#snippen-dispatch-modal').on('change', '.snippen-modal-template-select', function() {
+            const $select = $(this);
+            const selectedKey = $select.val();
+
+            if (!activeDispatchData || !activeDispatchData.templates) {
+                return;
+            }
+
+            if (isMessageEdited) {
+                const confirmChange = confirm('Advarsel: Endring av mal vil overskrive teksten du har skrevet. Vil du fortsette?');
+                if (!confirmChange) {
+                    // Revert select option
+                    return;
+                }
+            }
+
+            const tplObj = activeDispatchData.templates.find(t => t.key === selectedKey);
+            if (tplObj) {
+                const $modal = $('#snippen-dispatch-modal');
+                $modal.find('.snippen-modal-message').val(tplObj.rendered_body || tplObj.raw_body || '');
+                if (activeDispatchData.channel !== 'sms_customer') {
+                    $modal.find('.snippen-modal-subject').val(tplObj.rendered_subject || tplObj.raw_subject || '');
+                }
+                isMessageEdited = false;
+            }
+        });
+
+        // Handle Placeholder Chip Click (Copies to Clipboard + Inserts at cursor)
+        $('#snippen-dispatch-modal').on('click', '.snippen-placeholder-btn', function(e) {
+            e.preventDefault();
+            const phCode = $(this).data('code');
+            const $textarea = $('#snippen-dispatch-modal').find('.snippen-modal-message');
+            const textarea = $textarea[0];
+
+            if (phCode && textarea) {
+                // Copy to clipboard
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(phCode).catch(function() {});
+                }
+
+                // Insert into textarea at cursor position
+                const startPos = textarea.selectionStart || 0;
+                const endPos = textarea.selectionEnd || 0;
+                const origVal = textarea.value;
+
+                textarea.value = origVal.substring(0, startPos) + phCode + origVal.substring(endPos, origVal.length);
+                textarea.selectionStart = startPos + phCode.length;
+                textarea.selectionEnd = startPos + phCode.length;
+                textarea.focus();
+
+                isMessageEdited = true;
+
+                // Show feedback hint briefly
+                const $hint = $('#snippen-dispatch-modal').find('.snippen-placeholder-copied-hint');
+                $hint.stop(true, true).fadeIn(150).delay(2000).fadeOut(200);
+            }
         });
 
         // Modal Close/Cancel handlers

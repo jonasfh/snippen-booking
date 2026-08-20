@@ -167,9 +167,43 @@ class BookingActionsApi {
 			)
 		);
 		$object_names   = implode( ' og ', $objs );
+		$context        = self::get_booking_context( $booking, $object_names );
 
-		$sms_link = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$template_service = new \SnippenBooking\Service\Notification\NotificationTemplateService();
+		$raw_channel      = ( $channel === 'sms_customer' ) ? 'sms' : 'email';
+		$all_templates    = $template_service->get_all_templates();
+		$placeholders     = $template_service->get_all_placeholders();
 
+		$template_options = array();
+		$event_labels     = array(
+			'booking_confirmation' => __( 'Booking-bekreftelse', 'snippen-booking' ),
+			'admin_booking'        => __( 'Admin bookingvarsel', 'snippen-booking' ),
+			'user_activation'      => __( 'Kontoaktivering', 'snippen-booking' ),
+			'password_reset'       => __( 'Passordtilbakestilling', 'snippen-booking' ),
+		);
+
+		foreach ( $all_templates as $event_type => $channels ) {
+			if ( isset( $channels[ $raw_channel ] ) ) {
+				$tpl            = $channels[ $raw_channel ];
+				$raw_subject    = $tpl['subject'] ?? '';
+				$raw_body       = $tpl['body'] ?? '';
+				$label          = $event_labels[ $event_type ] ?? ucfirst( str_replace( '_', ' ', $event_type ) );
+
+				$template_options[] = array(
+					'key'              => $event_type,
+					'label'            => $label,
+					'raw_subject'      => $raw_subject,
+					'raw_body'         => $raw_body,
+					'rendered_subject' => self::replace_placeholders( $raw_subject, $context ),
+					'rendered_body'    => self::replace_placeholders( $raw_body, $context ),
+				);
+			}
+		}
+
+		$default_template_key = ( $channel === 'email_admin' ) ? 'admin_booking' : 'booking_confirmation';
+		$selected_template   = $template_service->render_template( $default_template_key, $raw_channel, $context );
+
+		$recipient = '';
 		if ( $channel === 'email_admin' ) {
 			$admin_users  = get_users( array( 'capability' => Capabilities::MANAGE_BOOKINGS ) );
 			$admin_emails = array();
@@ -178,26 +212,8 @@ class BookingActionsApi {
 					$admin_emails[] = $admin->user_email;
 				}
 			}
-
-			$subject  = sprintf( __( 'Ny Bookingforespørsel - %s (Manuell sendt)', 'snippen-booking' ), $object_names );
-			$message  = __( 'Ny bookingforespørsel mottatt (sendt manuelt av administrator):', 'snippen-booking' ) . "\n\n";
-			$message .= __( 'Lokale:', 'snippen-booking' ) . ' ' . $object_names . "\n";
-			$message .= __( 'Dato:', 'snippen-booking' ) . ' ' . $booking->booking_date . "\n";
-			$message .= __( 'Navn:', 'snippen-booking' ) . ' ' . $booking->customer_name . "\n";
-			$message .= __( 'Email:', 'snippen-booking' ) . ' ' . $booking->customer_email . "\n";
-			$message .= __( 'Telefon:', 'snippen-booking' ) . ' ' . $booking->customer_phone . "\n";
-			$message .= __( 'Beskrivelse:', 'snippen-booking' ) . ' ' . $booking->description . "\n";
-
-			wp_send_json_success(
-				array(
-					'recipient' => implode( ', ', $admin_emails ),
-					'subject'   => $subject,
-					'message'   => $message,
-				)
-			);
-		}
-
-		if ( $channel === 'email_customer' ) {
+			$recipient = implode( ', ', $admin_emails );
+		} elseif ( $channel === 'email_customer' ) {
 			$recipient = $booking->customer_email;
 			if ( empty( $recipient ) ) {
 				$user = get_userdata( $booking->user_id );
@@ -205,42 +221,20 @@ class BookingActionsApi {
 					$recipient = $user->user_email;
 				}
 			}
-
-			$subject      = __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
-			$mail_message = sprintf(
-				__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
-				$object_names,
-				$booking->booking_date,
-				$sms_link
-			);
-
-			wp_send_json_success(
-				array(
-					'recipient' => $recipient ?: '',
-					'subject'   => $subject,
-					'message'   => $mail_message,
-				)
-			);
+		} elseif ( $channel === 'sms_customer' ) {
+			$recipient = $booking->customer_phone ?: '';
 		}
 
-		if ( $channel === 'sms_customer' ) {
-			$sms_message = sprintf(
-				__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),
-				$object_names,
-				$booking->booking_date,
-				$sms_link
-			);
-
-			wp_send_json_success(
-				array(
-					'recipient' => $booking->customer_phone ?: '',
-					'subject'   => '',
-					'message'   => $sms_message,
-				)
-			);
-		}
-
-		wp_send_json_error( array( 'message' => __( 'Ugyldig handling.', 'snippen-booking' ) ) );
+		wp_send_json_success(
+			array(
+				'recipient'            => $recipient,
+				'subject'              => $selected_template['subject'],
+				'message'              => $selected_template['body'],
+				'default_template_key' => $default_template_key,
+				'templates'            => $template_options,
+				'placeholders'         => $placeholders,
+			)
+		);
 	}
 
 	/**
@@ -283,6 +277,7 @@ class BookingActionsApi {
 			)
 		);
 		$object_names   = implode( ' og ', $objs );
+		$context        = self::get_booking_context( $booking, $object_names );
 
 		$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
 		$email_provider       = $notification_manager->get_provider( 'email' );
@@ -303,10 +298,10 @@ class BookingActionsApi {
 				wp_send_json_error( array( 'message' => __( 'Fant ingen administratorer med e-post.', 'snippen-booking' ) ) );
 			}
 
-			$subject = $custom_subject !== null && $custom_subject !== '' ? $custom_subject : sprintf( __( 'Ny Bookingforespørsel - %s (Manuell sendt)', 'snippen-booking' ), $object_names );
+			$subject = $custom_subject !== null && $custom_subject !== '' ? self::replace_placeholders( $custom_subject, $context ) : sprintf( __( 'Ny Bookingforespørsel - %s (Manuell sendt)', 'snippen-booking' ), $object_names );
 
 			if ( $custom_message !== null && $custom_message !== '' ) {
-				$message = $custom_message;
+				$message = self::replace_placeholders( $custom_message, $context );
 			} else {
 				$message  = __( 'Ny bookingforespørsel mottatt (sendt manuelt av administrator):', 'snippen-booking' ) . "\n\n";
 				$message .= __( 'Lokale:', 'snippen-booking' ) . ' ' . $object_names . "\n";
@@ -337,10 +332,10 @@ class BookingActionsApi {
 			}
 
 			$sms_link = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
-			$subject  = $custom_subject !== null && $custom_subject !== '' ? $custom_subject : __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
+			$subject  = $custom_subject !== null && $custom_subject !== '' ? self::replace_placeholders( $custom_subject, $context ) : __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
 
 			if ( $custom_message !== null && $custom_message !== '' ) {
-				$mail_message = $custom_message;
+				$mail_message = self::replace_placeholders( $custom_message, $context );
 			} else {
 				$mail_message = sprintf(
 					__( "Takk for din bookingforespørsel for %1\$s den %2\$s.\n\nDu kan se detaljer om din booking her: %3\$s", 'snippen-booking' ),
@@ -377,7 +372,7 @@ class BookingActionsApi {
 			$sms_link = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
 
 			if ( $custom_message !== null && $custom_message !== '' ) {
-				$sms_message = $custom_message;
+				$sms_message = self::replace_placeholders( $custom_message, $context );
 			} else {
 				$sms_message = sprintf(
 					__( 'Takk for din bookingforespørsel for %1$s den %2$s. Se detaljer: %3$s', 'snippen-booking' ),

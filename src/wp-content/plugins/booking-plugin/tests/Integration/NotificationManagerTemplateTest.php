@@ -265,4 +265,114 @@ class NotificationManagerTemplateTest extends TestCase {
 		$this->assertStringContainsString( 'Admin Alert: Jane Smith', $admin_mail['message'] );
 		$this->assertStringContainsString( '+4792222222', $admin_mail['message'] );
 	}
+
+	/**
+	 * Test get_notification_preview returns templates and placeholders
+	 */
+	public function test_get_notification_preview_templates_and_placeholders() {
+		global $wpdb;
+
+		// Create test booking
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'           => wp_generate_uuid4(),
+				'booking_date'   => '2026-09-01',
+				'user_id'        => 1,
+				'slot_id'        => 1,
+				'customer_name'  => 'Alice Admin',
+				'customer_email' => 'alice@example.com',
+				'customer_phone' => '+4793333333',
+				'price'          => 500,
+				'status'         => 'confirmed',
+				'created_at'     => current_time( 'mysql' ),
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		$_POST['nonce']   = wp_create_nonce( 'snippen_admin_nonce' );
+		$_POST['id']      = $booking_id;
+		$_POST['channel'] = 'email_customer';
+
+		// Authenticate as admin
+		$user_id = wp_create_user( 'testadmin_' . time(), 'password123', 'adminpreview@example.com' );
+		$user    = get_user_by( 'id', $user_id );
+		$user->add_cap( 'manage_snippen_bookings' );
+		wp_set_current_user( $user_id );
+
+		ob_start();
+		try {
+			\SnippenBooking\Api\BookingActionsApi::get_notification_preview();
+		} catch ( \WPAjaxDieContinueException $e ) {
+			// Expected AJAX completion
+		}
+		$response_json = ob_get_clean();
+		$data          = json_decode( $response_json, true );
+
+		$this->assertTrue( $data['success'] );
+		$this->assertArrayHasKey( 'templates', $data['data'] );
+		$this->assertArrayHasKey( 'placeholders', $data['data'] );
+		$this->assertEquals( 'alice@example.com', $data['data']['recipient'] );
+		$this->assertEquals( 'booking_confirmation', $data['data']['default_template_key'] );
+	}
+
+	/**
+	 * Test dispatch_notification_manually replaces placeholders in custom message
+	 */
+	public function test_dispatch_notification_manually_replaces_placeholders() {
+		global $wpdb;
+
+		// Create test booking
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'           => wp_generate_uuid4(),
+				'booking_date'   => '2026-09-10',
+				'user_id'        => 1,
+				'slot_id'        => 1,
+				'customer_name'  => 'Bob Builder',
+				'customer_email' => 'bob@example.com',
+				'customer_phone' => '+4794444444',
+				'price'          => 450,
+				'status'         => 'confirmed',
+				'created_at'     => current_time( 'mysql' ),
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		$_POST['nonce']   = wp_create_nonce( 'snippen_admin_nonce' );
+		$_POST['id']      = $booking_id;
+		$_POST['channel'] = 'email_customer';
+		$_POST['subject'] = 'Hei {{user_name}}';
+		$_POST['message'] = 'Din booking er bekreftet for {{booking_date}}. Totalpris: {{booking_price}} kr.';
+
+		$user_id = wp_create_user( 'testadmin2_' . time(), 'password123', 'admindispatch@example.com' );
+		$user    = get_user_by( 'id', $user_id );
+		$user->add_cap( 'manage_snippen_bookings' );
+		wp_set_current_user( $user_id );
+
+		ob_start();
+		try {
+			\SnippenBooking\Api\BookingActionsApi::dispatch_notification_manually();
+		} catch ( \WPAjaxDieContinueException $e ) {
+			// Expected AJAX completion
+		}
+		$response_json = ob_get_clean();
+		$data          = json_decode( $response_json, true );
+
+		$this->assertTrue( $data['success'] );
+
+		$sent_mail = null;
+		foreach ( self::$sent_mails as $mail ) {
+			if ( 'bob@example.com' === $mail['to'] ) {
+				$sent_mail = $mail;
+				break;
+			}
+		}
+
+		$this->assertNotNull( $sent_mail );
+		$this->assertEquals( 'Hei Bob Builder', $sent_mail['subject'] );
+		$this->assertStringContainsString( 'Din booking er bekreftet for 2026-09-10.', $sent_mail['message'] );
+		$this->assertStringContainsString( 'Totalpris: 450 kr.', $sent_mail['message'] );
+	}
 }
