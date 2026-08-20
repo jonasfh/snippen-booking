@@ -396,12 +396,22 @@ class BookingsPage {
 						<label><?php esc_html_e( 'Mottaker:', 'snippen-booking' ); ?></label>
 						<input type="text" class="snippen-modal-recipient" readonly style="width:100%; background:#f1f5f9; color:#475569;">
 					</div>
-					<div class="snippen-form-group snippen-modal-subject-wrap">
+					<div class="snippen-form-group snippen-modal-template-wrap" style="margin-top: 12px;">
+						<label><?php esc_html_e( 'Velg mal:', 'snippen-booking' ); ?></label>
+						<select class="snippen-modal-template-select" style="width:100%;">
+						</select>
+					</div>
+					<div class="snippen-form-group snippen-modal-subject-wrap" style="margin-top: 12px;">
 						<label><?php esc_html_e( 'Emne:', 'snippen-booking' ); ?></label>
 						<input type="text" class="snippen-modal-subject" style="width:100%;">
 					</div>
-					<div class="snippen-form-group">
-						<label><?php esc_html_e( 'Melding:', 'snippen-booking' ); ?></label>
+					<div class="snippen-form-group" style="margin-top: 12px;">
+						<label style="display:flex; justify-content:space-between; align-items:center;">
+							<span><?php esc_html_e( 'Melding:', 'snippen-booking' ); ?></span>
+							<span class="snippen-placeholder-copied-hint" style="font-size:11px; color:#15803d; font-weight:600; display:none;"><?php esc_html_e( 'Kopiert til utklippstavle og satt inn!', 'snippen-booking' ); ?></span>
+						</label>
+						<div class="snippen-modal-placeholders-wrap" style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:4px; max-height:100px; overflow-y:auto; padding:6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px;">
+						</div>
 						<textarea class="snippen-modal-message" rows="8" style="width:100%; font-family:inherit; font-size:13px; padding:10px; border-radius:6px; border:1px solid #cbd5e1;"></textarea>
 					</div>
 					<div class="snippen-modal-feedback" style="margin-top:10px; font-size:12px; font-weight:600;"></div>

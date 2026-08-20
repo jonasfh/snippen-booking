@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.15.0] - 2026-08-20
+- (#226) Enhanced notification manual dispatch modal in admin booking overview with template selector dropdown (defaulting to booking confirmation), interactive placeholder chips with clipboard copy and cursor insertion, user warning upon template switch if message content was modified, and server-side placeholder replacement when sending.
+
 ## [2.14.0] - 2026-08-20
 - (#222) Harmonized available placeholders across all notification templates, moved placeholder overview box to the top of the Notification Templates admin page, and added `booking_time` placeholder for booking notifications.
 
