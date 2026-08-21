@@ -9,6 +9,8 @@ on:
 
 jobs:
   check-version:
+    permissions:
+      contents: read
     environment: prod
     runs-on: ubuntu-latest
     steps:
