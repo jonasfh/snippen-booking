@@ -58,6 +58,16 @@ jobs:
         ln -s $GITHUB_WORKSPACE/src/wp-content/plugins/booking-plugin /tmp/wordpress/wp-content/plugins/snippen-booking
         wp plugin activate snippen-booking --path=/tmp/wordpress
 
+    - name: Run PHPCS lint
+      run: |
+        echo "### PHPCS Lint Results 🎨" >> $GITHUB_STEP_SUMMARY
+        if composer lint; then
+          echo "✅ Ingen PHPCS-feil eller advarsler funnet!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ PHPCS linting feilet. Rett alle kodesstilfeil og advarsler." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
     - name: Run tests
       env:
         WP_ABSPATH: /tmp/wordpress/

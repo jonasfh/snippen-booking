@@ -18,7 +18,7 @@ Guide AI agents working in this repository.
 - All plugin logic in `inc/` directory (WordPress standard)
 - **Always create tests for new functionality**
 - **Update existing tests when changing functionality**
-- **Run tests to verify all changes before completion**
+- **Run tests and linting to verify all changes before completion**: Always run `composer lint` and ensure all PHPCS errors and warnings are resolved before committing.
 - **Always include created_at and modified_at timestamps on database tables**
 - **Check for latest versions**: Always ensure that the latest available versions of frameworks, libraries, and GitHub Actions are used, unless there is a specific reason not to. If old versions are discovered, notify the developer.
 - **DO NOT commit or push changes** (the USER handles version control), **EXCEPT** when following the "GitHub Issue Workflow" below.

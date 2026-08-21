@@ -72,9 +72,9 @@ npm run test:js
 ```
 
 #### Local Development vs. CI/CD Strategy
-- **Local Development**: Use `composer test:unit` or `composer test:fast` during active code changes for near-instant execution (~0.6 seconds).
-- **Pre-commit / Pre-PR**: Run `composer test` locally to verify the entire test suite (Unit + Integration) before pushing.
-- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/phpunit.yml`) executes the full test suite (`composer test`) and JS tests (`npm run test:js`) automatically on every push and pull request.
+- **Local Development**: Use `composer test:unit` or `composer test:fast` during active code changes for near-instant execution (~0.6 seconds). Use `composer lint` (and `composer lint:fix`) to ensure code compliance.
+- **Pre-commit / Pre-PR**: Run `composer test` and `composer lint` locally to verify the entire test suite and code standards before pushing.
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/phpunit.yml`) executes PHPCS linting (`composer lint`), the full PHP test suite (`composer test`), and JS tests (`npm run test:js`) automatically on every push and pull request.
 
 ### Development Tools
 
