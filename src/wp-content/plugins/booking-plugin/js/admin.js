@@ -284,6 +284,9 @@
                     if (activeDispatchData.$feedback) {
                         activeDispatchData.$feedback.text(response.data.message).css('color', '#15803d');
                     }
+                    if (activeDispatchData.id) {
+                        refreshBookingMessages(activeDispatchData.id);
+                    }
                     setTimeout(function() {
                         $modal.fadeOut(200);
                         activeDispatchData = null;
@@ -297,6 +300,108 @@
                 $submitBtn.prop('disabled', false).css('opacity', '1');
             });
         });
+
+        // Function to refresh booking messages via AJAX
+        function refreshBookingMessages(bookingId) {
+            const $historyContainer = $('.booking-messages-history[data-booking-id="' + bookingId + '"]');
+            if (!$historyContainer.length) {
+                return;
+            }
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_get_booking_messages',
+                nonce: snippenAdmin.nonce,
+                id: bookingId
+            }, function(response) {
+                if (response.success && response.data && response.data.messages) {
+                    renderMessagesHistory($historyContainer, response.data.messages);
+                }
+            });
+        }
+
+        // Render messages into container
+        function renderMessagesHistory($container, messages) {
+            const $listContainer = $container.find('.msg-list-container');
+            const $countSpan = $container.find('.msg-count');
+            $countSpan.text(messages.length);
+            $listContainer.empty();
+
+            if (!messages || messages.length === 0) {
+                $listContainer.html('<p class="no-messages-text" style="margin:0; font-size:12px; color:#64748b;">Ingen meldinger registrert på denne bookingen ennå.</p>');
+                return;
+            }
+
+            const knownLabels = {
+                'booking_confirmation': 'Booking-bekreftelse',
+                'manual_dispatch_customer': 'Manuell leietakermelding',
+                'admin_booking': 'Admin bookingvarsel',
+                'manual_dispatch_admin': 'Manuell adminmelding',
+                'user_activation': 'Kontoaktivering',
+                'password_reset': 'Passordtilbakestilling'
+            };
+
+            messages.forEach(function(msg) {
+                const iconClass = (msg.channel === 'sms') ? 'dashicons-smartphone' : 'dashicons-email-alt';
+                const channelLabel = (msg.channel || '').toUpperCase();
+                const statusBadge = (msg.status === 'sent')
+                    ? '<span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">Sendt</span>'
+                    : '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">Feilet</span>';
+
+                const eventType = msg.event_type || '';
+                const labelText = knownLabels[eventType] || eventType;
+
+                let $item = $('<div class="msg-item" data-event-type="' + escapeHtml(eventType) + '" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; padding:8px 10px; font-size:12px;"></div>');
+                
+                let subjectHtml = '';
+                if (msg.subject) {
+                    subjectHtml = '<div style="font-weight:600; color:#334155; margin-bottom:2px;">Emne: ' + escapeHtml(msg.subject) + '</div>';
+                }
+
+                $item.html(
+                    '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
+                    '<div><span class="dashicons ' + iconClass + '" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span> <strong>' + escapeHtml(channelLabel) + ' &bull; ' + escapeHtml(msg.recipient) + '</strong> ' + statusBadge + ' <span style="font-size:10px; color:#64748b; margin-left:4px;">(' + escapeHtml(labelText) + ')</span></div>' +
+                    '<span style="font-size:11px; color:#64748b;">' + escapeHtml(msg.created_at) + '</span>' +
+                    '</div>' +
+                    subjectHtml +
+                    '<div style="white-space:pre-wrap; color:#475569; font-family:inherit; background:#fff; padding:6px; border:1px solid #e2e8f0; border-radius:3px; max-height:100px; overflow-y:auto;">' + escapeHtml(msg.message) + '</div>'
+                );
+
+                $listContainer.append($item);
+            });
+
+            filterMessagesForContainer($container);
+        }
+
+        // Escape HTML utility
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Handle Event Type Checkbox Filter change
+        $('.bookings-table').on('change', '.msg-filter-cb', function() {
+            const $container = $(this).closest('.booking-messages-history');
+            filterMessagesForContainer($container);
+        });
+
+        function filterMessagesForContainer($container) {
+            $container.find('.msg-item').each(function() {
+                const $item = $(this);
+                const eventType = $item.data('event-type');
+                const $cb = $container.find('.msg-filter-cb[data-event-type="' + eventType + '"]');
+
+                // If checkbox exists for this event type, show if checked; otherwise show by default
+                if ($cb.length > 0) {
+                    if ($cb.is(':checked')) {
+                        $item.show();
+                    } else {
+                        $item.hide();
+                    }
+                } else {
+                    $item.show();
+                }
+            });
+        }
 
         // AJAX Save Door Code
         $('.bookings-table').on('click', '.snippen-btn-save-door-code', function(e) {

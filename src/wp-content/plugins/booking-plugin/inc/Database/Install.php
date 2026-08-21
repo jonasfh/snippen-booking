@@ -245,6 +245,28 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_booking_objects );
 
+		// Messages table (user communication logs)
+		$table_messages = $wpdb->prefix . 'snippen_messages';
+		$sql_messages   = "CREATE TABLE $table_messages (
+            id BIGINT NOT NULL AUTO_INCREMENT,
+            booking_id BIGINT NULL,
+            user_id BIGINT NULL,
+            channel VARCHAR(20) NOT NULL,
+            recipient VARCHAR(255) NOT NULL,
+            subject VARCHAR(255) NULL,
+            message TEXT NOT NULL,
+            event_type VARCHAR(50) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'sent',
+            metadata LONGTEXT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY booking_id (booking_id),
+            KEY user_id (user_id),
+            KEY recipient (recipient)
+        ) $charset_collate;";
+		dbDelta( $sql_messages );
+
 		// Legacy tables below for compatibility during redesign phase:
 
 		// Time slots table

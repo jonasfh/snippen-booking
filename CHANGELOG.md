@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.18.0] - 2026-08-21
+- (#223) Added user communication message logging (`snippen_messages` database table, `MessageLoggerService`). Logged sent emails and SMS (both automatic notifications and manual dispatches) with metadata context, `user_id`, and `booking_id`. Added communication history display section under booking details on the admin booking overview page.
+
 ## [2.17.0] - 2026-08-21
 - (#208) Removed legacy `TimeSlotsPage.php` class and integration test `TimeSlotsPageTest.php`, cleaning up dead code replaced by `BookingBlocksPage`.
 

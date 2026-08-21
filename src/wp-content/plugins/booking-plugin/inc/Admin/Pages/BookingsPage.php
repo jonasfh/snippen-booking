@@ -392,6 +392,67 @@ class BookingsPage {
 		echo '<button class="button snippen-btn-dispatch" data-channel="email_admin" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'Varsel til admin', 'snippen-booking' ) . '</button>';
 		echo '<div class="assistant-feedback" style="margin-top:6px; font-size:11px; font-weight:600; min-height:15px;"></div>';
 		echo '</div>';
+
+		// Communication / Messages history block for this booking
+		$messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking( (int) $booking->id );
+
+		$known_event_types = array(
+			'booking_confirmation'     => __( 'Booking-bekreftelse', 'snippen-booking' ),
+			'manual_dispatch_customer' => __( 'Manuell leietakermelding', 'snippen-booking' ),
+			'admin_booking'            => __( 'Admin bookingvarsel', 'snippen-booking' ),
+			'manual_dispatch_admin'    => __( 'Manuell adminmelding', 'snippen-booking' ),
+			'user_activation'          => __( 'Kontoaktivering', 'snippen-booking' ),
+			'password_reset'           => __( 'Passordtilbakestilling', 'snippen-booking' ),
+		);
+
+		echo '<div class="booking-messages-history" data-booking-id="' . esc_attr( $booking->id ) . '" style="grid-column: span 5; background:#fff; padding:14px; border:1px solid #e2e8f0; border-radius:6px; margin-top:10px;">';
+		echo '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">';
+		echo '<div><strong style="font-size:13px; color:#1e293b;"><span class="dashicons dashicons-format-chat" style="vertical-align:middle; font-size:16px; width:16px; height:16px; line-height:16px; margin-right:4px;"></span> ' . esc_html__( 'Kommunikasjonshistorikk:', 'snippen-booking' ) . ' (<span class="msg-count">' . count( $messages ) . '</span>)</strong></div>';
+
+		// Event type checkboxes filter (Only booking_confirmation and manual_dispatch_customer checked by default)
+		$default_checked_events = array( 'booking_confirmation', 'manual_dispatch_customer' );
+
+		echo '<div class="msg-filter-controls" style="display:flex; align-items:center; gap:10px; font-size:11px; color:#475569; flex-wrap:wrap;">';
+		echo '<span style="font-weight:600;">' . esc_html__( 'Filtrer hendelser:', 'snippen-booking' ) . '</span>';
+
+		foreach ( $known_event_types as $ev_key => $ev_label ) {
+			$checked = in_array( $ev_key, $default_checked_events, true ) ? 'checked' : '';
+			echo '<label style="cursor:pointer; display:inline-flex; align-items:center; gap:3px;"><input type="checkbox" class="msg-filter-cb" data-event-type="' . esc_attr( $ev_key ) . '" ' . $checked . '> ' . esc_html( $ev_label ) . '</label>';
+		}
+
+		echo '</div>';
+		echo '</div>';
+
+		echo '<div class="msg-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto;">';
+		if ( empty( $messages ) ) {
+			echo '<p class="no-messages-text" style="margin:0; font-size:12px; color:#64748b;">' . esc_html__( 'Ingen meldinger registrert på denne bookingen ennå.', 'snippen-booking' ) . '</p>';
+		} else {
+			foreach ( $messages as $msg ) {
+				$icon_class    = $msg->channel === 'sms' ? 'dashicons-smartphone' : 'dashicons-email-alt';
+				$channel_label = strtoupper( $msg->channel );
+				$status_badge  = $msg->status === 'sent'
+					? '<span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">' . esc_html__( 'Sendt', 'snippen-booking' ) . '</span>'
+					: '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">' . esc_html__( 'Feilet', 'snippen-booking' ) . '</span>';
+
+				$event_type = $msg->event_type ?? '';
+				$display    = in_array( $event_type, $default_checked_events, true ) ? 'block' : 'none';
+				$label_text = isset( $known_event_types[ $event_type ] ) ? $known_event_types[ $event_type ] : $event_type;
+
+				echo '<div class="msg-item" data-event-type="' . esc_attr( $event_type ) . '" style="display:' . esc_attr( $display ) . '; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; padding:8px 10px; font-size:12px;">';
+				echo '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
+				echo '<div><span class="dashicons ' . esc_attr( $icon_class ) . '" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span> <strong>' . esc_html( $channel_label ) . ' &bull; ' . esc_html( $msg->recipient ) . '</strong> ' . $status_badge . ' <span style="font-size:10px; color:#64748b; margin-left:4px;">(' . esc_html( $label_text ) . ')</span></div>';
+				echo '<span style="font-size:11px; color:#64748b;">' . esc_html( $msg->created_at ) . '</span>';
+				echo '</div>';
+				if ( ! empty( $msg->subject ) ) {
+					echo '<div style="font-weight:600; color:#334155; margin-bottom:2px;">' . esc_html__( 'Emne:', 'snippen-booking' ) . ' ' . esc_html( $msg->subject ) . '</div>';
+				}
+				echo '<div style="white-space:pre-wrap; color:#475569; font-family:inherit; background:#fff; padding:6px; border:1px solid #e2e8f0; border-radius:3px; max-height:100px; overflow-y:auto;">' . esc_html( $msg->message ) . '</div>';
+				echo '</div>';
+			}
+		}
+		echo '</div>';
+		echo '</div>';
+
 		echo '</div></td></tr>';
 	}
 

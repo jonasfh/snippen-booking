@@ -98,6 +98,17 @@ class NotificationManager {
 
 			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
 				$sms_sent = $provider->send_sms( $phone, $rendered_sms['body'] );
+				MessageLoggerService::log_message(
+					null,
+					$user_id,
+					'sms',
+					$phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_USER_ACTIVATION,
+					$sms_sent ? 'sent' : 'failed',
+					array( 'provider' => $provider_id )
+				);
 				if ( ! $sms_sent ) {
 					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s.', $provider_id ) );
 				}
@@ -110,6 +121,16 @@ class NotificationManager {
 			if ( $email_provider instanceof EmailProviderInterface && ! empty( $user->user_email ) ) {
 				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Bekreftelseskode for Snippen Booking', 'snippen-booking' );
 				$email_sent = $email_provider->send_email( $user->user_email, $subject, $rendered_email['body'] );
+				MessageLoggerService::log_message(
+					null,
+					$user_id,
+					'email',
+					$user->user_email,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_USER_ACTIVATION,
+					$email_sent ? 'sent' : 'failed'
+				);
 			}
 		}
 
@@ -210,7 +231,17 @@ class NotificationManager {
 				foreach ( $admin_emails as $admin_email ) {
 					try {
 						error_log( sprintf( 'NotificationManager: Sending admin email to %s...', $admin_email ) );
-						$email_provider->send_email( $admin_email, $subject, $message );
+						$sent = $email_provider->send_email( $admin_email, $subject, $message );
+						MessageLoggerService::log_message(
+							$booking_id,
+							$booking->user_id ? (int) $booking->user_id : null,
+							'email',
+							$admin_email,
+							$subject,
+							$message,
+							self::TYPE_ADMIN_BOOKING,
+							$sent ? 'sent' : 'failed'
+						);
 						error_log( sprintf( 'NotificationManager: Admin email call finished for %s', $admin_email ) );
 					} catch ( \Exception $e ) {
 						error_log( 'NotificationManager Exception during admin email send: ' . $e->getMessage() );
@@ -242,7 +273,18 @@ class NotificationManager {
 					foreach ( $admin_phones as $admin_phone ) {
 						try {
 							error_log( sprintf( 'NotificationManager: Sending admin SMS to %s...', $admin_phone ) );
-							$sms_provider->send_sms( $admin_phone, $admin_sms_message );
+							$sms_res = $sms_provider->send_sms( $admin_phone, $admin_sms_message );
+							MessageLoggerService::log_message(
+								$booking_id,
+								$booking->user_id ? (int) $booking->user_id : null,
+								'sms',
+								$admin_phone,
+								null,
+								$admin_sms_message,
+								self::TYPE_ADMIN_BOOKING,
+								$sms_res ? 'sent' : 'failed',
+								array( 'provider' => $provider_id )
+							);
 						} catch ( \Exception $e ) {
 							error_log( 'NotificationManager Exception during admin SMS send: ' . $e->getMessage() );
 						} catch ( \Throwable $t ) {
@@ -285,6 +327,17 @@ class NotificationManager {
 			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
 				error_log( sprintf( 'NotificationManager: Sending SMS to %s...', $booking->customer_phone ) );
 				$sms_sent = $provider->send_sms( $booking->customer_phone, $sms_message );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$booking->customer_phone,
+					null,
+					$sms_message,
+					self::TYPE_BOOKING_CONFIRMATION,
+					$sms_sent ? 'sent' : 'failed',
+					array( 'provider' => $provider_id )
+				);
 				error_log( sprintf( 'NotificationManager: SMS send call returned %s', $sms_sent ? 'true' : 'false' ) );
 				if ( ! $sms_sent ) {
 					error_log( sprintf( 'NotificationManager: Failed to dispatch SMS via %s.', $provider_id ) );
@@ -311,6 +364,16 @@ class NotificationManager {
 					try {
 						error_log( sprintf( 'NotificationManager: Sending customer email fallback/direct to %s...', $recipient ) );
 						$email_sent = $email_provider->send_email( $recipient, $subject, $mail_message );
+						MessageLoggerService::log_message(
+							$booking_id,
+							$booking->user_id ? (int) $booking->user_id : null,
+							'email',
+							$recipient,
+							$subject,
+							$mail_message,
+							self::TYPE_BOOKING_CONFIRMATION,
+							$email_sent ? 'sent' : 'failed'
+						);
 						error_log( sprintf( 'NotificationManager: Customer email call finished with result: %s', $email_sent ? 'true' : 'false' ) );
 					} catch ( \Exception $e ) {
 						error_log( 'NotificationManager Exception during customer email fallback: ' . $e->getMessage() );

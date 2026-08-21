@@ -62,6 +62,10 @@ You can configure custom templates for SMS and Email notifications (such as book
 Navigate to **Snippen Booking > Varslingsmaler** in the WordPress Admin dashboard.
 Here you can edit the text and subject lines. You can use dynamic placeholders (e.g. `{{user_name}}`, `{{booking_date}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{booking_price}}`) to personalize the messages. Default templates are provided out of the box, and you can easily revert to them at any time.
 
+### Communication History (Lagre brukerkommunikasjon)
+All SMS and Email messages sent to users and administrators (including automatic booking confirmations, account activation codes, admin alert notifications, and manual messages sent via the Booking Assistant) are automatically logged in the database with recipient details, timestamps, delivery channel, and `user_id`/`booking_id` associations.
+Administrators can inspect full communication logs directly for any booking by expanding the details row in the **Snippen Booking > Booking Oversikt** admin table.
+
 ### Door Codes
 Booking objects (venues) can be configured with a door code in the WordPress Admin dashboard under **Snippen Booking > Lokaler**.
 
