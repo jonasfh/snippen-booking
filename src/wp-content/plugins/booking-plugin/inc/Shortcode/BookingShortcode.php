@@ -186,8 +186,8 @@ class BookingShortcode {
 							</div>
 						</div>
 						<div id="summary-wash-notice" class="wash-time-notice" style="display: none; margin-top: 12px; padding: 10px 14px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 6px; color: #0369a1; font-size: 0.9em; font-weight: 500;">
-							<span style="font-weight: 700;">✦ <?php esc_html_e( 'Inkluderer utvask:', 'snippen-booking' ); ?></span>
-							<?php esc_html_e( 'Denne bookingen inkluderer utvask påfølgende morgen frem til kl. 11:00 uten tillegg i prisen.', 'snippen-booking' ); ?>
+							<span style="font-weight: 700;">✦ <?php esc_html_e( 'Viktig info:', 'snippen-booking' ); ?></span>
+							<span id="summary-wash-notice-text"></span>
 						</div>
 					</div>
 
