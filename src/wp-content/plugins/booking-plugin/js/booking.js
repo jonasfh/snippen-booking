@@ -293,9 +293,6 @@ jQuery(document).ready(function ($) {
                 blocksHtml += '<div class="block-time">' + timeStr + '</div>';
             }
             
-            if (block.custom_instructions) {
-                blocksHtml += '<div class="block-wash-info" style="font-size: 0.85em; color: #0284c7; font-weight: 500; margin-top: 3px;">✦ ' + escHtml(block.custom_instructions) + '</div>';
-            }
             if (block.is_available && block.available_object_names && block.available_object_names.length > 0) {
                 blocksHtml += '<div class="block-objects-available">' + escHtml(block.available_object_names.join(', ')) + '</div>';
             } else if (!block.is_available) {
