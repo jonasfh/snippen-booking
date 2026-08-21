@@ -95,7 +95,7 @@ describe('SnippenTableFilter', () => {
     });
 
     it('resets filters correctly', () => {
-        const filter = new SnippenTableFilter('.snippen-filterable-table');
+        new SnippenTableFilter('.snippen-filterable-table');
         const textInput = document.querySelector('.snippen-filter-text input');
         
         textInput.value = 'none';

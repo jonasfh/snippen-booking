@@ -1,5 +1,4 @@
 jQuery(document).ready(function($) {
-    var $container = $('.snippen-confirmation-container');
     var $step1 = $('#confirmation-step-1');
     var $step2 = $('#confirmation-step-2');
     var $response = $('#confirmation-response');
