@@ -188,9 +188,9 @@ class AvailabilityApi {
 
 				foreach ( $day_blocks as $d_block ) {
 					$block_id = $d_block['id'];
-					$total_blocks_count++;
+					++$total_blocks_count;
 					if ( $availability_service->isBlockAvailable( $obj_id, $date_str, $block_id ) ) {
-						$avail_blocks_count++;
+						++$avail_blocks_count;
 					}
 				}
 

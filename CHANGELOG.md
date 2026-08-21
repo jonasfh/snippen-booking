@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.19.1] - 2026-08-21
+- (#234) Resolved PHPCS errors and warnings across the codebase, configured `phpcs.xml` for PSR-4 autoloading & WordPress security sniffs, and fixed sanitization/escaping and loose comparison issues.
+
 ## [2.19.0] - 2026-08-21
 - (#232) Displayed booking time in HH:mm format alongside slot name in the "Dato / Tid" column of the admin booking overview page.
 

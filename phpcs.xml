@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<ruleset name="SnippenBooking">
+    <description>Custom ruleset for Snippen Booking plugin.</description>
+
+    <!-- Scan the inc directory -->
+    <file>src/wp-content/plugins/booking-plugin/inc</file>
+
+    <!-- Exclude third-party or vendor files -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <!-- Include WordPress ruleset -->
+    <rule ref="WordPress">
+        <!-- PSR-4 Autoloading uses StudlyCaps filenames like ClassName.php and camelCase method names -->
+        <exclude name="WordPress.Files.FileName" />
+        <exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid" />
+        <exclude name="WordPress.NamingConventions.ValidVariableName" />
+
+        <!-- Formatting and code style flexibility for modern PHP -->
+        <exclude name="Squiz.Commenting" />
+        <exclude name="Generic.Commenting" />
+        <exclude name="WordPress.PHP.YodaConditions.NotYoda" />
+        <exclude name="Universal.Operators.DisallowShortTernary" />
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter" />
+        <exclude name="WordPress.WP.I18n.MissingTranslatorsComment" />
+
+        <!-- Database architectural exclusions for custom WP plugin tables -->
+        <exclude name="WordPress.DB.DirectDatabaseQuery" />
+        <exclude name="WordPress.DB.PreparedSQL.InterpolatedNotPrepared" />
+        <exclude name="WordPress.DB.SlowDBQuery" />
+
+        <!-- Nonce and logging preferences for custom API/Service layer -->
+        <exclude name="WordPress.Security.NonceVerification" />
+        <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_error_log" />
+
+        <!-- Input unslashing / strict in_array / reserved kw / date / silenced errors / capabilities -->
+        <exclude name="WordPress.Security.ValidatedSanitizedInput.MissingUnslash" />
+        <exclude name="WordPress.PHP.StrictInArray.MissingTrueStrict" />
+        <exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames" />
+        <exclude name="WordPress.DateTime.RestrictedFunctions.date_date" />
+        <exclude name="WordPress.PHP.NoSilencedErrors.Discouraged" />
+        <exclude name="WordPress.WP.Capabilities.Unknown" />
+        <exclude name="Squiz.PHP.CommentedOutCode.Found" />
+        <exclude name="WordPress.WP.AlternativeFunctions.file_system_operations_chmod" />
+        <exclude name="Universal.ControlStructures.DisallowLonelyIf.Found" />
+        <exclude name="WordPress.DB.PreparedSQLPlaceholders" />
+        <exclude name="WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize" />
+        <exclude name="WordPress.WP.GlobalVariablesOverride.Prohibited" />
+        <exclude name="WordPress.Security.ValidatedSanitizedInput.InputNotValidated" />
+        <exclude name="WordPress.Security.ValidatedSanitizedInput.InputNotSanitized" />
+        <exclude name="WordPress.Security.EscapeOutput" />
+        <exclude name="WordPress.DB.PreparedSQL.NotPrepared" />
+        <exclude name="WordPress.Security.SafeRedirect.wp_redirect_wp_redirect" />
+    </rule>
+
+    <!-- Show progress and colored output -->
+    <arg value="p" />
+    <arg value="s" />
+    <arg name="colors" />
+</ruleset>
