@@ -148,6 +148,44 @@ class BookingsPageTest extends TestCase {
 
         $this->assertStringContainsString( 'Tidsrom:', $output );
         $this->assertStringContainsString( '09:00 - 12:00', $output );
+        $this->assertStringContainsString( '<small>Morgenblokk (09:00 - 12:00)</small>', $output );
+    }
+
+    /**
+     * Test that render_booking_row outputs HH:mm formatted time in the date column
+     */
+    public function test_render_booking_row_displays_hh_mm_time() {
+        global $wpdb;
+
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_bookings',
+            array(
+                'booking_date'     => '2026-09-15',
+                'customer_name'    => 'Ola Nordmann',
+                'customer_email'   => 'ola@example.com',
+                'status'           => 'confirmed',
+                'booking_snapshot' => wp_json_encode( array(
+                    'start_time'           => '14:00:00',
+                    'end_time'             => '18:00:00',
+                    'time_range_formatted' => '14:00 - 18:00',
+                ) ),
+            )
+        );
+        $booking_id = $wpdb->insert_id;
+
+        $bookings_page = new BookingsPage();
+        $reflection    = new \ReflectionClass( BookingsPage::class );
+        $method        = $reflection->getMethod( 'render_booking_row' );
+        $method->setAccessible( true );
+
+        $booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id ) );
+
+        ob_start();
+        $method->invoke( $bookings_page, $booking );
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString( '14:00 - 18:00', $output );
+        $this->assertStringContainsString( '<small>14:00 - 18:00</small>', $output );
     }
 
     /**

@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.19.0] - 2026-08-21
+- (#232) Displayed booking time in HH:mm format alongside slot name in the "Dato / Tid" column of the admin booking overview page.
+
 ## [2.18.0] - 2026-08-21
 - (#223) Added user communication message logging (`snippen_messages` database table, `MessageLoggerService`). Logged sent emails and SMS (both automatic notifications and manual dispatches) with metadata context, `user_id`, and `booking_id`. Added communication history display section under booking details on the admin booking overview page.
 

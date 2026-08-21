@@ -307,6 +307,13 @@ class BookingsPage {
 			}
 		}
 
+		$display_time = $time_range;
+		if ( ! empty( $booking->slot_name ) && ! empty( $time_range ) && $booking->slot_name !== $time_range ) {
+			$display_time = $booking->slot_name . ' (' . $time_range . ')';
+		} elseif ( empty( $display_time ) && ! empty( $booking->slot_name ) ) {
+			$display_time = $booking->slot_name;
+		}
+
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
 		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
 		echo '<div style="display:flex; justify-content:flex-start; gap:8px;">';
@@ -317,7 +324,7 @@ class BookingsPage {
 			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
 		}
 		echo '</div></td>';
-		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small>' . ( ! empty( $custom_inst_tags ) ? '<br><span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px; margin-top:2px; display:inline-block;" title="' . esc_attr( implode( ' | ', $custom_inst_tags ) ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
+		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong>' . ( ! empty( $display_time ) ? '<br><small>' . esc_html( $display_time ) . '</small>' : '' ) . ( ! empty( $custom_inst_tags ) ? '<br><span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px; margin-top:2px; display:inline-block;" title="' . esc_attr( implode( ' | ', $custom_inst_tags ) ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
 		echo '<td data-label="' . esc_attr__( 'Kunde', 'snippen-booking' ) . '"><strong>' . esc_html( $booking->customer_name ) . '</strong><br><small>' . esc_html( $booking->customer_email ) . '</small></td>';
 		echo '<td data-label="' . esc_attr__( 'Lokaler', 'snippen-booking' ) . '">';
 		foreach ( $objs as $oname ) {
