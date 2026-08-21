@@ -294,11 +294,15 @@ class BookingsPage {
 
 		$custom_inst_tags = array();
 		if ( ! empty( $booking->id ) ) {
+			$block_repo   = new \SnippenBooking\Database\Repository\BookingBlockRepository();
 			$booking_repo = new \SnippenBooking\Database\Repository\BookingRepository();
-			$b_blocks     = $booking_repo->get_booking_blocks( $booking->id );
-			foreach ( $b_blocks as $b_obj ) {
-				if ( ! empty( $b_obj->custom_instructions ) ) {
-					$custom_inst_tags[] = $b_obj->custom_instructions;
+			$b_booking    = $booking_repo->find( $booking->id );
+			if ( $b_booking && ! empty( $b_booking->booking_block_ids ) ) {
+				$b_blocks = $block_repo->find_by_ids( $b_booking->booking_block_ids );
+				foreach ( $b_blocks as $b_obj ) {
+					if ( ! empty( $b_obj->custom_instructions ) ) {
+						$custom_inst_tags[] = $b_obj->custom_instructions;
+					}
 				}
 			}
 		}
