@@ -31,3 +31,19 @@ Once a GitHub issue is identified or created, follow this workflow:
 
 - **Version Bump**: Bump version in `src/wp-content/plugins/booking-plugin/booking-plugin.php` for functional changes (unless already bumped in branch).
 - **CHANGELOG.md**: Every version bump must have an entry in `CHANGELOG.md` under `## [X.Y.Z] - YYYY-MM-DD`.
+
+## Dependabot & Dependency Updates
+
+Automated Dependabot PRs are intentionally disabled (`open-pull-requests-limit: 0` in `.github/dependabot.yml`). AI agents are responsible for reading Dependabot alerts and performing manual dependency updates.
+
+1. **Checking Alerts**:
+   - Inspect active Dependabot alerts via GitHub CLI: `gh api /repos/{owner}/{repo}/dependabot/alerts` (or `gh api repos/{owner}/{repo}/dependabot/alerts?state=open`).
+2. **Issue Creation & Workflow**:
+   - Create a GitHub issue for dependency updates if one does not exist (`gh issue create --title "Update dependency <pkg>" ...`).
+   - Create a dedicated branch (`gh-issue/<id>`).
+3. **Execution & Quality Assurance**:
+   - Perform the update using package managers (`composer update <pkg>`, `npm update <pkg>`, or updating action versions in workflow files).
+   - Bump plugin version in `booking-plugin.php` and document in `CHANGELOG.md`.
+   - Run verification suite: `composer test` and `composer lint`.
+   - Submit PR following standard GitHub Issue Workflow.
+
