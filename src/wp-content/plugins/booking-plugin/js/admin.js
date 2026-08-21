@@ -473,8 +473,6 @@
             const id = $checkbox.data('id');
             const entityType = $checkbox.data('entity-type');
             const isChecked = $checkbox.is(':checked') ? 1 : 0;
-            const $container = $checkbox.closest('.snippen-switch');
-
             $checkbox.prop('disabled', true);
 
             $.post(snippenAdmin.ajaxUrl, {

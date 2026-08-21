@@ -47,3 +47,19 @@ Automated Dependabot PRs are intentionally disabled (`open-pull-requests-limit: 
    - Run verification suite: `composer test` and `composer lint`.
    - Submit PR following standard GitHub Issue Workflow.
 
+## Code Scanning & Security Alerts Workflow
+
+Security & Code Scanning alerts (such as CodeQL, Dependabot, or Secret Scanning alerts) MUST follow the standard GitHub Issue Workflow:
+
+1. **Issue Creation**:
+   - Create a GitHub issue for the alerts if one does not already exist (`gh issue create --title "Fix Code Scanning alerts #3, #4, and #5" ...`).
+2. **Branching & Implementation**:
+   - Create a dedicated branch following `gh-issue/<id>` (e.g. `gh-issue/240`).
+   - Implement fixes for the identified security/code scanning alerts.
+3. **Versioning & Quality Control**:
+   - Bump plugin version in `booking-plugin.php` and document changes in `CHANGELOG.md` referencing `(#<id>)`.
+   - Run verification suite: `npm run test:js`, `composer test`, and `composer lint`.
+4. **Commit, PR & Issue Comment**:
+   - Commit with format `(#<id>) Description`.
+   - Push branch and create PR (`gh pr create --body "Closes #<id>" --title "(#<id>) ..."`).
+   - Add summary comment on the GitHub issue (`gh issue comment <id> --body "..."`).

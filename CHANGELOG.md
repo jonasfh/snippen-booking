@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.19.2] - 2026-08-21
+- (#240) Resolved CodeQL JavaScript code-scanning alerts #3, #4, and #5 by removing unused local variables in `account-confirmation.js`, `admin.js`, and `admin-table-filter.test.js`.
+
 ## [2.19.1] - 2026-08-21
 - (#234) Resolved PHPCS errors and warnings across the codebase, configured `phpcs.xml` for PSR-4 autoloading & WordPress security sniffs, and fixed sanitization/escaping and loose comparison issues.
 
