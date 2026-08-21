@@ -209,12 +209,12 @@ class BookingShortcode {
 
 							<div class="form-group">
 								<label for="name"><?php esc_html_e( 'Navn på beboer', 'snippen-booking' ); ?></label>
-								<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_name ); ?>" autocomplete="name" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+								<input type="text" name="name" id="name" required placeholder="<?php esc_attr_e( 'Fullt navn', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_name ); ?>" autocomplete="name" readonly>
 							</div>
 							
 							<div class="form-group">
 								<label for="email"><?php esc_html_e( 'E-post', 'snippen-booking' ); ?></label>
-								<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_email ); ?>" autocomplete="email" <?php echo Capabilities::can_manage_bookings() ? '' : 'readonly'; ?>>
+								<input type="email" name="email" id="email" required placeholder="<?php esc_attr_e( 'navn@eksempel.no', 'snippen-booking' ); ?>" value="<?php echo esc_attr( $user_email ); ?>" autocomplete="email" readonly>
 							</div>
 							
 							<div class="form-group">
