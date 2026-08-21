@@ -89,27 +89,27 @@ class TimeSlotsPage {
 		$description   = sanitize_textarea_field( $_POST['description'] );
 		$start_time    = sanitize_text_field( $_POST['start_time'] );
 		$end_time      = sanitize_text_field( $_POST['end_time'] );
-		$cleanup_hours      = intval( $_POST['cleanup_hours'] );
-		$is_active          = isset( $_POST['is_active'] ) ? 1 : 0;
-		$includes_wash_time = isset( $_POST['includes_wash_time'] ) ? 1 : 0;
-		$object_ids         = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
-		$days_of_week       = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
-		$days_of_week       = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
-		$start_date         = ! empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
-		$end_date           = ! empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
+		$cleanup_hours       = intval( $_POST['cleanup_hours'] );
+		$is_active           = isset( $_POST['is_active'] ) ? 1 : 0;
+		$custom_instructions = ! empty( $_POST['custom_instructions'] ) ? sanitize_text_field( $_POST['custom_instructions'] ) : null;
+		$object_ids          = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
+		$days_of_week        = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
+		$days_of_week        = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
+		$start_date          = ! empty( $_POST['start_date'] ) ? sanitize_text_field( $_POST['start_date'] ) : null;
+		$end_date            = ! empty( $_POST['end_date'] ) ? sanitize_text_field( $_POST['end_date'] ) : null;
 
 		$data = array(
-			'name'               => $name,
-			'description'        => $description,
-			'start_time'         => $start_time,
-			'end_time'           => $end_time,
-			'cleanup_hours'      => $cleanup_hours,
-			'is_active'          => $is_active,
-			'includes_wash_time' => $includes_wash_time,
-			'days_of_week'       => $days_of_week,
-			'date_start'         => $start_date,
-			'date_end'           => $end_date,
-			'modified_at'        => current_time( 'mysql' ),
+			'name'                => $name,
+			'description'         => $description,
+			'start_time'          => $start_time,
+			'end_time'            => $end_time,
+			'cleanup_hours'       => $cleanup_hours,
+			'is_active'           => $is_active,
+			'custom_instructions' => $custom_instructions,
+			'days_of_week'        => $days_of_week,
+			'date_start'          => $start_date,
+			'date_end'            => $end_date,
+			'modified_at'         => current_time( 'mysql' ),
 		);
 
 		if ( $id > 0 ) {
@@ -325,12 +325,10 @@ class TimeSlotsPage {
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
-		echo '<label style="font-weight:bold; display:flex; align-items:center; gap:8px;">';
-		$includes_wash_time = $slot && isset( $slot->includes_wash_time ) && (int) $slot->includes_wash_time === 1;
-		echo '<input type="checkbox" name="includes_wash_time" value="1" ' . checked( $includes_wash_time, true, false ) . '>';
-		echo esc_html__( 'Inkluderer utvask-tid neste morgen (frem til kl. 11:00)', 'snippen-booking' );
-		echo '</label>';
-		echo '<p class="description">' . esc_html__( 'Markér hvis kunden kan benytte lokalet til utvask påfølgende morgen fram til kl. 11:00 uten ekstra kostnad.', 'snippen-booking' ) . '</p>';
+		echo '<label for="custom_instructions">' . esc_html__( 'Egendefinert melding / instruksjoner (vises for kunden)', 'snippen-booking' ) . '</label>';
+		$custom_inst_val = $slot && isset( $slot->custom_instructions ) ? $slot->custom_instructions : '';
+		echo '<input type="text" name="custom_instructions" id="custom_instructions" value="' . esc_attr( $custom_inst_val ) . '" class="regular-text" placeholder="' . esc_attr__( 'F.eks. Inkluderer utvask neste morgen frem til kl. 11:00', 'snippen-booking' ) . '">';
+		echo '<p class="description">' . esc_html__( 'Valgfri tekst som vises for kunden ved valg av tidsluke.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';
