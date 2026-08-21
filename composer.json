@@ -61,8 +61,8 @@
         ],
         "demo:clean": "@demo:clear",
         "demo:reset": "@demo:clear",
-        "lint": "phpcs --standard=WordPress src/wp-content/plugins/booking-plugin/inc/",
-        "lint:fix": "phpcbf --standard=WordPress src/wp-content/plugins/booking-plugin/inc/"
+        "lint": "phpcs",
+        "lint:fix": "phpcbf"
     },
     "config": {
         "allow-plugins": {

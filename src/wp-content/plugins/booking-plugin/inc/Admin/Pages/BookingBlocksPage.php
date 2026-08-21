@@ -89,11 +89,11 @@ class BookingBlocksPage {
 			return;
 		}
 
-		$id           = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name         = sanitize_text_field( $_POST['name'] );
-		$description  = sanitize_textarea_field( $_POST['description'] );
-		$start_time   = sanitize_text_field( $_POST['start_time'] );
-		$end_time     = sanitize_text_field( $_POST['end_time'] );
+		$id                  = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name                = sanitize_text_field( $_POST['name'] );
+		$description         = sanitize_textarea_field( $_POST['description'] );
+		$start_time          = sanitize_text_field( $_POST['start_time'] );
+		$end_time            = sanitize_text_field( $_POST['end_time'] );
 		$sort_order          = isset( $_POST['sort_order'] ) ? intval( $_POST['sort_order'] ) : 0;
 		$is_active           = isset( $_POST['is_active'] ) ? 1 : 0;
 		$custom_instructions = ! empty( $_POST['custom_instructions'] ) ? sanitize_text_field( $_POST['custom_instructions'] ) : null;
@@ -214,9 +214,9 @@ class BookingBlocksPage {
 
 				$is_active = ! isset( $block->is_active ) || (int) $block->is_active === 1;
 
-				$display_start       = substr( $block->start_time, 0, 5 );
-				$display_end         = ( substr( $block->end_time, 0, 5 ) === '23:59' || $block->end_time === '23:59:59' ) ? '24:00' : substr( $block->end_time, 0, 5 );
-				$has_custom_inst     = ! empty( $block->custom_instructions );
+				$display_start   = substr( $block->start_time, 0, 5 );
+				$display_end     = ( substr( $block->end_time, 0, 5 ) === '23:59' || $block->end_time === '23:59:59' ) ? '24:00' : substr( $block->end_time, 0, 5 );
+				$has_custom_inst = ! empty( $block->custom_instructions );
 
 				echo '<tr>';
 				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $block->name ) . '</a></strong>' . ( $has_custom_inst ? ' <span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px;" title="' . esc_attr( $block->custom_instructions ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
@@ -294,7 +294,7 @@ class BookingBlocksPage {
 
 					// Time overlap check (two time intervals [A_start, A_end) and [B_start, B_end) overlap iff A_start < B_end AND A_end > B_start)
 					if ( $b_start < $o_end && $b_end > $o_start ) {
-						$other_objs   = $block_objects[ $other->id ] ?? array();
+						$other_objs  = $block_objects[ $other->id ] ?? array();
 						$shared_objs = array_intersect( $this_objs, $other_objs );
 
 						if ( ! empty( $shared_objs ) ) {

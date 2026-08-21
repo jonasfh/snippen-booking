@@ -433,7 +433,8 @@ class Plugin {
 		}
 
 		// Check if we're on a plugin page already
-		if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'snippen-booking' ) === 0 ) {
+		$page_param = isset( $_GET['page'] ) ? sanitize_text_field( $_GET['page'] ) : '';
+		if ( $page_param && strpos( $page_param, 'snippen-booking' ) === 0 ) {
 			return;
 		}
 
@@ -463,7 +464,7 @@ class Plugin {
 				admin_url( 'admin.php' )
 			)
 		);
-		wp_redirect( add_query_arg( 'page', 'snippen-booking-setup-wizard', admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( 'page', 'snippen-booking-setup-wizard', admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -471,7 +472,7 @@ class Plugin {
 	 * Render bare template for modals
 	 */
 	public static function handle_bare_template() {
-		if ( isset( $_GET['snippen_bare'] ) && $_GET['snippen_bare'] == '1' ) {
+		if ( isset( $_GET['snippen_bare'] ) && (string) $_GET['snippen_bare'] === '1' ) {
 			if ( have_posts() ) {
 				while ( have_posts() ) {
 					the_post();

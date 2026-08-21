@@ -185,10 +185,10 @@ class BookingActionsApi {
 
 		foreach ( $all_templates as $event_type => $channels ) {
 			if ( isset( $channels[ $raw_channel ] ) ) {
-				$tpl            = $channels[ $raw_channel ];
-				$raw_subject    = $tpl['subject'] ?? '';
-				$raw_body       = $tpl['body'] ?? '';
-				$label          = $event_labels[ $event_type ] ?? ucfirst( str_replace( '_', ' ', $event_type ) );
+				$tpl         = $channels[ $raw_channel ];
+				$raw_subject = $tpl['subject'] ?? '';
+				$raw_body    = $tpl['body'] ?? '';
+				$label       = $event_labels[ $event_type ] ?? ucfirst( str_replace( '_', ' ', $event_type ) );
 
 				$template_options[] = array(
 					'key'              => $event_type,
@@ -462,7 +462,6 @@ class BookingActionsApi {
 				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
 			}
 		}
-
 
 		$sms_link                     = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
 		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
