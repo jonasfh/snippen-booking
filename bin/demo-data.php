@@ -114,7 +114,7 @@ if ($action === 'users') {
     $first_names = ['Lars', 'Erik', 'Morten', 'Kari', 'Ingrid', 'Solveig', 'Anders', 'Stian', 'Mette', 'Heidi'];
     $last_names = ['Hansen', 'Johansen', 'Olsen', 'Larsen', 'Andersen', 'Nilsen', 'Pedersen', 'Kristiansen', 'Jensen', 'Karlsen'];
 
-    for ($i = 0; $i < 50; $i++) {
+    for ($i = 0; $i < 10; $i++) {
         $first = $first_names[array_rand($first_names)];
         $last = $last_names[array_rand($last_names)];
         $username = strtolower($first . '.' . $last . rand(10, 99));

@@ -244,9 +244,19 @@ erDiagram
         INT booking_id FK
         INT booking_object_id FK
     }
-    price_objects {
-        INT price_id FK
-        INT booking_object_id FK
+    messages {
+        BIGINT id PK
+        BIGINT booking_id FK
+        BIGINT user_id FK
+        VARCHAR channel
+        VARCHAR recipient
+        VARCHAR subject
+        TEXT message
+        VARCHAR event_type
+        VARCHAR status
+        LONGTEXT metadata
+        DATETIME created_at
+        DATETIME modified_at
     }
 
     time_slots ||--o{ bookings : references
@@ -255,6 +265,7 @@ erDiagram
     booking_objects ||--|{ bookings_booking_objects : belongs_to
     prices ||--|{ price_objects : belongs_to
     booking_objects ||--|{ price_objects : belongs_to
+    bookings ||--o{ messages : references
 ```
 
 ## Pluggable Notification System

@@ -17,6 +17,7 @@ class BookingActionsApi {
 		add_action( 'wp_ajax_snippen_dispatch_notification_manually', array( __CLASS__, 'dispatch_notification_manually' ) );
 		add_action( 'wp_ajax_snippen_get_notification_preview', array( __CLASS__, 'get_notification_preview' ) );
 		add_action( 'wp_ajax_snippen_update_door_code', array( __CLASS__, 'update_door_code' ) );
+		add_action( 'wp_ajax_snippen_get_booking_messages', array( __CLASS__, 'get_booking_messages' ) );
 	}
 
 	/**
@@ -315,7 +316,18 @@ class BookingActionsApi {
 
 			$success = true;
 			foreach ( $admin_emails as $admin_email ) {
-				if ( ! $email_provider->send_email( $admin_email, $subject, $message ) ) {
+				$sent = $email_provider->send_email( $admin_email, $subject, $message );
+				\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$admin_email,
+					$subject,
+					$message,
+					'manual_dispatch_admin',
+					$sent ? 'sent' : 'failed'
+				);
+				if ( ! $sent ) {
 					$success = false;
 				}
 			}
@@ -358,7 +370,19 @@ class BookingActionsApi {
 				wp_send_json_error( array( 'message' => __( 'Kunden har ingen registrert e-postadresse.', 'snippen-booking' ) ) );
 			}
 
-			if ( $email_provider->send_email( $recipient, $subject, $mail_message ) ) {
+			$sent = $email_provider->send_email( $recipient, $subject, $mail_message );
+			\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+				$booking_id,
+				$booking->user_id ? (int) $booking->user_id : null,
+				'email',
+				$recipient,
+				$subject,
+				$mail_message,
+				'manual_dispatch_customer',
+				$sent ? 'sent' : 'failed'
+			);
+
+			if ( $sent ) {
 				wp_send_json_success( array( 'message' => __( 'Bekreftelses-e-post sendt til kunden.', 'snippen-booking' ) ) );
 			} else {
 				wp_send_json_error( array( 'message' => __( 'Kunne ikke sende e-post til kunden.', 'snippen-booking' ) ) );
@@ -390,7 +414,20 @@ class BookingActionsApi {
 				wp_send_json_error( array( 'message' => __( 'SMS tilbyder er ikke konfigurert.', 'snippen-booking' ) ) );
 			}
 
-			if ( $provider->send_sms( $booking->customer_phone, $sms_message ) ) {
+			$sent = $provider->send_sms( $booking->customer_phone, $sms_message );
+			\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+				$booking_id,
+				$booking->user_id ? (int) $booking->user_id : null,
+				'sms',
+				$booking->customer_phone,
+				null,
+				$sms_message,
+				'manual_dispatch_customer',
+				$sent ? 'sent' : 'failed',
+				array( 'provider' => $provider_id )
+			);
+
+			if ( $sent ) {
 				wp_send_json_success( array( 'message' => __( 'Bekreftelses-SMS sendt til kunden.', 'snippen-booking' ) ) );
 			} else {
 				wp_send_json_error( array( 'message' => __( 'SMS sending feilet. Sjekk logger.', 'snippen-booking' ) ) );
@@ -463,6 +500,26 @@ class BookingActionsApi {
 		}
 
 		return $text;
+	}
+
+	/**
+	 * Get messages for a booking (AJAX handler for live refresh)
+	 */
+	public static function get_booking_messages() {
+		check_ajax_referer( 'snippen_admin_nonce', 'nonce' );
+
+		if ( ! Capabilities::can_manage_bookings() ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
+		}
+
+		$booking_id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		if ( ! $booking_id ) {
+			wp_send_json_error( array( 'message' => __( 'Ugyldig booking ID.', 'snippen-booking' ) ) );
+		}
+
+		$messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking( $booking_id );
+
+		wp_send_json_success( array( 'messages' => $messages ) );
 	}
 
 	/**
