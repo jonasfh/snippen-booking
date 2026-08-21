@@ -293,6 +293,9 @@ jQuery(document).ready(function ($) {
                 blocksHtml += '<div class="block-time">' + timeStr + '</div>';
             }
             
+            if (block.includes_wash_time) {
+                blocksHtml += '<div class="block-wash-info" style="font-size: 0.85em; color: #0284c7; font-weight: 500; margin-top: 3px;">✦ Inkluderer utvask neste morgen (til kl. 11)</div>';
+            }
             if (block.is_available && block.available_object_names && block.available_object_names.length > 0) {
                 blocksHtml += '<div class="block-objects-available">' + escHtml(block.available_object_names.join(', ')) + '</div>';
             } else if (!block.is_available) {
@@ -335,6 +338,7 @@ jQuery(document).ready(function ($) {
         
         // Hide and clear response messages
         $('#booking-response').hide().html('');
+        $('#summary-wash-notice').hide();
         
         // Reset submit button text and enabled status
         var $submitBtn = $('#booking-form').find('.booking-submit');
@@ -513,6 +517,12 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 if (response.success) {
+                    if (response.data.includes_wash_time) {
+                        $('#summary-wash-notice').slideDown(200);
+                    } else {
+                        $('#summary-wash-notice').slideUp(200);
+                    }
+
                     if (response.data.discount_amount > 0) {
                         var html = '<div style="text-decoration: line-through; color: #64748b; font-size: 0.9em;">kr. ' + Math.round(response.data.base_price) + ',-</div>';
                         html += '<div style="color: #16a34a; font-size: 0.9em; margin-bottom: 5px;">Rabatt: -kr. ' + Math.round(response.data.discount_amount) + ',-</div>';

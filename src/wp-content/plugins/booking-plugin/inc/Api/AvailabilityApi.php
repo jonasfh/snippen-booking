@@ -160,6 +160,7 @@ class AvailabilityApi {
 					'name'                   => $block->name,
 					'start_time'             => $block->start_time,
 					'end_time'               => $block->end_time,
+					'includes_wash_time'     => ! empty( $block->includes_wash_time ),
 					'is_available'           => $is_available,
 					'available_capacity'     => $available_capacity,
 					'total_capacity'         => $total_capacity,
@@ -326,13 +327,26 @@ class AvailabilityApi {
 			}
 		}
 
+		$includes_wash_time = false;
+		if ( ! empty( $block_ids ) ) {
+			$block_repo = new BookingBlockRepository();
+			$blocks     = $block_repo->find_by_ids( $block_ids );
+			foreach ( $blocks as $b ) {
+				if ( ! empty( $b->includes_wash_time ) ) {
+					$includes_wash_time = true;
+					break;
+				}
+			}
+		}
+
 		wp_send_json_success(
 			array(
-				'objects'         => $objects_data,
-				'price'           => $final_price,
-				'base_price'      => $base_price,
-				'discount_amount' => $discount_amount,
-				'discount_name'   => $discount_name,
+				'objects'            => $objects_data,
+				'price'              => $final_price,
+				'base_price'         => $base_price,
+				'discount_amount'    => $discount_amount,
+				'discount_name'      => $discount_name,
+				'includes_wash_time' => $includes_wash_time,
 			)
 		);
 	}

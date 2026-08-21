@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.16.0] - 2026-08-21
+- (#228) Added support for configuring wash time (`includes_wash_time`) on time slots and booking blocks. Updated Admin UI to toggle wash time per block, display "Utvask" tag in time slot list and admin bookings overview, and inform frontend users during wizard selection and summary confirmation that wash time is included next morning until 11:00 at no extra charge.
+
 ## [2.15.0] - 2026-08-20
 - (#226) Enhanced notification manual dispatch modal in admin booking overview with template selector dropdown (defaulting to booking confirmation), interactive placeholder chips with clipboard copy and cursor insertion, user warning upon template switch if message content was modified, and server-side placeholder replacement when sending.
 

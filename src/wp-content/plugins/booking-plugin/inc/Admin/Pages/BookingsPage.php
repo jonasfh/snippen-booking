@@ -292,6 +292,19 @@ class BookingsPage {
 		$payment_status = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
 		$all_statuses   = \SnippenBooking\Service\PaymentService::get_statuses();
 
+		$has_wash_time = false;
+		if ( ! empty( $booking->id ) ) {
+			$block_repo = new \SnippenBooking\Database\Repository\BookingBlockRepository();
+			$booking_repo = new \SnippenBooking\Database\Repository\BookingRepository();
+			$b_blocks = $booking_repo->get_booking_blocks( $booking->id );
+			foreach ( $b_blocks as $b_obj ) {
+				if ( ! empty( $b_obj->includes_wash_time ) ) {
+					$has_wash_time = true;
+					break;
+				}
+			}
+		}
+
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
 		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
 		echo '<div style="display:flex; justify-content:flex-start; gap:8px;">';
@@ -302,7 +315,7 @@ class BookingsPage {
 			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
 		}
 		echo '</div></td>';
-		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small></td>';
+		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong><br><small>' . esc_html( $booking->slot_name ) . '</small>' . ( $has_wash_time ? '<br><span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px; margin-top:2px; display:inline-block;">' . esc_html__( 'Utvask', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
 		echo '<td data-label="' . esc_attr__( 'Kunde', 'snippen-booking' ) . '"><strong>' . esc_html( $booking->customer_name ) . '</strong><br><small>' . esc_html( $booking->customer_email ) . '</small></td>';
 		echo '<td data-label="' . esc_attr__( 'Lokaler', 'snippen-booking' ) . '">';
 		foreach ( $objs as $oname ) {

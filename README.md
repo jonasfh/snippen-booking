@@ -28,6 +28,10 @@ To limit the form to a specific object or multiple objects, you can pass the `ob
 
 When multiple objects are available or selected, only time slots marked as "delt" (shared) will be available in this mode.
 
+### Wash Time (Utvask-tid)
+Booking blocks and time slots can be configured in the WordPress Admin dashboard under **Snippen Booking > Bookingblokker** with the **Inkluderer utvask-tid neste morgen** option.
+When enabled for a time slot, users booking that slot are informed directly in the booking wizard and summary confirmation that they can use the venue for cleaning up/washing until 11:00 AM the following morning without extra charge. The booking is also tagged with **Utvask** in the admin overview.
+
 ### User Account Confirmation
 Users must confirm their account via SMS before they can create bookings. The account confirmation form is displayed using the following shortcode:
 
