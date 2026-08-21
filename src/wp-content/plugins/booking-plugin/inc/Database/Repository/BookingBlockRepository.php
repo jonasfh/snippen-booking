@@ -93,6 +93,9 @@ class BookingBlockRepository {
 		$table = $wpdb->prefix . 'snippen_booking_blocks';
 
 		$data['modified_at'] = current_time( 'mysql' );
+		if ( isset( $data['includes_wash_time'] ) ) {
+			$data['includes_wash_time'] = (int) $data['includes_wash_time'];
+		}
 
 		if ( $id ) {
 			$wpdb->update( $table, $data, array( 'id' => $id ) );
