@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.17.0] - 2026-08-21
+- (#208) Removed legacy `TimeSlotsPage.php` class and integration test `TimeSlotsPageTest.php`, cleaning up dead code replaced by `BookingBlocksPage`.
+
 ## [2.16.0] - 2026-08-21
 - (#228) Added support for configurable custom instructions (`custom_instructions`) on time slots and booking blocks. Updated Admin UI with a text input field to configure custom messages per block (e.g. for weekend wash-time next morning until 11:00), display an info badge in time slot list and admin bookings overview, and inform frontend users during wizard selection and summary confirmation when custom instructions are configured.
 
