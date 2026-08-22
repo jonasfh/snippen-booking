@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.19.4] - 2026-08-22
+- (#245) Fixed Dependabot security alerts #3, #4, #5, #6, and #11 by updating `js-yaml` and `brace-expansion` npm dependencies.
+
 ## [2.19.3] - 2026-08-22
 - (#243) Fixed Dependabot security alerts #1 and #2 by updating `wp-coding-standards/wpcs` to v3.4.1 (CVE-2026-45293) and `squizlabs/php_codesniffer` to v3.13.6 (CVE-2026-67434).
 
