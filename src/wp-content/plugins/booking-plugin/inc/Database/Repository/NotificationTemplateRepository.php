@@ -127,7 +127,7 @@ class NotificationTemplateRepository {
 		$type         = sanitize_text_field( $data['type'] ?? 'email' );
 		$title        = isset( $data['title'] ) && null !== $data['title'] ? sanitize_text_field( $data['title'] ) : null;
 		$message      = $data['message'] ?? '';
-		$connected_to = ! empty( $data['connected_to'] ) ? sanitize_text_field( $data['connected_to'] ) : null;
+		$connected_to = ! empty( $data['connected_to'] ) ? PlaceholderRegistry::normalize_context( sanitize_text_field( $data['connected_to'] ) ) : null;
 
 		if ( empty( $name ) || empty( $message ) ) {
 			return false;
@@ -196,7 +196,7 @@ class NotificationTemplateRepository {
 			$update_format[]        = '%s';
 		}
 		if ( array_key_exists( 'connected_to', $data ) ) {
-			$new_connected = ! empty( $data['connected_to'] ) ? sanitize_text_field( $data['connected_to'] ) : null;
+			$new_connected = ! empty( $data['connected_to'] ) ? PlaceholderRegistry::normalize_context( sanitize_text_field( $data['connected_to'] ) ) : null;
 			$target_type   = $update_data['type'] ?? $existing->type;
 			if ( ! empty( $new_connected ) ) {
 				$conflict = $this->find_by_connected_and_type( $new_connected, $target_type );

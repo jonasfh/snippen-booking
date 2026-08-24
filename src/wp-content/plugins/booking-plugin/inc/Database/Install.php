@@ -17,9 +17,14 @@ class Install {
 
 		// If running in tests and tables already exist, skip to prevent implicit commits from DDL statements
 		if ( defined( 'SNIPPEN_BOOKING_TESTS_DIR' ) ) {
-			$table_blocks    = $wpdb->prefix . 'snippen_booking_blocks';
-			$table_templates = $wpdb->prefix . 'snippen_notification_templates';
-			if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_blocks'" ) === $table_blocks && $wpdb->get_var( "SHOW TABLES LIKE '$table_templates'" ) === $table_templates ) {
+			$table_blocks  = $wpdb->prefix . 'snippen_booking_blocks';
+			$table_objects = $wpdb->prefix . 'snippen_booking_objects';
+			$table_rules   = $wpdb->prefix . 'snippen_pricing_rules';
+			if (
+				$wpdb->get_var( "SHOW TABLES LIKE '$table_blocks'" ) === $table_blocks &&
+				$wpdb->get_var( "SHOW TABLES LIKE '$table_objects'" ) === $table_objects &&
+				$wpdb->get_var( "SHOW TABLES LIKE '$table_rules'" ) === $table_rules
+			) {
 				return;
 			}
 		}

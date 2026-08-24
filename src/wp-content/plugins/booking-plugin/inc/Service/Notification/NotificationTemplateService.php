@@ -107,7 +107,7 @@ class NotificationTemplateService {
 		$norm_type = PlaceholderRegistry::normalize_context( $event_type );
 
 		$defaults = array(
-			'user_activation'      => array(
+			'account-activation'   => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Din bekreftelseskode for Snippen Booking er: {{confirmation_code}}. Koden er gyldig i 15 minutter.', 'snippen-booking' ),
@@ -117,7 +117,7 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo {{user_name}},\n\nDin bekreftelseskode for Snippen Booking er: {{confirmation_code}}\n\nKoden er gyldig i 15 minutter.\n\nVennligst enter koden på siden for å bekrefte kontoen din.", 'snippen-booking' ),
 				),
 			),
-			'booking_confirmation' => array(
+			'booking-confirmation' => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Takk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}. Betaling: Bank {{bank_account}}, Vipps {{vipps_number}} ({{booking_price}} kr). {{payment_instructions}} Se detaljer: {{booking_url}}', 'snippen-booking' ),
@@ -127,7 +127,7 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nBetalingsinformasjon:\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\nBeløp: {{booking_price}} kr\n\n{{payment_instructions}}\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				),
 			),
-			'admin_booking'        => array(
+			'admin-booking-alert'  => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Ny bookingforespørsel for {{booking_objects}} den {{booking_date}} fra {{user_name}}.', 'snippen-booking' ),
@@ -137,7 +137,7 @@ class NotificationTemplateService {
 					'body'    => __( "Ny bookingforespørsel mottatt:\n\nLokale: {{booking_objects}}\nDato: {{booking_date}}\nNavn: {{user_name}}\nEmail: {{user_email}}\nTelefon: {{user_phone}}\nBeskrivelse: {{booking_description}}\n\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen.", 'snippen-booking' ),
 				),
 			),
-			'password_reset'       => array(
+			'password-reset'       => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'For å tilbakestille passordet ditt, trykk på denne lenken: {{reset_link}}', 'snippen-booking' ),

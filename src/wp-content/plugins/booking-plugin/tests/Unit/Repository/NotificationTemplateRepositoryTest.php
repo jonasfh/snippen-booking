@@ -106,4 +106,38 @@ class NotificationTemplateRepositoryTest extends TestCase {
 		);
 		$this->assertFalse( $id2 );
 	}
+
+	/**
+	 * Test alias connected_to names map to canonical key and prevent duplicate creation
+	 */
+	public function test_alias_connected_to_uniqueness() {
+		$id1 = $this->repository->create(
+			array(
+				'name'         => 'Template 1',
+				'type'         => 'email',
+				'title'        => 'Subject 1',
+				'message'      => 'Msg 1',
+				'connected_to' => 'user_activation',
+			)
+		);
+		$this->assertIsInt( $id1 );
+
+		// Attempt duplicate using hyphenated alias account-activation
+		$id2 = $this->repository->create(
+			array(
+				'name'         => 'Template 2',
+				'type'         => 'email',
+				'title'        => 'Subject 2',
+				'message'      => 'Msg 2',
+				'connected_to' => 'account-activation',
+			)
+		);
+		$this->assertFalse( $id2 );
+
+		// Searching using either alias should return the same row
+		$row1 = $this->repository->find_by_connected_and_type( 'user_activation', 'email' );
+		$row2 = $this->repository->find_by_connected_and_type( 'account-activation', 'email' );
+		$this->assertNotNull( $row1 );
+		$this->assertEquals( $row1->id, $row2->id );
+	}
 }
