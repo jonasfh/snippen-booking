@@ -216,11 +216,18 @@ class PlaceholderRegistry {
 			return;
 		}
 
+		$raw_connected = (array) ( $definition['connected_to'] ?? array() );
+		$expanded      = array();
+		foreach ( $raw_connected as $conn ) {
+			$expanded[] = $conn;
+			$expanded[] = self::normalize_context( $conn );
+		}
+
 		$this->placeholders[ $definition['name'] ] = array(
 			'name'         => $definition['name'],
 			'label'        => $definition['label'] ?? $definition['name'],
 			'description'  => $definition['description'] ?? '',
-			'connected_to' => (array) ( $definition['connected_to'] ?? array() ),
+			'connected_to' => array_values( array_unique( $expanded ) ),
 			'resolver'     => $definition['resolver'] ?? null,
 		);
 	}

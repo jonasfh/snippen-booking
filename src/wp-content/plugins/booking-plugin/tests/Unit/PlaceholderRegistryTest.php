@@ -110,6 +110,18 @@ class PlaceholderRegistryTest extends TestCase {
 	}
 
 	/**
+	 * Test validating template strings with hyphenated context names
+	 */
+	public function test_validate_template_hyphenated_context() {
+		$booking_conf_text = 'Hello {{user_name}}, booking for {{booking_objects}} on {{booking_date}}. Total: {{booking_price}} kr. {{payment_instructions}} {{booking_url}}';
+		$errors_hyphen     = $this->registry->validate_template( $booking_conf_text, 'booking-confirmation' );
+		$this->assertEmpty( $errors_hyphen );
+
+		$errors_underscore = $this->registry->validate_template( $booking_conf_text, 'booking_confirmation' );
+		$this->assertEmpty( $errors_underscore );
+	}
+
+	/**
 	 * Test resolving values from flat array context
 	 */
 	public function test_resolve_flat_context() {
