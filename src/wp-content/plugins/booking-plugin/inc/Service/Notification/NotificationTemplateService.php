@@ -9,10 +9,46 @@
 
 namespace SnippenBooking\Service\Notification;
 
+use SnippenBooking\Database\Repository\NotificationTemplateRepository;
+
 /**
  * Class NotificationTemplateService
  */
 class NotificationTemplateService {
+
+	/**
+	 * Template repository instance
+	 *
+	 * @var NotificationTemplateRepository
+	 */
+	private $repository;
+
+	/**
+	 * Placeholder registry instance
+	 *
+	 * @var PlaceholderRegistry
+	 */
+	private $registry;
+
+	/**
+	 * Constructor
+	 *
+	 * @param PlaceholderRegistry|null            $registry   Optional custom registry.
+	 * @param NotificationTemplateRepository|null $repository Optional custom repository.
+	 */
+	public function __construct( ?PlaceholderRegistry $registry = null, ?NotificationTemplateRepository $repository = null ) {
+		$this->registry   = $registry ?: new PlaceholderRegistry();
+		$this->repository = $repository ?: new NotificationTemplateRepository();
+	}
+
+	/**
+	 * Get repository instance
+	 *
+	 * @return NotificationTemplateRepository
+	 */
+	public function get_repository(): NotificationTemplateRepository {
+		return $this->repository;
+	}
 
 	/**
 	 * Get all templates organized by event type and channel
@@ -43,13 +79,15 @@ class NotificationTemplateService {
 	 * @return array Template data with keys: subject, body, is_default.
 	 */
 	public function get_template( string $event_type, string $channel ): array {
-		$option_key = "snippen_template_{$event_type}_{$channel}";
-		$custom     = get_option( $option_key );
+		$db_row = $this->repository->find_by_connected_and_type( $event_type, $channel );
 
-		if ( $custom && is_array( $custom ) ) {
-			$merged               = array_merge( $this->get_default_template( $event_type, $channel ), $custom );
-			$merged['is_default'] = false;
-			return $merged;
+		if ( $db_row ) {
+			return array(
+				'id'         => (int) $db_row->id,
+				'subject'    => $db_row->title ?: '',
+				'body'       => $db_row->message,
+				'is_default' => false,
+			);
 		}
 
 		$default               = $this->get_default_template( $event_type, $channel );
@@ -66,6 +104,8 @@ class NotificationTemplateService {
 	 * @return array
 	 */
 	public function get_default_template( string $event_type, string $channel ): array {
+		$norm_type = PlaceholderRegistry::normalize_context( $event_type );
+
 		$defaults = array(
 			'user_activation'      => array(
 				'sms'   => array(
@@ -109,7 +149,7 @@ class NotificationTemplateService {
 			),
 		);
 
-		return $defaults[ $event_type ][ $channel ] ?? array(
+		return $defaults[ $norm_type ][ $channel ] ?? array(
 			'subject' => '',
 			'body'    => '',
 		);
@@ -118,21 +158,36 @@ class NotificationTemplateService {
 	/**
 	 * Save a custom template
 	 *
-	 * @param string      $event_type Event type.
-	 * @param string      $channel    Channel.
+	 * @param string      $event_type Event type / connected_to.
+	 * @param string      $channel    Channel (sms/email).
 	 * @param string|null $subject    Subject (optional for SMS).
 	 * @param string      $body       Message body.
 	 * @return bool
 	 */
 	public function save_template( string $event_type, string $channel, ?string $subject, string $body ): bool {
-		$option_key = "snippen_template_{$event_type}_{$channel}";
+		$existing = $this->repository->find_by_connected_and_type( $event_type, $channel );
 
-		$template = array(
-			'subject' => $subject ?: '',
-			'body'    => $body,
+		if ( $existing ) {
+			return $this->repository->update(
+				(int) $existing->id,
+				array(
+					'title'   => $subject ?: null,
+					'message' => $body,
+				)
+			);
+		}
+
+		$inserted = $this->repository->create(
+			array(
+				'name'         => sprintf( '%s (%s)', ucfirst( str_replace( '_', ' ', $event_type ) ), strtoupper( $channel ) ),
+				'type'         => $channel,
+				'title'        => $subject ?: null,
+				'message'      => $body,
+				'connected_to' => $event_type,
+			)
 		);
 
-		return update_option( $option_key, $template );
+		return false !== $inserted;
 	}
 
 	/**
@@ -143,24 +198,13 @@ class NotificationTemplateService {
 	 * @return bool
 	 */
 	public function reset_template_to_default( string $event_type, string $channel ): bool {
-		$option_key = "snippen_template_{$event_type}_{$channel}";
-		return delete_option( $option_key );
-	}
+		$existing = $this->repository->find_by_connected_and_type( $event_type, $channel );
 
-	/**
-	 * Placeholder registry instance
-	 *
-	 * @var PlaceholderRegistry
-	 */
-	private $registry;
+		if ( $existing ) {
+			return $this->repository->delete( (int) $existing->id );
+		}
 
-	/**
-	 * Constructor
-	 *
-	 * @param PlaceholderRegistry|null $registry Optional custom registry.
-	 */
-	public function __construct( ?PlaceholderRegistry $registry = null ) {
-		$this->registry = $registry ?: new PlaceholderRegistry();
+		return true;
 	}
 
 	/**

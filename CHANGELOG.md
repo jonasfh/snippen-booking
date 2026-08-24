@@ -1,6 +1,7 @@
 # Changelog
 
 ## [2.20.0] - 2026-08-24
+- (#250) Harmonized SMS and Email notification templates by consolidating storage into custom database table `snippen_notification_templates`, implementing `NotificationTemplateRepository`, updating Admin management UI with dynamic placeholder status styling, and adding idempotent `composer demo:templates` setup.
 - (#251) Standardized template placeholders by introducing a central `PlaceholderRegistry` single source of truth, removing old hardcoded placeholder handling, adding template placeholder validation on Admin save, and creating unit and integration tests for all 14 placeholders.
 
 ## [2.19.4] - 2026-08-22

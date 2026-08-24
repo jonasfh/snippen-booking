@@ -17,8 +17,9 @@ class Install {
 
 		// If running in tests and tables already exist, skip to prevent implicit commits from DDL statements
 		if ( defined( 'SNIPPEN_BOOKING_TESTS_DIR' ) ) {
-			$table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
-			if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_blocks'" ) === $table_blocks ) {
+			$table_blocks    = $wpdb->prefix . 'snippen_booking_blocks';
+			$table_templates = $wpdb->prefix . 'snippen_notification_templates';
+			if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_blocks'" ) === $table_blocks && $wpdb->get_var( "SHOW TABLES LIKE '$table_templates'" ) === $table_templates ) {
 				return;
 			}
 		}
@@ -266,6 +267,22 @@ class Install {
             KEY recipient (recipient)
         ) $charset_collate;";
 		dbDelta( $sql_messages );
+
+		// Notification templates table
+		$table_templates = $wpdb->prefix . 'snippen_notification_templates';
+		$sql_templates   = "CREATE TABLE $table_templates (
+            id BIGINT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            type VARCHAR(20) NOT NULL,
+            title VARCHAR(255) NULL,
+            message TEXT NOT NULL,
+            connected_to VARCHAR(50) NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY connected_type (connected_to, type)
+        ) $charset_collate;";
+		dbDelta( $sql_templates );
 
 		// Legacy tables below for compatibility during redesign phase:
 

@@ -245,9 +245,26 @@ class PlaceholderRegistry {
 	}
 
 	/**
+	 * Normalize connected_to context string to canonical format
+	 *
+	 * @param string $context Context string (e.g. account-activation or user_activation).
+	 * @return string
+	 */
+	public static function normalize_context( string $context ): string {
+		$map = array(
+			'account-activation'   => 'user_activation',
+			'booking-confirmation' => 'booking_confirmation',
+			'admin-booking-alert'  => 'admin_booking',
+			'password-reset'       => 'password_reset',
+		);
+
+		return $map[ $context ] ?? $context;
+	}
+
+	/**
 	 * Get placeholders allowed for a given connected_to context
 	 *
-	 * @param string $connected_to Context event type (e.g., booking_confirmation).
+	 * @param string $connected_to Context event type (e.g., booking_confirmation or booking-confirmation).
 	 * @return array
 	 */
 	public function get_placeholders_for_context( string $connected_to ): array {
@@ -255,9 +272,10 @@ class PlaceholderRegistry {
 			return $this->placeholders;
 		}
 
-		$filtered = array();
+		$normalized = self::normalize_context( $connected_to );
+		$filtered   = array();
 		foreach ( $this->placeholders as $name => $definition ) {
-			if ( in_array( $connected_to, $definition['connected_to'], true ) ) {
+			if ( in_array( $normalized, $definition['connected_to'], true ) || in_array( $connected_to, $definition['connected_to'], true ) ) {
 				$filtered[ $name ] = $definition;
 			}
 		}
@@ -293,8 +311,9 @@ class PlaceholderRegistry {
 	 * @return array Array of validation error strings.
 	 */
 	public function validate_template( string $text, string $connected_to = '' ): array {
-		$found  = $this->extract_placeholders( $text );
-		$errors = array();
+		$found      = $this->extract_placeholders( $text );
+		$errors     = array();
+		$normalized = self::normalize_context( $connected_to );
 
 		foreach ( $found as $placeholder_name ) {
 			$definition = $this->get_placeholder( $placeholder_name );
@@ -307,7 +326,7 @@ class PlaceholderRegistry {
 				continue;
 			}
 
-			if ( ! empty( $connected_to ) && ! in_array( $connected_to, $definition['connected_to'], true ) ) {
+			if ( ! empty( $connected_to ) && ! in_array( $normalized, $definition['connected_to'], true ) && ! in_array( $connected_to, $definition['connected_to'], true ) ) {
 				$errors[] = sprintf(
 					/* translators: 1: Placeholder name, 2: Event context */
 					__( 'Placeholder {{%1$s}} er ikke tillatt for hendelsen "%2$s".', 'snippen-booking' ),
@@ -338,7 +357,9 @@ class PlaceholderRegistry {
 			throw new UnknownPlaceholderException( $name );
 		}
 
-		if ( ! empty( $connected_to ) && ! in_array( $connected_to, $definition['connected_to'], true ) ) {
+		$normalized = self::normalize_context( $connected_to );
+
+		if ( ! empty( $connected_to ) && ! in_array( $normalized, $definition['connected_to'], true ) && ! in_array( $connected_to, $definition['connected_to'], true ) ) {
 			throw new DisallowedPlaceholderException( $name, $connected_to );
 		}
 
@@ -372,6 +393,8 @@ class PlaceholderRegistry {
 			return '';
 		}
 
+		$normalized = self::normalize_context( $connected_to );
+
 		// First, check validation errors for unknown or disallowed placeholders
 		$extracted = $this->extract_placeholders( $text );
 		foreach ( $extracted as $name ) {
@@ -379,7 +402,7 @@ class PlaceholderRegistry {
 			if ( ! $definition ) {
 				throw new UnknownPlaceholderException( $name );
 			}
-			if ( ! empty( $connected_to ) && ! in_array( $connected_to, $definition['connected_to'], true ) ) {
+			if ( ! empty( $connected_to ) && ! in_array( $normalized, $definition['connected_to'], true ) && ! in_array( $connected_to, $definition['connected_to'], true ) ) {
 				throw new DisallowedPlaceholderException( $name, $connected_to );
 			}
 		}

@@ -43,6 +43,7 @@
         "demo:sms": "php bin/demo-sms.php",
         "demo:mail": "php bin/demo-mail.php",
         "demo:notifications": "php bin/demo-notifications.php",
+        "demo:templates": "php bin/demo-templates.php",
         "demo:payments": "php bin/demo-payments.php",
         "demo:me": "php bin/demo-me.php",
         "demo:env": [
@@ -55,6 +56,7 @@
             "@demo:pages",
             "@demo:me",
             "@demo:env",
+            "@demo:templates",
             "@demo:notifications",
             "@demo:payments",
             "@demo:mail"
