@@ -298,10 +298,49 @@ class NotificationTemplateRepository {
 			),
 		);
 
+		$this->cleanup_duplicates();
+
 		foreach ( $defaults as $tpl ) {
 			$existing = $this->find_by_connected_and_type( $tpl['connected_to'], $tpl['type'] );
 			if ( ! $existing ) {
 				$this->create( $tpl );
+			}
+		}
+	}
+
+	/**
+	 * Clean up duplicate templates for the same (connected_to, type) pair
+	 *
+	 * @return void
+	 */
+	public function cleanup_duplicates() {
+		$this->ensure_table_exists();
+		global $wpdb;
+		$table = $this->get_table_name();
+
+		$all  = $this->get_all();
+		$seen = array();
+
+		foreach ( $all as $tpl ) {
+			if ( empty( $tpl->connected_to ) ) {
+				continue;
+			}
+			$norm_conn = PlaceholderRegistry::normalize_context( $tpl->connected_to );
+			$key       = $norm_conn . ':' . $tpl->type;
+
+			if ( isset( $seen[ $key ] ) ) {
+				$wpdb->delete( $table, array( 'id' => $tpl->id ), array( '%d' ) );
+			} else {
+				$seen[ $key ] = (int) $tpl->id;
+				if ( $tpl->connected_to !== $norm_conn ) {
+					$wpdb->update(
+						$table,
+						array( 'connected_to' => $norm_conn ),
+						array( 'id' => $tpl->id ),
+						array( '%s' ),
+						array( '%d' )
+					);
+				}
 			}
 		}
 	}
