@@ -252,10 +252,21 @@ class PlaceholderRegistry {
 	 */
 	public static function normalize_context( string $context ): string {
 		$map = array(
-			'account-activation'   => 'user_activation',
-			'booking-confirmation' => 'booking_confirmation',
-			'admin-booking-alert'  => 'admin_booking',
-			'password-reset'       => 'password_reset',
+			'user_activation'      => 'account-activation',
+			'user-activation'      => 'account-activation',
+			'account_activation'   => 'account-activation',
+			'account-activation'   => 'account-activation',
+
+			'booking_confirmation' => 'booking-confirmation',
+			'booking-confirmation' => 'booking-confirmation',
+
+			'admin_booking'        => 'admin-booking-alert',
+			'admin-booking'        => 'admin-booking-alert',
+			'admin_booking_alert'  => 'admin-booking-alert',
+			'admin-booking-alert'  => 'admin-booking-alert',
+
+			'password_reset'       => 'password-reset',
+			'password-reset'       => 'password-reset',
 		);
 
 		return $map[ $context ] ?? $context;
