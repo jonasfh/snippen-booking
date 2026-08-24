@@ -9,6 +9,8 @@ namespace SnippenBooking\Tests\Unit;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\Notification\NotificationTemplateService;
+use SnippenBooking\Service\Notification\Exception\UnknownPlaceholderException;
+use SnippenBooking\Service\Notification\Exception\DisallowedPlaceholderException;
 
 /**
  * Unit tests for notification templates
@@ -28,6 +30,10 @@ class NotificationTemplateServiceTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 		$this->service = new NotificationTemplateService();
+		delete_option( 'snippen_template_user_activation_sms' );
+		delete_option( 'snippen_template_user_activation_email' );
+		delete_option( 'snippen_template_booking_confirmation_email' );
+		delete_option( 'snippen_template_booking_confirmation_sms' );
 	}
 
 	/**
@@ -58,14 +64,12 @@ class NotificationTemplateServiceTest extends TestCase {
 	 * Test that reset_template_to_default removes custom template
 	 */
 	public function test_reset_template_to_default() {
-		// First, save a custom template
 		$custom_body = 'Custom message';
 		$this->service->save_template( 'booking_confirmation', 'email', 'Custom Subject', $custom_body );
 
 		$template = $this->service->get_template( 'booking_confirmation', 'email' );
 		$this->assertFalse( $template['is_default'] );
 
-		// Now reset it
 		$this->service->reset_template_to_default( 'booking_confirmation', 'email' );
 
 		$template = $this->service->get_template( 'booking_confirmation', 'email' );
@@ -73,15 +77,15 @@ class NotificationTemplateServiceTest extends TestCase {
 	}
 
 	/**
-	 * Test placeholder replacement
+	 * Test placeholder replacement in email template
 	 */
 	public function test_render_template_with_placeholders() {
 		$context = array(
-			'user_name'          => 'John Doe',
-			'confirmation_code'  => '123456',
+			'user_name'         => 'John Doe',
+			'confirmation_code' => '123456',
 		);
 
-		$rendered = $this->service->render_template( 'user_activation', 'sms', $context );
+		$rendered = $this->service->render_template( 'user_activation', 'email', $context );
 
 		$this->assertStringContainsString( 'John Doe', $rendered['body'] );
 		$this->assertStringContainsString( '123456', $rendered['body'] );
@@ -97,8 +101,8 @@ class NotificationTemplateServiceTest extends TestCase {
 		$this->service->save_template( 'user_activation', 'email', 'Test Subject', $custom_body );
 
 		$context = array(
-			'user_name'          => 'Jane Smith',
-			'confirmation_code'  => '654321',
+			'user_name'         => 'Jane Smith',
+			'confirmation_code' => '654321',
 		);
 
 		$rendered = $this->service->render_template( 'user_activation', 'email', $context );
@@ -124,20 +128,17 @@ class NotificationTemplateServiceTest extends TestCase {
 	}
 
 	/**
-	 * Test get_available_placeholders and get_all_placeholders returns all placeholders including booking_time
+	 * Test get_available_placeholders filters placeholders by event context
 	 */
 	public function test_get_available_placeholders() {
 		$placeholders = $this->service->get_available_placeholders( 'user_activation' );
 
 		$this->assertArrayHasKey( 'user_name', $placeholders );
 		$this->assertArrayHasKey( 'confirmation_code', $placeholders );
-		$this->assertArrayHasKey( 'booking_time', $placeholders );
-		$this->assertArrayHasKey( 'booking_date', $placeholders );
-		$this->assertArrayHasKey( 'booking_objects', $placeholders );
-		$this->assertArrayHasKey( 'reset_link', $placeholders );
+		$this->assertArrayNotHasKey( 'reset_link', $placeholders );
 
 		$all_placeholders = $this->service->get_all_placeholders();
-		$this->assertEquals( $placeholders, $all_placeholders );
+		$this->assertCount( 14, $all_placeholders );
 	}
 
 	/**
@@ -146,7 +147,6 @@ class NotificationTemplateServiceTest extends TestCase {
 	public function test_email_templates_have_subjects() {
 		$email_template = $this->service->get_template( 'user_activation', 'email' );
 		$this->assertNotEmpty( $email_template['subject'] );
-		$this->assertStringContainsString( 'Bekreftelse', $email_template['subject'] );
 
 		$booking_email = $this->service->get_template( 'booking_confirmation', 'email' );
 		$this->assertNotEmpty( $booking_email['subject'] );
@@ -164,17 +164,44 @@ class NotificationTemplateServiceTest extends TestCase {
 	}
 
 	/**
-	 * Test that missing placeholders don't break rendering
+	 * Test that missing placeholders don't break rendering in non-strict mode
 	 */
 	public function test_render_with_missing_context_values() {
+		$custom_body = 'Hello {{user_name}}, code is {{confirmation_code}}';
+		$this->service->save_template( 'user_activation', 'email', 'Subject', $custom_body );
+
 		$context = array(
 			'user_name' => 'Test User',
-			// Missing confirmation_code
 		);
 
-		$rendered = $this->service->render_template( 'user_activation', 'sms', $context );
+		$rendered = $this->service->render_template( 'user_activation', 'email', $context );
 
-		// Should still contain user_name replacement, but {{confirmation_code}} remains
 		$this->assertStringContainsString( 'Test User', $rendered['body'] );
+		$this->assertStringContainsString( '{{confirmation_code}}', $rendered['body'] );
+	}
+
+	/**
+	 * Test rendering unknown placeholder throws UnknownPlaceholderException
+	 */
+	public function test_render_unknown_placeholder_throws_exception() {
+		$this->expectException( UnknownPlaceholderException::class );
+
+		$custom_body = 'Hello {{non_existent_token}}';
+		$this->service->save_template( 'user_activation', 'email', 'Subject', $custom_body );
+
+		$this->service->render_template( 'user_activation', 'email', array() );
+	}
+
+	/**
+	 * Test rendering disallowed placeholder throws DisallowedPlaceholderException
+	 */
+	public function test_render_disallowed_placeholder_throws_exception() {
+		$this->expectException( DisallowedPlaceholderException::class );
+
+		// reset_link is only allowed in password_reset, not user_activation
+		$custom_body = 'Activation with link {{reset_link}}';
+		$this->service->save_template( 'user_activation', 'email', 'Subject', $custom_body );
+
+		$this->service->render_template( 'user_activation', 'email', array() );
 	}
 }

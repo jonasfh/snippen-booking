@@ -148,6 +148,31 @@ class NotificationTemplateService {
 	}
 
 	/**
+	 * Placeholder registry instance
+	 *
+	 * @var PlaceholderRegistry
+	 */
+	private $registry;
+
+	/**
+	 * Constructor
+	 *
+	 * @param PlaceholderRegistry|null $registry Optional custom registry.
+	 */
+	public function __construct( ?PlaceholderRegistry $registry = null ) {
+		$this->registry = $registry ?: new PlaceholderRegistry();
+	}
+
+	/**
+	 * Get the central placeholder registry
+	 *
+	 * @return PlaceholderRegistry
+	 */
+	public function get_registry(): PlaceholderRegistry {
+		return $this->registry;
+	}
+
+	/**
 	 * Render a template with placeholder replacements
 	 *
 	 * @param string $event_type Event type.
@@ -158,8 +183,8 @@ class NotificationTemplateService {
 	public function render_template( string $event_type, string $channel, array $context ): array {
 		$template = $this->get_template( $event_type, $channel );
 
-		$subject = $this->replace_placeholders( $template['subject'], $context );
-		$body    = $this->replace_placeholders( $template['body'], $context );
+		$subject = $this->registry->render_template( $template['subject'], $event_type, $context, false );
+		$body    = $this->registry->render_template( $template['body'], $event_type, $context, false );
 
 		return array(
 			'subject' => $subject,
@@ -168,43 +193,19 @@ class NotificationTemplateService {
 	}
 
 	/**
-	 * Replace placeholders in a string
-	 *
-	 * @param string $text    Text with {{placeholder}} syntax.
-	 * @param array  $context Key-value pairs for replacement.
-	 * @return string
-	 */
-	private function replace_placeholders( string $text, array $context ): string {
-		foreach ( $context as $key => $value ) {
-			$placeholder = '{{' . $key . '}}';
-			$text        = str_replace( $placeholder, (string) $value, $text );
-		}
-
-		return $text;
-	}
-
-	/**
 	 * Get all available placeholders and their descriptions
 	 *
 	 * @return array Placeholder => Description pairs.
 	 */
 	public function get_all_placeholders(): array {
-		return array(
-			'user_name'            => __( 'User / Customer name', 'snippen-booking' ),
-			'user_email'           => __( 'Customer email', 'snippen-booking' ),
-			'user_phone'           => __( 'Customer phone number', 'snippen-booking' ),
-			'confirmation_code'    => __( '6-digit confirmation code', 'snippen-booking' ),
-			'booking_objects'      => __( 'Booked venue names', 'snippen-booking' ),
-			'booking_date'         => __( 'Booking date', 'snippen-booking' ),
-			'booking_time'         => __( 'Booking time / time slot', 'snippen-booking' ),
-			'booking_description'  => __( 'Booking description/notes', 'snippen-booking' ),
-			'booking_url'          => __( 'Booking details URL', 'snippen-booking' ),
-			'booking_price'        => __( 'Booking total price', 'snippen-booking' ),
-			'bank_account'         => __( 'Payment bank account number', 'snippen-booking' ),
-			'vipps_number'         => __( 'Payment Vipps number / info', 'snippen-booking' ),
-			'payment_instructions' => __( 'Payment instructions / deadline text from payment settings', 'snippen-booking' ),
-			'reset_link'           => __( 'Password reset URL', 'snippen-booking' ),
-		);
+		$result       = array();
+		$placeholders = $this->registry->get_registered_placeholders();
+
+		foreach ( $placeholders as $name => $definition ) {
+			$result[ $name ] = $definition['label'];
+		}
+
+		return $result;
 	}
 
 	/**
@@ -214,7 +215,13 @@ class NotificationTemplateService {
 	 * @return array Placeholder => Description pairs.
 	 */
 	public function get_available_placeholders( string $event_type = '' ): array {
-		// phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-		return $this->get_all_placeholders();
+		$result       = array();
+		$placeholders = $this->registry->get_placeholders_for_context( $event_type );
+
+		foreach ( $placeholders as $name => $definition ) {
+			$result[ $name ] = $definition['label'];
+		}
+
+		return $result;
 	}
 }

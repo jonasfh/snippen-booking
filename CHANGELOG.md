@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.20.0] - 2026-08-24
+- (#251) Standardized template placeholders by introducing a central `PlaceholderRegistry` single source of truth, removing old hardcoded placeholder handling, adding template placeholder validation on Admin save, and creating unit and integration tests for all 14 placeholders.
+
 ## [2.19.4] - 2026-08-22
 - (#245) Fixed Dependabot security alerts #3, #4, #5, #6, and #11 by updating `js-yaml` and `brace-expansion` npm dependencies.
 
