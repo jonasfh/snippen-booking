@@ -10,7 +10,7 @@ Guide AI agents working in this repository.
   - Always write tests for new functionality and update existing tests when modifying functionality.
   - Run `composer lint` and `composer test` to verify all changes before completion. Resolving all PHPCS errors and warnings is mandatory.
 - **Database Rules**: Always include `created_at` and `modified_at` timestamps on custom database tables.
-- **GitHub Issue Workflow**: All development MUST follow an associated GitHub Issue. Create branches like `gh-issue/<id>`, create PRs, and format commit messages as `(#<id>) Description`.
+- **GitHub Issue Workflow**: All development MUST follow an associated GitHub Issue or direct Code Scanning / Dependabot alert IDs. Create branches like `gh-issue/<id>`, `dep-<ids>-fix-dependabot-issues`, or `sec-<ids>-fix-code-scanning-issues`, create PRs, and format commit messages accordingly (`(#<id>) Description` or `(sec-<ids>) Description` / `(dep-<ids>) Description`).
 - **Documentation**: Keep `README.md` (user-facing) and `DEV_README.md` (developer-facing) updated with changes.
 
 ## Modular Sub-guidelines
