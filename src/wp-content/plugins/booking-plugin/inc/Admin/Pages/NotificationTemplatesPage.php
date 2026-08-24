@@ -51,13 +51,30 @@ class NotificationTemplatesPage {
 			$body       = isset( $_POST['body'] ) ? wp_kses_post( wp_unslash( $_POST['body'] ) ) : '';
 
 			if ( $event_type && $channel && $body ) {
-				$this->template_service->save_template( $event_type, $channel, $subject ?: null, $body );
-				add_settings_error(
-					'snippen_templates',
-					'settings_updated',
-					__( 'Template saved successfully.', 'snippen-booking' ),
-					'success'
+				$registry          = $this->template_service->get_registry();
+				$validation_errors = array_merge(
+					$registry->validate_template( $subject ?: '', $event_type ),
+					$registry->validate_template( $body, $event_type )
 				);
+
+				if ( ! empty( $validation_errors ) ) {
+					foreach ( $validation_errors as $err ) {
+						add_settings_error(
+							'snippen_templates',
+							'invalid_placeholder',
+							$err,
+							'error'
+						);
+					}
+				} else {
+					$this->template_service->save_template( $event_type, $channel, $subject ?: null, $body );
+					add_settings_error(
+						'snippen_templates',
+						'settings_updated',
+						__( 'Template saved successfully.', 'snippen-booking' ),
+						'success'
+					);
+				}
 			} else {
 				add_settings_error(
 					'snippen_templates',
@@ -102,7 +119,7 @@ class NotificationTemplatesPage {
 
 			<?php settings_errors( 'snippen_templates' ); ?>
 
-			<p><?php esc_html_e( 'Configure notification templates for different events and channels. Use placeholders like {{user_name}}, {{booking_date}}, etc.', 'snippen-booking' ); ?></p>
+			<p><?php esc_html_e( 'Configure notification templates for different events and channels. Placeholders are validated against the central registry.', 'snippen-booking' ); ?></p>
 
 			<?php $this->render_placeholders_summary(); ?>
 
@@ -110,6 +127,19 @@ class NotificationTemplatesPage {
 				<?php $this->render_templates(); ?>
 			</div>
 		</div>
+		<script>
+			function snippenInsertPlaceholder(targetId, placeholder) {
+				var textarea = document.getElementById(targetId);
+				if (!textarea) return;
+				var start = textarea.selectionStart || 0;
+				var end = textarea.selectionEnd || 0;
+				var text = textarea.value;
+				var tag = '{{' + placeholder + '}}';
+				textarea.value = text.substring(0, start) + tag + text.substring(end);
+				textarea.focus();
+				textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+			}
+		</script>
 		<?php
 	}
 
@@ -119,19 +149,27 @@ class NotificationTemplatesPage {
 	 * @return void
 	 */
 	private function render_placeholders_summary() {
-		$placeholders = $this->template_service->get_all_placeholders();
+		$registry     = $this->template_service->get_registry();
+		$placeholders = $registry->get_registered_placeholders();
+
 		if ( empty( $placeholders ) ) {
 			return;
 		}
 		?>
 		<div class="snippen-card" style="margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-left: 4px solid #2271b1;">
-			<h3 style="margin-top: 0;"><?php esc_html_e( 'Available Placeholders', 'snippen-booking' ); ?></h3>
-			<p><?php esc_html_e( 'The following placeholders are available for use in all notification templates:', 'snippen-booking' ); ?></p>
-			<ul style="margin: 10px 0; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px;">
-				<?php foreach ( $placeholders as $placeholder => $description ) : ?>
-					<li><code>{{<?php echo esc_html( $placeholder ); ?>}}</code> - <?php echo esc_html( $description ); ?></li>
+			<h3 style="margin-top: 0;"><?php esc_html_e( 'Placeholder Registry', 'snippen-booking' ); ?></h3>
+			<p><?php esc_html_e( 'The central placeholder registry defines valid dynamic tokens and their allowed contexts:', 'snippen-booking' ); ?></p>
+			<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 10px;">
+				<?php foreach ( $placeholders as $name => $def ) : ?>
+					<div style="background: white; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+						<strong><code>{{<?php echo esc_html( $name ); ?>}}</code></strong> - <?php echo esc_html( $def['label'] ); ?>
+						<p style="margin: 4px 0 6px 0; color: #666; font-size: 12px;"><?php echo esc_html( $def['description'] ); ?></p>
+						<span style="font-size: 11px; color: #444; background: #eef; padding: 2px 6px; border-radius: 3px;">
+							<?php esc_html_e( 'Allowed in:', 'snippen-booking' ); ?> <?php echo esc_html( implode( ', ', $def['connected_to'] ) ); ?>
+						</span>
+					</div>
 				<?php endforeach; ?>
-			</ul>
+			</div>
 		</div>
 		<?php
 	}
@@ -175,8 +213,11 @@ class NotificationTemplatesPage {
 	 * @return void
 	 */
 	private function render_template_editor( string $event_type, string $channel, array $template ) {
-		$channel_label = 'sms' === $channel ? __( 'SMS', 'snippen-booking' ) : __( 'Email', 'snippen-booking' );
-		$is_default    = $template['is_default'];
+		$channel_label      = 'sms' === $channel ? __( 'SMS', 'snippen-booking' ) : __( 'Email', 'snippen-booking' );
+		$is_default         = $template['is_default'];
+		$registry           = $this->template_service->get_registry();
+		$allowed_ph         = $registry->get_placeholders_for_context( $event_type );
+		$target_textarea_id = 'body_' . esc_attr( $event_type . '_' . $channel );
 
 		echo '<div style="background: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 15px; border-radius: 4px;">';
 		echo '<h3 style="margin-top: 0;">' . esc_html( $channel_label ) . '</h3>';
@@ -195,7 +236,6 @@ class NotificationTemplatesPage {
 			<input type="hidden" name="channel" value="<?php echo esc_attr( $channel ); ?>">
 
 			<?php
-			// Only show subject field for email templates
 			if ( 'email' === $channel ) {
 				?>
 				<div class="snippen-form-group" style="margin-bottom: 15px;">
@@ -215,18 +255,31 @@ class NotificationTemplatesPage {
 			?>
 
 			<div class="snippen-form-group" style="margin-bottom: 15px;">
-				<label for="body_<?php echo esc_attr( $event_type . '_' . $channel ); ?>" style="display: block; font-weight: bold; margin-bottom: 5px;">
+				<label for="<?php echo esc_attr( $target_textarea_id ); ?>" style="display: block; font-weight: bold; margin-bottom: 5px;">
 					<?php esc_html_e( 'Message Template', 'snippen-booking' ); ?>
 				</label>
 				<textarea 
-					id="body_<?php echo esc_attr( $event_type . '_' . $channel ); ?>" 
+					id="<?php echo esc_attr( $target_textarea_id ); ?>" 
 					name="body" 
 					rows="6"
 					style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;"
 				><?php echo esc_textarea( $template['body'] ); ?></textarea>
-				<small style="display: block; margin-top: 5px; color: #666;">
-					<?php esc_html_e( 'Use {{placeholder}} syntax for dynamic values. See list above.', 'snippen-booking' ); ?>
-				</small>
+
+				<div style="margin-top: 8px;">
+					<strong style="font-size: 12px;"><?php esc_html_e( 'Click to insert allowed placeholder:', 'snippen-booking' ); ?></strong>
+					<div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+						<?php foreach ( $allowed_ph as $name => $def ) : ?>
+							<button 
+								type="button" 
+								class="button button-small" 
+								onclick="snippenInsertPlaceholder('<?php echo esc_js( $target_textarea_id ); ?>', '<?php echo esc_js( $name ); ?>')"
+								title="<?php echo esc_attr( $def['description'] ); ?>"
+							>
+								+ {{<?php echo esc_html( $name ); ?>}}
+							</button>
+						<?php endforeach; ?>
+					</div>
+				</div>
 			</div>
 
 			<div style="display: flex; gap: 10px;">
@@ -246,3 +299,4 @@ class NotificationTemplatesPage {
 		echo '</div>';
 	}
 }
+
