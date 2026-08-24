@@ -38,32 +38,29 @@ Automated Dependabot PRs are intentionally disabled (`open-pull-requests-limit: 
 
 1. **Checking Alerts**:
    - Inspect active Dependabot alerts via GitHub CLI: `gh api /repos/{owner}/{repo}/dependabot/alerts` (or `gh api repos/{owner}/{repo}/dependabot/alerts?state=open`).
-2. **Issue Creation & Workflow**:
-   - Create a GitHub issue for dependency updates if one does not exist (`gh issue create --title "Update dependency <pkg>" ...`).
-   - Create a dedicated branch (`gh-issue/<id>`).
-3. **Alert Referencing Rule**:
-   - Do NOT reference security/code scanning alerts with shorthand issue syntax like `#3` (as GitHub issue #3 is completely distinct).
-   - ALWAYS use full URLs when referencing alerts in issue titles, descriptions, and comments:
-     - Code Scanning: `https://github.com/jonasfh/snippen-booking/security/code-scanning/<alert_id>`
+2. **Branching & Workflow**:
+   - Create a dedicated branch using an associated GitHub Issue (`gh-issue/<id>`) OR directly using alert IDs: `dep-<id1>-<id2>-fix-dependabot-issues` (e.g. `dep-1-2-3-fix-dependabot-issues`).
+3. **Commit, PR & Alert Referencing Rule**:
+   - Do NOT reference security/dependabot alert numbers with shorthand issue syntax like `#3` (as GitHub issue #3 is completely distinct).
+   - Commit messages should start with `(#<id>)` or `(dep-<ids>)`, e.g. `(dep-1-2-3) Fix dependabot issues`.
+   - Push branch and create PR (`gh pr create`).
+   - ALWAYS use full URLs when referencing alerts in titles, descriptions, and comments:
      - Dependabot: `https://github.com/jonasfh/snippen-booking/security/dependabot/<alert_id>`
 
 ## Code Scanning & Security Alerts Workflow
 
-Security & Code Scanning alerts (such as CodeQL, Dependabot, or Secret Scanning alerts) MUST follow the standard GitHub Issue Workflow:
+Security & Code Scanning alerts (such as CodeQL or Secret Scanning alerts) can be handled either via GitHub Issues or directly using Code Scanning alert IDs:
 
-1. **Issue Creation**:
-   - Create a GitHub issue for the alerts if one does not already exist (e.g. `gh issue create --title "Fix Code Scanning alerts 3, 4, 5" --body "Resolving https://github.com/jonasfh/snippen-booking/security/code-scanning/3 ..."`).
+1. **Branching**:
+   - Create a dedicated branch using an associated GitHub Issue (`gh-issue/<id>`) OR directly using alert IDs: `sec-<id1>-<id2>-fix-some-code-scanning-issues` (e.g. `sec-12-17-19-fix-some-code-scanning-issues`).
 2. **Alert Link Rules**:
    - NEVER reference security alert numbers with `#<id>` (e.g. `#3`). Always use full URLs:
      - `https://github.com/jonasfh/snippen-booking/security/code-scanning/<id>`
-     - `https://github.com/jonasfh/snippen-booking/security/dependabot/<id>`
-3. **Branching & Implementation**:
-   - Create a dedicated branch following `gh-issue/<id>` (e.g. `gh-issue/240`).
+3. **Implementation & Quality Control**:
    - Implement fixes for the identified security/code scanning alerts.
-4. **Versioning & Quality Control**:
-   - Bump plugin version in `booking-plugin.php` and document changes in `CHANGELOG.md` referencing `(#<id>)`.
+   - Bump plugin version in `booking-plugin.php` and document changes in `CHANGELOG.md` if relevant.
    - Run verification suite: `npm run test:js`, `composer test`, and `composer lint`.
-5. **Commit, PR & Issue Comment**:
-   - Commit with format `(#<id>) Description`.
-   - Push branch and create PR (`gh pr create --body "Closes #<id>" --title "(#<id>) ..."`).
-   - Add summary comment on the GitHub issue (`gh issue comment <id> --body "..."`).
+4. **Commit, Push & PR**:
+   - Commit with format `(#<id>) Description` or `(sec-<ids>) Description`, e.g. `(sec-12-17-19) Fix code scanning alerts`.
+   - Push branch and create PR (`gh pr create`).
+   - When dependabot/security issues are resolved, commit and push just like regular GitHub issues.
