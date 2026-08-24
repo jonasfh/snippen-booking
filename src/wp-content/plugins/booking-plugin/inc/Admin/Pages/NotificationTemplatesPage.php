@@ -70,6 +70,7 @@ class NotificationTemplatesPage {
 
 				if ( ! empty( $validation_errors ) ) {
 					foreach ( $validation_errors as $err ) {
+						error_log( 'Snippen Booking Template Validation Error: ' . $err );
 						add_settings_error( 'snippen_templates', 'invalid_placeholder', $err, 'error' );
 					}
 				} else {
@@ -85,8 +86,10 @@ class NotificationTemplatesPage {
 							)
 						);
 						if ( $updated ) {
+							error_log( sprintf( 'Snippen Booking Template updated successfully: ID %d', $template_id ) );
 							add_settings_error( 'snippen_templates', 'settings_updated', __( 'Template updated successfully.', 'snippen-booking' ), 'success' );
 						} else {
+							error_log( sprintf( 'Snippen Booking Template update failed: ID %d', $template_id ) );
 							add_settings_error( 'snippen_templates', 'update_failed', __( 'Could not update template. Check for duplicate connected_to constraints.', 'snippen-booking' ), 'error' );
 						}
 					} else {
@@ -100,8 +103,11 @@ class NotificationTemplatesPage {
 							)
 						);
 						if ( $created_id ) {
+							error_log( sprintf( 'Snippen Booking Template created successfully: ID %d', $created_id ) );
 							add_settings_error( 'snippen_templates', 'settings_updated', __( 'Template created successfully.', 'snippen-booking' ), 'success' );
+							$template_id = $created_id;
 						} else {
+							error_log( 'Snippen Booking Template create failed: duplicate constraint' );
 							add_settings_error( 'snippen_templates', 'create_failed', __( 'Could not create template. Only one template per channel is allowed per connected event.', 'snippen-booking' ), 'error' );
 						}
 					}
@@ -110,7 +116,23 @@ class NotificationTemplatesPage {
 				add_settings_error( 'snippen_templates', 'invalid_input', __( 'Please fill in all required fields.', 'snippen-booking' ), 'error' );
 			}
 
-			wp_safe_redirect( add_query_arg( 'page', 'snippen-booking-templates', admin_url( 'admin.php' ) ) );
+			// Persist settings errors across PRG redirect
+			$errors = get_settings_errors( 'snippen_templates' );
+			if ( ! empty( $errors ) ) {
+				set_transient( 'snippen_templates_errors', $errors, 60 );
+			}
+
+			$redirect_url = $template_id > 0
+				? add_query_arg(
+					array(
+						'page' => 'snippen-booking-templates',
+						'edit' => $template_id,
+					),
+					admin_url( 'admin.php' )
+				)
+				: add_query_arg( 'page', 'snippen-booking-templates', admin_url( 'admin.php' ) );
+
+			wp_safe_redirect( $redirect_url );
 			exit;
 
 		} elseif ( 'delete_template' === $action ) {
@@ -120,6 +142,11 @@ class NotificationTemplatesPage {
 			if ( $template_id > 0 ) {
 				$repository->delete( $template_id );
 				add_settings_error( 'snippen_templates', 'settings_updated', __( 'Template deleted successfully.', 'snippen-booking' ), 'success' );
+			}
+
+			$errors = get_settings_errors( 'snippen_templates' );
+			if ( ! empty( $errors ) ) {
+				set_transient( 'snippen_templates_errors', $errors, 60 );
 			}
 
 			wp_safe_redirect( add_query_arg( 'page', 'snippen-booking-templates', admin_url( 'admin.php' ) ) );
@@ -135,6 +162,11 @@ class NotificationTemplatesPage {
 				add_settings_error( 'snippen_templates', 'settings_updated', __( 'Template reset to default.', 'snippen-booking' ), 'success' );
 			}
 
+			$errors = get_settings_errors( 'snippen_templates' );
+			if ( ! empty( $errors ) ) {
+				set_transient( 'snippen_templates_errors', $errors, 60 );
+			}
+
 			wp_safe_redirect( add_query_arg( 'page', 'snippen-booking-templates', admin_url( 'admin.php' ) ) );
 			exit;
 		}
@@ -146,9 +178,18 @@ class NotificationTemplatesPage {
 	 * @return void
 	 */
 	public function render() {
-		// Ensure default templates exist in DB
+		// Ensure default templates exist in DB and clean up any duplicates
 		$repository = $this->template_service->get_repository();
 		$repository->seed_defaults();
+
+		// Retrieve transient settings errors from PRG redirect
+		$transient_errors = get_transient( 'snippen_templates_errors' );
+		if ( $transient_errors && is_array( $transient_errors ) ) {
+			delete_transient( 'snippen_templates_errors' );
+			foreach ( $transient_errors as $err ) {
+				add_settings_error( 'snippen_templates', $err['code'], $err['message'], $err['type'] );
+			}
+		}
 
 		$edit_id       = isset( $_GET['edit'] ) ? (int) $_GET['edit'] : 0;
 		$is_new_action = ( isset( $_GET['action'] ) && 'new' === $_GET['action'] ) || isset( $_GET['new_template'] );
