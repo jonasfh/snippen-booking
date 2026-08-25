@@ -300,14 +300,14 @@ class NotificationTemplateRepository {
 				'name'         => __( 'Betalingspurring (SMS)', 'snippen-booking' ),
 				'type'         => 'sms',
 				'title'        => null,
-				'message'      => __( 'Påminnelse: Betaling for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr) mangler. Bank: {{bank_account}}, Vipps: {{vipps_number}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'message'      => __( 'Påminnelse: Betaling for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr) mangler. Bank: {{bank_account}}, Vipps: {{vipps_number}}. Last opp kvittering/skjermbilde her: {{booking_url}}', 'snippen-booking' ),
 				'connected_to' => 'payment-reminder',
 			),
 			array(
 				'name'         => __( 'Betalingspurring (E-post)', 'snippen-booking' ),
 				'type'         => 'email',
 				'title'        => __( 'Betalingspåminnelse for din booking', 'snippen-booking' ),
-				'message'      => __( "Hallo {{user_name}},\n\nDette er en påminnelse om at betaling for din booking ({{booking_objects}} den {{booking_date}}) ennå ikke er registrert.\n\nBeløp: {{booking_price}} kr\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\n\n{{payment_instructions}}\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
+				'message'      => __( "Hallo {{user_name}},\n\nDette er en påminnelse om at betaling for din booking ({{booking_objects}} den {{booking_date}}) ennå ikke er registrert.\n\nBeløp: {{booking_price}} kr\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\n\nNår du har gjennomført betalingen, vennligst gå til bookinglenken og last opp kvittering eller skjermbilde fra betalingen:\n{{booking_url}}\n\n{{payment_instructions}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				'connected_to' => 'payment-reminder',
 			),
 		);
