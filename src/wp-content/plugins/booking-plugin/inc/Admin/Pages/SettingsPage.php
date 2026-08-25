@@ -95,11 +95,16 @@ class SettingsPage {
 		update_option( 'snippen_email_admin_booking_enabled', isset( $_POST['snippen_email_admin_booking_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_user_activation_enabled', isset( $_POST['snippen_email_user_activation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_password_reset_enabled', isset( $_POST['snippen_email_password_reset_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_email_payment_reminder_enabled', isset( $_POST['snippen_email_payment_reminder_enabled'] ) ? 'yes' : 'no' );
 
 		update_option( 'snippen_sms_booking_confirmation_enabled', isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_admin_booking_enabled', isset( $_POST['snippen_sms_admin_booking_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_user_activation_enabled', isset( $_POST['snippen_sms_user_activation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_password_reset_enabled', isset( $_POST['snippen_sms_password_reset_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_sms_payment_reminder_enabled', isset( $_POST['snippen_sms_payment_reminder_enabled'] ) ? 'yes' : 'no' );
+
+		$reminder_days = isset( $_POST['snippen_payment_reminder_days'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_reminder_days'] ) ) : '30, 21';
+		update_option( 'snippen_payment_reminder_days', $reminder_days );
 
 		// Save provider settings dynamically
 		$manager = new NotificationManager();
@@ -148,11 +153,15 @@ class SettingsPage {
 		$email_admin      = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
 		$email_activation = get_option( 'snippen_email_user_activation_enabled', 'yes' );
 		$email_password   = get_option( 'snippen_email_password_reset_enabled', 'yes' );
+		$email_reminder   = get_option( 'snippen_email_payment_reminder_enabled', 'yes' );
 
 		$sms_booking    = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
 		$sms_admin      = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
 		$sms_activation = get_option( 'snippen_sms_user_activation_enabled', 'no' );
 		$sms_password   = get_option( 'snippen_sms_password_reset_enabled', 'no' );
+		$sms_reminder   = get_option( 'snippen_sms_payment_reminder_enabled', 'no' );
+
+		$payment_reminder_days = get_option( 'snippen_payment_reminder_days', '30, 21' );
 
 		$manager         = new NotificationManager();
 		$email_provider  = $manager->get_provider( 'email' );
@@ -186,9 +195,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_email_user_activation_enabled" value="yes" ' . checked( $email_activation, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send kontoregistreringskode på e-post', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_password_reset_enabled" value="yes" ' . checked( $email_password, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send tilbakestilling av passord på e-post', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_email_payment_reminder_enabled" value="yes" ' . checked( $email_reminder, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send automatisk betalingspurring til kunde på e-post', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
@@ -216,9 +229,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_sms_user_activation_enabled" value="yes" ' . checked( $sms_activation, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send kontoregistreringskode på SMS', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_password_reset_enabled" value="yes" ' . checked( $sms_password, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send tilbakestilling av passord på SMS', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_sms_payment_reminder_enabled" value="yes" ' . checked( $sms_reminder, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send automatisk betalingspurring til kunde på SMS', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
@@ -252,6 +269,15 @@ class SettingsPage {
 		echo '<label for="snippen_payment_instructions" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Betalingsinstruksjoner / Betalingsfrist', 'snippen-booking' ) . '</label>';
 		echo '<textarea name="snippen_payment_instructions" id="snippen_payment_instructions" class="large-text" rows="4" placeholder="' . esc_attr( $payment_instructions_default ) . '">' . esc_textarea( $payment_instructions ) . '</textarea>';
 		echo '<p class="description">' . esc_html__( 'Instruksjonstekst og betalingsfrist. Denne teksten vises ved bookingvisning for leietaker og er også tilgjengelig som plassholder ({{payment_instructions}}) i Bookingbekreftelse varslingsmalen.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';
+		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Konfigurasjon for automatiske betalingspurringer:', 'snippen-booking' ) . '</h4>';
+		echo '<div style="margin-bottom:12px;">';
+		echo '<label for="snippen_payment_reminder_days" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Purreintervaller (dager før booking start)', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_payment_reminder_days" id="snippen_payment_reminder_days" value="' . esc_attr( $payment_reminder_days ) . '" class="regular-text" placeholder="30, 21">';
+		echo '<p class="description">' . esc_html__( 'Kommaseparert liste over antall dager før bookingdato hvor automatisk betalingspurring skal sendes (f.eks. "30, 21").', 'snippen-booking' ) . '</p>';
+		echo '</div>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';
