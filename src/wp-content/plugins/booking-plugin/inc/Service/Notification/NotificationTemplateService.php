@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -107,7 +107,7 @@ class NotificationTemplateService {
 		$norm_type = PlaceholderRegistry::normalize_context( $event_type );
 
 		$defaults = array(
-			'account-activation'   => array(
+			'account-activation'       => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Din bekreftelseskode for Snippen Booking er: {{confirmation_code}}. Koden er gyldig i 15 minutter.', 'snippen-booking' ),
@@ -117,7 +117,7 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo {{user_name}},\n\nDin bekreftelseskode for Snippen Booking er: {{confirmation_code}}\n\nKoden er gyldig i 15 minutter.\n\nVennligst enter koden på siden for å bekrefte kontoen din.", 'snippen-booking' ),
 				),
 			),
-			'booking-confirmation' => array(
+			'booking-confirmation'     => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Takk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}. Betaling: Bank {{bank_account}}, Vipps {{vipps_number}} ({{booking_price}} kr). {{payment_instructions}} Se detaljer: {{booking_url}}', 'snippen-booking' ),
@@ -127,7 +127,7 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo {{user_name}},\n\nTakk for din bookingforespørsel for {{booking_objects}} den {{booking_date}}.\n\nBetalingsinformasjon:\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\nBeløp: {{booking_price}} kr\n\n{{payment_instructions}}\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				),
 			),
-			'admin-booking-alert'  => array(
+			'admin-booking-alert'      => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Ny bookingforespørsel for {{booking_objects}} den {{booking_date}} fra {{user_name}}.', 'snippen-booking' ),
@@ -137,7 +137,7 @@ class NotificationTemplateService {
 					'body'    => __( "Ny bookingforespørsel mottatt:\n\nLokale: {{booking_objects}}\nDato: {{booking_date}}\nNavn: {{user_name}}\nEmail: {{user_email}}\nTelefon: {{user_phone}}\nBeskrivelse: {{booking_description}}\n\nVennligst logg inn i administrasjonsgrensesnittet for å håndtere denne forespørselen.", 'snippen-booking' ),
 				),
 			),
-			'password-reset'       => array(
+			'password-reset'           => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'For å tilbakestille passordet ditt, trykk på denne lenken: {{reset_link}}', 'snippen-booking' ),
@@ -147,7 +147,7 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo {{user_name}},\n\nNoen har bedt om å tilbakestille passordet for din konto.\n\nHvis dette var en feiltakelse, kan du se bort fra denne e-posten.\n\nFor å tilbakestille passordet ditt, trykk på denne lenken:\n{{reset_link}}", 'snippen-booking' ),
 				),
 			),
-			'payment-reminder'     => array(
+			'payment-reminder'         => array(
 				'sms'   => array(
 					'subject' => '',
 					'body'    => __( 'Påminnelse: Betaling for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr) mangler. Bank: {{bank_account}}, Vipps: {{vipps_number}}. Last opp kvittering/skjermbilde her: {{booking_url}}', 'snippen-booking' ),
@@ -155,6 +155,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Betalingspåminnelse for din booking', 'snippen-booking' ),
 					'body'    => __( "Hallo {{user_name}},\n\nDette er en påminnelse om at betaling for din booking ({{booking_objects}} den {{booking_date}}) ennå ikke er registrert.\n\nBeløp: {{booking_price}} kr\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\n\nNår du har gjennomført betalingen, vennligst gå til bookinglenken og last opp kvittering eller skjermbilde fra betalingen:\n{{booking_url}}\n\n{{payment_instructions}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
+				),
+			),
+			'payment-receipt-uploaded' => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Ny betalingskvittering lastet opp for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr). Kunde: {{user_name}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Ny betalingskvittering lastet opp - {{booking_objects}}', 'snippen-booking' ),
+					'body'    => __( "Hallo Admin,\n\nDet har blitt lastet opp ny betalingsdokumentasjon (kvittering/skjermbilde) for en booking.\n\nKunde: {{user_name}} ({{user_email}})\nBooking: {{booking_objects}} den {{booking_date}}\nBeløp: {{booking_price}} kr\n\nDu kan se bookingdetaljer og opplastet fil her:\n{{booking_url}}", 'snippen-booking' ),
 				),
 			),
 		);

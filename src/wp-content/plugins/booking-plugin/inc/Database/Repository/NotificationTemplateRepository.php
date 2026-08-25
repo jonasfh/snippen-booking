@@ -310,6 +310,20 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hallo {{user_name}},\n\nDette er en påminnelse om at betaling for din booking ({{booking_objects}} den {{booking_date}}) ennå ikke er registrert.\n\nBeløp: {{booking_price}} kr\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\n\nNår du har gjennomført betalingen, vennligst gå til bookinglenken og last opp kvittering eller skjermbilde fra betalingen:\n{{booking_url}}\n\n{{payment_instructions}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				'connected_to' => 'payment-reminder',
 			),
+			array(
+				'name'         => __( 'Opplastet kvittering varsel (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Ny betalingskvittering lastet opp for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr). Kunde: {{user_name}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'connected_to' => 'payment-receipt-uploaded',
+			),
+			array(
+				'name'         => __( 'Opplastet kvittering varsel (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Ny betalingskvittering lastet opp - {{booking_objects}}', 'snippen-booking' ),
+				'message'      => __( "Hallo Admin,\n\nDet har blitt lastet opp ny betalingsdokumentasjon (kvittering/skjermbilde) for en booking.\n\nKunde: {{user_name}} ({{user_email}})\nBooking: {{booking_objects}} den {{booking_date}}\nBeløp: {{booking_price}} kr\n\nDu kan se bookingdetaljer og opplastet fil her:\n{{booking_url}}", 'snippen-booking' ),
+				'connected_to' => 'payment-receipt-uploaded',
+			),
 		);
 
 		$this->cleanup_duplicates();

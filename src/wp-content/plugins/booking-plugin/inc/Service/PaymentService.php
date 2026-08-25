@@ -88,47 +88,17 @@ class PaymentService {
 	}
 
 	/**
-	 * Send email notification to admin when receipt is uploaded
+	 * Send notification to admin when receipt is uploaded
 	 *
 	 * @param object $booking
 	 * @return bool
 	 */
 	public static function notify_admin_of_receipt_upload( $booking ) {
-		if ( 'yes' !== get_option( 'snippen_payment_notify_admin', 'yes' ) ) {
+		if ( ! $booking || empty( $booking->id ) ) {
 			return false;
 		}
 
-		$recipients  = array();
-		$admin_users = get_users(
-			array(
-				'capability' => \SnippenBooking\Helper\Capabilities::MANAGE_BOOKINGS,
-			)
-		);
-
-		foreach ( $admin_users as $admin ) {
-			if ( ! empty( $admin->user_email ) ) {
-				$recipients[] = $admin->user_email;
-			}
-		}
-
-		if ( empty( $recipients ) ) {
-			$recipients[] = get_option( 'admin_email' );
-		}
-
-		$site_name = get_bloginfo( 'name' );
-		$subject   = sprintf( __( '[%1$s] Ny betalingskvittering lastet opp - Booking #%2$d', 'snippen-booking' ), $site_name, $booking->id );
-
-		$admin_url = admin_url( 'admin.php?page=snippen-booking&s=' . rawurlencode( $booking->customer_name ) );
-
-		$message  = sprintf( __( "Det har blitt lastet opp ny betalingsdokumentasjon for en booking.\n\n", 'snippen-booking' ) );
-		$message .= sprintf( __( "Booking-ID: #%d\n", 'snippen-booking' ), $booking->id );
-		$message .= sprintf( __( "Kunde: %1\$s (%2\$s)\n", 'snippen-booking' ), $booking->customer_name, $booking->customer_email );
-		$message .= sprintf( __( "Dato: %s\n", 'snippen-booking' ), $booking->booking_date );
-		$message .= sprintf( __( "Beløp: %s kr\n\n", 'snippen-booking' ), number_format( $booking->price, 0, ',', ' ' ) );
-		$message .= sprintf( __( "Se og behandle betalingen i admin-panelet:\n%s\n", 'snippen-booking' ), $admin_url );
-
-		$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
-
-		return wp_mail( $recipients, $subject, $message, $headers );
+		$manager = new \SnippenBooking\Service\Notification\NotificationManager();
+		return $manager->send_payment_receipt_uploaded_notification( (int) $booking->id );
 	}
 }

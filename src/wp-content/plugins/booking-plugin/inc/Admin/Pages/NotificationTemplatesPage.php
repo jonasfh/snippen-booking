@@ -248,7 +248,8 @@ class NotificationTemplatesPage {
 					'booking-confirmation': 'booking_confirmation',
 					'admin-booking-alert': 'admin_booking',
 					'password-reset': 'password_reset',
-					'payment-reminder': 'payment_reminder'
+					'payment-reminder': 'payment_reminder',
+					'payment-receipt-uploaded': 'payment_receipt_uploaded'
 				};
 				var normVal = normMap[val] || val;
 
@@ -377,12 +378,13 @@ class NotificationTemplatesPage {
 		$connected_to = $template ? ( $template->connected_to ?? '' ) : '';
 
 		$connected_options = array(
-			''                     => __( '-- Ingenting (Manuell mal) --', 'snippen-booking' ),
-			'account-activation'   => __( 'account-activation (Kontoaktivering)', 'snippen-booking' ),
-			'booking-confirmation' => __( 'booking-confirmation (Bookingbekreftelse)', 'snippen-booking' ),
-			'admin-booking-alert'  => __( 'admin-booking-alert (Admin bookingvarsel)', 'snippen-booking' ),
-			'password-reset'       => __( 'password-reset (Tilbakestill passord)', 'snippen-booking' ),
-			'payment-reminder'     => __( 'payment-reminder (Betalingspurring)', 'snippen-booking' ),
+			''                         => __( '-- Ingenting (Manuell mal) --', 'snippen-booking' ),
+			'account-activation'       => __( 'account-activation (Kontoaktivering)', 'snippen-booking' ),
+			'booking-confirmation'     => __( 'booking-confirmation (Bookingbekreftelse)', 'snippen-booking' ),
+			'admin-booking-alert'      => __( 'admin-booking-alert (Admin bookingvarsel)', 'snippen-booking' ),
+			'password-reset'           => __( 'password-reset (Tilbakestill passord)', 'snippen-booking' ),
+			'payment-reminder'         => __( 'payment-reminder (Betalingspurring)', 'snippen-booking' ),
+			'payment-receipt-uploaded' => __( 'payment-receipt-uploaded (Opplastet kvittering varsel)', 'snippen-booking' ),
 		);
 		?>
 		<div class="snippen-card" style="margin-top: 20px; background: white; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">

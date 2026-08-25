@@ -58,4 +58,38 @@ class PaymentTemplateTest extends TestCase {
 		$this->assertStringContainsString( '1 500', $rendered['body'] );
 		$this->assertStringContainsString( 'Vennligst overfør leiebeløpet innen 3 dager.', $rendered['body'] );
 	}
+
+	/**
+	 * Test that payment_receipt_uploaded default template and placeholders render correctly.
+	 */
+	public function test_payment_receipt_uploaded_template_rendering() {
+		$template_service = new NotificationTemplateService();
+
+		$placeholders = $template_service->get_available_placeholders( 'payment_receipt_uploaded' );
+		$this->assertArrayHasKey( 'user_name', $placeholders );
+		$this->assertArrayHasKey( 'user_email', $placeholders );
+		$this->assertArrayHasKey( 'booking_objects', $placeholders );
+		$this->assertArrayHasKey( 'booking_date', $placeholders );
+		$this->assertArrayHasKey( 'booking_price', $placeholders );
+		$this->assertArrayHasKey( 'booking_url', $placeholders );
+
+		$context = array(
+			'user_name'       => 'Kari Nordmann',
+			'user_email'      => 'kari@example.com',
+			'booking_objects' => 'Peisestuen',
+			'booking_date'    => '2026-10-15',
+			'booking_price'   => '2 000',
+			'booking_url'     => 'https://example.com/?booking_uuid=456',
+		);
+
+		$rendered = $template_service->render_template( 'payment_receipt_uploaded', 'email', $context );
+
+		$this->assertStringContainsString( 'Peisestuen', $rendered['subject'] );
+		$this->assertStringContainsString( 'Kari Nordmann', $rendered['body'] );
+		$this->assertStringContainsString( 'kari@example.com', $rendered['body'] );
+		$this->assertStringContainsString( 'Peisestuen', $rendered['body'] );
+		$this->assertStringContainsString( '2026-10-15', $rendered['body'] );
+		$this->assertStringContainsString( '2 000', $rendered['body'] );
+		$this->assertStringContainsString( 'https://example.com/?booking_uuid=456', $rendered['body'] );
+	}
 }

@@ -40,6 +40,11 @@ class NotificationManager {
 	const TYPE_PAYMENT_REMINDER = 'payment_reminder';
 
 	/**
+	 * Notification type: Payment Receipt Uploaded Alert
+	 */
+	const TYPE_PAYMENT_RECEIPT_UPLOADED = 'payment_receipt_uploaded';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -524,5 +529,125 @@ class NotificationManager {
 		}
 
 		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Send notification to admins when a user uploads payment receipt
+	 *
+	 * @param int $booking_id Booking ID.
+	 * @return bool True if at least one notification sent successfully.
+	 */
+	public function send_payment_receipt_uploaded_notification( int $booking_id ): bool {
+		$booking_repository = new \SnippenBooking\Database\Repository\BookingRepository();
+		$booking            = $booking_repository->find( $booking_id );
+
+		if ( ! $booking ) {
+			return false;
+		}
+
+		$email_enabled = get_option( 'snippen_email_payment_receipt_uploaded_enabled', 'yes' ) === 'yes';
+		$sms_enabled   = get_option( 'snippen_sms_payment_receipt_uploaded_enabled', 'no' ) === 'yes';
+
+		if ( ! $email_enabled && ! $sms_enabled ) {
+			return false;
+		}
+
+		$object_repository = new \SnippenBooking\Database\Repository\BookingObjectRepository();
+		$objects           = $object_repository->find_by_ids( $booking->object_ids );
+		$object_names      = implode( ', ', array_column( $objects, 'name' ) );
+
+		$booking_time = $booking->start_time . ' - ' . $booking->end_time;
+		if ( ! empty( $booking->is_all_day ) ) {
+			$booking_time = __( 'Hele dagen', 'snippen-booking' );
+		}
+
+		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+
+		$context = array(
+			'user_name'       => $booking->customer_name,
+			'user_email'      => $booking->customer_email,
+			'user_phone'      => $booking->customer_phone,
+			'booking_objects' => $object_names,
+			'booking_date'    => $booking->booking_date,
+			'booking_time'    => $booking_time,
+			'booking_url'     => $booking_url,
+			'booking_price'   => number_format( (float) $booking->price, 0, ',', ' ' ),
+		);
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( 'payment_receipt_uploaded', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'payment_receipt_uploaded', 'email', $context );
+
+		$admin_emails = get_option( 'snippen_payment_admin_emails', '' );
+		if ( empty( $admin_emails ) ) {
+			$admin_emails = get_option( 'admin_email' );
+		}
+
+		$admin_email_list = array_filter( array_map( 'trim', explode( ',', (string) $admin_emails ) ) );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		// 1. Email notification
+		if ( $email_enabled && ! empty( $admin_email_list ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Ny betalingskvittering lastet opp', 'snippen-booking' );
+				foreach ( $admin_email_list as $admin_email ) {
+					$sent = $email_provider->send_email( $admin_email, $subject, $rendered_email['body'] );
+					MessageLoggerService::log_message(
+						$booking_id,
+						$booking->user_id ? (int) $booking->user_id : null,
+						'email',
+						$admin_email,
+						$subject,
+						$rendered_email['body'],
+						self::TYPE_PAYMENT_RECEIPT_UPLOADED,
+						$sent ? 'sent' : 'failed'
+					);
+					if ( $sent ) {
+						$email_sent = true;
+					}
+				}
+			}
+		}
+
+		// 2. SMS notification
+		if ( $sms_enabled ) {
+			$admin_users  = get_users( array( 'role' => 'administrator' ) );
+			$admin_phones = array();
+			foreach ( $admin_users as $admin ) {
+				$phone = get_user_meta( $admin->ID, 'snippen_phone', true );
+				if ( ! empty( $phone ) ) {
+					$admin_phones[] = $phone;
+				}
+			}
+
+			if ( ! empty( $admin_phones ) ) {
+				$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+				$sms_provider = $this->get_provider( $provider_id );
+				if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+					foreach ( $admin_phones as $admin_phone ) {
+						$sent = $sms_provider->send_sms( $admin_phone, $rendered_sms['body'] );
+						MessageLoggerService::log_message(
+							$booking_id,
+							$booking->user_id ? (int) $booking->user_id : null,
+							'sms',
+							$admin_phone,
+							null,
+							$rendered_sms['body'],
+							self::TYPE_PAYMENT_RECEIPT_UPLOADED,
+							$sent ? 'sent' : 'failed',
+							array( 'provider' => $provider_id )
+						);
+						if ( $sent ) {
+							$sms_sent = true;
+						}
+					}
+				}
+			}
+		}
+
+		return $email_sent || $sms_sent;
 	}
 }

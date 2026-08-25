@@ -96,12 +96,16 @@ class SettingsPage {
 		update_option( 'snippen_email_user_activation_enabled', isset( $_POST['snippen_email_user_activation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_password_reset_enabled', isset( $_POST['snippen_email_password_reset_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_payment_reminder_enabled', isset( $_POST['snippen_email_payment_reminder_enabled'] ) ? 'yes' : 'no' );
+		$email_receipt_uploaded = isset( $_POST['snippen_email_payment_receipt_uploaded_enabled'] ) ? 'yes' : 'no';
+		update_option( 'snippen_email_payment_receipt_uploaded_enabled', $email_receipt_uploaded );
+		update_option( 'snippen_payment_notify_admin', $email_receipt_uploaded );
 
 		update_option( 'snippen_sms_booking_confirmation_enabled', isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_admin_booking_enabled', isset( $_POST['snippen_sms_admin_booking_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_user_activation_enabled', isset( $_POST['snippen_sms_user_activation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_password_reset_enabled', isset( $_POST['snippen_sms_password_reset_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_payment_reminder_enabled', isset( $_POST['snippen_sms_payment_reminder_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_sms_payment_receipt_uploaded_enabled', isset( $_POST['snippen_sms_payment_receipt_uploaded_enabled'] ) ? 'yes' : 'no' );
 
 		$reminder_days = isset( $_POST['snippen_payment_reminder_days'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_reminder_days'] ) ) : '30, 21';
 		update_option( 'snippen_payment_reminder_days', $reminder_days );
@@ -149,17 +153,19 @@ class SettingsPage {
 		$payment_admin_emails = get_option( 'snippen_payment_admin_emails', '' );
 		$payment_notify_admin = get_option( 'snippen_payment_notify_admin', 'yes' );
 
-		$email_booking    = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
-		$email_admin      = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
-		$email_activation = get_option( 'snippen_email_user_activation_enabled', 'yes' );
-		$email_password   = get_option( 'snippen_email_password_reset_enabled', 'yes' );
-		$email_reminder   = get_option( 'snippen_email_payment_reminder_enabled', 'yes' );
+		$email_booking          = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
+		$email_admin            = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
+		$email_activation       = get_option( 'snippen_email_user_activation_enabled', 'yes' );
+		$email_password         = get_option( 'snippen_email_password_reset_enabled', 'yes' );
+		$email_reminder         = get_option( 'snippen_email_payment_reminder_enabled', 'yes' );
+		$email_receipt_uploaded = get_option( 'snippen_email_payment_receipt_uploaded_enabled', 'yes' );
 
-		$sms_booking    = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
-		$sms_admin      = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
-		$sms_activation = get_option( 'snippen_sms_user_activation_enabled', 'no' );
-		$sms_password   = get_option( 'snippen_sms_password_reset_enabled', 'no' );
-		$sms_reminder   = get_option( 'snippen_sms_payment_reminder_enabled', 'no' );
+		$sms_booking          = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		$sms_admin            = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
+		$sms_activation       = get_option( 'snippen_sms_user_activation_enabled', 'no' );
+		$sms_password         = get_option( 'snippen_sms_password_reset_enabled', 'no' );
+		$sms_reminder         = get_option( 'snippen_sms_payment_reminder_enabled', 'no' );
+		$sms_receipt_uploaded = get_option( 'snippen_sms_payment_receipt_uploaded_enabled', 'no' );
 
 		$payment_reminder_days = get_option( 'snippen_payment_reminder_days', '30, 21' );
 
@@ -199,9 +205,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_email_password_reset_enabled" value="yes" ' . checked( $email_password, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send tilbakestilling av passord på e-post', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_payment_reminder_enabled" value="yes" ' . checked( $email_reminder, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send automatisk betalingspurring til kunde på e-post', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_email_payment_receipt_uploaded_enabled" value="yes" ' . checked( $email_receipt_uploaded, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om opplastet betalingskvittering til administratorer på e-post', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
@@ -233,9 +243,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_sms_password_reset_enabled" value="yes" ' . checked( $sms_password, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send tilbakestilling av passord på SMS', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_payment_reminder_enabled" value="yes" ' . checked( $sms_reminder, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send automatisk betalingspurring til kunde på SMS', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_sms_payment_receipt_uploaded_enabled" value="yes" ' . checked( $sms_receipt_uploaded, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om opplastet betalingskvittering til administratorer på SMS', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
