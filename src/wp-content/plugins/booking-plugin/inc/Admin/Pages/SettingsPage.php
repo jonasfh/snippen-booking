@@ -151,7 +151,6 @@ class SettingsPage {
 		$payment_vipps_number = get_option( 'snippen_payment_vipps_number', '' );
 		$payment_instructions = get_option( 'snippen_payment_instructions', '' );
 		$payment_admin_emails = get_option( 'snippen_payment_admin_emails', '' );
-		$payment_notify_admin = get_option( 'snippen_payment_notify_admin', 'yes' );
 
 		$email_booking          = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 		$email_admin            = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
@@ -292,14 +291,6 @@ class SettingsPage {
 		echo '<input type="text" name="snippen_payment_reminder_days" id="snippen_payment_reminder_days" value="' . esc_attr( $payment_reminder_days ) . '" class="regular-text" placeholder="30, 21">';
 		echo '<p class="description">' . esc_html__( 'Kommaseparert liste over antall dager før bookingdato hvor automatisk betalingspurring skal sendes (f.eks. "30, 21").', 'snippen-booking' ) . '</p>';
 		echo '</div>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';
-		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'E-postvarsel til administrator ved opplastet betalingsdokumentasjon:', 'snippen-booking' ) . '</h4>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px;">';
-		echo '<input type="checkbox" name="snippen_payment_notify_admin" value="yes" ' . checked( $payment_notify_admin, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send e-postvarsel til Booking-administratorer når en bruker laster opp kvittering/skjermbilde', 'snippen-booking' );
-		echo '</label>';
 		echo '</div>';
 		echo '</div>';
 
