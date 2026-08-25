@@ -45,6 +45,7 @@
         "demo:notifications": "php bin/demo-notifications.php",
         "demo:templates": "php bin/demo-templates.php",
         "demo:payments": "php bin/demo-payments.php",
+        "demo:reminders": "php bin/demo-payment-reminders.php",
         "demo:me": "php bin/demo-me.php",
         "demo:env": [
             "@demo:sms",
