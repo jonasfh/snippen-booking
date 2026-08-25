@@ -35,6 +35,11 @@ class NotificationManager {
 	const TYPE_PASSWORD_RESET = 'password_reset';
 
 	/**
+	 * Notification type: Payment Reminder
+	 */
+	const TYPE_PAYMENT_REMINDER = 'payment_reminder';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -380,6 +385,140 @@ class NotificationManager {
 					} catch ( \Throwable $t ) {
 						error_log( 'NotificationManager Throwable during customer email fallback: ' . $t->getMessage() );
 					}
+				}
+			}
+		}
+
+		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Send payment reminder notification to customer for a booking.
+	 *
+	 * @param int $booking_id  Booking ID.
+	 * @param int $days_before Interval days before booking date (optional).
+	 * @return bool True if SMS or email was sent successfully, false otherwise.
+	 */
+	public function send_payment_reminder( int $booking_id, int $days_before = 0 ): bool {
+		error_log( sprintf( 'NotificationManager: Preparing payment reminder for booking ID %d (%d days before)', $booking_id, $days_before ) );
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d", $booking_id ) );
+		if ( ! $booking ) {
+			error_log( sprintf( 'NotificationManager Error: Booking ID %d not found for payment reminder.', $booking_id ) );
+			return false;
+		}
+
+		// Fetch associated locales/objects
+		$objs         = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		$object_names = implode( ' og ', $objs );
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_payment_reminder_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_payment_reminder_enabled', 'yes' );
+
+		$email_provider   = $this->get_provider( 'email' );
+		$template_service = new NotificationTemplateService();
+
+		// Fetch booking time string
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
+		$booking_url                  = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen kort tid. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
+
+		$context = array(
+			'user_name'            => $booking->customer_name,
+			'user_email'           => $booking->customer_email,
+			'user_phone'           => $booking->customer_phone,
+			'booking_objects'      => $object_names,
+			'booking_date'         => $booking->booking_date,
+			'booking_time'         => $booking_time,
+			'booking_url'          => $booking_url,
+			'booking_price'        => number_format( (float) $booking->price, 0, ',', ' ' ),
+			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
+			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
+			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
+		);
+
+		$rendered_sms   = $template_service->render_template( 'payment_reminder', 'sms', $context );
+		$rendered_email = $template_service->render_template( 'payment_reminder', 'email', $context );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		// 1. Send SMS reminder
+		if ( $sms_enabled && ! empty( $booking->customer_phone ) ) {
+			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$sms_provider = $this->get_provider( $provider_id );
+
+			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				$sms_sent = $sms_provider->send_sms( $booking->customer_phone, $rendered_sms['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$booking->customer_phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_PAYMENT_REMINDER,
+					$sms_sent ? 'sent' : 'failed',
+					array(
+						'provider'    => $provider_id,
+						'days_before' => $days_before,
+					)
+				);
+			}
+		}
+
+		// 2. Send Email reminder
+		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$recipient = $booking->customer_email;
+				if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+					$user = get_userdata( $booking->user_id );
+					if ( $user ) {
+						$recipient = $user->user_email;
+					}
+				}
+
+				if ( ! empty( $recipient ) ) {
+					$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Betalingspåminnelse for din booking', 'snippen-booking' );
+					$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+					MessageLoggerService::log_message(
+						$booking_id,
+						$booking->user_id ? (int) $booking->user_id : null,
+						'email',
+						$recipient,
+						$subject,
+						$rendered_email['body'],
+						self::TYPE_PAYMENT_REMINDER,
+						$email_sent ? 'sent' : 'failed',
+						array( 'days_before' => $days_before )
+					);
 				}
 			}
 		}

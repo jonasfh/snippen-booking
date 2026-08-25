@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.21.0] - 2026-08-25
+- (#247) Implemented automated payment reminder notifications for unpaid bookings with configurable interval days (e.g. 30 and 21 days before booking), idempotent database tracking table `snippen_booking_payment_reminders`, payment receipt upload exemption, extensible `snippen_booking_should_send_payment_reminder` filter, default SMS and Email notification templates under `payment-reminder` context, and daily WP-Cron scheduling.
+
 ## [2.20.0] - 2026-08-24
 - (#250) Harmonized SMS and Email notification templates by consolidating storage into custom database table `snippen_notification_templates`, implementing `NotificationTemplateRepository`, updating Admin management UI with dynamic placeholder status styling, and adding idempotent `composer demo:templates` setup.
 - (#251) Standardized template placeholders by introducing a central `PlaceholderRegistry` single source of truth, removing old hardcoded placeholder handling, adding template placeholder validation on Admin save, and creating unit and integration tests for all 14 placeholders.

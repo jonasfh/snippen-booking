@@ -89,6 +89,20 @@ class Plugin {
 
 		// Intercept snippen_bare requests to serve bare pages for modals
 		add_action( 'template_redirect', array( __CLASS__, 'handle_bare_template' ) );
+
+		// Automated payment reminder cron hook (Issue #247)
+		add_action( 'snippen_booking_daily_payment_reminders', array( __CLASS__, 'handle_daily_payment_reminders' ) );
+		if ( ! wp_next_scheduled( 'snippen_booking_daily_payment_reminders' ) ) {
+			wp_schedule_event( time(), 'daily', 'snippen_booking_daily_payment_reminders' );
+		}
+	}
+
+	/**
+	 * Handle daily payment reminders cron trigger
+	 */
+	public static function handle_daily_payment_reminders() {
+		$service = new \SnippenBooking\Service\Notification\PaymentReminderService();
+		$service->run_cron();
 	}
 
 	/**

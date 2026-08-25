@@ -58,9 +58,15 @@ Granular SMS settings are available in the WordPress admin dashboard under **Set
 If an SMS notification is disabled, the system will automatically fall back to sending that notification via email to ensure that confirmation codes and booking details are still delivered to the user.
 
 ### Notification Templates (Varslingsmaler)
-You can configure custom templates for SMS and Email notifications (such as booking confirmations, account confirmations, admin alerts, and payment instructions/deadlines).
+You can configure custom templates for SMS and Email notifications (such as booking confirmations, account confirmations, admin alerts, payment reminders, and payment instructions/deadlines).
 Navigate to **Snippen Booking > Varslingsmaler** in the WordPress Admin dashboard.
 Here you can edit the text and subject lines. You can use dynamic placeholders (e.g. `{{user_name}}`, `{{booking_date}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{booking_price}}`) to personalize the messages. Default templates are provided out of the box, and you can easily revert to them at any time.
+
+### Automated Payment Reminders (Betalingspurring)
+Automated payment reminders are sent to customers with unpaid bookings via WP-Cron (scheduled daily).
+- **Default Intervals**: Reminders are sent 30 days and 21 days before the booking date. The interval days can be customized via the option `snippen_payment_reminder_days` or the filter `snippen_booking_payment_reminder_days`.
+- **Exemptions**: Bookings with uploaded payment receipts (`payment_receipt_attachment_id`), settled/paid statuses (`PAID` or `EXEMPT`), or cancelled/deleted statuses are automatically exempt. Custom exemption rules can be programmatically added via the filter `snippen_booking_should_send_payment_reminder`.
+- **Idempotency**: All dispatched reminders are recorded in the database table `wp_snippen_booking_payment_reminders` with unique `(booking_id, days_before)` tracking. Re-running WP-Cron multiple times a day will never resend a reminder for an interval step already sent.
 
 ### Communication History (Lagre brukerkommunikasjon)
 All SMS and Email messages sent to users and administrators (including automatic booking confirmations, account activation codes, admin alert notifications, and manual messages sent via the Booking Assistant) are automatically logged in the database with recipient details, timestamps, delivery channel, and `user_id`/`booking_id` associations.

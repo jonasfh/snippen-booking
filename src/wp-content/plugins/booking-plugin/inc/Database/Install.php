@@ -289,6 +289,21 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_templates );
 
+		// Payment reminders tracking table
+		$table_reminders = $wpdb->prefix . 'snippen_booking_payment_reminders';
+		$sql_reminders   = "CREATE TABLE $table_reminders (
+            id BIGINT NOT NULL AUTO_INCREMENT,
+            booking_id BIGINT NOT NULL,
+            days_before INT NOT NULL,
+            sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY booking_days (booking_id, days_before),
+            KEY booking_id (booking_id)
+        ) $charset_collate;";
+		dbDelta( $sql_reminders );
+
 		// Legacy tables below for compatibility during redesign phase:
 
 		// Time slots table
