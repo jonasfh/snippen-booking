@@ -296,6 +296,20 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hallo {{user_name}},\n\nNoen har bedt om å tilbakestille passordet for din konto.\n\nHvis dette var en feiltakelse, kan du se bort fra denne e-posten.\n\nFor å tilbakestille passordet ditt, trykk på denne lenken:\n{{reset_link}}", 'snippen-booking' ),
 				'connected_to' => 'password-reset',
 			),
+			array(
+				'name'         => __( 'Betalingspurring (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Påminnelse: Betaling for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr) mangler. Bank: {{bank_account}}, Vipps: {{vipps_number}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'connected_to' => 'payment-reminder',
+			),
+			array(
+				'name'         => __( 'Betalingspurring (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Betalingspåminnelse for din booking', 'snippen-booking' ),
+				'message'      => __( "Hallo {{user_name}},\n\nDette er en påminnelse om at betaling for din booking ({{booking_objects}} den {{booking_date}}) ennå ikke er registrert.\n\nBeløp: {{booking_price}} kr\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\n\n{{payment_instructions}}\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
+				'connected_to' => 'payment-reminder',
+			),
 		);
 
 		$this->cleanup_duplicates();

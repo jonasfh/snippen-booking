@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -145,6 +145,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Tilbakestill passord', 'snippen-booking' ),
 					'body'    => __( "Hallo {{user_name}},\n\nNoen har bedt om å tilbakestille passordet for din konto.\n\nHvis dette var en feiltakelse, kan du se bort fra denne e-posten.\n\nFor å tilbakestille passordet ditt, trykk på denne lenken:\n{{reset_link}}", 'snippen-booking' ),
+				),
+			),
+			'payment-reminder'     => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Påminnelse: Betaling for {{booking_objects}} den {{booking_date}} ({{booking_price}} kr) mangler. Bank: {{bank_account}}, Vipps: {{vipps_number}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Betalingspåminnelse for din booking', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nDette er en påminnelse om at betaling for din booking ({{booking_objects}} den {{booking_date}}) ennå ikke er registrert.\n\nBeløp: {{booking_price}} kr\nBankkontonr: {{bank_account}}\nVipps: {{vipps_number}}\n\n{{payment_instructions}}\n\nDu kan se detaljer om din booking her: {{booking_url}}\n\nVed spørsmål, kontakt oss.", 'snippen-booking' ),
 				),
 			),
 		);

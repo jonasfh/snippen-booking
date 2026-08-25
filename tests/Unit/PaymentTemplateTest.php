@@ -17,6 +17,8 @@ class PaymentTemplateTest extends TestCase {
 
 	public function setUp(): void {
 		parent::setUp();
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_notification_templates" );
 		delete_option( 'snippen_template_booking_confirmation_email' );
 		delete_option( 'snippen_template_booking_confirmation_sms' );
 	}
