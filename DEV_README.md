@@ -14,6 +14,9 @@ Kjør følgende i container-terminalen for å komme i gang:
 
 # 2. Sett opp demodata og miljø:
 composer demo
+
+# 3. Test/Trigg automatiske betalingspurringer manuelt:
+composer demo:reminders
 ```
 
 Etter dette er nettsiden tilgjengelig på [http://localhost:8080](http://localhost:8080) (Admin: `admin` / `admin`).
