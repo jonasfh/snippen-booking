@@ -26,6 +26,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     libapache2-mod-php \
     vim \
     nodejs \
+    sudo \
     && a2enmod rewrite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -56,3 +57,21 @@ RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
 EXPOSE 9003
+
+# Create a non-root user that matches the host UID/GID so mounted files keep correct ownership.
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN groupadd --gid "$USER_GID" "$USERNAME" || true \
+ && useradd -s /bin/bash --uid "$USER_UID" --gid "$USER_GID" -m "$USERNAME" || true \
+ && mkdir -p /home/$USERNAME/.local && chown -R $USER_UID:$USER_GID /home/$USERNAME
+
+# Allow the non-root user to run admin commands for starting services during postStart
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+ && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Ensure workspace and entrypoint are writable by the non-root user
+RUN chown -R "$USER_UID":"$USER_GID" /workspaces /entrypoint.sh || true
+
+ENV HOME=/home/$USERNAME
+USER $USERNAME

@@ -2,10 +2,15 @@
   "name": "wp-dev-xdebug",
   "build": {
     "dockerfile": "Dockerfile",
-    "context": "."
+    "context": ".",
+    "args": {
+      "USERNAME": "vscode",
+      "USER_UID": "${localEnv:UID}",
+      "USER_GID": "${localEnv:GID}"
+    }
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "forwardPorts": [
     8080,
     9003
@@ -29,8 +34,9 @@
   "postCreateCommand": "bash /entrypoint.sh setup",
   "postStartCommand": "nohup bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
   "mounts": [
-    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,readonly"
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=${localWorkspaceFolderBasename}-gemini,target=/home/vscode/.gemini/config,type=volume",
+    "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind,consistency=cached"
   ],
-  
-  "remoteUser": "root"
+  "remoteUser": "vscode"
 }
