@@ -1,0 +1,3 @@
+[submodule ".agents/common-agent-instructions"]
+	path = .agents/common-agent-instructions
+	url = https://github.com/jonasfh/common-agent-instructions.git

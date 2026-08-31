@@ -11,16 +11,20 @@ Guide AI agents working in this repository.
   - Run `composer lint` and `composer test` to verify all changes before completion. Resolving all PHPCS errors and warnings is mandatory.
 - **Database Rules**: Always include `created_at` and `modified_at` timestamps on custom database tables.
 - **GitHub Issue Workflow**: All development MUST follow an associated GitHub Issue or direct Code Scanning / Dependabot alert IDs. Create branches like `gh-issue/<id>`, `dep-<ids>-fix-dependabot-issues`, or `sec-<ids>-fix-code-scanning-issues`, create PRs, and format commit messages accordingly (`(#<id>) Description` or `(sec-<ids>) Description` / `(dep-<ids>) Description`).
-- **Documentation**: Keep `README.md` (user-facing) and `DEV_README.md` (developer-facing) updated with changes.
+- **PR Merging Strategy**: When merging PRs, ALWAYS use **Rebase and merge** (`gh pr merge <id> --rebase --delete-branch`) by default. If rebasing issues or conflicts arise, create a standard merge commit (`gh pr merge <id> --merge --delete-branch`). Do NOT use squash and merge (`--squash`) unless explicitly instructed or required for a specific reason.
+- **Documentation**: Always update documentation (`README.md`, `DEV_README.md`, and architecture documents) whenever implementing new features, endpoints, data models, or database schemas. Keeping documentation in sync with the codebase is mandatory.
 
 ## Modular Sub-guidelines
 
-Detailed guidelines are split into specialized modules under `.agents/`:
+### Common (Technology-Agnostic) Submodule Guidelines
+- 🔄 **[Workflow Guidelines](file:///.agents/common-agent-instructions/WORKFLOW.md)**: GitHub issue-driven workflow, branching, commit conventions, PR merge rules, SemVer, and CHANGELOG maintenance.
+- 📝 **[Documentation Standards & Diagrams](file:///.agents/common-agent-instructions/DOCUMENTATION.md)**: Documentation synchronization, README/DEV_README maintenance, and Mermaid syntax rules.
+- 🧪 **[Quality & Testing Principles](file:///.agents/common-agent-instructions/TESTING.md)**: Automated test requirements, zero-linting policy, and formatting hygiene.
+- 📐 **[Common Architecture](file:///.agents/common-agent-instructions/ARCHITECTURE.md)**: Modularity, decoupling, and universal database timestamp rules.
 
+### Project-Specific Guidelines
 - 📐 **[Architecture & Coding Standards](file:///.agents/ARCHITECTURE.md)**: Tech stack, plugin directory structure, namespace mapping, DB rules, and CSS styling.
-- 🔄 **[GitHub Issue Workflow](file:///.agents/WORKFLOW.md)**: Branching strategy, commit message rules, PR requirements, versioning, and CHANGELOG updates.
 - 🧪 **[Testing & Quality Assurance](file:///.agents/TESTING.md)**: Running tests and linting (`composer test`, `composer lint`), writing unit/integration tests, and debugging/logging.
-- 📝 **[Documentation Standards & Diagrams](file:///.agents/DOCUMENTATION.md)**: README/DEV_README maintenance and Mermaid `erDiagram` syntax constraints.
 
 ## Versioning & Changelog
 - **Version Bump**: Update version in `src/wp-content/plugins/booking-plugin/booking-plugin.php` on functional changes.
