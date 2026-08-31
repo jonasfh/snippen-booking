@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../snippen-sms-service"
+		},
+		{
+			"path": "../snippen-testing"
+		}
+	],
+	"settings": {}
+}
