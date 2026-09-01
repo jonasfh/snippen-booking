@@ -419,3 +419,32 @@ The plugin includes a manual payment tracking system, allowing users to view pay
 - **`SnippenBooking\Api\UpdatePaymentStatusApi`**: AJAX endpoint (`snippen_update_payment_status`) for administrators (`manage_bookings`) to update payment status and notes.
 - **`SnippenBooking\Database\Migrations\Migration_2_6_0`**: Database migration creating table `wp_snippen_payment_statuses` and adding payment metadata columns to `wp_snippen_bookings`.
 
+## SMS Gateway REST API Synchronization
+
+The plugin integrates with the `snippen-sms-service` daemon via REST API endpoints under `/wp-json/snippen/v1/sms`.
+
+### Architecture & Endpoints
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│                      snippen-booking                    │
+│  - snippen_sms_service Provider (logs queued in DB)     │
+│  - SmsGatewayApi REST Controller                        │
+└──────────────────────────┬──────────────────────────────┘
+                           │ HTTP REST (Bearer / X-API-Key)
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    snippen-sms-service                  │
+│  - Polls GET /outbox                                    │
+│  - Dispatches SMS via hardware modem/provider           │
+│  - Reports status via POST /outbox/status               │
+│  - Syncs incoming SMS via POST /inbox                   │
+│  - Resolves active bookings via GET /bookings?phone=... │
+└─────────────────────────────────────────────────────────┘
+```
+
+1. **`GET /wp-json/snippen/v1/sms/outbox`**: Fetches pending outbound SMS messages (`status = 'queued'`).
+2. **`POST /wp-json/snippen/v1/sms/outbox/status`**: Updates outbound SMS message status (`sent` or `failed`) with gateway and modem metadata.
+3. **`POST /wp-json/snippen/v1/sms/inbox`**: Receives reported inbound SMS messages from tenants and records them in `snippen_messages` (`status = 'received'`, `event_type = 'inbound_sms'`).
+4. **`GET /wp-json/snippen/v1/sms/bookings`**: Looks up active bookings associated with a given phone number (`?phone=+47...`).
+

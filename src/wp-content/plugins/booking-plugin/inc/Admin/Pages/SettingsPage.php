@@ -110,6 +110,10 @@ class SettingsPage {
 		$reminder_days = isset( $_POST['snippen_payment_reminder_days'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_reminder_days'] ) ) : '30, 21';
 		update_option( 'snippen_payment_reminder_days', $reminder_days );
 
+		if ( isset( $_POST['snippen_active_notification_provider'] ) ) {
+			update_option( 'snippen_active_notification_provider', sanitize_text_field( wp_unslash( $_POST['snippen_active_notification_provider'] ) ) );
+		}
+
 		// Save provider settings dynamically
 		$manager = new NotificationManager();
 		foreach ( $manager->get_providers() as $provider ) {
@@ -167,10 +171,12 @@ class SettingsPage {
 		$sms_receipt_uploaded = get_option( 'snippen_sms_payment_receipt_uploaded_enabled', 'no' );
 
 		$payment_reminder_days = get_option( 'snippen_payment_reminder_days', '30, 21' );
+		$active_provider       = get_option( 'snippen_active_notification_provider', 'keysms' );
 
-		$manager         = new NotificationManager();
-		$email_provider  = $manager->get_provider( 'email' );
-		$keysms_provider = $manager->get_provider( 'keysms' );
+		$manager              = new NotificationManager();
+		$email_provider       = $manager->get_provider( 'email' );
+		$keysms_provider      = $manager->get_provider( 'keysms' );
+		$snippen_sms_provider = $manager->get_provider( 'snippen_sms_service' );
 
 		echo '<div class="snippen-card" style="padding:0; background:none; border:none; box-shadow:none;"><form method="post" action="">';
 		wp_nonce_field( 'snippen_save_settings', 'snippen_settings_nonce' );
@@ -179,6 +185,7 @@ class SettingsPage {
 		echo '<h2 class="nav-tab-wrapper" style="margin-bottom:20px; border-bottom:1px solid #ccd0d4; padding-left:0;">';
 		echo '<a href="#" class="nav-tab nav-tab-active" data-tab="email">' . esc_html__( 'E-post', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="keysms">' . esc_html__( 'KeySMS (SMS)', 'snippen-booking' ) . '</a>';
+		echo '<a href="#" class="nav-tab" data-tab="snippen_sms">' . esc_html__( 'Snippen SMS (Gateway)', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="payment">' . esc_html__( 'Betaling', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="general">' . esc_html__( 'Generelt', 'snippen-booking' ) . '</a>';
 		echo '</h2>';
@@ -224,8 +231,18 @@ class SettingsPage {
 		// 2. KeySMS tab content
 		echo '<div class="tab-content" id="tab-keysms" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'KeySMS (SMS) Varsler', 'snippen-booking' ) . '</h3>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">';
+		echo '<label for="snippen_active_notification_provider_keysms" style="display:block; font-weight:700; margin-bottom:6px;">' . esc_html__( 'Aktiv SMS-tilbyder i systemet:', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_active_notification_provider" id="snippen_active_notification_provider_keysms" style="min-width:300px;">';
+		echo '<option value="keysms" ' . selected( $active_provider, 'keysms', false ) . '>' . esc_html__( 'KeySMS (Direkte API)', 'snippen-booking' ) . '</option>';
+		echo '<option value="snippen_sms_service" ' . selected( $active_provider, 'snippen_sms_service', false ) . '>' . esc_html__( 'Snippen SMS Service (Gateway)', 'snippen-booking' ) . '</option>';
+		echo '</select>';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Velg hvilken SMS-tjeneste som skal benyttes ved utsendelse av SMS fra systemet.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
 		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-bottom:24px;">';
-		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Aktiver varslingstyper for KeySMS (SMS):', 'snippen-booking' ) . '</h4>';
+		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Aktiver varslingstyper for SMS:', 'snippen-booking' ) . '</h4>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_booking_confirmation_enabled" value="yes" ' . checked( $sms_booking, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send bookingbekreftelse til kunde på SMS', 'snippen-booking' );
@@ -259,7 +276,23 @@ class SettingsPage {
 		}
 		echo '</div>';
 
-		// 3. Betaling tab content
+		// 3. Snippen SMS Gateway tab content
+		echo '<div class="tab-content" id="tab-snippen_sms" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'Snippen SMS Service (Gateway)', 'snippen-booking' ) . '</h3>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px; padding:12px 16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px;">';
+		echo '<p style="margin:0 0 6px 0; font-size:13px;"><strong>' . esc_html__( 'REST API Sync Endepunkt:', 'snippen-booking' ) . '</strong> <code style="background:#fff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px;">' . esc_url( rest_url( 'snippen/v1/sms' ) ) . '</code></p>';
+		echo '<p class="description" style="margin:0;">' . esc_html__( 'Konfigurer SMS Gateway med SNIPPEN_SMS_API_URL satt til denne adressen og SNIPPEN_SMS_API_TOKEN satt til tokenet under.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		if ( $snippen_sms_provider ) {
+			foreach ( $snippen_sms_provider->get_settings_schema() as $field ) {
+				$this->render_field( $field );
+			}
+		}
+		echo '</div>';
+
+		// 4. Betaling tab content
 		echo '<div class="tab-content" id="tab-payment" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Betalingsinnstillinger', 'snippen-booking' ) . '</h3>';
 

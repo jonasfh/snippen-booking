@@ -53,6 +53,7 @@ class NotificationManager {
 		$providers = array(
 			new EmailProvider(),
 			new KeySmsProvider(),
+			new SnippenSmsProvider(),
 		);
 
 		return apply_filters( 'snippen_booking_notification_providers', $providers );
@@ -71,6 +72,23 @@ class NotificationManager {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Determine initial logged status for an SMS dispatch attempt.
+	 *
+	 * @param bool   $success     Whether the provider accepted/sent the SMS.
+	 * @param string $provider_id ID of the active provider.
+	 * @return string 'queued', 'sent', or 'failed'.
+	 */
+	private function get_sms_initial_status( bool $success, string $provider_id ): string {
+		if ( ! $success ) {
+			return 'failed';
+		}
+		if ( 'snippen_sms_service' === $provider_id ) {
+			return 'queued';
+		}
+		return 'sent';
 	}
 
 	/**
@@ -116,7 +134,7 @@ class NotificationManager {
 					null,
 					$rendered_sms['body'],
 					self::TYPE_USER_ACTIVATION,
-					$sms_sent ? 'sent' : 'failed',
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
 					array( 'provider' => $provider_id )
 				);
 				if ( ! $sms_sent ) {
@@ -292,7 +310,7 @@ class NotificationManager {
 								null,
 								$admin_sms_message,
 								self::TYPE_ADMIN_BOOKING,
-								$sms_res ? 'sent' : 'failed',
+								$this->get_sms_initial_status( $sms_res, $provider_id ),
 								array( 'provider' => $provider_id )
 							);
 						} catch ( \Exception $e ) {
@@ -345,7 +363,7 @@ class NotificationManager {
 					null,
 					$sms_message,
 					self::TYPE_BOOKING_CONFIRMATION,
-					$sms_sent ? 'sent' : 'failed',
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
 					array( 'provider' => $provider_id )
 				);
 				error_log( sprintf( 'NotificationManager: SMS send call returned %s', $sms_sent ? 'true' : 'false' ) );
@@ -490,7 +508,7 @@ class NotificationManager {
 					null,
 					$rendered_sms['body'],
 					self::TYPE_PAYMENT_REMINDER,
-					$sms_sent ? 'sent' : 'failed',
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
 					array(
 						'provider'    => $provider_id,
 						'days_before' => $days_before,
@@ -637,7 +655,7 @@ class NotificationManager {
 							null,
 							$rendered_sms['body'],
 							self::TYPE_PAYMENT_RECEIPT_UPLOADED,
-							$sent ? 'sent' : 'failed',
+							$this->get_sms_initial_status( $sent, $provider_id ),
 							array( 'provider' => $provider_id )
 						);
 						if ( $sent ) {

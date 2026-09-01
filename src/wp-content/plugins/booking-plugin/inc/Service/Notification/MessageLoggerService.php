@@ -98,4 +98,87 @@ class MessageLoggerService {
 
 		return is_array( $results ) ? $results : array();
 	}
+
+	/**
+	 * Get pending outbound messages waiting to be dispatched.
+	 *
+	 * @param int $limit Max number of messages to fetch.
+	 * @return array Array of message objects.
+	 */
+	public static function get_pending_outbox( int $limit = 50 ): array {
+		global $wpdb;
+
+		$table   = $wpdb->prefix . 'snippen_messages';
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE channel = 'sms' AND status = 'queued' ORDER BY id ASC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$limit
+			)
+		);
+
+		return is_array( $results ) ? $results : array();
+	}
+
+	/**
+	 * Get a message by ID.
+	 *
+	 * @param int $message_id Message ID.
+	 * @return object|null Message object or null if not found.
+	 */
+	public static function get_message( int $message_id ): ?object {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'snippen_messages';
+		$row   = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$message_id
+			)
+		);
+
+		return $row ?: null;
+	}
+
+	/**
+	 * Update message status and merge additional metadata.
+	 *
+	 * @param int    $message_id     Message record ID.
+	 * @param string $status         New status ('sent', 'failed', 'queued', etc.).
+	 * @param array  $extra_metadata Extra metadata to merge into the JSON field.
+	 * @return bool True on success, false on failure.
+	 */
+	public static function update_message_status( int $message_id, string $status, array $extra_metadata = array() ): bool {
+		global $wpdb;
+
+		$table   = $wpdb->prefix . 'snippen_messages';
+		$message = self::get_message( $message_id );
+
+		if ( ! $message ) {
+			return false;
+		}
+
+		$current_metadata = array();
+		if ( ! empty( $message->metadata ) ) {
+			$decoded = json_decode( $message->metadata, true );
+			if ( is_array( $decoded ) ) {
+				$current_metadata = $decoded;
+			}
+		}
+
+		$merged_metadata = array_merge( $current_metadata, $extra_metadata );
+
+		$updated = $wpdb->update(
+			$table,
+			array(
+				'status'      => sanitize_text_field( $status ),
+				'metadata'    => ! empty( $merged_metadata ) ? wp_json_encode( $merged_metadata ) : null,
+				'modified_at' => current_time( 'mysql' ),
+			),
+			array( 'id' => $message_id ),
+			array( '%s', '%s', '%s' ),
+			array( '%d' )
+		);
+
+		return false !== $updated;
+	}
 }

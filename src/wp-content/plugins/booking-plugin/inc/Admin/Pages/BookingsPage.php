@@ -410,6 +410,8 @@ class BookingsPage {
 			'manual_dispatch_admin'    => __( 'Manuell adminmelding', 'snippen-booking' ),
 			'user_activation'          => __( 'Kontoaktivering', 'snippen-booking' ),
 			'password_reset'           => __( 'Passordtilbakestilling', 'snippen-booking' ),
+			'payment_reminder'         => __( 'Betalingspåminnelse', 'snippen-booking' ),
+			'inbound_sms'              => __( 'Innkommende SMS', 'snippen-booking' ),
 		);
 
 		echo '<div class="booking-messages-history" data-booking-id="' . esc_attr( $booking->id ) . '" style="grid-column: span 5; background:#fff; padding:14px; border:1px solid #e2e8f0; border-radius:6px; margin-top:10px;">';
@@ -417,7 +419,7 @@ class BookingsPage {
 		echo '<div><strong style="font-size:13px; color:#1e293b;"><span class="dashicons dashicons-format-chat" style="vertical-align:middle; font-size:16px; width:16px; height:16px; line-height:16px; margin-right:4px;"></span> ' . esc_html__( 'Kommunikasjonshistorikk:', 'snippen-booking' ) . ' (<span class="msg-count">' . count( $messages ) . '</span>)</strong></div>';
 
 		// Event type checkboxes filter (Only booking_confirmation and manual_dispatch_customer checked by default)
-		$default_checked_events = array( 'booking_confirmation', 'manual_dispatch_customer' );
+		$default_checked_events = array( 'booking_confirmation', 'manual_dispatch_customer', 'inbound_sms' );
 
 		echo '<div class="msg-filter-controls" style="display:flex; align-items:center; gap:10px; font-size:11px; color:#475569; flex-wrap:wrap;">';
 		echo '<span style="font-weight:600;">' . esc_html__( 'Filtrer hendelser:', 'snippen-booking' ) . '</span>';
@@ -437,9 +439,16 @@ class BookingsPage {
 			foreach ( $messages as $msg ) {
 				$icon_class    = $msg->channel === 'sms' ? 'dashicons-smartphone' : 'dashicons-email-alt';
 				$channel_label = strtoupper( $msg->channel );
-				$status_badge  = $msg->status === 'sent'
-					? '<span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">' . esc_html__( 'Sendt', 'snippen-booking' ) . '</span>'
-					: '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">' . esc_html__( 'Feilet', 'snippen-booking' ) . '</span>';
+				$status_badge  = '';
+				if ( 'sent' === $msg->status ) {
+					$status_badge = '<span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">' . esc_html__( 'Sendt', 'snippen-booking' ) . '</span>';
+				} elseif ( 'queued' === $msg->status ) {
+					$status_badge = '<span class="snippen-badge" style="background:#fef3c7; color:#b45309; font-size:10px; padding:1px 5px;">' . esc_html__( 'I kø', 'snippen-booking' ) . '</span>';
+				} elseif ( 'received' === $msg->status ) {
+					$status_badge = '<span class="snippen-badge" style="background:#e0e7ff; color:#3730a3; font-size:10px; padding:1px 5px;">' . esc_html__( 'Mottatt', 'snippen-booking' ) . '</span>';
+				} else {
+					$status_badge = '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">' . esc_html__( 'Feilet', 'snippen-booking' ) . '</span>';
+				}
 
 				$event_type = $msg->event_type ?? '';
 				$display    = in_array( $event_type, $default_checked_events, true ) ? 'block' : 'none';

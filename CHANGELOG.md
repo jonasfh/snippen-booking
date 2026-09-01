@@ -1,6 +1,10 @@
 # Changelog
 
+## [2.22.0] - 2026-09-01
+- (#263) Added Snippen SMS Service provider (`snippen_sms_service`) and REST synchronization gateway endpoints (`/wp-json/snippen/v1/sms/outbox`, `/outbox/status`, `/inbox`, `/bookings`). Outbound SMS messages are queued in `snippen_messages` table for gateway edge dispatch, status transitions to `sent`/`failed` are reported back, and incoming tenant SMS messages are recorded in communication history. Added admin settings configuration for API token, sender name, active SMS provider toggle, and queue status badge in communication history.
+
 ## [2.21.0] - 2026-08-25
+
 - (#247) Implemented automated payment reminder notifications for unpaid bookings with configurable interval days (e.g. 30 and 21 days before booking), idempotent database tracking table `snippen_booking_payment_reminders`, payment receipt upload exemption, extensible `snippen_booking_should_send_payment_reminder` filter, default SMS and Email notification templates under `payment-reminder` context, and daily WP-Cron scheduling.
 
 ## [2.20.0] - 2026-08-24
