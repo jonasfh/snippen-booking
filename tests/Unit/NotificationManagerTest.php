@@ -11,6 +11,7 @@ use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\Notification\NotificationManager;
 use SnippenBooking\Service\Notification\EmailProvider;
 use SnippenBooking\Service\Notification\KeySmsProvider;
+use SnippenBooking\Service\Notification\SnippenSmsProvider;
 
 /**
  * Class NotificationManagerTest
@@ -30,7 +31,7 @@ class NotificationManagerTest extends TestCase {
 		$providers = $manager->get_providers();
 
 		$this->assertIsArray( $providers );
-		$this->assertCount( 2, $providers );
+		$this->assertCount( 3, $providers );
 
 		$ids = array_map( function( $provider ) {
 			return $provider->get_id();
@@ -38,6 +39,7 @@ class NotificationManagerTest extends TestCase {
 
 		$this->assertContains( 'email', $ids );
 		$this->assertContains( 'keysms', $ids );
+		$this->assertContains( 'snippen_sms_service', $ids );
 	}
 
 	/**
@@ -52,7 +54,11 @@ class NotificationManagerTest extends TestCase {
 		$keysms = $manager->get_provider( 'keysms' );
 		$this->assertInstanceOf( KeySmsProvider::class, $keysms );
 
+		$snippen_sms = $manager->get_provider( 'snippen_sms_service' );
+		$this->assertInstanceOf( SnippenSmsProvider::class, $snippen_sms );
+
 		$invalid = $manager->get_provider( 'non_existent_provider' );
 		$this->assertNull( $invalid );
 	}
 }
+

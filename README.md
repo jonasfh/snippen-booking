@@ -52,10 +52,14 @@ By default, if the user is not logged in, the shortcode will return an empty str
 [snippen_booking_list login-form="1"]
 ```
 
-### SMS Settings
-Granular SMS settings are available in the WordPress admin dashboard under **Settings > SMS Innstillinger**. Here you can configure API credentials and enable or disable specific SMS notification types, such as booking confirmations and account confirmations.
+### SMS Settings & Providers
+Granular SMS settings are available in the WordPress admin dashboard under **Snippen Booking > Innstillinger**.
+The plugin supports two SMS providers:
+- **KeySMS (Direkte API)**: Direct dispatch to KeySMS HTTP API.
+- **Snippen SMS Service (Gateway)**: Asynchronous edge gateway dispatch. Outbound messages are queued in `snippen_messages`, polled by the `snippen-sms-service` daemon via `/wp-json/snippen/v1/sms/outbox`, status reported back via `/wp-json/snippen/v1/sms/outbox/status`, and incoming tenant SMS messages logged via `/wp-json/snippen/v1/sms/inbox`.
 
 If an SMS notification is disabled, the system will automatically fall back to sending that notification via email to ensure that confirmation codes and booking details are still delivered to the user.
+
 
 ### Notification Templates (Varslingsmaler)
 You can configure custom templates for SMS and Email notifications (such as booking confirmations, account confirmations, admin alerts, payment reminders, and payment instructions/deadlines).

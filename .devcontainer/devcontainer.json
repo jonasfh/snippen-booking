@@ -20,7 +20,9 @@
       "extensions": [
         "bmewburn.vscode-intelephense-client",
         "xdebug.php-debug",
-        "ms-azuretools.vscode-containers",
+        "ms-azuretools.vscode-containers"
+      ],
+      "recommendations": [
         "google.google-antigravity"
       ]
     }

@@ -414,7 +414,8 @@ class BookingActionsApi {
 				wp_send_json_error( array( 'message' => __( 'SMS tilbyder er ikke konfigurert.', 'snippen-booking' ) ) );
 			}
 
-			$sent = $provider->send_sms( $booking->customer_phone, $sms_message );
+			$sent           = $provider->send_sms( $booking->customer_phone, $sms_message );
+			$initial_status = $sent ? ( 'snippen_sms_service' === $provider_id ? 'queued' : 'sent' ) : 'failed';
 			\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
 				$booking_id,
 				$booking->user_id ? (int) $booking->user_id : null,
@@ -423,12 +424,15 @@ class BookingActionsApi {
 				null,
 				$sms_message,
 				'manual_dispatch_customer',
-				$sent ? 'sent' : 'failed',
+				$initial_status,
 				array( 'provider' => $provider_id )
 			);
 
 			if ( $sent ) {
-				wp_send_json_success( array( 'message' => __( 'Bekreftelses-SMS sendt til kunden.', 'snippen-booking' ) ) );
+				$msg_text = 'snippen_sms_service' === $provider_id
+					? __( 'SMS lagt i utbokskø for utsendelse til kunden.', 'snippen-booking' )
+					: __( 'Bekreftelses-SMS sendt til kunden.', 'snippen-booking' );
+				wp_send_json_success( array( 'message' => $msg_text ) );
 			} else {
 				wp_send_json_error( array( 'message' => __( 'SMS sending feilet. Sjekk logger.', 'snippen-booking' ) ) );
 			}
@@ -436,6 +440,7 @@ class BookingActionsApi {
 
 		wp_send_json_error( array( 'message' => __( 'Ugyldig handling.', 'snippen-booking' ) ) );
 	}
+
 
 	/**
 	 * Build template context array from booking object and object names
