@@ -448,3 +448,31 @@ The plugin integrates with the `snippen-sms-service` daemon via REST API endpoin
 3. **`POST /wp-json/snippen/v1/sms/inbox`**: Receives reported inbound SMS messages from tenants and records them in `snippen_messages` (`status = 'received'`, `event_type = 'inbound_sms'`).
 4. **`GET /wp-json/snippen/v1/sms/bookings`**: Looks up active bookings associated with a given phone number (`?phone=+47...`).
 
+### SMS Gateway & E2E Test Provisioning (`composer demo:gateway`)
+
+For integration testing alongside `snippen-sms-service` and `snippen-testing`:
+
+```bash
+# Set up SMS gateway provider and seed test user, booking, and outbox message (+4799887766)
+composer demo:gateway
+
+# Run container healthcheck (verifies WordPress and /wp-json/snippen/v1/sms/outbox)
+composer healthcheck
+# or directly:
+bash bin/healthcheck.sh
+```
+
+### Headless Container Startup & Environment Variables
+
+The container entrypoint (`.devcontainer/docker-entrypoint.sh` / `Dockerfile`) supports automated headless execution without interactive prompts:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `PORT` | Apache listen port | `8080` |
+| `WP_URL` | WordPress Site URL / Hostname | `http://${HTTP_HOST:-localhost}:${PORT}` |
+| `SNIPPEN_SMS_API_TOKEN` | SMS Gateway API Token | `test-integration-token` |
+| `SNIPPEN_SMS_SENDER` | Outbound SMS sender label | `Snippen` |
+| `INIT_GATEWAY` | Run `composer demo:gateway` automatically on container start | `false` |
+| `INIT_DEMO` / `AUTO_DEMO` | Run full `composer demo` automatically on container start | `false` |
+| `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PWD` | Database connection details | `localhost` / `wpuser` / `wppass` |
+

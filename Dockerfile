@@ -51,9 +51,10 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Copy entrypoint script and healthcheck
+COPY .devcontainer/docker-entrypoint.sh /entrypoint.sh
+COPY bin/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /entrypoint.sh /usr/local/bin/healthcheck.sh
 
 EXPOSE 8080
 EXPOSE 9003
@@ -78,6 +79,6 @@ USER $USERNAME
 
 # Healthcheck verifying WordPress and SMS outbox responsiveness
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
-    CMD bash /workspaces/snippen-booking/bin/healthcheck.sh || exit 1
+    CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
