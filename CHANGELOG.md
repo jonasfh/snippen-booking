@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.23.0] - 2026-09-03
+- (#265) Supported automated headless provisioning and SMS gateway demo setup for Docker Compose integration testing alongside `snippen-testing` and `snippen-sms-service`.
+  - Added `composer demo:gateway` and `composer demo:e2e` scripts (`bin/demo-gateway.php`) configuring API token (`SNIPPEN_SMS_API_TOKEN` / `test-integration-token`), active provider (`snippen_sms_service`), and seeding test resident user, confirmed booking, and queued outbound message for recognizable test phone `+4799887766`.
+  - Added container healthcheck support (`bin/healthcheck.sh`, `composer healthcheck`) verifying both WordPress root HTTP responsiveness and `/wp-json/snippen/v1/sms/outbox` endpoint availability.
+  - Enhanced `.devcontainer/docker-entrypoint.sh` and root `Dockerfile` with headless startup parameters (`INIT_GATEWAY`, `INIT_DEMO`, `AUTO_DEMO`), dynamic `WP_HOME` / `WP_SITEURL` multi-host resolution, non-interactive execution, and fixed Apache DocumentRoot rewrite configuration before setup exit.
+  - Added `HEALTHCHECK` instructions and integration test `DemoGatewayTest`.
+
 ## [2.22.0] - 2026-09-01
 - (#263) Added Snippen SMS Service provider (`snippen_sms_service`) and REST synchronization gateway endpoints (`/wp-json/snippen/v1/sms/outbox`, `/outbox/status`, `/inbox`, `/bookings`). Outbound SMS messages are queued in `snippen_messages` table for gateway edge dispatch, status transitions to `sent`/`failed` are reported back, and incoming tenant SMS messages are recorded in communication history. Added admin settings configuration for API token, sender name, active SMS provider toggle, and queue status badge in communication history.
 
