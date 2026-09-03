@@ -71,8 +71,10 @@ RUN groupadd --gid "$USER_GID" "$USERNAME" || true \
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
  && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Ensure workspace and entrypoint are writable by the non-root user
-RUN chown -R "$USER_UID":"$USER_GID" /workspaces /entrypoint.sh || true
+# Copy repository files into workspace
+WORKDIR /workspaces/snippen-booking
+COPY --chown=$USERNAME:$USERNAME . /workspaces/snippen-booking
+RUN composer install --no-interaction --prefer-dist
 
 ENV HOME=/home/$USERNAME
 USER $USERNAME

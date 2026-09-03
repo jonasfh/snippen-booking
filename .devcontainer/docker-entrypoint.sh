@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Elevate privileges if run as non-root (e.g. USER vscode)
+if [ "$(id -u)" -ne 0 ]; then
+  exec sudo -E bash "$0" "$@"
+fi
+
 WP_DIR="/wordpress"
 PORT="${PORT:-8080}"
 DB_HOST="${MYSQL_HOST:-localhost}"
