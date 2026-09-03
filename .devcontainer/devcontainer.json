@@ -37,8 +37,8 @@
     "MYSQL_PWD": "wppass",
     "HTTP_HOST": "localhost"
   },
-  "postCreateCommand": "bash /entrypoint.sh setup",
-  "postStartCommand": "nohup bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
+  "postCreateCommand": "sudo bash /entrypoint.sh setup",
+  "postStartCommand": "nohup sudo bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
   "mounts": [
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
     "source=${localWorkspaceFolderBasename}-gemini,target=/home/vscode/.gemini/config,type=volume",
