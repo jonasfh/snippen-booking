@@ -10,6 +10,9 @@
     }
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "forwardPorts": [
     8080,
@@ -40,6 +43,8 @@
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
     "source=${localWorkspaceFolderBasename}-gemini,target=/home/vscode/.gemini/config,type=volume",
     "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind,consistency=cached"
+    ,
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "remoteUser": "vscode"
 }
