@@ -1,6 +1,6 @@
 <?php
 /**
- * Set up SMS Gateway demo settings, token, and seed recognizable test booking data.
+ * Set up SMS Gateway demo settings, token, pages, and seed recognizable test booking data.
  *
  * @package SnippenBooking
  */
@@ -60,147 +60,200 @@ if ( empty( $objects ) ) {
 	}
 }
 
-$first_object_id = ! empty( $objects ) ? (int) $objects[0]->id : 1;
-
-// 3. Seed test resident user
-$test_phone    = '+4799887766';
-$test_email    = 'test.guest@example.no';
-$test_username = 'test.guest';
-$test_name     = 'Ola Nordmann (E2E Test)';
-
-$user = get_user_by( 'login', $test_username );
-if ( ! $user ) {
-	$user_id = wp_insert_user(
-		array(
-			'user_login'   => $test_username,
-			'user_pass'    => 'demo123',
-			'user_email'   => $test_email,
-			'display_name' => $test_name,
-			'role'         => 'snippen_resident',
-		)
-	);
-	if ( is_wp_error( $user_id ) ) {
-		echo 'Error creating test user: ' . $user_id->get_error_message() . "\n";
-		exit( 1 );
+// 3. Generate frontend demo booking pages if demo-pages.php exists
+$demo_pages_script = __DIR__ . '/demo-pages.php';
+if ( file_exists( $demo_pages_script ) ) {
+	echo "Generating frontend demo booking pages...\n";
+	$page_output = array();
+	$page_code   = 0;
+	exec( 'php ' . escapeshellarg( $demo_pages_script ), $page_output, $page_code );
+	if ( 0 === $page_code ) {
+		echo "Frontend demo pages created and published.\n";
+	} else {
+		echo 'Notice: demo-pages.php exited with status ' . $page_code . "\n";
 	}
-} else {
-	$user_id = $user->ID;
-	wp_update_user(
-		array(
-			'ID'           => $user_id,
-			'user_email'   => $test_email,
-			'display_name' => $test_name,
-		)
-	);
 }
 
-update_user_meta( $user_id, 'snippen_phone', $test_phone );
-echo "Test user configured (ID: $user_id, Phone: $test_phone)\n";
+// 4. Seed multiple test resident users with phones
+$test_users_data = array(
+	array(
+		'username'     => 'test.guest',
+		'name'         => 'Ola Nordmann (E2E Test)',
+		'email'        => 'test.guest@example.no',
+		'phone'        => '+4799887766',
+		'days'         => '+1 day',
+		'object_index' => 0,
+		'desc'         => 'E2E Test Booking for SMS Gateway',
+		'seed_outbox'  => true,
+	),
+	array(
+		'username'     => 'kari.nordmann',
+		'name'         => 'Kari Nordmann (Test)',
+		'email'        => 'kari.nordmann@example.no',
+		'phone'        => '+4799887767',
+		'days'         => '+3 days',
+		'object_index' => 1,
+		'desc'         => 'Bursdagsselskap for familien',
+		'seed_outbox'  => false,
+	),
+	array(
+		'username'     => 'per.hansen',
+		'name'         => 'Per Hansen (Test)',
+		'email'        => 'per.hansen@example.no',
+		'phone'        => '+4799887768',
+		'days'         => '+7 days',
+		'object_index' => 0,
+		'desc'         => 'Styremøte og beboersamling',
+		'seed_outbox'  => false,
+	),
+);
 
-// 4. Seed test booking data for this phone number
 $table_bookings            = $wpdb->prefix . 'snippen_bookings';
 $table_booking_objects     = $wpdb->prefix . 'snippen_bookings_booking_objects';
 $table_new_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
 $table_booking_blocks      = $wpdb->prefix . 'snippen_booking_booking_blocks';
 $table_blocks              = $wpdb->prefix . 'snippen_booking_blocks';
+$table_messages            = $wpdb->prefix . 'snippen_messages';
 
-$existing_booking = $wpdb->get_row(
-	$wpdb->prepare(
-		"SELECT id, uuid FROM {$table_bookings} WHERE customer_phone = %s AND deleted_at IS NULL LIMIT 1",
-		$test_phone
-	)
-);
+$now             = current_time( 'mysql' );
+$first_object_id = ! empty( $objects ) ? (int) $objects[0]->id : 1;
 
-$now = current_time( 'mysql' );
-if ( ! $existing_booking ) {
-	$booking_date = date( 'Y-m-d', strtotime( '+1 day' ) );
-	$uuid         = wp_generate_uuid4();
+foreach ( $test_users_data as $u_data ) {
+	$username   = $u_data['username'];
+	$test_email = $u_data['email'];
+	$test_name  = $u_data['name'];
+	$test_phone = $u_data['phone'];
 
-	$wpdb->insert(
-		$table_bookings,
-		array(
-			'uuid'              => $uuid,
-			'user_id'           => $user_id,
-			'slot_id'           => 1,
-			'booking_date'      => $booking_date,
-			'customer_name'     => $test_name,
-			'customer_email'    => $test_email,
-			'customer_phone'    => $test_phone,
-			'price'             => 1500.00,
-			'description'       => 'E2E Test Booking for SMS Gateway',
-			'status'            => 'confirmed',
-			'payment_status_id' => 2, // PAID
-			'created_at'        => $now,
-			'modified_at'       => $now,
-		)
-	);
-	$booking_id = $wpdb->insert_id;
-
-	$wpdb->insert(
-		$table_booking_objects,
-		array(
-			'booking_id'        => $booking_id,
-			'booking_object_id' => $first_object_id,
-		)
-	);
-
-	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_new_booking_objects ) ) === $table_new_booking_objects ) {
-		$wpdb->insert(
-			$table_new_booking_objects,
+	$user = get_user_by( 'login', $username );
+	if ( ! $user ) {
+		$user_id = wp_insert_user(
 			array(
-				'booking_id'        => $booking_id,
-				'booking_object_id' => $first_object_id,
+				'user_login'   => $username,
+				'user_pass'    => 'demo123',
+				'user_email'   => $test_email,
+				'display_name' => $test_name,
+				'role'         => 'snippen_resident',
+			)
+		);
+		if ( is_wp_error( $user_id ) ) {
+			echo 'Error creating test user ' . esc_html( $username ) . ': ' . $user_id->get_error_message() . "\n";
+			continue;
+		}
+	} else {
+		$user_id = $user->ID;
+		wp_update_user(
+			array(
+				'ID'           => $user_id,
+				'user_email'   => $test_email,
+				'display_name' => $test_name,
 			)
 		);
 	}
 
-	// Link booking block if blocks table exists
-	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_blocks ) ) === $table_blocks ) {
-		$block_ids = $wpdb->get_col( "SELECT id FROM {$table_blocks} WHERE deleted_at IS NULL LIMIT 1" );
-		if ( ! empty( $block_ids ) && $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_booking_blocks ) ) === $table_booking_blocks ) {
+	update_user_meta( $user_id, 'snippen_phone', $test_phone );
+	echo "Test user configured: $username (ID: $user_id, Phone: $test_phone)\n";
+
+	// Check if booking exists for this phone number
+	$existing_booking = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT id, uuid FROM {$table_bookings} WHERE customer_phone = %s AND deleted_at IS NULL LIMIT 1",
+			$test_phone
+		)
+	);
+
+	if ( ! $existing_booking ) {
+		$booking_date = date( 'Y-m-d', strtotime( $u_data['days'] ) );
+		$uuid         = wp_generate_uuid4();
+
+		$obj_idx   = $u_data['object_index'] % count( $objects );
+		$target_id = ! empty( $objects[ $obj_idx ] ) ? (int) $objects[ $obj_idx ]->id : $first_object_id;
+
+		$wpdb->insert(
+			$table_bookings,
+			array(
+				'uuid'              => $uuid,
+				'user_id'           => $user_id,
+				'slot_id'           => 1,
+				'booking_date'      => $booking_date,
+				'customer_name'     => $test_name,
+				'customer_email'    => $test_email,
+				'customer_phone'    => $test_phone,
+				'price'             => 1500.00,
+				'description'       => $u_data['desc'],
+				'status'            => 'confirmed',
+				'payment_status_id' => 2, // PAID
+				'created_at'        => $now,
+				'modified_at'       => $now,
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		$wpdb->insert(
+			$table_booking_objects,
+			array(
+				'booking_id'        => $booking_id,
+				'booking_object_id' => $target_id,
+			)
+		);
+
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_new_booking_objects ) ) === $table_new_booking_objects ) {
 			$wpdb->insert(
-				$table_booking_blocks,
+				$table_new_booking_objects,
 				array(
-					'booking_id'       => $booking_id,
-					'booking_block_id' => (int) $block_ids[0],
+					'booking_id'        => $booking_id,
+					'booking_object_id' => $target_id,
 				)
 			);
 		}
+
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_blocks ) ) === $table_blocks ) {
+			$block_ids = $wpdb->get_col( "SELECT id FROM {$table_blocks} WHERE deleted_at IS NULL LIMIT 1" );
+			if ( ! empty( $block_ids ) && $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_booking_blocks ) ) === $table_booking_blocks ) {
+				$wpdb->insert(
+					$table_booking_blocks,
+					array(
+						'booking_id'       => $booking_id,
+						'booking_block_id' => (int) $block_ids[0],
+					)
+				);
+			}
+		}
+
+		echo "Created test booking ID: $booking_id (UUID: $uuid, Date: $booking_date, Room ID: $target_id)\n";
+	} else {
+		$booking_id = (int) $existing_booking->id;
+		echo "Existing test booking found for $test_phone (ID: $booking_id)\n";
 	}
 
-	echo "Created test booking ID: $booking_id (UUID: $uuid, Date: $booking_date)\n";
-} else {
-	$booking_id = (int) $existing_booking->id;
-	echo "Existing test booking found (ID: $booking_id, UUID: {$existing_booking->uuid})\n";
-}
+	// 5. Seed queued outbound test message if specified (for test.guest)
+	if ( ! empty( $u_data['seed_outbox'] ) ) {
+		$pending_outbox = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table_messages} WHERE channel = 'sms' AND status = 'queued' AND recipient = %s",
+				$test_phone
+			)
+		);
 
-// 5. Seed a queued outbound test message for the gateway outbox
-$table_messages = $wpdb->prefix . 'snippen_messages';
-$pending_outbox = (int) $wpdb->get_var(
-	$wpdb->prepare(
-		"SELECT COUNT(*) FROM {$table_messages} WHERE channel = 'sms' AND status = 'queued' AND recipient = %s",
-		$test_phone
-	)
-);
-
-if ( 0 === $pending_outbox ) {
-	\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
-		$booking_id,
-		$user_id,
-		'sms',
-		$test_phone,
-		null,
-		'Din adgangskode til Snippen er 4821',
-		'booking_confirmation',
-		'queued',
-		array(
-			'provider' => 'snippen_sms_service',
-			'sender'   => $sender_name,
-		)
-	);
-	echo "Queued outbound SMS message created for $test_phone in outbox.\n";
-} else {
-	echo "Pending outbound SMS message already queued in outbox.\n";
+		if ( 0 === $pending_outbox ) {
+			\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+				$booking_id,
+				$user_id,
+				'sms',
+				$test_phone,
+				null,
+				'Din adgangskode til Snippen er 4821',
+				'booking_confirmation',
+				'queued',
+				array(
+					'provider' => 'snippen_sms_service',
+					'sender'   => $sender_name,
+				)
+			);
+			echo "Queued outbound SMS message created for $test_phone in outbox.\n";
+		} else {
+			echo "Pending outbound SMS message already queued in outbox.\n";
+		}
+	}
 }
 
 echo "Success: SMS Gateway demo setup complete!\n";
