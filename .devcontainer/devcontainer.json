@@ -37,14 +37,12 @@
     "MYSQL_PWD": "wppass",
     "HTTP_HOST": "localhost"
   },
-  "postCreateCommand": "sudo bash /entrypoint.sh setup",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.gemini; sudo bash /entrypoint.sh setup",
   "postStartCommand": "nohup sudo bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
   "mounts": [
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
-    "source=${localWorkspaceFolderBasename}-gemini,target=/home/vscode/.gemini/config,type=volume",
+    "source=${localWorkspaceFolderBasename}-gemini-data,target=/home/vscode/.gemini,type=volume",
     "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind,consistency=cached"
-    ,
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "remoteUser": "vscode"
 }
