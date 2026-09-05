@@ -26,14 +26,17 @@ npm run test:ui:update
 
 # Code style check (PHPCS)
 composer lint
+# or: phpcs / npm run lint
 
 # Auto-fix code style (PHPCBF)
 composer lint:fix
+# or: phpcbf / npm run lint:fix
 ```
 
 ## Mandatory Rules
 - **Create tests**: Create unit or integration tests for all new functionality.
 - **Update tests**: Update existing tests when modifying functionality.
+- **Code formatting**: Routinely run `phpcbf` (or `composer lint:fix`) on code changes before checking code quality or committing.
 - **UI testing policy**: Run `npm run test:ui:fast` **only** when actively developing or modifying UI, CSS, templates, or frontend logic. Never run visual regression suites for purely backend, PHP, or database tasks.
 - **Linting check**: Always run `composer lint` and resolve all PHPCS errors and warnings before completing a task.
 

@@ -10,7 +10,9 @@
     "test:js": "jest",
     "test:ui:fast": "playwright test",
     "test:ui": "playwright test",
-    "test:ui:update": "playwright test --update-snapshots"
+    "test:ui:update": "playwright test --update-snapshots",
+    "lint": "composer lint",
+    "lint:fix": "composer lint:fix"
   },
   "keywords": [],
   "author": "",
