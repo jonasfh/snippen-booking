@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Calendar Fixture</title>
+    <link rel="stylesheet" href="../../src/wp-content/plugins/booking-plugin/css/booking.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="snippen-booking-container">
+        <div id="calendar-container" class="snippen-calendar-view">
+            <div class="calendar-header">
+                <button class="week-nav-btn week-nav-prev" title="Forrige uke">&larr;</button>
+                <div class="current-week-range">1. sep – 7. sep 2026 (Uke 36)</div>
+                <button class="week-nav-btn week-nav-next" title="Neste uke">&rarr;</button>
+            </div>
+            <div class="week-grid">
+                <div class="day-column" data-date="2026-09-01">
+                    <div class="day-header">
+                        <span class="day-name">Man</span>
+                        <span class="day-date">01.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Storsalen Ledig</span>
+                        </div>
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Møterom Ledig</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-column" data-date="2026-09-02">
+                    <div class="day-header">
+                        <span class="day-name">Tir</span>
+                        <span class="day-date">02.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary partially-booked">
+                            <span class="object-summary-text">Storsalen Delvis</span>
+                        </div>
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Møterom Ledig</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-column selected-day" data-date="2026-09-03">
+                    <div class="day-header">
+                        <span class="day-name">Ons</span>
+                        <span class="day-date">03.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary fully-booked">
+                            <span class="object-summary-text">Storsalen Fullt</span>
+                        </div>
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Møterom Ledig</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-column" data-date="2026-09-04">
+                    <div class="day-header">
+                        <span class="day-name">Tor</span>
+                        <span class="day-date">04.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Storsalen Ledig</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-column" data-date="2026-09-05">
+                    <div class="day-header">
+                        <span class="day-name">Fre</span>
+                        <span class="day-date">05.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Storsalen Ledig</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-column" data-date="2026-09-06">
+                    <div class="day-header">
+                        <span class="day-name">Lør</span>
+                        <span class="day-date">06.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary fully-booked">
+                            <span class="object-summary-text">Storsalen Fullt</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="day-column" data-date="2026-09-07">
+                    <div class="day-header">
+                        <span class="day-name">Søn</span>
+                        <span class="day-date">07.09</span>
+                    </div>
+                    <div class="slots-container">
+                        <div class="day-object-summary available">
+                            <span class="object-summary-text">Storsalen Ledig</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

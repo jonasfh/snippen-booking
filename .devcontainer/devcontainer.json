@@ -35,7 +35,8 @@
     "MYSQL_HOST": "localhost",
     "MYSQL_USER": "wpuser",
     "MYSQL_PWD": "wppass",
-    "HTTP_HOST": "localhost"
+    "HTTP_HOST": "localhost",
+    "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright"
   },
   "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.gemini; sudo bash /entrypoint.sh setup",
   "postStartCommand": "nohup sudo bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",

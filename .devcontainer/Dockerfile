@@ -30,6 +30,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && a2enmod rewrite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Pre-install Chromium and system dependencies for Playwright visual regression tests
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npx --yes playwright install chromium --with-deps \
+    && chmod -R 777 /ms-playwright
+
 # Configure Xdebug
 RUN echo "xdebug.mode=debug" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.start_with_request=trigger" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \

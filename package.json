@@ -7,12 +7,16 @@
     "test": "tests"
   },
   "scripts": {
-    "test:js": "jest"
+    "test:js": "jest",
+    "test:ui:fast": "playwright test",
+    "test:ui": "playwright test",
+    "test:ui:update": "playwright test --update-snapshots"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1"
   }
