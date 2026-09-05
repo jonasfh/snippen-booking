@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.24.0] - 2026-09-05
+- (#270) Enhanced demo and gateway setup scripts (`bin/demo-gateway.php`, `composer demo:gateway`) to automatically create and publish frontend booking demo pages (combined calendar, room booking pages, account activation), seed multiple resident test users (`test.guest` / `+4799887766`, `kari.nordmann` / `+4799887767`, `per.hansen` / `+4799887768`), and seed multiple bookings across rooms and dates for testing.
+
 ## [2.23.0] - 2026-09-03
 - (#265) Supported automated headless provisioning and SMS gateway demo setup for Docker Compose integration testing alongside `snippen-testing` and `snippen-sms-service`.
   - Added `composer demo:gateway` and `composer demo:e2e` scripts (`bin/demo-gateway.php`) configuring API token (`SNIPPEN_SMS_API_TOKEN` / `test-integration-token`), active provider (`snippen_sms_service`), and seeding test resident user, confirmed booking, and queued outbound message for recognizable test phone `+4799887766`.
