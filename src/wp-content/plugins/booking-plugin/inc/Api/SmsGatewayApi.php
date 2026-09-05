@@ -8,6 +8,7 @@
 namespace SnippenBooking\Api;
 
 use SnippenBooking\Service\Notification\MessageLoggerService;
+use SnippenBooking\Service\Sms\SmsInboxResolverService;
 use SnippenBooking\Helper\PhoneHelper;
 
 /**
@@ -77,6 +78,41 @@ class SmsGatewayApi {
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( __CLASS__, 'report_inbox' ),
 					'permission_callback' => array( __CLASS__, 'verify_token' ),
+				),
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( __CLASS__, 'get_inbox' ),
+					'permission_callback' => array( __CLASS__, 'verify_token' ),
+					'args'                => array(
+						'status'     => array(
+							'required'          => false,
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'booking_id' => array(
+							'required'          => false,
+							'sanitize_callback' => 'absint',
+						),
+						'user_id'    => array(
+							'required'          => false,
+							'sanitize_callback' => 'absint',
+						),
+						'phone'      => array(
+							'required'          => false,
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'search'     => array(
+							'required'          => false,
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'limit'      => array(
+							'default'           => 50,
+							'sanitize_callback' => 'absint',
+						),
+						'offset'     => array(
+							'default'           => 0,
+							'sanitize_callback' => 'absint',
+						),
+					),
 				),
 			)
 		);
@@ -238,51 +274,95 @@ class SmsGatewayApi {
 		}
 
 		$processed_ids = array();
+		$results       = array();
 
 		foreach ( $messages as $item ) {
 			$sender     = sanitize_text_field( $item['sender'] ?? '' );
 			$text       = sanitize_textarea_field( $item['body'] ?? $item['message'] ?? '' );
-			$booking_id = isset( $item['booking_id'] ) && ! empty( $item['booking_id'] ) ? (int) $item['booking_id'] : null;
 			$gateway_id = isset( $item['gateway_id'] ) ? (int) $item['gateway_id'] : null;
+			$modem_id   = isset( $item['modem_message_id'] ) ? sanitize_text_field( $item['modem_message_id'] ) : null;
+			$recv_at    = isset( $item['received_at'] ) ? sanitize_text_field( $item['received_at'] ) : null;
 
 			if ( empty( $sender ) || empty( $text ) ) {
 				continue;
 			}
 
-			$metadata = array(
-				'direction' => 'inbound',
-			);
-			if ( $gateway_id !== null ) {
-				$metadata['gateway_id'] = $gateway_id;
-			}
-			if ( ! empty( $item['modem_message_id'] ) ) {
-				$metadata['modem_message_id'] = sanitize_text_field( $item['modem_message_id'] );
-			}
-			if ( ! empty( $item['received_at'] ) ) {
-				$metadata['received_at'] = sanitize_text_field( $item['received_at'] );
-			}
-
-			$logged_id = MessageLoggerService::log_message(
-				$booking_id,
-				null,
-				'sms',
+			// Run through rule resolution engine
+			$resolution = SmsInboxResolverService::resolve_message(
 				$sender,
-				null,
 				$text,
-				'inbound_sms',
-				'received',
-				$metadata
+				$gateway_id,
+				$modem_id,
+				$recv_at
 			);
 
-			if ( false !== $logged_id && $gateway_id !== null ) {
+			if ( false !== $resolution['logged_id'] && $gateway_id !== null ) {
 				$processed_ids[] = $gateway_id;
 			}
+
+			$results[] = array(
+				'gateway_id'  => $gateway_id,
+				'message_id'  => $resolution['logged_id'],
+				'status'      => $resolution['status'],
+				'booking_id'  => $resolution['booking_id'],
+				'user_id'     => $resolution['user_id'],
+				'rule'        => $resolution['rule'],
+				'prompt_sent' => $resolution['prompt_sent'],
+			);
 		}
 
 		return rest_ensure_response(
 			array(
 				'success'       => true,
 				'processed_ids' => $processed_ids,
+				'results'       => $results,
+			)
+		);
+	}
+
+	/**
+	 * Handle GET /inbox: Query and filter received inbound SMS messages.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response Response object.
+	 */
+	public static function get_inbox( \WP_REST_Request $request ) {
+		$args = array(
+			'status'     => $request->get_param( 'status' ),
+			'booking_id' => $request->get_param( 'booking_id' ),
+			'user_id'    => $request->get_param( 'user_id' ),
+			'phone'      => $request->get_param( 'phone' ),
+			'search'     => $request->get_param( 'search' ),
+			'limit'      => $request->get_param( 'limit' ) ?: 50,
+			'offset'     => $request->get_param( 'offset' ) ?: 0,
+		);
+
+		$messages = MessageLoggerService::get_inbound_messages( $args );
+		$total    = MessageLoggerService::count_inbound_messages( $args );
+
+		$formatted = array();
+		foreach ( $messages as $msg ) {
+			$meta        = ! empty( $msg->metadata ) ? json_decode( $msg->metadata, true ) : array();
+			$formatted[] = array(
+				'id'               => (int) $msg->id,
+				'booking_id'       => $msg->booking_id ? (int) $msg->booking_id : null,
+				'user_id'          => $msg->user_id ? (int) $msg->user_id : null,
+				'sender'           => $msg->recipient,
+				'body'             => $msg->message,
+				'status'           => $msg->status,
+				'gateway_id'       => $meta['gateway_id'] ?? null,
+				'modem_message_id' => $meta['modem_message_id'] ?? null,
+				'matched_rule'     => $meta['matched_rule'] ?? null,
+				'created_at'       => mysql_to_rfc3339( $msg->created_at ),
+			);
+		}
+
+		return rest_ensure_response(
+			array(
+				'messages' => $formatted,
+				'total'    => $total,
+				'limit'    => (int) $args['limit'],
+				'offset'   => (int) $args['offset'],
 			)
 		);
 	}

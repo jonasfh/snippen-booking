@@ -51,6 +51,38 @@ class SnippenSmsProvider implements SmsProviderInterface {
 				'required'    => false,
 				'description' => __( 'Standard avsendernavn på utgående SMS (f.eks. Snippen).', 'snippen-booking' ),
 			),
+			array(
+				'key'         => 'snippen_sms_active_booking_past_days',
+				'label'       => __( 'Aktiv booking: dager i fortid (betalt)', 'snippen-booking' ),
+				'type'        => 'number',
+				'required'    => false,
+				'default'     => 2,
+				'description' => __( 'Hvor mange dager etter arrangementsslutt en betalt reservasjon regnes som aktiv for innkommende SMS.', 'snippen-booking' ),
+			),
+			array(
+				'key'         => 'snippen_sms_unpaid_booking_past_days',
+				'label'       => __( 'Aktiv booking: dager i fortid (ubetalt)', 'snippen-booking' ),
+				'type'        => 'number',
+				'required'    => false,
+				'default'     => 0,
+				'description' => __( 'Hvor mange dager etter arrangementsslutt en ubetalt reservasjon regnes som aktiv for innkommende SMS.', 'snippen-booking' ),
+			),
+			array(
+				'key'         => 'snippen_sms_conversation_ttl_minutes',
+				'label'       => __( 'Samtalevindu / dialog (minutter)', 'snippen-booking' ),
+				'type'        => 'number',
+				'required'    => false,
+				'default'     => 120,
+				'description' => __( 'Tidsrom hvor nye SMS-meldinger automatisk arver forrige tilknyttede reservasjon.', 'snippen-booking' ),
+			),
+			array(
+				'key'         => 'snippen_sms_auto_disambiguate',
+				'label'       => __( 'Automatisk oppklaring ved flervalg', 'snippen-booking' ),
+				'type'        => 'checkbox',
+				'required'    => false,
+				'default'     => 'yes',
+				'description' => __( 'Send automatisk en SMS med nummerert liste når leietaker med flere aktive bookinger sender melding.', 'snippen-booking' ),
+			),
 		);
 	}
 

@@ -143,6 +143,15 @@ class AdminLoader {
 			array( self::class, 'render_settings_page' )
 		);
 
+		add_submenu_page(
+			'snippen-booking',
+			__( 'SMS Innboks', 'snippen-booking' ),
+			__( 'SMS Innboks', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-sms-inbox',
+			array( self::class, 'render_sms_inbox_page' )
+		);
+
 		$templates_hook = add_submenu_page(
 			'snippen-booking',
 			__( 'Varslingsmaler', 'snippen-booking' ),
@@ -390,6 +399,18 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Beboer Import', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render SMS Inbox Page
+	 */
+	public static function render_sms_inbox_page() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\SmsInboxPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\SmsInboxPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'SMS Innboks', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 

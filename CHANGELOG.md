@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.27.0] - 2026-09-06
+- (#259) Implemented two-way SMS inbox with rule-based booking resolution, quarantine management, and admin inbox UI:
+  - Added `SmsInboxResolverService` (`inc/Service/Sms/`) with prioritized 6-rule resolution engine:
+    - Rule 1 (Active session): Automatically associates replies within conversation TTL to the previous booking context.
+    - Rule 2 (Disambiguation selection): Resolves tenant replies (numeric `1`, `2`, `nr. 1`, ordinals `første`, `andre`) to candidate bookings and updates awaiting quarantine messages.
+    - Rule 3 (Single active booking): Unambiguous automatic matching to the active booking.
+    - Rule 4 (Multiple active bookings): Places inbound SMS in quarantine (`pending_selection`) and enqueues an automated disambiguation prompt SMS listing candidates with numbers.
+    - Rule 5 (Registered user without active booking): Links to `user_id` with `booking_id = NULL` under status `general_inquiry`.
+    - Rule 6 (Unknown sender): Safely retains unlinked messages in quarantine (`quarantine`) for administrative handling.
+  - Added dynamic admin settings in `SnippenSmsProvider`: `snippen_sms_active_booking_past_days` (default 2 days for paid bookings), `snippen_sms_unpaid_booking_past_days` (default 0 days for unpaid bookings), `snippen_sms_conversation_ttl_minutes` (default 120 mins), and `snippen_sms_auto_disambiguate` toggle.
+  - Enhanced REST endpoints in `SmsGatewayApi`: `POST /wp-json/snippen/v1/sms/inbox` running the resolution engine with detailed results, and `GET /wp-json/snippen/v1/sms/inbox` for querying and filtering inbound SMS messages.
+  - Added dedicated Admin page `SMS Innboks & Karantene` (`SmsInboxPage`) under Snippen Booking menu for inspecting inbound SMS, filtering by status, and manual single-click assignment to reservations.
+  - Added helper methods in `MessageLoggerService` (`get_inbound_messages`, `count_inbound_messages`, `assign_message_to_booking`).
+  - Added unit tests (`SmsInboxResolverServiceTest`) covering all 6 rules and payment status filtering, and integration tests (`SmsGatewayApiTest`) for `POST` and `GET /inbox`.
+
 ## [2.26.0] - 2026-09-05
 - (#275) Established automated UI verification and visual regression testing tooling:
   - Configured Playwright with focused golden snapshot testing for desktop (1280px) and mobile (375px) viewports across critical frontend components (booking calendar week grid and booking details overlay).

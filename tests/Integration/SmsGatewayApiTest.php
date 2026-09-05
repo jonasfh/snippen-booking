@@ -229,6 +229,21 @@ class SmsGatewayApiTest extends TestCase {
 	 * Test POST /inbox records incoming messages and returns processed_ids
 	 */
 	public function test_report_inbox() {
+		// Seed single active booking for the sender
+		$booking_repo = new BookingRepository();
+		$booking_id   = $booking_repo->create(
+			array(
+				'uuid'           => wp_generate_uuid4(),
+				'booking_date'   => gmdate( 'Y-m-d', strtotime( '+5 days' ) ),
+				'customer_name'  => 'Test Kunde',
+				'customer_email' => 'kunde@example.com',
+				'customer_phone' => '+4799887766',
+				'status'         => 'confirmed',
+			),
+			array( 1 ),
+			array()
+		);
+
 		$payload = array(
 			'messages' => array(
 				array(
@@ -236,7 +251,6 @@ class SmsGatewayApiTest extends TestCase {
 					'sender'           => '+4799887766',
 					'recipient'        => 'snippen-sms-service',
 					'body'             => 'Hei, jeg har et spørsmål om nøkkelen.',
-					'booking_id'       => 15,
 					'modem_message_id' => 'modem-inbound-501',
 					'received_at'      => '2026-09-01T14:30:00+00:00',
 				),
@@ -253,9 +267,13 @@ class SmsGatewayApiTest extends TestCase {
 		$data = $response->get_data();
 		$this->assertTrue( $data['success'] );
 		$this->assertSame( array( 501 ), $data['processed_ids'] );
+		$this->assertCount( 1, $data['results'] );
+		$this->assertSame( 'received', $data['results'][0]['status'] );
+		$this->assertSame( $booking_id, $data['results'][0]['booking_id'] );
+		$this->assertSame( 'single_active_booking', $data['results'][0]['rule'] );
 
 		// Check database record
-		$messages = MessageLoggerService::get_messages_for_booking( 15 );
+		$messages = MessageLoggerService::get_messages_for_booking( $booking_id );
 		$this->assertCount( 1, $messages );
 		$inbound = $messages[0];
 		$this->assertSame( 'sms', $inbound->channel );
@@ -266,6 +284,55 @@ class SmsGatewayApiTest extends TestCase {
 		$meta = json_decode( $inbound->metadata, true );
 		$this->assertSame( 501, $meta['gateway_id'] );
 		$this->assertSame( 'inbound', $meta['direction'] );
+	}
+
+	/**
+	 * Test GET /inbox query and filtering
+	 */
+	public function test_get_inbox() {
+		// Log a received message and a quarantine message
+		MessageLoggerService::log_message(
+			10,
+			null,
+			'sms',
+			'+4791111111',
+			null,
+			'Mottatt melding 1',
+			'inbound_sms',
+			'received',
+			array( 'gateway_id' => 101 )
+		);
+		MessageLoggerService::log_message(
+			null,
+			null,
+			'sms',
+			'+4792222222',
+			null,
+			'Karantene melding 2',
+			'inbound_sms',
+			'quarantine',
+			array( 'gateway_id' => 102 )
+		);
+
+		// Fetch all
+		$request = new \WP_REST_Request( 'GET', '/snippen/v1/sms/inbox' );
+		$request->add_header( 'Authorization', 'Bearer test-secret-token-123' );
+		$response = rest_do_request( $request );
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+		$this->assertSame( 2, $data['total'] );
+		$this->assertCount( 2, $data['messages'] );
+
+		// Fetch with status=quarantine filter
+		$filter_req = new \WP_REST_Request( 'GET', '/snippen/v1/sms/inbox' );
+		$filter_req->add_header( 'Authorization', 'Bearer test-secret-token-123' );
+		$filter_req->set_param( 'status', 'quarantine' );
+		$filter_res = rest_do_request( $filter_req );
+		$this->assertSame( 200, $filter_res->get_status() );
+		$filter_data = $filter_res->get_data();
+		$this->assertSame( 1, $filter_data['total'] );
+		$this->assertSame( '+4792222222', $filter_data['messages'][0]['sender'] );
+		$this->assertSame( 'quarantine', $filter_data['messages'][0]['status'] );
 	}
 
 	/**
