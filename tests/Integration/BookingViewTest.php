@@ -167,6 +167,39 @@ class BookingViewTest extends TestCase {
 	}
 
 	/**
+	 * Test that the booking popup includes responsive modal structure and scroll locking
+	 */
+	public function test_overlay_structure_and_accessibility() {
+		$uuid = wp_generate_uuid4();
+		$this->create_test_booking_with_uuid( 1, $uuid, 'confirmed', 'Responsive Overlay Test' );
+
+		$_GET['booking_uuid'] = $uuid;
+
+		ob_start();
+		Plugin::render_booking_popup();
+		$output = ob_get_clean();
+
+		// Check role and accessibility attributes
+		$this->assertStringContainsString( 'role="dialog"', $output );
+		$this->assertStringContainsString( 'aria-modal="true"', $output );
+		$this->assertStringContainsString( 'aria-labelledby="snippen-booking-modal-title"', $output );
+
+		// Check structured header and scrollable body
+		$this->assertStringContainsString( 'class="snippen-booking-modal-header"', $output );
+		$this->assertStringContainsString( 'class="snippen-booking-modal-title"', $output );
+		$this->assertStringContainsString( 'class="snippen-booking-modal-body"', $output );
+		$this->assertStringContainsString( 'class="snippen-booking-modal-close"', $output );
+
+		// Check footer and bottom close button
+		$this->assertStringContainsString( 'class="snippen-booking-modal-footer"', $output );
+		$this->assertStringContainsString( 'class="snippen-modal-footer-close-btn"', $output );
+
+		// Check scroll locking and Escape key handling in script
+		$this->assertStringContainsString( 'snippen-modal-open', $output );
+		$this->assertStringContainsString( 'Escape', $output );
+	}
+
+	/**
 	 * Helper to create a test booking with a UUID
 	 */
 	private function create_test_booking_with_uuid( $user_id, $uuid, $status = 'pending', $desc = 'Test Booking' ) {

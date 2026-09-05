@@ -476,3 +476,15 @@ The container entrypoint (`.devcontainer/docker-entrypoint.sh` / `Dockerfile`) s
 | `INIT_DEMO` / `AUTO_DEMO` | Run full `composer demo` automatically on container start | `false` |
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PWD` | Database connection details | `localhost` / `wpuser` / `wppass` |
 
+## Modal & Overlay Architecture
+
+All modal and overlay dialogs across the plugin (direct-link booking UUID popup, calendar booking info modal, rental terms iframe modal, and admin notification dispatch dialog) adhere to standard mobile-friendly and responsive rules:
+
+- **Viewport containment**: Overlays use `height: 100dvh` (with fallback `100%`) and modals use `max-height: calc(100dvh - 32px)` (`calc(100dvh - 16px)` on mobile) so modals never exceed the screen dimensions or get clipped under dynamic mobile toolbars/address bars (e.g. iOS Safari and Android Chrome).
+- **Fixed Header & Independent Scrolling**: Modals are structured with a fixed header (`flex-shrink: 0`) and scrollable body (`overflow-y: auto`, `overscroll-behavior: contain`), ensuring the modal title and close button remain permanently pinned and accessible at the top while content scrolls.
+- **Scroll Locking**: When any overlay is active, the `body.snippen-modal-open` class is applied to lock the background page from scrolling (`overflow: hidden !important;`).
+- **Dismissal**: Modals can be dismissed via:
+  1. The close button (`&times;`) in the header.
+  2. Clicking on the semi-transparent overlay backdrop.
+  3. Pressing the keyboard `Escape` key.
+

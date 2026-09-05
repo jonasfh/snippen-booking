@@ -214,16 +214,21 @@ class Plugin {
 		);
 
 		// Render the overlay container
-		echo '<div class="snippen-booking-modal-overlay" id="snippen-booking-modal">';
+		echo '<div class="snippen-booking-modal-overlay" id="snippen-booking-modal" role="dialog" aria-modal="true" aria-labelledby="snippen-booking-modal-title">';
 		echo '<div class="snippen-booking-modal-content">';
-		echo '<button class="snippen-booking-modal-close" onclick="closeSnippenBookingModal()">&times;</button>';
 
 		if ( ! $booking ) {
 			// 1. Not found
+			echo '<div class="snippen-booking-modal-header">';
+			echo '<h2 class="snippen-booking-modal-title" id="snippen-booking-modal-title">' . esc_html__( 'Booking ikke funnet', 'snippen-booking' ) . '</h2>';
+			echo '<button type="button" class="snippen-booking-modal-close" onclick="closeSnippenBookingModal()" aria-label="' . esc_attr__( 'Lukk', 'snippen-booking' ) . '">&times;</button>';
+			echo '</div>';
+
+			echo '<div class="snippen-booking-modal-body">';
 			echo '<div class="snippen-modal-error-content">';
-			echo '<h2>' . esc_html__( 'Booking ikke funnet', 'snippen-booking' ) . '</h2>';
 			echo '<p>' . esc_html__( 'Forespurt booking ble ikke funnet eller har blitt slettet.', 'snippen-booking' ) . '</p>';
 			echo '</div>';
+			echo '</div>'; // body
 		} else {
 				// Get associated objects/locales
 				$objs         = $wpdb->get_col(
@@ -256,8 +261,13 @@ class Plugin {
 
 				$payment_status = \SnippenBooking\Service\PaymentService::get_booking_payment_status( $booking );
 
+				echo '<div class="snippen-booking-modal-header">';
+				echo '<h2 class="snippen-booking-modal-title" id="snippen-booking-modal-title">' . esc_html__( 'Bookingdetaljer', 'snippen-booking' ) . '</h2>';
+				echo '<button type="button" class="snippen-booking-modal-close" onclick="closeSnippenBookingModal()" aria-label="' . esc_attr__( 'Lukk', 'snippen-booking' ) . '">&times;</button>';
+				echo '</div>';
+
+				echo '<div class="snippen-booking-modal-body">';
 				echo '<div class="snippen-modal-details-content">';
-				echo '<h2>' . esc_html__( 'Bookingdetaljer', 'snippen-booking' ) . '</h2>';
 				echo '<div class="snippen-modal-badge-wrapper"><span class="' . esc_attr( $status_class ) . '">' . esc_html( $status_label ) . '</span></div>';
 
 				echo '<div class="snippen-booking-details-grid">';
@@ -325,7 +335,7 @@ class Plugin {
 			if ( ! $payment_status->is_settled ) {
 				echo '<form id="snippen-receipt-upload-form" style="margin-top:12px;">';
 				echo '<label style="display:block; font-weight:600; margin-bottom:6px;">' . esc_html__( 'Last opp kvittering / skjermbilde for betaling:', 'snippen-booking' ) . '</label>';
-				echo '<input type="file" name="payment_receipt" id="payment_receipt_file" accept="image/*,.pdf" required style="margin-bottom:8px;">';
+				echo '<input type="file" name="payment_receipt" id="payment_receipt_file" accept="image/*,.pdf" required style="margin-bottom:8px; max-width:100%; box-sizing:border-box;">';
 				echo '<br><button type="submit" class="button button-primary" style="background:#0284c7; border:none; color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer;">' . esc_html__( 'Last opp kvittering', 'snippen-booking' ) . '</button>';
 				echo '<div id="snippen-receipt-msg" style="margin-top:8px; font-weight:600;"></div>';
 				echo '</form>';
@@ -369,7 +379,12 @@ class Plugin {
 				echo '</div>'; // payment section
 
 				echo '</div>'; // details content
+				echo '</div>'; // body
 		}
+
+		echo '<div class="snippen-booking-modal-footer">';
+		echo '<button type="button" class="snippen-modal-footer-close-btn" onclick="closeSnippenBookingModal()">' . esc_html__( 'Lukk', 'snippen-booking' ) . '</button>';
+		echo '</div>';
 
 		echo '</div>'; // content
 		echo '</div>'; // overlay
@@ -384,9 +399,19 @@ class Plugin {
 			if (modal) {
 				modal.style.display = "none";
 			}
+			document.body.classList.remove("snippen-modal-open");
 		}
-		document.getElementById("snippen-booking-modal").addEventListener("click", function(e) {
-			if (e.target === this) {
+		document.body.classList.add("snippen-modal-open");
+		var modalEl = document.getElementById("snippen-booking-modal");
+		if (modalEl) {
+			modalEl.addEventListener("click", function(e) {
+				if (e.target === this) {
+					closeSnippenBookingModal();
+				}
+			});
+		}
+		document.addEventListener("keydown", function(e) {
+			if (e.key === "Escape" || e.keyCode === 27) {
 				closeSnippenBookingModal();
 			}
 		});

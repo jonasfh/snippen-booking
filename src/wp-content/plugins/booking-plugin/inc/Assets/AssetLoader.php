@@ -61,6 +61,7 @@ class AssetLoader {
 					'notSet'               => __( 'Ikke satt', 'snippen-booking' ),
 					'termsTitle'           => __( 'Vilkår for leie', 'snippen-booking' ),
 					'termsRequired'        => __( 'Vennligst kryss av i boksen for å gå videre.', 'snippen-booking' ),
+					'close'                => __( 'Lukk', 'snippen-booking' ),
 					'weekdays'             => array(
 						__( 'Man', 'snippen-booking' ),
 						__( 'Tir', 'snippen-booking' ),

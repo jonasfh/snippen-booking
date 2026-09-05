@@ -129,6 +129,7 @@ jQuery(document).ready(function ($) {
 
             $(document).on('click', '.close-modal, .modal-overlay', function() {
                 $('#booking-info-modal').fadeOut(200);
+                $('body').removeClass('snippen-modal-open');
             });
         }
     }
@@ -668,6 +669,7 @@ jQuery(document).ready(function ($) {
         html += '</div>';
 
         $('#booking-info-content').html(html);
+        $('body').addClass('snippen-modal-open');
         $('#booking-info-modal').fadeIn(200);
     }
 
@@ -700,27 +702,50 @@ jQuery(document).ready(function ($) {
         var sep = url.indexOf('?') > -1 ? '&' : '?';
         var bareUrl = url + sep + 'snippen_bare=1';
 
-        var modalHtml = '<div class="snippen-modal terms-modal" style="display:none;">' +
+        var modalHtml = '<div class="snippen-modal terms-modal" style="display:none;" role="dialog" aria-modal="true">' +
             '<div class="modal-overlay"></div>' +
-            '<div class="modal-content" style="max-width: 800px; height: 80vh; display: flex; flex-direction: column;">' +
+            '<div class="modal-content" style="max-width: 800px; height: 80vh; height: 80dvh; display: flex; flex-direction: column;">' +
                 '<div class="modal-header">' +
                     '<h4>' + (snippenBookingAjax.strings.termsTitle || 'Vilkår for leie') + '</h4>' +
-                    '<button type="button" class="close-modal">&times;</button>' +
+                    '<button type="button" class="close-modal" aria-label="Lukk">&times;</button>' +
                 '</div>' +
-                '<div class="modal-body" style="flex-grow: 1; padding: 0;">' +
+                '<div class="modal-body" style="flex-grow: 1; padding: 0; overflow: hidden;">' +
                     '<iframe src="' + bareUrl + '" style="width: 100%; height: 100%; border: none;"></iframe>' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                    '<button type="button" class="snippen-modal-footer-close-btn close-modal">' + (snippenBookingAjax.strings.close || 'Lukk') + '</button>' +
                 '</div>' +
             '</div>' +
         '</div>';
 
         $('body').append(modalHtml);
+        $('body').addClass('snippen-modal-open');
         $('.terms-modal').fadeIn(200);
     });
 
     $(document).on('click', '.terms-modal .close-modal, .terms-modal .modal-overlay', function() {
         $('.terms-modal').fadeOut(200, function() {
             $(this).remove();
+            if (!$('#booking-info-modal:visible').length) {
+                $('body').removeClass('snippen-modal-open');
+            }
         });
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            if ($('.terms-modal:visible').length) {
+                $('.terms-modal').fadeOut(200, function() {
+                    $(this).remove();
+                    if (!$('#booking-info-modal:visible').length) {
+                        $('body').removeClass('snippen-modal-open');
+                    }
+                });
+            } else if ($('#booking-info-modal:visible').length) {
+                $('#booking-info-modal').fadeOut(200);
+                $('body').removeClass('snippen-modal-open');
+            }
+        }
     });
 
     init();

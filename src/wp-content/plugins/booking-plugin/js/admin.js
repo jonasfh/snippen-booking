@@ -163,8 +163,8 @@
                         $modal.find('.snippen-modal-title').text('Send SMS til kunde');
                         $modal.find('.snippen-modal-submit').text('Send SMS');
                     }
-
                     $modal.fadeIn(200);
+                    $('body').addClass('snippen-modal-open');
                 } else {
                     $feedback.text(response.data.message || 'Kunne ikke hente forhåndsvisning.').css('color', '#b91c1c');
                 }
@@ -244,6 +244,7 @@
         $('#snippen-dispatch-modal').on('click', '.snippen-modal-close, .snippen-modal-cancel', function(e) {
             e.preventDefault();
             $('#snippen-dispatch-modal').fadeOut(200);
+            $('body').removeClass('snippen-modal-open');
             activeDispatchData = null;
         });
 
@@ -251,6 +252,16 @@
         $('#snippen-dispatch-modal').on('click', function(e) {
             if ($(e.target).is('#snippen-dispatch-modal')) {
                 $('#snippen-dispatch-modal').fadeOut(200);
+                $('body').removeClass('snippen-modal-open');
+                activeDispatchData = null;
+            }
+        });
+
+        // Close modal on Escape key
+        $(document).on('keydown', function(e) {
+            if ((e.key === 'Escape' || e.keyCode === 27) && $('#snippen-dispatch-modal:visible').length) {
+                $('#snippen-dispatch-modal').fadeOut(200);
+                $('body').removeClass('snippen-modal-open');
                 activeDispatchData = null;
             }
         });
@@ -289,6 +300,7 @@
                     }
                     setTimeout(function() {
                         $modal.fadeOut(200);
+                        $('body').removeClass('snippen-modal-open');
                         activeDispatchData = null;
                     }, 1000);
                 } else {
