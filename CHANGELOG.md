@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.26.0] - 2026-09-05
+- (#275) Established automated UI verification and visual regression testing tooling:
+  - Configured Playwright with focused golden snapshot testing for desktop (1280px) and mobile (375px) viewports across critical frontend components (booking calendar week grid and booking details overlay).
+  - Created isolated, lightweight HTML fixtures (`tests/ui/fixtures/`) executing against real plugin styles (`booking.css`) with zero backend/database startup overhead, achieving ~1.8s execution time.
+  - Added targeted npm scripts: `npm run test:ui:fast` for quick local UI regression checks, `npm run test:ui` for full test suites, and `npm run test:ui:update` for golden snapshot baselines.
+  - Added `.github/workflows/ui-tests.yml` for automated CI visual regression testing with artifact diff uploads on failure.
+  - Pre-cached Chromium and Playwright system dependencies in DevContainer (`.devcontainer/Dockerfile` and `devcontainer.json`).
+  - Added `.agents/node-agent-instructions` submodule and documented UI testing guidelines in `AGENTS.md`, `.agents/TESTING.md`, and `DEV_README.md`.
+
 ## [2.25.0] - 2026-09-05
 - (#272) Improved mobile user experience and responsiveness across all modal and overlay views (single booking UUID popup, calendar booking info modal, rental terms iframe modal, and admin notification dispatch dialog):
   - Added background scroll locking (`body.snippen-modal-open`) preventing the underlying page from scrolling while overlays are active.

@@ -72,12 +72,19 @@ composer test:integration
 
 # Run JavaScript tests (Jest)
 npm run test:js
+
+# Run fast UI & visual regression tests (Playwright - < 5s)
+npm run test:ui:fast
+
+# Update visual golden baselines after intentional UI changes
+npm run test:ui:update
 ```
 
 #### Local Development vs. CI/CD Strategy
 - **Local Development**: Use `composer test:unit` or `composer test:fast` during active code changes for near-instant execution (~0.6 seconds). Use `composer lint` (and `composer lint:fix`) to ensure code compliance.
-- **Pre-commit / Pre-PR**: Run `composer test` and `composer lint` locally to verify the entire test suite and code standards before pushing.
-- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/phpunit.yml`) executes PHPCS linting (`composer lint`), the full PHP test suite (`composer test`), and JS tests (`npm run test:js`) automatically on every push and pull request.
+- **UI & Visual Regression**: When actively modifying frontend templates, modal layouts, or CSS, run `npm run test:ui:fast` to ensure no visual regressions across desktop and mobile viewports. Local execution runs against isolated fixtures in ~2 seconds without requiring full database/server boot.
+- **Pre-commit / Pre-PR**: Run `composer test`, `composer lint`, and `npm run test:ui:fast` locally to verify the entire test suite and code standards before pushing.
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/phpunit.yml` and `.github/workflows/ui-tests.yml`) executes PHPCS linting, the full PHP test suite, JS unit tests, and Playwright visual regression tests automatically on push and pull requests.
 
 ### Development Tools
 

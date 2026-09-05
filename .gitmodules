@@ -1,3 +1,6 @@
 [submodule ".agents/common-agent-instructions"]
 	path = .agents/common-agent-instructions
 	url = https://github.com/jonasfh/common-agent-instructions.git
+[submodule ".agents/node-agent-instructions"]
+	path = .agents/node-agent-instructions
+	url = https://github.com/jonasfh/node-agent-instructions.git
