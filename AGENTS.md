@@ -8,7 +8,8 @@ Guide AI agents working in this repository.
 - **Follow WordPress Plugin Best Practices**: Use PSR-4 autoloading (`SnippenBooking\` namespace) under `src/wp-content/plugins/booking-plugin/inc/`.
 - **Testing & Quality Control**:
   - Always write tests for new functionality and update existing tests when modifying functionality.
-  - Run `composer lint` and `composer test` to verify all changes before completion. Resolving all PHPCS errors and warnings is mandatory.
+  - Run `phpcbf` (or `composer lint:fix`) routinely on modified files to automatically fix coding standards and formatting violations.
+  - Run `composer lint` (or `phpcs`) and `composer test` to verify all changes before completion. Resolving all PHPCS errors and warnings is mandatory.
 - **UI & Visual Regression Testing**:
   - Run visual UI tests (`npm run test:ui:fast`) **only** when actively modifying UI, CSS, templates, or frontend logic. Never run visual suites for purely backend, PHP, API, or database changes.
   - Use `npm run test:ui:update` to update golden baselines when UI changes are intentional.

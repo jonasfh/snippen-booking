@@ -17,6 +17,14 @@ WP_URL="${WP_URL:-http://${HTTP_HOST:-localhost}:${PORT}}"
 mkdir -p "$WP_DIR"
 cd "$WP_DIR"
 
+# Ensure phpcbf and phpcs are accessible in /usr/local/bin
+if [ -f "/workspaces/snippen-booking/vendor/bin/phpcbf" ] && [ ! -f "/usr/local/bin/phpcbf" ]; then
+  ln -sf /workspaces/snippen-booking/vendor/bin/phpcbf /usr/local/bin/phpcbf || true
+fi
+if [ -f "/workspaces/snippen-booking/vendor/bin/phpcs" ] && [ ! -f "/usr/local/bin/phpcs" ]; then
+  ln -sf /workspaces/snippen-booking/vendor/bin/phpcs /usr/local/bin/phpcs || true
+fi
+
 # 1. Database Initialization
 if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ]; then
   echo "Starting MariaDB..."
