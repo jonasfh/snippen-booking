@@ -452,8 +452,22 @@ The plugin integrates with the `snippen-sms-service` daemon via REST API endpoin
 
 1. **`GET /wp-json/snippen/v1/sms/outbox`**: Fetches pending outbound SMS messages (`status = 'queued'`).
 2. **`POST /wp-json/snippen/v1/sms/outbox/status`**: Updates outbound SMS message status (`sent` or `failed`) with gateway and modem metadata.
-3. **`POST /wp-json/snippen/v1/sms/inbox`**: Receives reported inbound SMS messages from tenants and records them in `snippen_messages` (`status = 'received'`, `event_type = 'inbound_sms'`).
-4. **`GET /wp-json/snippen/v1/sms/bookings`**: Looks up active bookings associated with a given phone number (`?phone=+47...`).
+3. **`POST /wp-json/snippen/v1/sms/inbox`**: Receives reported inbound SMS messages from tenants and executes the prioritized 6-rule resolution engine:
+   - **Rule 1 (Active Session)**: Within conversation TTL (`snippen_sms_conversation_ttl_minutes`, default 120m), automatically inherits previous booking context.
+   - **Rule 2 (Disambiguation Selection)**: Parses tenant choices (`1`, `2`, `nr 1`, `første`, `andre`), associates the chosen booking, and resolves pending messages.
+   - **Rule 3 (Single Active Booking)**: Unambiguously matches single active reservation (`status = 'received'`).
+   - **Rule 4 (Multiple Active Bookings)**: Enters quarantine (`status = 'pending_selection'`) and dispatches a numbered SMS disambiguation prompt.
+   - **Rule 5 (Registered User without Active Booking)**: Associates `user_id` with `booking_id = NULL` (`status = 'general_inquiry'`).
+   - **Rule 6 (Unknown Sender)**: Safely quarantines message (`status = 'quarantine'`) for admin review.
+4. **`GET /wp-json/snippen/v1/sms/inbox`**: Queries and filters inbound SMS messages by `status` (`received`, `pending_selection`, `general_inquiry`, `quarantine`), `booking_id`, `user_id`, or search text with pagination.
+5. **`GET /wp-json/snippen/v1/sms/bookings`**: Looks up active bookings associated with a given phone number (`?phone=+47...`).
+
+#### Admin SMS Innboks & Karantene
+
+Administrators can navigate to **Snippen Booking → SMS Innboks** (`admin.php?page=snippen-booking-sms-inbox`) to:
+- Monitor all inbound SMS traffic and matched resolution rules.
+- Filter messages by status (Quarantine, Pending selection, General inquiries, Resolved bookings).
+- Manually assign unassociated or quarantined messages to a booking with a single click.
 
 ### SMS Gateway & E2E Test Provisioning (`composer demo:gateway`)
 

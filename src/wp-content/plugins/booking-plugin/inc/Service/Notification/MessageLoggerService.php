@@ -181,4 +181,137 @@ class MessageLoggerService {
 
 		return false !== $updated;
 	}
+
+	/**
+	 * Assign a quarantined or unresolved message to a booking (and optional user).
+	 *
+	 * @param int      $message_id Message ID.
+	 * @param int      $booking_id Target Booking ID.
+	 * @param int|null $user_id    Target User ID (optional, derived from booking if null).
+	 * @return bool True on success, false on failure.
+	 */
+	public static function assign_message_to_booking( int $message_id, int $booking_id, ?int $user_id = null ): bool {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'snippen_messages';
+
+		// If user_id is null, attempt to resolve from the booking
+		if ( null === $user_id ) {
+			$table_bookings = $wpdb->prefix . 'snippen_bookings';
+			$booking_row    = $wpdb->get_row(
+				$wpdb->prepare( "SELECT user_id FROM {$table_bookings} WHERE id = %d", $booking_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			);
+			if ( $booking_row && ! empty( $booking_row->user_id ) ) {
+				$user_id = (int) $booking_row->user_id;
+			}
+		}
+
+		$data    = array(
+			'booking_id'  => $booking_id,
+			'status'      => 'received',
+			'modified_at' => current_time( 'mysql' ),
+		);
+		$formats = array( '%d', '%s', '%s' );
+
+		if ( null !== $user_id ) {
+			$data['user_id'] = $user_id;
+			$formats[]       = '%d';
+		}
+
+		$updated = $wpdb->update(
+			$table,
+			$data,
+			array( 'id' => $message_id ),
+			$formats,
+			array( '%d' )
+		);
+
+		return false !== $updated;
+	}
+
+	/**
+	 * Query inbound SMS messages with optional filters and pagination.
+	 *
+	 * @param array $args Filter arguments.
+	 * @return array List of message records.
+	 */
+	public static function get_inbound_messages( array $args = array() ): array {
+		global $wpdb;
+
+		$table                      = $wpdb->prefix . 'snippen_messages';
+		list( $where_sql, $params ) = self::build_inbound_where( $args );
+
+		$limit  = isset( $args['limit'] ) ? max( 1, (int) $args['limit'] ) : 50;
+		$offset = isset( $args['offset'] ) ? max( 0, (int) $args['offset'] ) : 0;
+
+		$query    = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d";
+		$params[] = $limit;
+		$params[] = $offset;
+
+		$prepared = $wpdb->prepare( $query, ...$params ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$results  = $wpdb->get_results( $prepared ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		return is_array( $results ) ? $results : array();
+	}
+
+	/**
+	 * Count inbound SMS messages matching filter arguments.
+	 *
+	 * @param array $args Filter arguments.
+	 * @return int Number of matching messages.
+	 */
+	public static function count_inbound_messages( array $args = array() ): int {
+		global $wpdb;
+
+		$table                      = $wpdb->prefix . 'snippen_messages';
+		list( $where_sql, $params ) = self::build_inbound_where( $args );
+
+		$query = "SELECT COUNT(*) FROM {$table} WHERE {$where_sql}";
+		if ( ! empty( $params ) ) {
+			$prepared = $wpdb->prepare( $query, ...$params ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			return (int) $wpdb->get_var( $prepared ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		}
+
+		return (int) $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	}
+
+	/**
+	 * Build WHERE clause and parameters for inbound queries.
+	 *
+	 * @param array $args Filter arguments.
+	 * @return array Array containing [where_sql, params].
+	 */
+	private static function build_inbound_where( array $args ): array {
+		$where  = array( "channel = 'sms'", "event_type = 'inbound_sms'" );
+		$params = array();
+
+		if ( ! empty( $args['status'] ) && 'all' !== $args['status'] ) {
+			$where[]  = 'status = %s';
+			$params[] = sanitize_text_field( $args['status'] );
+		}
+
+		if ( isset( $args['booking_id'] ) && '' !== $args['booking_id'] ) {
+			$where[]  = 'booking_id = %d';
+			$params[] = (int) $args['booking_id'];
+		}
+
+		if ( isset( $args['user_id'] ) && '' !== $args['user_id'] ) {
+			$where[]  = 'user_id = %d';
+			$params[] = (int) $args['user_id'];
+		}
+
+		if ( ! empty( $args['phone'] ) ) {
+			$where[]  = 'recipient LIKE %s';
+			$params[] = '%' . $GLOBALS['wpdb']->esc_like( sanitize_text_field( $args['phone'] ) ) . '%';
+		}
+
+		if ( ! empty( $args['search'] ) ) {
+			$search   = '%' . $GLOBALS['wpdb']->esc_like( sanitize_text_field( $args['search'] ) ) . '%';
+			$where[]  = '(recipient LIKE %s OR message LIKE %s)';
+			$params[] = $search;
+			$params[] = $search;
+		}
+
+		return array( implode( ' AND ', $where ), $params );
+	}
 }
