@@ -533,19 +533,31 @@ input:disabled + .snippen-slider {
 }
 
 /* Modal Dialog Styling */
+body.snippen-modal-open {
+    overflow: hidden !important;
+}
+
 .snippen-modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
     background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     z-index: 100000;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .snippen-modal-content {
@@ -554,7 +566,13 @@ input:disabled + .snippen-slider {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     width: 100%;
     max-width: 580px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    margin: auto;
+    box-sizing: border-box;
     animation: snippenModalSlide 0.25s ease-out;
 }
 
@@ -570,6 +588,7 @@ input:disabled + .snippen-slider {
     padding: 18px 24px;
     border-bottom: 1px solid var(--border-color);
     background: #f8fafc;
+    flex-shrink: 0;
 }
 
 .snippen-modal-header h2.snippen-modal-title {
@@ -595,6 +614,11 @@ input:disabled + .snippen-slider {
 
 .snippen-modal-body {
     padding: 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .snippen-modal-body .snippen-form-group {
@@ -616,5 +640,30 @@ input:disabled + .snippen-slider {
     padding: 16px 24px;
     background: #f8fafc;
     border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .snippen-modal-backdrop {
+        padding: 8px;
+    }
+
+    .snippen-modal-content {
+        max-height: calc(100vh - 16px);
+        max-height: calc(100dvh - 16px);
+        border-radius: 10px;
+    }
+
+    .snippen-modal-header {
+        padding: 14px 16px;
+    }
+
+    .snippen-modal-body {
+        padding: 16px;
+    }
+
+    .snippen-modal-footer {
+        padding: 12px 16px;
+    }
 }
 

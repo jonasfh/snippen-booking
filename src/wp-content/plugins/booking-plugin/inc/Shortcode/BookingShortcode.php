@@ -265,6 +265,9 @@ class BookingShortcode {
 						<button type="button" class="close-modal">&times;</button>
 					</div>
 					<div class="modal-body" id="booking-info-content"></div>
+					<div class="modal-footer">
+						<button type="button" class="snippen-modal-footer-close-btn close-modal"><?php esc_html_e( 'Lukk', 'snippen-booking' ); ?></button>
+					</div>
 				</div>
 			</div>
 			<?php endif; ?>

@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.25.0] - 2026-09-05
+- (#272) Improved mobile user experience and responsiveness across all modal and overlay views (single booking UUID popup, calendar booking info modal, rental terms iframe modal, and admin notification dispatch dialog):
+  - Added background scroll locking (`body.snippen-modal-open`) preventing the underlying page from scrolling while overlays are active.
+  - Constrained overlays within viewport bounds using dynamic viewport units (`100dvh` / `calc(100dvh - 32px)` with `vh` fallback) so modals never exceed screen height or width on mobile devices (including Safari and Android address bars and landscape orientations).
+  - Structured modals with fixed headers and scrollable bodies (`overflow-y: auto`, `overscroll-behavior: contain`), ensuring the close button and title remain pinned and always accessible.
+  - Added keyboard `Escape` key listeners to dismiss active modals cleanly across all views.
+  - Optimized mobile touch targets and padding on small screens.
+
 ## [2.24.0] - 2026-09-05
 - (#270) Enhanced demo and gateway setup scripts (`bin/demo-gateway.php`, `composer demo:gateway`) to automatically create and publish frontend booking demo pages (combined calendar, room booking pages, account activation), seed multiple resident test users (`test.guest` / `+4799887766`, `kari.nordmann` / `+4799887767`, `per.hansen` / `+4799887768`), and seed multiple bookings across rooms and dates for testing.
 
