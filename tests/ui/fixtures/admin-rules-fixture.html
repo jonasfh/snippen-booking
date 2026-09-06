@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Rules Table Fixture</title>
+    <link rel="stylesheet" href="../../../src/wp-content/plugins/booking-plugin/css/admin.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 12px;
+            background-color: #f0f2f5;
+            color: #1e293b;
+            box-sizing: border-box;
+        }
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 8px 6px;
+            }
+        }
+        .dashicons {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            font-size: 14px;
+            text-align: center;
+            vertical-align: middle;
+            font-style: normal;
+        }
+        .dashicons-edit:before { content: "✎"; }
+        .dashicons-trash:before { content: "🗑"; }
+    </style>
+</head>
+<body>
+    <div class="snippen-booking-admin-wrap">
+        <div class="snippen-admin-header">
+            <h1>Rabattregler (Varighetsbasert)</h1>
+            <a href="#" class="snippen-btn snippen-btn-primary">Legg til ny</a>
+        </div>
+
+        <div class="snippen-card">
+            <div class="snippen-table-controls">
+                <span class="snippen-table-summary">Viser 3 av 3 rader</span>
+                <button type="button" class="snippen-btn snippen-btn-outline">Rens alle filtre</button>
+            </div>
+
+            <div class="snippen-table-responsive">
+                <table class="snippen-list-table snippen-filterable-table" id="discount-rules-table">
+                    <thead>
+                        <tr>
+                            <th data-filter-type="text" data-sort-type="string">Navn</th>
+                            <th data-filter-type="text" data-sort-type="string">Lokaler</th>
+                            <th data-filter-type="text" data-sort-type="string">Varighet</th>
+                            <th data-filter-type="text" data-sort-type="string">Rabatt</th>
+                            <th data-filter-type="minmax" data-sort-type="number">Prioritet</th>
+                            <th data-filter-type="select" data-sort-type="string">Status</th>
+                            <th style="text-align:right;">Handlinger</th>
+                        </tr>
+                        <tr class="snippen-filter-row">
+                            <th><div class="snippen-filter-input"><input type="text" placeholder="Søk..."></div></th>
+                            <th><div class="snippen-filter-input"><input type="text" placeholder="Søk..."></div></th>
+                            <th><div class="snippen-filter-input"><input type="text" placeholder="Søk..."></div></th>
+                            <th><div class="snippen-filter-input"><input type="text" placeholder="Søk..."></div></th>
+                            <th>
+                                <div class="snippen-filter-minmax">
+                                    <input type="number" placeholder="Min" class="snippen-min-input">
+                                    <input type="number" placeholder="Maks" class="snippen-max-input">
+                                </div>
+                            </th>
+                            <th>
+                                <div class="snippen-multiselect-dropdown">
+                                    <button type="button" class="snippen-multiselect-btn">Alle</button>
+                                </div>
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><a href="#">Hele Snippen hele dagen helligdag</a></strong></td>
+                            <td>Festsalen, Peisestuen</td>
+                            <td>&gt;= 13.00 timer</td>
+                            <td>Fast pris: 4 000 kr</td>
+                            <td>10</td>
+                            <td><label class="snippen-switch"><input type="checkbox" checked><span class="snippen-slider"></span></label></td>
+                            <td style="text-align:right;">
+                                <a href="#" class="snippen-btn snippen-btn-outline" title="Rediger"><span class="dashicons dashicons-edit"></span></a>
+                                <a href="#" class="snippen-btn snippen-btn-outline snippen-btn-danger" title="Slett"><span class="dashicons dashicons-trash"></span></a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="#">Hele Snippen hele dagen helg</a></strong></td>
+                            <td>Festsalen, Peisestuen</td>
+                            <td>&gt;= 13.00 timer</td>
+                            <td>Fast pris: 4 000 kr</td>
+                            <td>10</td>
+                            <td><label class="snippen-switch"><input type="checkbox" checked><span class="snippen-slider"></span></label></td>
+                            <td style="text-align:right;">
+                                <a href="#" class="snippen-btn snippen-btn-outline" title="Rediger"><span class="dashicons dashicons-edit"></span></a>
+                                <a href="#" class="snippen-btn snippen-btn-outline snippen-btn-danger" title="Slett"><span class="dashicons dashicons-trash"></span></a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong><a href="#">Hele Snippen hele dagen hverdag</a></strong></td>
+                            <td>Festsalen, Peisestuen</td>
+                            <td>&gt;= 7.00 timer</td>
+                            <td>Fast pris: 2 000 kr</td>
+                            <td>5</td>
+                            <td><label class="snippen-switch"><input type="checkbox" checked><span class="snippen-slider"></span></label></td>
+                            <td style="text-align:right;">
+                                <a href="#" class="snippen-btn snippen-btn-outline" title="Rediger"><span class="dashicons dashicons-edit"></span></a>
+                                <a href="#" class="snippen-btn snippen-btn-outline snippen-btn-danger" title="Slett"><span class="dashicons dashicons-trash"></span></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

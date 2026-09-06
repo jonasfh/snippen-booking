@@ -166,14 +166,15 @@ class DiscountPage {
 		$rules = $wpdb->get_results( $query );
 
 		echo '<div class="snippen-card">';
+		echo '<div class="snippen-table-responsive">';
 		echo '<table class="snippen-list-table snippen-filterable-table">';
 		echo '<thead><tr>';
-		echo '<th>' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Varighet', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Rabatt', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</th>';
-		echo '<th>' . esc_html__( 'Status', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Lokaler', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Varighet', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Rabatt', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="minmax" data-sort-type="number">' . esc_html__( 'Prioritet', 'snippen-booking' ) . '</th>';
+		echo '<th data-filter-type="select" data-sort-type="string">' . esc_html__( 'Status', 'snippen-booking' ) . '</th>';
 		echo '<th style="text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr></thead>';
 		echo '<tbody>';
@@ -221,7 +222,7 @@ class DiscountPage {
 			}
 		}
 
-		echo '</tbody></table></div>';
+		echo '</tbody></table></div></div>';
 	}
 
 	private function render_form( $id = 0 ) {

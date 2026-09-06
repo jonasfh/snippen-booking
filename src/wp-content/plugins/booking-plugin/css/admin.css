@@ -21,6 +21,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
     margin-bottom: 20px;
     background: #fff;
     padding: 20px;
@@ -32,7 +34,9 @@
     margin: 0;
     font-size: 24px;
     font-weight: 700;
+    line-height: 1.35;
     color: #0f172a;
+    word-break: break-word;
 }
 
 .snippen-card {
@@ -41,6 +45,16 @@
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     padding: 24px;
     margin-bottom: 24px;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.snippen-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    margin-top: 10px;
 }
 
 /* Custom Table Styling */
@@ -443,6 +457,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 .snippen-table-summary {
     font-size: 14px;
@@ -524,8 +540,76 @@ th.sorted-desc .sort-icon {
     opacity: 1;
 }
 
-/* Responsive Booking List */
+/* Responsive Admin Layout & Tables */
 @media screen and (max-width: 768px) {
+    .snippen-booking-admin-wrap {
+        margin: 12px 0 0 0;
+    }
+
+    .snippen-admin-header {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .snippen-admin-header h1 {
+        font-size: 20px;
+        line-height: 1.35;
+    }
+
+    .snippen-card {
+        padding: 16px 12px;
+        border-radius: 10px;
+    }
+
+    .snippen-table-controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-between;
+    }
+
+    .snippen-table-summary {
+        font-size: 13px;
+    }
+
+    .snippen-list-table th,
+    .snippen-list-table td {
+        padding: 10px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .snippen-list-table td:first-child {
+        white-space: normal;
+        min-width: 120px;
+        word-break: break-word;
+    }
+
+    .snippen-filter-row th {
+        padding: 6px 6px;
+    }
+
+    .snippen-filter-input input,
+    .snippen-multiselect-btn {
+        padding: 5px 6px;
+        font-size: 12px;
+        height: 28px;
+        min-width: 65px;
+    }
+
+    .snippen-filter-minmax {
+        gap: 3px;
+        min-width: 80px;
+    }
+
+    .snippen-filter-minmax input {
+        padding: 4px 4px;
+        font-size: 11px;
+        min-width: 38px;
+        height: 28px;
+    }
+
+    /* Responsive Booking List */
     .bookings-table,
     .bookings-table thead,
     .bookings-table tbody,

@@ -228,6 +228,7 @@ class PricingPage {
 		$rules = $wpdb->get_results( $query );
 
 		echo '<div class="snippen-card" id="snippen-pricing-list">';
+		echo '<div class="snippen-table-responsive">';
 		echo '<table class="snippen-list-table snippen-filterable-table" id="pricing-rules-table">';
 		echo '<thead><tr>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
@@ -275,7 +276,7 @@ class PricingPage {
 			}
 		}
 
-		echo '</tbody></table></div>';
+		echo '</tbody></table></div></div>';
 	}
 
 	/**

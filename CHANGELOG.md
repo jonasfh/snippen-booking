@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.27.2] - 2026-09-06
+- (#281) Forbedret mobilvisning for prisregler og rabattregler i admin:
+  - Fikset overlappende titteltekst i `.snippen-admin-header h1` med romslig linjehøyde (`line-height: 1.35;`) og fleksibel flyt/gap for handlingsknapper på smale skjermer.
+  - Pakket tabeller inn i `.snippen-table-responsive` med jevn berøringsrulling (`-webkit-overflow-scrolling: touch;`), slik at tabeller med mange kolonner aldri flyter utenfor `.snippen-card` eller skjermkanten på mobil.
+  - Forbedret `admin-table-filter.js` til å automatisk pakke filterbare tabeller i en responsiv rullekontainer, plassere filterkontroller over kontaineren, og unngå tomme filterrader når ingen filtre er definert.
+  - Komprimerte tabell-headere, celler og filter-inputs på mobil (`<= 768px`) for bedre overblikk og plassutnyttelse.
+  - Lagt til `data-filter-type` og `data-sort-type` på `DiscountPage` for full filtrering- og sorteringsstøtte.
+  - Lagt til Playwright UI- og visuell regresjonstest for regeltabellene under desktop og mobil.
+
 ## [2.27.1] - 2026-09-06
 - (#279) Forbedret mobilresponsivitet og kommunikasjonshistorikk i administrasjonens booking-oversikt:
   - Fikset bredde og layout for detaljvisning på mobil: erstattet fastlåste `grid-column: span`-regler med responsive klasser og lagt til eksplisitt breddekontroll (`100%`, `box-sizing: border-box`, `min-width: 0`) slik at ingen felt eller knapper havner utenfor skjermkanten.
