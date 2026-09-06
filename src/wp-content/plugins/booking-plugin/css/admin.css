@@ -335,6 +335,36 @@
     box-sizing: border-box;
 }
 
+.payment-status-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.payment-status-radio-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-color, #1e293b);
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+.payment-status-radio-label:hover {
+    background-color: #f1f5f9;
+}
+
+.payment-status-radio-label input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+}
+
 .snippen-details-row .booking-assistant-actions {
     box-sizing: border-box;
 }

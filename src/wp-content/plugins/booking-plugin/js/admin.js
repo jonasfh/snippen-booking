@@ -495,7 +495,7 @@
             const $btn = $(this);
             const $container = $btn.closest('.payment-admin-container');
             const id = $container.data('id');
-            const paymentStatusId = $container.find('.payment-status-select').val();
+            const paymentStatusId = $container.find('input.payment-status-radio:checked').val() || $container.find('.payment-status-select').val();
             const paymentNotes = $container.find('.payment-notes-input').val();
             const $feedback = $container.find('.payment-feedback');
 
