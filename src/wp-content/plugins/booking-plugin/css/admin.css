@@ -317,15 +317,6 @@
     padding-top: 12px;
 }
 
-.msg-filter-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-    color: #475569;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-}
 
 .msg-list-container {
     display: flex;
@@ -826,9 +817,6 @@ th.sorted-desc .sort-icon {
         gap: 8px;
     }
 
-    .msg-filter-controls {
-        gap: 6px 10px;
-    }
 }
 
 /* Toggle Switch Styling */

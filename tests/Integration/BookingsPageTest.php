@@ -298,6 +298,11 @@ class BookingsPageTest extends TestCase {
         // Check message body markup
         $this->assertStringContainsString( 'class="msg-item-body"', $output );
         $this->assertStringContainsString( 'Hei Test Person, din booking er bekreftet.', $output );
+        $this->assertStringContainsString( '<div class="msg-item" data-event-type="booking_confirmation">', $output );
+
+        // Ensure event filter controls are dropped
+        $this->assertStringNotContainsString( 'class="msg-filter-controls"', $output );
+        $this->assertStringNotContainsString( 'msg-filter-cb', $output );
 
         // Ensure no internal scrollbar styles are present
         $this->assertStringNotContainsString( 'max-height:240px; overflow-y:auto;', $output );

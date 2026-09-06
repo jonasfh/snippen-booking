@@ -381,8 +381,6 @@
                 $listContainer.append($item);
             });
 
-            filterMessagesForContainer($container);
-
             // If history body was closed when new message arrived, auto-expand it
             const $body = $container.find('.msg-history-body');
             if ($body.length && !$body.is(':visible')) {
@@ -402,7 +400,7 @@
 
         // Toggle communication history
         $('.bookings-table').on('click', '.toggle-msg-history, .msg-history-header', function(e) {
-            if ($(e.target).closest('.msg-filter-controls, input, select, textarea').length) {
+            if ($(e.target).closest('input, select, textarea').length) {
                 return;
             }
             e.preventDefault();
@@ -429,31 +427,6 @@
                 }
             });
         });
-
-        // Handle Event Type Checkbox Filter change
-        $('.bookings-table').on('change', '.msg-filter-cb', function() {
-            const $container = $(this).closest('.booking-messages-history');
-            filterMessagesForContainer($container);
-        });
-
-        function filterMessagesForContainer($container) {
-            $container.find('.msg-item').each(function() {
-                const $item = $(this);
-                const eventType = $item.data('event-type');
-                const $cb = $container.find('.msg-filter-cb[data-event-type="' + eventType + '"]');
-
-                // If checkbox exists for this event type, show if checked; otherwise show by default
-                if ($cb.length > 0) {
-                    if ($cb.is(':checked')) {
-                        $item.show();
-                    } else {
-                        $item.hide();
-                    }
-                } else {
-                    $item.show();
-                }
-            });
-        }
 
         // AJAX Save Door Code
         $('.bookings-table').on('click', '.snippen-btn-save-door-code', function(e) {
