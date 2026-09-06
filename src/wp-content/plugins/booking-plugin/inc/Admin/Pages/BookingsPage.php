@@ -453,17 +453,19 @@ class BookingsPage {
 		$messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking( (int) $booking->id );
 
 		$known_event_types = array(
-			'booking_confirmation'     => __( 'Booking-bekreftelse', 'snippen-booking' ),
-			'manual_dispatch_customer' => __( 'Manuell leietakermelding', 'snippen-booking' ),
-			'admin_booking'            => __( 'Admin bookingvarsel', 'snippen-booking' ),
-			'manual_dispatch_admin'    => __( 'Manuell adminmelding', 'snippen-booking' ),
-			'user_activation'          => __( 'Kontoaktivering', 'snippen-booking' ),
-			'password_reset'           => __( 'Passordtilbakestilling', 'snippen-booking' ),
-			'payment_reminder'         => __( 'Betalingspåminnelse', 'snippen-booking' ),
-			'payment_receipt_uploaded' => __( 'Kvittering lastet opp', 'snippen-booking' ),
-			'booking_confirmed'        => __( 'Booking godkjent', 'snippen-booking' ),
-			'payment_received'         => __( 'Betaling bekreftet', 'snippen-booking' ),
-			'inbound_sms'              => __( 'Innkommende SMS', 'snippen-booking' ),
+			'booking_confirmation'            => __( 'Booking-bekreftelse', 'snippen-booking' ),
+			'manual_dispatch_customer'        => __( 'Manuell leietakermelding', 'snippen-booking' ),
+			'admin_booking'                   => __( 'Admin bookingvarsel', 'snippen-booking' ),
+			'manual_dispatch_admin'           => __( 'Manuell adminmelding', 'snippen-booking' ),
+			'user_activation'                 => __( 'Kontoaktivering', 'snippen-booking' ),
+			'password_reset'                  => __( 'Passordtilbakestilling', 'snippen-booking' ),
+			'payment_reminder'                => __( 'Betalingspåminnelse', 'snippen-booking' ),
+			'payment_receipt_uploaded'        => __( 'Kvittering lastet opp', 'snippen-booking' ),
+			'booking_confirmed'               => __( 'Booking godkjent', 'snippen-booking' ),
+			'payment_received'                => __( 'Betaling bekreftet', 'snippen-booking' ),
+			'inbound_sms'                     => __( 'Innkommende SMS', 'snippen-booking' ),
+			'sms_disambiguation_prompt'       => __( 'Valgforespørsel (SMS)', 'snippen-booking' ),
+			'sms_disambiguation_confirmation' => __( 'Valgbekreftelse (SMS)', 'snippen-booking' ),
 		);
 
 		$total_count    = count( $messages );

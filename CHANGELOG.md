@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.31.0] - 2026-09-06
+- (#302) Send bekreftelsesmelding ved valg av reservasjon (SMS flervalg):
+  - Automatisk utsending av bekreftelses-SMS til leietaker når et valg gjøres på en flervalgsdialog («Henvendelsen og kommende meldinger knyttes til reservasjon: Peisestuen (27.09.2026 kl. 11:00)»).
+  - Ny konstant `EVENT_DISAMBIGUATION_CONFIRMATION` ('sms_disambiguation_confirmation') og standardiserte formateringshjelpere `format_booking_label()` og `format_disambiguation_confirmation()` i `SmsInboxResolverService`.
+  - Støtte for `get_booking_summary()` for oppslag av ressursnavn og tidspunkter ved behov.
+  - Lagt til etiketter for `sms_disambiguation_prompt` og `sms_disambiguation_confirmation` i `BookingsPage.php` og `admin.js`.
+  - Oppdatert `bin/demo-inbox.php` til å vise bekreftelses-SMS i handlingsoppsummeringen.
+  - Omfattende enhets- og integrasjonstester for bekreftelsesmelding og utbokskø.
+
 ## [2.30.0] - 2026-09-06
 - (#300) Filtrer ut adminvarsler og svarnumre i kommunikasjonshistorikk:
   - Skjult administrative varsler (`admin_booking`, `manual_dispatch_admin`, `payment_receipt_uploaded` osv.) som standard i kommunikasjonshistorikken under booking-detaljer.

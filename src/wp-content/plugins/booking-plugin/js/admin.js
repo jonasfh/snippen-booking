@@ -474,7 +474,9 @@
                 'payment_receipt_uploaded': 'Kvittering lastet opp',
                 'booking_confirmed': 'Booking godkjent',
                 'payment_received': 'Betaling bekreftet',
-                'inbound_sms': 'Innkommende SMS'
+                'inbound_sms': 'Innkommende SMS',
+                'sms_disambiguation_prompt': 'Valgforespørsel (SMS)',
+                'sms_disambiguation_confirmation': 'Valgbekreftelse (SMS)'
             };
 
             messages.forEach(function(msg) {
