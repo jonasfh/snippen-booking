@@ -23,8 +23,9 @@ class SmsInboxResolverService {
 	const STATUS_GENERAL_INQUIRY   = 'general_inquiry';
 	const STATUS_QUARANTINE        = 'quarantine';
 
-	const EVENT_INBOUND_SMS           = 'inbound_sms';
-	const EVENT_DISAMBIGUATION_PROMPT = 'sms_disambiguation_prompt';
+	const EVENT_INBOUND_SMS                 = 'inbound_sms';
+	const EVENT_DISAMBIGUATION_PROMPT       = 'sms_disambiguation_prompt';
+	const EVENT_DISAMBIGUATION_CONFIRMATION = 'sms_disambiguation_confirmation';
 
 	/**
 	 * Parse selection choice (1-based index) from user text.
@@ -72,6 +73,50 @@ class SmsInboxResolverService {
 	}
 
 	/**
+	 * Format a clear, natural-language label for a single booking.
+	 * E.g. "Peisestuen (27.09.2026 kl. 11:00)"
+	 *
+	 * @param object $booking Booking object.
+	 * @return string Formatted booking label.
+	 */
+	public static function format_booking_label( object $booking ): string {
+		$resource_name  = ! empty( $booking->resource_name ) ? $booking->resource_name : __( 'Lokale/ressurs', 'snippen-booking' );
+		$date_formatted = ! empty( $booking->booking_date ) ? date_i18n( 'd.m.Y', strtotime( $booking->booking_date ) ) : '';
+		$time_formatted = ! empty( $booking->slot_start ) ? substr( $booking->slot_start, 0, 5 ) : '';
+
+		$dt_str = $date_formatted;
+		if ( ! empty( $time_formatted ) ) {
+			$dt_str .= ' kl. ' . $time_formatted;
+		}
+
+		if ( ! empty( $dt_str ) ) {
+			return sprintf( '%s (%s)', $resource_name, $dt_str );
+		}
+
+		return $resource_name;
+	}
+
+	/**
+	 * Format a natural-language confirmation acknowledging the user's booking selection.
+	 *
+	 * @param object|null $booking Booking object or null if unavailable.
+	 * @return string Norwegian confirmation text.
+	 */
+	public static function format_disambiguation_confirmation( ?object $booking ): string {
+		if ( ! $booking ) {
+			return __( 'Henvendelsen og kommende meldinger er nå knyttet til din valgte reservasjon.', 'snippen-booking' );
+		}
+
+		$label = self::format_booking_label( $booking );
+
+		return sprintf(
+			/* translators: %s: formatted booking label */
+			__( 'Henvendelsen og kommende meldinger knyttes til reservasjon: %s', 'snippen-booking' ),
+			$label
+		);
+	}
+
+	/**
 	 * Format a clear, natural-language prompt asking the user to choose between active bookings.
 	 *
 	 * @param array $bookings Array of booking objects.
@@ -83,17 +128,8 @@ class SmsInboxResolverService {
 		);
 
 		foreach ( $bookings as $index => $booking ) {
-			$num            = $index + 1;
-			$resource_name  = ! empty( $booking->resource_name ) ? $booking->resource_name : __( 'Lokale/ressurs', 'snippen-booking' );
-			$date_formatted = ! empty( $booking->booking_date ) ? date_i18n( 'd.m.Y', strtotime( $booking->booking_date ) ) : '';
-			$time_formatted = ! empty( $booking->slot_start ) ? substr( $booking->slot_start, 0, 5 ) : '';
-
-			$dt_str = $date_formatted;
-			if ( ! empty( $time_formatted ) ) {
-				$dt_str .= ' kl. ' . $time_formatted;
-			}
-
-			$lines[] = sprintf( '%d. %s (%s)', $num, $resource_name, $dt_str );
+			$num     = $index + 1;
+			$lines[] = sprintf( '%d. %s', $num, self::format_booking_label( $booking ) );
 		}
 
 		$lines[] = __( 'Hvilken reservasjon gjelder henvendelsen? Svar med tallet (f.eks. 1 eller 2).', 'snippen-booking' );
@@ -254,6 +290,48 @@ class SmsInboxResolverService {
 	}
 
 	/**
+	 * Get summary details for a single booking (including resource names and slot start/end).
+	 *
+	 * @param int $booking_id Booking ID.
+	 * @return object|null Booking object or null if not found.
+	 */
+	public static function get_booking_summary( int $booking_id ): ?object {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
+
+		$query = $wpdb->prepare(
+			"SELECT b.*, s.start_time as slot_start, s.end_time as slot_end 
+			 FROM {$table_bookings} b 
+			 LEFT JOIN {$table_slots} s ON b.slot_id = s.id 
+			 WHERE b.id = %d 
+			 LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$booking_id
+		);
+
+		$booking = $wpdb->get_row( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		if ( ! $booking ) {
+			return null;
+		}
+
+		$object_names           = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$booking->id
+			)
+		); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$booking->resource_name = ! empty( $object_names ) ? implode( ', ', $object_names ) : '';
+
+		return $booking;
+	}
+
+	/**
 	 * Resolve an inbound SMS message according to the 6 prioritized rules.
 	 *
 	 * @param string      $sender_phone  Sender phone number.
@@ -368,12 +446,13 @@ class SmsInboxResolverService {
 					);
 
 					return array(
-						'logged_id'   => $logged_id,
-						'status'      => self::STATUS_RECEIVED,
-						'booking_id'  => $booking_id,
-						'user_id'     => $user_id,
-						'rule'        => 'active_session',
-						'prompt_sent' => false,
+						'logged_id'         => $logged_id,
+						'status'            => self::STATUS_RECEIVED,
+						'booking_id'        => $booking_id,
+						'user_id'           => $user_id,
+						'rule'              => 'active_session',
+						'prompt_sent'       => false,
+						'confirmation_sent' => false,
 					);
 				}
 			}
@@ -430,13 +509,50 @@ class SmsInboxResolverService {
 							);
 						}
 
+						// Send confirmation SMS back to the user acknowledging the selection
+						$auto_prompt       = ( 'no' !== get_option( 'snippen_sms_auto_disambiguate', 'yes' ) );
+						$confirmation_sent = false;
+
+						if ( $auto_prompt ) {
+							$selected_booking = null;
+							foreach ( $active_bookings as $b ) {
+								if ( (int) $b->id === $resolved_booking_id ) {
+									$selected_booking = $b;
+									break;
+								}
+							}
+							if ( ! $selected_booking ) {
+								$selected_booking = self::get_booking_summary( $resolved_booking_id );
+							}
+
+							$confirmation_text = self::format_disambiguation_confirmation( $selected_booking );
+							$conf_meta         = array(
+								'direction'  => 'outbound',
+								'booking_id' => $resolved_booking_id,
+							);
+
+							MessageLoggerService::log_message(
+								$resolved_booking_id,
+								$found_user_id,
+								'sms',
+								$sender_phone,
+								null,
+								$confirmation_text,
+								self::EVENT_DISAMBIGUATION_CONFIRMATION,
+								'queued',
+								$conf_meta
+							);
+							$confirmation_sent = true;
+						}
+
 						return array(
-							'logged_id'   => $logged_id,
-							'status'      => self::STATUS_RECEIVED,
-							'booking_id'  => $resolved_booking_id,
-							'user_id'     => $found_user_id,
-							'rule'        => 'disambiguation_selection',
-							'prompt_sent' => false,
+							'logged_id'         => $logged_id,
+							'status'            => self::STATUS_RECEIVED,
+							'booking_id'        => $resolved_booking_id,
+							'user_id'           => $found_user_id,
+							'rule'              => 'disambiguation_selection',
+							'prompt_sent'       => false,
+							'confirmation_sent' => $confirmation_sent,
 						);
 					}
 				}
@@ -465,12 +581,13 @@ class SmsInboxResolverService {
 			);
 
 			return array(
-				'logged_id'   => $logged_id,
-				'status'      => self::STATUS_RECEIVED,
-				'booking_id'  => $booking_id,
-				'user_id'     => $user_id,
-				'rule'        => 'single_active_booking',
-				'prompt_sent' => false,
+				'logged_id'         => $logged_id,
+				'status'            => self::STATUS_RECEIVED,
+				'booking_id'        => $booking_id,
+				'user_id'           => $user_id,
+				'rule'              => 'single_active_booking',
+				'prompt_sent'       => false,
+				'confirmation_sent' => false,
 			);
 		}
 
@@ -522,12 +639,13 @@ class SmsInboxResolverService {
 			}
 
 			return array(
-				'logged_id'   => $logged_id,
-				'status'      => self::STATUS_PENDING_SELECTION,
-				'booking_id'  => null,
-				'user_id'     => $found_user_id,
-				'rule'        => 'multiple_active_bookings',
-				'prompt_sent' => $prompt_sent,
+				'logged_id'         => $logged_id,
+				'status'            => self::STATUS_PENDING_SELECTION,
+				'booking_id'        => null,
+				'user_id'           => $found_user_id,
+				'rule'              => 'multiple_active_bookings',
+				'prompt_sent'       => $prompt_sent,
+				'confirmation_sent' => false,
 			);
 		}
 
@@ -550,12 +668,13 @@ class SmsInboxResolverService {
 			);
 
 			return array(
-				'logged_id'   => $logged_id,
-				'status'      => self::STATUS_GENERAL_INQUIRY,
-				'booking_id'  => null,
-				'user_id'     => $found_user_id,
-				'rule'        => 'registered_user_no_booking',
-				'prompt_sent' => false,
+				'logged_id'         => $logged_id,
+				'status'            => self::STATUS_GENERAL_INQUIRY,
+				'booking_id'        => null,
+				'user_id'           => $found_user_id,
+				'rule'              => 'registered_user_no_booking',
+				'prompt_sent'       => false,
+				'confirmation_sent' => false,
 			);
 		}
 
@@ -576,12 +695,13 @@ class SmsInboxResolverService {
 		);
 
 		return array(
-			'logged_id'   => $logged_id,
-			'status'      => self::STATUS_QUARANTINE,
-			'booking_id'  => null,
-			'user_id'     => null,
-			'rule'        => 'unknown_sender',
-			'prompt_sent' => false,
+			'logged_id'         => $logged_id,
+			'status'            => self::STATUS_QUARANTINE,
+			'booking_id'        => null,
+			'user_id'           => null,
+			'rule'              => 'unknown_sender',
+			'prompt_sent'       => false,
+			'confirmation_sent' => false,
 		);
 	}
 }

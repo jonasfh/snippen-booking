@@ -223,10 +223,10 @@ if ( $raw ) {
 echo "======================================================================\n";
 echo "  Snippen SMS Gateway - Simulering av innkommende SMS\n";
 echo "======================================================================\n";
-echo sprintf( "%-18s: %s\n", 'Avsender', $normalized_phone );
-echo sprintf( "%-18s: \"%s\"\n", 'Melding', $message_arg );
-echo sprintf( "%-18s: %s\n", 'Transport', $transport );
-echo sprintf( "%-18s: %d %s\n", 'HTTP Status', $status_code, ( $status_code >= 200 && $status_code < 300 ) ? 'OK' : 'Feil' );
+printf( "%-18s: %s\n", 'Avsender', $normalized_phone );
+printf( "%-18s: \"%s\"\n", 'Melding', $message_arg );
+printf( "%-18s: %s\n", 'Transport', $transport );
+printf( "%-18s: %d %s\n", 'HTTP Status', $status_code, ( $status_code >= 200 && $status_code < 300 ) ? 'OK' : 'Feil' );
 echo "----------------------------------------------------------------------\n";
 
 if ( $status_code < 200 || $status_code >= 300 ) {
@@ -234,8 +234,8 @@ if ( $status_code < 200 || $status_code >= 300 ) {
 	$err_msg  = $response_data['message'] ?? ( is_string( $response_data ) ? $response_data : 'Forespørselen feilet' );
 
 	echo "STATUS: FEIL (HTTP {$status_code})\n";
-	echo sprintf( "%-18s: %s\n", 'Feilkode', $err_code );
-	echo sprintf( "%-18s: %s\n", 'Beskrivelse', $err_msg );
+	printf( "%-18s: %s\n", 'Feilkode', $err_code );
+	printf( "%-18s: %s\n", 'Beskrivelse', $err_msg );
 	echo "======================================================================\n";
 	exit( 1 );
 }
@@ -278,11 +278,11 @@ foreach ( $results as $res ) {
 	);
 	$rule_text   = $rule_labels[ $rule ] ?? $rule;
 
-	echo sprintf( "%-18s: %s\n", 'Løsningsstatus', $status_text );
-	echo sprintf( "%-18s: %s\n", 'Oppløsningsregel', $rule_text );
+	printf( "%-18s: %s\n", 'Løsningsstatus', $status_text );
+	printf( "%-18s: %s\n", 'Oppløsningsregel', $rule_text );
 
 	if ( $logged_id ) {
-		echo sprintf( "%-18s: #%d\n", 'Meldings-ID', $logged_id );
+		printf( "%-18s: #%d\n", 'Meldings-ID', $logged_id );
 	}
 
 	// Booking description
@@ -290,22 +290,22 @@ foreach ( $results as $res ) {
 		$table_b  = $wpdb->prefix . 'snippen_bookings';
 		$booking  = $wpdb->get_row( $wpdb->prepare( "SELECT id, booking_date, status, customer_name FROM {$table_b} WHERE id = %d", $booking_id ) );
 		$b_detail = $booking ? "Booking #{$booking_id} ({$booking->customer_name}, dato: {$booking->booking_date}, status: {$booking->status})" : "Booking #{$booking_id}";
-		echo sprintf( "%-18s: %s\n", 'Tilknyttet booking', $b_detail );
+		printf( "%-18s: %s\n", 'Tilknyttet booking', $b_detail );
 	} else {
-		echo sprintf( "%-18s: %s\n", 'Tilknyttet booking', 'Ingen' );
+		printf( "%-18s: %s\n", 'Tilknyttet booking', 'Ingen' );
 	}
 
 	// User description
 	if ( $user_id ) {
 		$user     = get_userdata( $user_id );
 		$u_detail = $user ? "Bruker #{$user_id} ({$user->display_name}, {$user->user_email})" : "Bruker #{$user_id}";
-		echo sprintf( "%-18s: %s\n", 'Tilknyttet bruker', $u_detail );
+		printf( "%-18s: %s\n", 'Tilknyttet bruker', $u_detail );
 	} else {
-		echo sprintf( "%-18s: %s\n", 'Tilknyttet bruker', 'Ukjent / ikke registrert' );
+		printf( "%-18s: %s\n", 'Tilknyttet bruker', 'Ukjent / ikke registrert' );
 	}
 
 	// Action description
-	echo sprintf( "%-18s: ", 'Utført handling' );
+	printf( '%-18s: ', 'Utført handling' );
 	if ( 'pending_selection' === $status && $prompt_sent ) {
 		echo "Valg-SMS ble generert og lagt i utboks for flervalg.\n";
 
@@ -324,7 +324,26 @@ foreach ( $results as $res ) {
 			echo "-----------------------------------------\n";
 		}
 	} elseif ( 'received' === $status ) {
-		echo "Meldingen ble knyttet til booking #{$booking_id} og lagret i innboksen.\n";
+		if ( 'disambiguation_selection' === $rule ) {
+			echo "Valg bekreftet. Meldingen ble knyttet til booking #{$booking_id}, og bekreftelses-SMS ble lagt i utboksen.\n";
+
+			// Query latest queued confirmation text
+			$table_m           = $wpdb->prefix . 'snippen_messages';
+			$last_confirmation = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT message FROM {$table_m} WHERE recipient = %s AND event_type = %s ORDER BY id DESC LIMIT 1",
+					$normalized_phone,
+					'sms_disambiguation_confirmation'
+				)
+			);
+			if ( $last_confirmation ) {
+				echo "\n--- [Generert bekreftelses-SMS lagt i utboks] ---\n";
+				echo trim( $last_confirmation ) . "\n";
+				echo "--------------------------------------------------\n";
+			}
+		} else {
+			echo "Meldingen ble knyttet til booking #{$booking_id} og lagret i innboksen.\n";
+		}
 	} elseif ( 'general_inquiry' === $status ) {
 		echo "Meldingen ble lagret som generell henvendelse for brukeren.\n";
 	} elseif ( 'quarantine' === $status ) {

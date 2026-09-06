@@ -301,13 +301,14 @@ class SmsGatewayApi {
 			}
 
 			$results[] = array(
-				'gateway_id'  => $gateway_id,
-				'message_id'  => $resolution['logged_id'],
-				'status'      => $resolution['status'],
-				'booking_id'  => $resolution['booking_id'],
-				'user_id'     => $resolution['user_id'],
-				'rule'        => $resolution['rule'],
-				'prompt_sent' => $resolution['prompt_sent'],
+				'gateway_id'        => $gateway_id,
+				'message_id'        => $resolution['logged_id'],
+				'status'            => $resolution['status'],
+				'booking_id'        => $resolution['booking_id'],
+				'user_id'           => $resolution['user_id'],
+				'rule'              => $resolution['rule'],
+				'prompt_sent'       => $resolution['prompt_sent'],
+				'confirmation_sent' => $resolution['confirmation_sent'] ?? false,
 			);
 		}
 

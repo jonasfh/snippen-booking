@@ -54,17 +54,17 @@ class SmsInboxResolverServiceTest extends TestCase {
 	 * Helper to create a test booking
 	 */
 	private function create_booking( array $args = array() ): int {
-		$repo = new BookingRepository();
+		$repo     = new BookingRepository();
 		$defaults = array(
-			'uuid'           => wp_generate_uuid4(),
-			'booking_date'   => current_time( 'Y-m-d' ),
-			'customer_name'  => 'Ola Nordmann',
-			'customer_phone' => '+4799887766',
-			'customer_email' => 'ola@example.com',
+			'uuid'              => wp_generate_uuid4(),
+			'booking_date'      => current_time( 'Y-m-d' ),
+			'customer_name'     => 'Ola Nordmann',
+			'customer_phone'    => '+4799887766',
+			'customer_email'    => 'ola@example.com',
 			'status'            => 'confirmed',
 			'payment_status_id' => 2,
 		);
-		$data = array_merge( $defaults, $args );
+		$data     = array_merge( $defaults, $args );
 		return $repo->create( $data, array( 1 ), array() );
 	}
 
@@ -117,6 +117,24 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$this->assertStringContainsString( '1. Badstue', $prompt );
 		$this->assertStringContainsString( '2. Felleslokale', $prompt );
 		$this->assertStringContainsString( 'Hvilken reservasjon gjelder henvendelsen?', $prompt );
+	}
+
+	/**
+	 * Test format_disambiguation_confirmation
+	 */
+	public function test_format_disambiguation_confirmation() {
+		$b = (object) array(
+			'resource_name' => 'Peisestuen',
+			'booking_date'  => '2026-09-27',
+			'slot_start'    => '11:00:00',
+		);
+
+		$text = SmsInboxResolverService::format_disambiguation_confirmation( $b );
+		$this->assertStringContainsString( 'Henvendelsen og kommende meldinger knyttes til reservasjon: Peisestuen (27.09.2026 kl. 11:00)', $text );
+
+		// Test fallback when booking is null
+		$fallback = SmsInboxResolverService::format_disambiguation_confirmation( null );
+		$this->assertStringContainsString( 'valgte reservasjon', $fallback );
 	}
 
 	/**
@@ -203,8 +221,22 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
 
 		$past_time = gmdate( 'Y-m-d H:i:s', time() - 600 );
-		$wpdb->update( $wpdb->prefix . 'snippen_bookings', array( 'created_at' => $past_time, 'modified_at' => $past_time ), array( 'id' => $b1_id ) );
-		$wpdb->update( $wpdb->prefix . 'snippen_bookings', array( 'created_at' => $past_time, 'modified_at' => $past_time ), array( 'id' => $b2_id ) );
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'created_at'  => $past_time,
+				'modified_at' => $past_time,
+			),
+			array( 'id' => $b1_id )
+		);
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'created_at'  => $past_time,
+				'modified_at' => $past_time,
+			),
+			array( 'id' => $b2_id )
+		);
 
 		// 2. Session message on booking 1 (set created_at 5 minutes ago)
 		$session_time = gmdate( 'Y-m-d H:i:s', time() - 300 );
@@ -229,7 +261,10 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$now = gmdate( 'Y-m-d H:i:s', time() );
 		$wpdb->update(
 			$wpdb->prefix . 'snippen_bookings',
-			array( 'modified_at' => $now, 'description' => 'Endret tidspunkt' ),
+			array(
+				'modified_at' => $now,
+				'description' => 'Endret tidspunkt',
+			),
 			array( 'id' => $b2_id )
 		);
 
@@ -260,11 +295,13 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$reply_res = SmsInboxResolverService::resolve_message( '+4799887766', '2' );
 		$this->assertSame( 'disambiguation_selection', $reply_res['rule'] );
 		$this->assertSame( $b2_id, $reply_res['booking_id'] );
+		$this->assertTrue( $reply_res['confirmation_sent'] );
 
 		// 3. User follows up with another question
 		$followup_res = SmsInboxResolverService::resolve_message( '+4799887766', 'Flott, hvor finner jeg nøkkelen?' );
 		$this->assertSame( 'active_session', $followup_res['rule'] );
 		$this->assertSame( $b2_id, $followup_res['booking_id'] );
+		$this->assertFalse( $followup_res['confirmation_sent'] );
 	}
 
 	/**
@@ -311,11 +348,21 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$this->assertSame( 'disambiguation_selection', $res['rule'] );
 		$this->assertSame( SmsInboxResolverService::STATUS_RECEIVED, $res['status'] );
 		$this->assertSame( $b2_id, $res['booking_id'] );
+		$this->assertTrue( $res['confirmation_sent'] );
 
 		// Verify the pending message was updated to resolved booking
 		$updated_pending = MessageLoggerService::get_message( $pending_msg_id );
 		$this->assertSame( (string) $b2_id, (string) $updated_pending->booking_id );
 		$this->assertSame( 'received', $updated_pending->status );
+
+		// Verify confirmation SMS was enqueued
+		$outbox = MessageLoggerService::get_pending_outbox();
+		$this->assertNotEmpty( $outbox );
+		$this->assertSame( SmsInboxResolverService::EVENT_DISAMBIGUATION_CONFIRMATION, $outbox[0]->event_type );
+		$this->assertSame( '+4799887766', $outbox[0]->recipient );
+		$this->assertSame( (string) $b2_id, (string) $outbox[0]->booking_id );
+		$this->assertStringContainsString( 'Henvendelsen og kommende meldinger knyttes til reservasjon', $outbox[0]->message );
+		$this->assertStringContainsString( '10.10.2026', $outbox[0]->message );
 	}
 
 	/**
@@ -441,7 +488,7 @@ class SmsInboxResolverServiceTest extends TestCase {
 		);
 
 		$search_phones = SmsInboxResolverService::get_search_phones( '+4795556677' );
-		$active = SmsInboxResolverService::get_active_bookings_for_phones( $search_phones );
+		$active        = SmsInboxResolverService::get_active_bookings_for_phones( $search_phones );
 
 		$this->assertCount( 1, $active );
 		$this->assertSame( (int) $paid_past_id, (int) $active[0]->id );
