@@ -443,6 +443,58 @@
     overflow-wrap: break-word;
 }
 
+.msg-history-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.msg-history-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    user-select: none;
+}
+
+.msg-history-filter-toggle input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.msg-filtered-indicator {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.no-visible-messages-text {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Visibility toggling for filtered communication items */
+.booking-messages-history:not(.show-all-messages) .msg-item-filtered {
+    display: none;
+}
+
+/* When history has visible messages, hide the 'no visible messages' text */
+.booking-messages-history.has-visible-messages .no-visible-messages-text {
+    display: none;
+}
+
+/* When showing all messages, hide the 'no visible messages' text */
+.booking-messages-history.show-all-messages .no-visible-messages-text {
+    display: none;
+}
+
 /* Tablet responsiveness for booking details */
 @media screen and (min-width: 769px) and (max-width: 1024px) {
     .bookings-table .snippen-details-row .details-content {

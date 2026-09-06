@@ -460,12 +460,28 @@ class BookingsPage {
 			'user_activation'          => __( 'Kontoaktivering', 'snippen-booking' ),
 			'password_reset'           => __( 'Passordtilbakestilling', 'snippen-booking' ),
 			'payment_reminder'         => __( 'Betalingspåminnelse', 'snippen-booking' ),
+			'payment_receipt_uploaded' => __( 'Kvittering lastet opp', 'snippen-booking' ),
+			'booking_confirmed'        => __( 'Booking godkjent', 'snippen-booking' ),
+			'payment_received'         => __( 'Betaling bekreftet', 'snippen-booking' ),
 			'inbound_sms'              => __( 'Innkommende SMS', 'snippen-booking' ),
 		);
 
-		echo '<div class="booking-messages-history" data-booking-id="' . esc_attr( $booking->id ) . '">';
+		$total_count    = count( $messages );
+		$visible_count  = 0;
+		$filtered_count = 0;
+		foreach ( $messages as $msg ) {
+			if ( self::is_filtered_message( $msg ) ) {
+				++$filtered_count;
+			} else {
+				++$visible_count;
+			}
+		}
+
+		$history_classes = 'booking-messages-history' . ( $visible_count > 0 ? ' has-visible-messages' : '' );
+
+		echo '<div class="' . esc_attr( $history_classes ) . '" data-booking-id="' . esc_attr( $booking->id ) . '">';
 		echo '<div class="msg-history-header">';
-		echo '<div class="msg-history-header-title"><strong style="font-size:13px; color:#1e293b;"><span class="dashicons dashicons-format-chat" style="vertical-align:middle; font-size:16px; width:16px; height:16px; line-height:16px; margin-right:4px;"></span> ' . esc_html__( 'Kommunikasjonshistorikk:', 'snippen-booking' ) . ' (<span class="msg-count">' . count( $messages ) . '</span>)</strong></div>';
+		echo '<div class="msg-history-header-title"><strong style="font-size:13px; color:#1e293b;"><span class="dashicons dashicons-format-chat" style="vertical-align:middle; font-size:16px; width:16px; height:16px; line-height:16px; margin-right:4px;"></span> ' . esc_html__( 'Kommunikasjonshistorikk:', 'snippen-booking' ) . ' (<span class="msg-count" data-visible-count="' . esc_attr( $visible_count ) . '" data-total-count="' . esc_attr( $total_count ) . '">' . $visible_count . '</span>)</strong></div>';
 		echo '<button type="button" class="button button-small toggle-msg-history" aria-expanded="false">';
 		echo '<span class="toggle-text">' . esc_html__( 'Vis kommunikasjon', 'snippen-booking' ) . '</span> ';
 		echo '<span class="dashicons dashicons-arrow-down-alt2" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span>';
@@ -474,10 +490,25 @@ class BookingsPage {
 
 		echo '<div class="msg-history-body" style="display:none;">';
 
-		echo '<div class="msg-list-container">';
 		if ( empty( $messages ) ) {
 			echo '<p class="no-messages-text" style="margin:0; font-size:12px; color:#64748b;">' . esc_html__( 'Ingen meldinger registrert på denne bookingen ennå.', 'snippen-booking' ) . '</p>';
 		} else {
+			echo '<div class="msg-history-toolbar">';
+			echo '<label class="msg-history-filter-toggle">';
+			echo '<input type="checkbox" class="snippen-toggle-all-messages" /> ';
+			echo '<span>' . esc_html__( 'Vis all kommunikasjon', 'snippen-booking' ) . '</span>';
+			echo '</label>';
+			if ( $filtered_count > 0 ) {
+				/* translators: %d: number of hidden messages */
+				echo '<span class="msg-filtered-indicator">(' . esc_html( sprintf( _n( '%d skjult', '%d skjulte', $filtered_count, 'snippen-booking' ), $filtered_count ) ) . ')</span>';
+			} else {
+				echo '<span class="msg-filtered-indicator" style="display:none;"></span>';
+			}
+			echo '</div>'; // .msg-history-toolbar
+
+			echo '<p class="no-visible-messages-text" style="margin:0; font-size:12px; color:#64748b;">' . esc_html__( 'Ingen meldinger å vise med gjeldende filter.', 'snippen-booking' ) . '</p>';
+
+			echo '<div class="msg-list-container">';
 			foreach ( $messages as $msg ) {
 				$icon_class    = $msg->channel === 'sms' ? 'dashicons-smartphone' : 'dashicons-email-alt';
 				$channel_label = strtoupper( $msg->channel );
@@ -492,10 +523,12 @@ class BookingsPage {
 					$status_badge = '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">' . esc_html__( 'Feilet', 'snippen-booking' ) . '</span>';
 				}
 
-				$event_type = $msg->event_type ?? '';
-				$label_text = isset( $known_event_types[ $event_type ] ) ? $known_event_types[ $event_type ] : $event_type;
+				$event_type  = $msg->event_type ?? '';
+				$label_text  = isset( $known_event_types[ $event_type ] ) ? $known_event_types[ $event_type ] : $event_type;
+				$is_filtered = self::is_filtered_message( $msg );
+				$item_class  = 'msg-item' . ( $is_filtered ? ' msg-item-filtered' : '' );
 
-				echo '<div class="msg-item" data-event-type="' . esc_attr( $event_type ) . '">';
+				echo '<div class="' . esc_attr( $item_class ) . '" data-event-type="' . esc_attr( $event_type ) . '">';
 				echo '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
 				echo '<div><span class="dashicons ' . esc_attr( $icon_class ) . '" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span> <strong>' . esc_html( $channel_label ) . ' &bull; ' . esc_html( $msg->recipient ) . '</strong> ' . $status_badge . ' <span style="font-size:10px; color:#64748b; margin-left:4px;">(' . esc_html( $label_text ) . ')</span></div>';
 				echo '<span style="font-size:11px; color:#64748b;">' . esc_html( $msg->created_at ) . '</span>';
@@ -506,8 +539,8 @@ class BookingsPage {
 				echo '<div class="msg-item-body">' . esc_html( $msg->message ) . '</div>';
 				echo '</div>';
 			}
+			echo '</div>'; // .msg-list-container
 		}
-		echo '</div>'; // .msg-list-container
 		echo '</div>'; // .msg-history-body
 		echo '</div>'; // .booking-messages-history
 
@@ -569,5 +602,41 @@ class BookingsPage {
 			'cancelled' => __( 'Avbrutt', 'snippen-booking' ),
 		);
 		return isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
+	}
+
+	/**
+	 * Determine if a communication message is an admin notification or numeric selection reply.
+	 *
+	 * @param object $msg Message object.
+	 * @return bool True if message should be filtered by default.
+	 */
+	public static function is_filtered_message( object $msg ): bool {
+		$admin_event_types = array(
+			'admin_booking',
+			'manual_dispatch_admin',
+			'payment_receipt_uploaded',
+		);
+
+		$event_type = $msg->event_type ?? '';
+		if ( in_array( $event_type, $admin_event_types, true ) || false !== strpos( $event_type, 'admin' ) ) {
+			return true;
+		}
+
+		$metadata = array();
+		if ( ! empty( $msg->metadata ) ) {
+			$metadata = is_string( $msg->metadata ) ? json_decode( $msg->metadata, true ) : (array) $msg->metadata;
+		}
+		if ( is_array( $metadata ) && isset( $metadata['matched_rule'] ) && 'disambiguation_selection' === $metadata['matched_rule'] ) {
+			return true;
+		}
+
+		$is_inbound = ( 'inbound_sms' === $event_type || 'received' === ( $msg->status ?? '' ) );
+		if ( $is_inbound && ! empty( $msg->message ) ) {
+			if ( preg_match( '/^\s*(?:nr\.?|nummer|valg|booking|#)?\s*\d+\.?\s*$/i', trim( $msg->message ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
