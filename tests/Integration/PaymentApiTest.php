@@ -14,8 +14,22 @@ use SnippenBooking\Service\Notification\MessageLoggerService;
 class PaymentApiTest extends TestCase {
 
 	/**
-	 * Test update payment status by admin
+	 * Set up test environment
 	 */
+	protected function setUp(): void {
+		parent::setUp();
+		if ( ! defined( 'DOING_AJAX' ) ) {
+			define( 'DOING_AJAX', true );
+		}
+		add_filter(
+			'wp_die_ajax_handler',
+			function () {
+				return function ( $message ) {
+					throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
+				};
+			}
+		);
+	}
 	public function test_admin_update_payment_status() {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_bookings';
@@ -41,22 +55,25 @@ class PaymentApiTest extends TestCase {
 		$admin_id = wp_create_user( 'paymentadmin', 'password', 'paymentadmin@example.com' );
 		$user     = get_user_by( 'id', $admin_id );
 		$user->add_role( 'administrator' );
+		$user->add_cap( \SnippenBooking\Helper\Capabilities::MANAGE_BOOKINGS );
 		wp_set_current_user( $admin_id );
 
 		update_option( 'snippen_email_payment_received_enabled', 'yes' );
 
 		$_POST['nonce']             = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce']          = $_POST['nonce'];
 		$_POST['booking_id']        = $booking_id;
 		$_POST['payment_status_id'] = 2; // PAID
 		$_POST['payment_notes']     = 'Vipps ref #987654';
 
+		ob_start();
 		try {
 			UpdatePaymentStatusApi::update_payment_status();
-		} catch ( \WpHttpException $e ) {
-			// Catch die inside wp_send_json
 		} catch ( \Exception $e ) {
-			// Catch die
+			// Intentionally empty: catch die inside wp_send_json.
+			unset( $e );
 		}
+		ob_end_clean();
 
 		$updated_booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id ) );
 		$this->assertEquals( 2, (int) $updated_booking->payment_status_id );
@@ -70,7 +87,7 @@ class PaymentApiTest extends TestCase {
 		$payment_messages = array_filter(
 			$messages,
 			function ( $m ) {
-				return $m->message_type === 'payment_received';
+				return $m->event_type === 'payment_received';
 			}
 		);
 		$this->assertNotEmpty( $payment_messages );
@@ -78,7 +95,7 @@ class PaymentApiTest extends TestCase {
 		$confirmed_messages = array_filter(
 			$messages,
 			function ( $m ) {
-				return $m->message_type === 'booking_confirmed';
+				return $m->event_type === 'booking_confirmed';
 			}
 		);
 		$this->assertNotEmpty( $confirmed_messages );
@@ -111,6 +128,7 @@ class PaymentApiTest extends TestCase {
 		wp_set_current_user( $user_id );
 
 		$_POST['nonce']             = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce']          = $_POST['nonce'];
 		$_POST['booking_id']        = $booking_id;
 		$_POST['payment_status_id'] = 2;
 
@@ -131,6 +149,16 @@ class PaymentApiTest extends TestCase {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_bookings';
 
+		// Create object and link
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_objects',
+			array(
+				'name'       => 'Testlokale',
+				'created_at' => current_time( 'mysql' ),
+			)
+		);
+		$obj_id = $wpdb->insert_id;
+
 		$uuid = wp_generate_uuid4();
 		$wpdb->insert(
 			$table,
@@ -148,16 +176,44 @@ class PaymentApiTest extends TestCase {
 		);
 		$booking_id = $wpdb->insert_id;
 
-		// Create a temporary dummy file
-		$temp_file = wp_tempnam( 'test_receipt' );
-		file_put_contents( $temp_file, 'dummy content' );
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings_booking_objects',
+			array(
+				'booking_id'        => $booking_id,
+				'booking_object_id' => $obj_id,
+				'created_at'        => current_time( 'mysql' ),
+			)
+		);
+
+		update_option( 'snippen_email_payment_receipt_uploaded_enabled', 'yes' );
+		update_option( 'snippen_payment_admin_emails', 'admin@example.com' );
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+
+		$filter_action = function () {
+			return 'wp_handle_sideload';
+		};
+		add_filter( 'snippen_upload_payment_receipt_action', $filter_action );
+
+		$filter_overrides = function ( $overrides ) {
+			$overrides['test_form'] = false;
+			return $overrides;
+		};
+		add_filter( 'snippen_upload_payment_receipt_overrides', $filter_overrides );
+
+		// Create a temporary dummy PNG file
+		$temp_file = wp_tempnam( 'test_receipt.png' );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
+		$png_content = base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		file_put_contents( $temp_file, $png_content );
 
 		$_FILES['payment_receipt'] = array(
 			'name'     => 'test-receipt.png',
 			'type'     => 'image/png',
 			'tmp_name' => $temp_file,
 			'error'    => UPLOAD_ERR_OK,
-			'size'     => strlen( 'dummy content' ),
+			'size'     => strlen( $png_content ),
 		);
 
 		$_POST['booking_uuid'] = $uuid;
@@ -168,13 +224,26 @@ class PaymentApiTest extends TestCase {
 			}
 		);
 
+		remove_filter( 'snippen_upload_payment_receipt_action', $filter_action );
+		remove_filter( 'snippen_upload_payment_receipt_overrides', $filter_overrides );
+
 		$this->assertTrue( $response['success'] );
 		$this->assertArrayHasKey( 'attachment_url', $response['data'] );
 		$this->assertStringContainsString( '/userdata/booking_uuid_' . $uuid . '/', $response['data']['attachment_url'] );
 
+		// Verify notification was sent and logged
+		$messages         = MessageLoggerService::get_messages_for_booking( $booking_id );
+		$receipt_messages = array_filter(
+			$messages,
+			function ( $m ) {
+				return $m->event_type === 'payment_receipt_uploaded';
+			}
+		);
+		$this->assertNotEmpty( $receipt_messages );
+
 		// Clean up
 		if ( file_exists( $temp_file ) ) {
-			unlink( $temp_file );
+			wp_delete_file( $temp_file );
 		}
 	}
 
@@ -186,7 +255,8 @@ class PaymentApiTest extends TestCase {
 		try {
 			$func();
 		} catch ( \Exception $e ) {
-			// ignore wp_die
+			// Intentionally empty: ignore wp_die exception.
+			unset( $e );
 		}
 		$output = ob_get_clean();
 		return json_decode( $output, true );

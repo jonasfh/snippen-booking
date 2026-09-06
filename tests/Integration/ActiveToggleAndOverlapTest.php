@@ -98,17 +98,23 @@ class ActiveToggleAndOverlapTest extends TestCase {
 		$_POST['id']          = $slot_id;
 		$_POST['is_active']   = 0;
 
-		add_filter( 'wp_die_ajax_handler', function() {
-			return function( $message, $title, $args ) {
-				throw new \WPAjaxDieContinueException( is_string( $message ) ? $message : wp_json_encode( $message ) );
+		$die_handler = function() {
+			return function( $message ) {
+				throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
 			};
-		} );
+		};
+		add_filter( 'wp_die_ajax_handler', $die_handler );
 
+		ob_start();
 		try {
 			ToggleStatusApi::handle_toggle();
-		} catch ( \WPAjaxDieContinueException $e ) {
-			// Expected WP Ajax exit call
+		} catch ( \Exception $e ) {
+			// Expected WP Ajax exit call.
+			unset( $e );
 		}
+		ob_end_clean();
+
+		remove_filter( 'wp_die_ajax_handler', $die_handler );
 
 		$updated_is_active = (int) $wpdb->get_var( $wpdb->prepare( "SELECT is_active FROM $table_slots WHERE id = %d", $slot_id ) );
 		$this->assertEquals( 0, $updated_is_active, 'Status should be toggled to 0 in DB' );

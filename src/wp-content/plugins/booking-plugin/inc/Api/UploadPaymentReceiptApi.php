@@ -87,7 +87,10 @@ class UploadPaymentReceiptApi {
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
-		$upload_overrides = array( 'test_form' => false );
+		$upload_overrides = apply_filters(
+			'snippen_upload_payment_receipt_overrides',
+			array( 'test_form' => false )
+		);
 
 		$booking_uuid = $booking->uuid;
 
@@ -112,7 +115,12 @@ class UploadPaymentReceiptApi {
 		};
 
 		add_filter( 'upload_dir', $custom_upload_dir_filter );
-		$uploaded_file = wp_handle_upload( $file, $upload_overrides );
+		$upload_action = apply_filters( 'snippen_upload_payment_receipt_action', 'wp_handle_upload' );
+		if ( 'wp_handle_sideload' === $upload_action ) {
+			$uploaded_file = wp_handle_sideload( $file, $upload_overrides );
+		} else {
+			$uploaded_file = wp_handle_upload( $file, $upload_overrides );
+		}
 		remove_filter( 'upload_dir', $custom_upload_dir_filter );
 
 		if ( isset( $uploaded_file['error'] ) ) {
