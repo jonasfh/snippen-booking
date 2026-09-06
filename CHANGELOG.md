@@ -10,6 +10,7 @@
   - Lagt til opsjon `--raw` for ren JSON-respons.
   - Opprettet omfattende integrasjonstester i `tests/Integration/DemoInboxTest.php`.
   - Rettet oppslag av leietaker på `snippen_phone` usermeta i `SmsInboxResolverService`.
+  - Forbedret samtaleoppløsning (`active_session`): En pågående samtale avbrytes automatisk dersom brukeren oppretter en ny booking eller en annen booking endres etter siste meldingsaktivitet. Systemet ber da brukeren velge hvilken booking meldingen gjelder via flervalgsdialog, og etablerer deretter `active_session` på den valgte bookingen.
 
 ## [2.28.4] - 2026-09-06
 - (#297) Bytt dropdown med radio buttons for betalingsadministrasjon i admin:

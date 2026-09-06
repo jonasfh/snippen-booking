@@ -295,9 +295,15 @@ class SmsInboxResolverService {
 		$ttl_seconds    = max( 60, $ttl_minutes * 60 );
 		$current_ts     = time();
 
+		// Retrieve active bookings for phone numbers
+		$active_bookings = self::get_active_bookings_for_phones( $search_phones );
+		$booking_count   = count( $active_bookings );
+
 		// -------------------------------------------------------------
 		// REGEL 1: Pågående samtale innenfor samtale-TTL
-		// Sjekk om det har vært en SMS (inn/ut) knyttet til en booking nylig
+		// Sjekk om det har vært en SMS (inn/ut) knyttet til en booking nylig.
+		// Samtalen avbrytes dersom bookingen ikke lenger er aktiv, eller hvis
+		// en annen booking er opprettet eller endret etter siste samtale-SMS.
 		// -------------------------------------------------------------
 		$recent_placeholders = implode( ',', array_fill( 0, count( $search_phones ), '%s' ) );
 		$recent_query        = $wpdb->prepare(
@@ -314,30 +320,62 @@ class SmsInboxResolverService {
 		if ( $last_session_msg ) {
 			$msg_ts = strtotime( $last_session_msg->created_at );
 			if ( ( $current_ts - $msg_ts ) <= $ttl_seconds ) {
-				$booking_id = (int) $last_session_msg->booking_id;
-				$user_id    = ! empty( $last_session_msg->user_id ) ? (int) $last_session_msg->user_id : $found_user_id;
+				$session_booking_id = (int) $last_session_msg->booking_id;
 
-				$metadata['matched_rule'] = 'active_session';
-				$logged_id                = MessageLoggerService::log_message(
-					$booking_id,
-					$user_id,
-					'sms',
-					$sender_phone,
-					null,
-					$body,
-					self::EVENT_INBOUND_SMS,
-					self::STATUS_RECEIVED,
-					$metadata
-				);
+				// Verify that session booking is currently active
+				$is_session_active   = false;
+				$session_invalidated = false;
 
-				return array(
-					'logged_id'   => $logged_id,
-					'status'      => self::STATUS_RECEIVED,
-					'booking_id'  => $booking_id,
-					'user_id'     => $user_id,
-					'rule'        => 'active_session',
-					'prompt_sent' => false,
-				);
+				foreach ( $active_bookings as $ab ) {
+					if ( (int) $ab->id === $session_booking_id ) {
+						$is_session_active = true;
+						break;
+					}
+				}
+
+				// If session booking is active and user has other active bookings,
+				// check if any other booking has been created or modified AFTER the session message
+				if ( $is_session_active && $booking_count > 1 ) {
+					foreach ( $active_bookings as $ab ) {
+						if ( (int) $ab->id === $session_booking_id ) {
+							continue;
+						}
+						$b_created  = ! empty( $ab->created_at ) ? strtotime( $ab->created_at ) : 0;
+						$b_modified = ! empty( $ab->modified_at ) ? strtotime( $ab->modified_at ) : 0;
+
+						if ( $b_created > $msg_ts || $b_modified > $msg_ts ) {
+							$session_invalidated = true;
+							break;
+						}
+					}
+				}
+
+				if ( $is_session_active && ! $session_invalidated ) {
+					$booking_id = $session_booking_id;
+					$user_id    = ! empty( $last_session_msg->user_id ) ? (int) $last_session_msg->user_id : $found_user_id;
+
+					$metadata['matched_rule'] = 'active_session';
+					$logged_id                = MessageLoggerService::log_message(
+						$booking_id,
+						$user_id,
+						'sms',
+						$sender_phone,
+						null,
+						$body,
+						self::EVENT_INBOUND_SMS,
+						self::STATUS_RECEIVED,
+						$metadata
+					);
+
+					return array(
+						'logged_id'   => $logged_id,
+						'status'      => self::STATUS_RECEIVED,
+						'booking_id'  => $booking_id,
+						'user_id'     => $user_id,
+						'rule'        => 'active_session',
+						'prompt_sent' => false,
+					);
+				}
 			}
 		}
 
@@ -404,12 +442,6 @@ class SmsInboxResolverService {
 				}
 			}
 		}
-
-		// -------------------------------------------------------------
-		// Hent kandidater for aktive bookinger for telefonen
-		// -------------------------------------------------------------
-		$active_bookings = self::get_active_bookings_for_phones( $search_phones );
-		$booking_count   = count( $active_bookings );
 
 		// -------------------------------------------------------------
 		// REGEL 3: Nøyaktig 1 aktiv reservasjon

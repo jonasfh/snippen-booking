@@ -470,7 +470,7 @@ The plugin integrates with the `snippen-sms-service` daemon via REST API endpoin
 1. **`GET /wp-json/snippen/v1/sms/outbox`**: Fetches pending outbound SMS messages (`status = 'queued'`).
 2. **`POST /wp-json/snippen/v1/sms/outbox/status`**: Updates outbound SMS message status (`sent` or `failed`) with gateway and modem metadata.
 3. **`POST /wp-json/snippen/v1/sms/inbox`**: Receives reported inbound SMS messages from tenants and executes the prioritized 6-rule resolution engine:
-   - **Rule 1 (Active Session)**: Within conversation TTL (`snippen_sms_conversation_ttl_minutes`, default 120m), automatically inherits previous booking context.
+   - **Rule 1 (Active Session)**: Within conversation TTL (`snippen_sms_conversation_ttl_minutes`, default 120m), automatically inherits previous booking context. If a new booking is created or another active booking is modified after the latest session activity, the session is interrupted and falls through to Rule 4 for disambiguation. Replying with a choice re-establishes the active session on the chosen booking.
    - **Rule 2 (Disambiguation Selection)**: Parses tenant choices (`1`, `2`, `nr 1`, `første`, `andre`), associates the chosen booking, and resolves pending messages.
    - **Rule 3 (Single Active Booking)**: Unambiguously matches single active reservation (`status = 'received'`).
    - **Rule 4 (Multiple Active Bookings)**: Enters quarantine (`status = 'pending_selection'`) and dispatches a numbered SMS disambiguation prompt.
