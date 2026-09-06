@@ -57,7 +57,10 @@
             const newStatus = $btn.hasClass('approve') ? 'confirmed' : 'cancelled';
             const $bookingRow = $('#booking-' + id);
             const $detailsRow = $('#details-' + id);
-            const $badges = $bookingRow.find('.snippen-badge').add($detailsRow.find('.snippen-badge'));
+            let $badges = $bookingRow.find('.snippen-status-badge').add($detailsRow.find('.snippen-status-badge'));
+            if (!$badges.length) {
+                $badges = $bookingRow.find('td[data-label="Status"] .snippen-badge');
+            }
 
             if (newStatus === 'cancelled' && !confirm(snippenAdmin.strings.confirmCancel)) {
                 return;

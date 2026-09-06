@@ -341,6 +341,10 @@ class BookingsPage {
 			echo '<span class="snippen-tag">' . esc_html( $oname ) . '</span> ';
 		}
 		echo '</div>';
+		echo '<div class="snippen-mobile-summary-badges" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:2px;">';
+		echo '<span class="snippen-badge snippen-status-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span>';
+		echo '<span class="snippen-badge snippen-payment-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
+		echo '</div>';
 		echo '</div>';
 		echo '</td>';
 
@@ -361,10 +365,10 @@ class BookingsPage {
 		}
 		echo '</td>';
 		echo '<td data-label="' . esc_attr__( 'Pris', 'snippen-booking' ) . '" style="font-weight:600;">' . number_format( $booking->price, 0, ',', ' ' ) . ',-</td>';
-		echo '<td data-label="' . esc_attr__( 'Status', 'snippen-booking' ) . '"><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></td>';
+		echo '<td data-label="' . esc_attr__( 'Status', 'snippen-booking' ) . '"><span class="snippen-badge snippen-status-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></td>';
 
 		echo '<td data-label="' . esc_attr__( 'Betaling', 'snippen-booking' ) . '">';
-		echo '<span class="snippen-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
+		echo '<span class="snippen-badge snippen-payment-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
 		if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
 			$receipt_url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
 			if ( $receipt_url ) {
@@ -433,7 +437,6 @@ class BookingsPage {
 		echo '</div></div>';
 
 		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Pris:', 'snippen-booking' ) . '</strong><br>' . number_format( $booking->price, 0, ',', ' ' ) . ',-</div>';
-		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Status:', 'snippen-booking' ) . '</strong><br><span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></div>';
 
 		echo '<div class="booking-assistant-actions" data-id="' . esc_attr( $booking->id ) . '" data-uuid="' . esc_attr( $booking->uuid ) . '">';
 		echo '<strong>' . esc_html__( 'Booking-hjelper:', 'snippen-booking' ) . '</strong><br>';
