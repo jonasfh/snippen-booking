@@ -100,7 +100,7 @@ class BookingActionsTest extends TestCase {
         $messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking($booking_id);
         $this->assertNotEmpty($messages);
         $confirmed_messages = array_filter($messages, function($m) {
-            return $m->message_type === 'booking_confirmed';
+            return $m->event_type === 'booking_confirmed';
         });
         $this->assertNotEmpty($confirmed_messages);
     }

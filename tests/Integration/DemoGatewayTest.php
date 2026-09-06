@@ -30,6 +30,12 @@ class DemoGatewayTest extends TestCase {
 		exec( 'php ' . escapeshellarg( __DIR__ . '/../../bin/demo-gateway.php' ), $output, $code );
 		$this->assertSame( 0, $code, 'demo-gateway.php should exit with 0' );
 
+		// Flush options cache and sync transaction since external process modified DB
+		global $wpdb;
+		$wpdb->query( 'COMMIT' );
+		wp_cache_flush();
+		wp_load_alloptions( true );
+
 		// 1. Verify Options
 		$this->assertSame( 'test-integration-token', get_option( 'snippen_sms_service_api_token' ) );
 		$this->assertSame( 'snippen_sms_service', get_option( 'snippen_sms_provider' ) );

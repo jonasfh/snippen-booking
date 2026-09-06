@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.28.1] - 2026-09-06
+- (#291) Rettet fatal error ved opplasting av betalingskvittering:
+  - Fjernet referanse til ikke-eksisterende klasse `BookingObjectRepository` i `NotificationManager::send_payment_receipt_uploaded_notification`.
+  - Henter tilknyttede bookingobjekter via databasetabellene med fallback til `booking_snapshot`, tilsvarende øvrige varslingsmetoder i `NotificationManager`.
+  - Henter formatert bookingtidspunkt fra snapshot/tidsslott.
+  - Lagt til filter for overstyring av opplastingshåndtering i `UploadPaymentReceiptApi` for programmatic- og enhetstesting.
+  - Opprettet integrasjonstester i `PaymentReceiptNotificationTest` og utvidet `PaymentApiTest`.
+
 ## [2.28.0] - 2026-09-06
 - (#289) Melding til bruker når admin endrer bookingstatus:
   - Lagt til to nye connected_to-hendelser i varslingssystemet: `booking-confirmed` (Reservasjon bekreftet) og `payment-received` (Betalingsstatus: Betalt).

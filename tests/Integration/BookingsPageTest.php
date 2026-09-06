@@ -279,13 +279,13 @@ class BookingsPageTest extends TestCase {
 
         $bookings_page = new BookingsPage();
         $reflection    = new \ReflectionClass( BookingsPage::class );
-        $method        = $reflection->getMethod( 'render_details' );
+        $method        = $reflection->getMethod( 'render_booking_row' );
         $method->setAccessible( true );
 
         $booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id ) );
 
         ob_start();
-        $method->invoke( $bookings_page, $booking, array(), '' );
+        $method->invoke( $bookings_page, $booking );
         $output = ob_get_clean();
 
         // Check header, toggle button, and closed body

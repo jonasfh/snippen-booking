@@ -148,7 +148,7 @@ class BookingsPage {
 		$table_booking_blocks   = $wpdb->prefix . 'snippen_booking_booking_blocks';
 		$table_blocks           = $wpdb->prefix . 'snippen_booking_blocks';
 
-		$query = "SELECT b.*, s.name as slot_name, 
+		$query = "SELECT b.*, COALESCE(s.name, bb.name) as slot_name, 
                          COALESCE(MIN(bb.start_time), s.start_time) as start_time, 
                          COALESCE(MAX(bb.end_time), s.end_time) as end_time, 
                          ps.slug as payment_slug, ps.name as payment_name, ps.is_settled as payment_is_settled

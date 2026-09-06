@@ -566,8 +566,13 @@ class NotificationManager {
 	 * @return bool True if at least one notification sent successfully.
 	 */
 	public function send_payment_receipt_uploaded_notification( int $booking_id ): bool {
-		$booking_repository = new \SnippenBooking\Database\Repository\BookingRepository();
-		$booking            = $booking_repository->find( $booking_id );
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
 
 		if ( ! $booking ) {
 			return false;
@@ -580,13 +585,53 @@ class NotificationManager {
 			return false;
 		}
 
-		$object_repository = new \SnippenBooking\Database\Repository\BookingObjectRepository();
-		$objects           = $object_repository->find_by_ids( $booking->object_ids );
-		$object_names      = implode( ', ', array_column( $objects, 'name' ) );
+		// Fetch associated locales/objects
+		$objs = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
 
-		$booking_time = $booking->start_time . ' - ' . $booking->end_time;
-		if ( ! empty( $booking->is_all_day ) ) {
-			$booking_time = __( 'Hele dagen', 'snippen-booking' );
+		if ( empty( $objs ) ) {
+			$table_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
+			$objs                  = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT o.name 
+					 FROM {$table_booking_objects} bo 
+					 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+					 WHERE bo.booking_id = %d",
+					$booking_id
+				)
+			);
+		}
+
+		if ( empty( $objs ) && ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['objects'] ) ) {
+				$objs = array_column( $snapshot['objects'], 'name' );
+			}
+		}
+
+		$object_names = implode( ' og ', $objs );
+
+		// Fetch booking time string
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
 		}
 
 		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
