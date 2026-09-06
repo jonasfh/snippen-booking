@@ -319,6 +319,31 @@ class BookingsPage {
 		}
 
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
+
+		// Mobile single-cell summary (Visible on mobile <= 768px, hidden on desktop)
+		echo '<td class="snippen-booking-mobile-summary" colspan="8">';
+		echo '<div class="snippen-mobile-summary-card">';
+		echo '<div class="snippen-mobile-summary-header">';
+		echo '<strong class="snippen-mobile-customer-name">' . esc_html( $booking->customer_name ) . '</strong>';
+		echo '<button type="button" class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '" aria-expanded="false"><span class="dashicons dashicons-arrow-down-alt2"></span></button>';
+		echo '</div>';
+		echo '<div class="snippen-mobile-summary-time">';
+		echo '<strong>' . esc_html( $booking_date ) . '</strong>';
+		if ( ! empty( $display_time ) ) {
+			echo ' &bull; ' . esc_html( $display_time );
+		}
+		if ( ! empty( $custom_inst_tags ) ) {
+			echo ' <span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:1px 5px; margin-left:4px;" title="' . esc_attr( implode( ' | ', $custom_inst_tags ) ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>';
+		}
+		echo '</div>';
+		echo '<div class="snippen-mobile-summary-objects">';
+		foreach ( $objs as $oname ) {
+			echo '<span class="snippen-tag">' . esc_html( $oname ) . '</span> ';
+		}
+		echo '</div>';
+		echo '</div>';
+		echo '</td>';
+
 		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
 		echo '<div style="display:flex; justify-content:flex-start; gap:8px;">';
 		if ( $booking->status === 'pending' ) {
@@ -348,13 +373,27 @@ class BookingsPage {
 		}
 		echo '</td>';
 
-		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
+		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '" aria-expanded="false"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
 		echo '</tr>';
 
 		// Details Row (Hidden)
 		echo '<tr class="snippen-details-row" id="details-' . esc_attr( $booking->id ) . '" style="display:none; background:#f8fafc;">';
 		echo '<td colspan="8">';
 		echo '<div class="details-content">';
+
+		// Action buttons inside details row (prominent and colored)
+		if ( $booking->status === 'pending' || $booking->status !== 'cancelled' ) {
+			echo '<div class="booking-details-actions-wrap">';
+			echo '<strong>' . esc_html__( 'Handlinger:', 'snippen-booking' ) . '</strong>';
+			echo '<div class="booking-details-action-buttons">';
+			if ( $booking->status === 'pending' ) {
+				echo '<button type="button" class="snippen-btn-action approve with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Godkjenn', 'snippen-booking' ) . '"><span class="dashicons dashicons-yes"></span> <span>' . esc_html__( 'Godkjenn booking', 'snippen-booking' ) . '</span></button>';
+			}
+			if ( $booking->status !== 'cancelled' ) {
+				echo '<button type="button" class="snippen-btn-action cancel with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span> <span>' . esc_html__( 'Avbryt booking', 'snippen-booking' ) . '</span></button>';
+			}
+			echo '</div></div>';
+		}
 		echo '<div><strong>' . esc_html__( 'Kontaktinfo:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->customer_phone ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse/Notater:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';

@@ -38,6 +38,9 @@
         .dashicons-paperclip:before { content: "📎"; }
         .dashicons-smartphone:before { content: "📱"; }
         .dashicons-email-alt:before { content: "✉"; }
+        .dashicons-yes:before { content: "✓"; }
+        .dashicons-no:before { content: "✕"; }
+        .dashicons-calendar-alt:before { content: "📅"; }
     </style>
 </head>
 <body>
@@ -79,9 +82,26 @@
                 </tr>
             </thead>
             <tbody>
-                <tr class="snippen-booking-row" id="booking-101">
+                <!-- Booking 101: Confirmed, initially expanded in fixture -->
+                <tr class="snippen-booking-row is-expanded" id="booking-101">
+                    <td class="snippen-booking-mobile-summary" colspan="8">
+                        <div class="snippen-mobile-summary-card">
+                            <div class="snippen-mobile-summary-header">
+                                <strong class="snippen-mobile-customer-name">Kari Nordmann</strong>
+                                <button type="button" class="snippen-btn-action toggle-details" title="Skjul detaljer" aria-expanded="true"><span class="dashicons dashicons-arrow-up-alt2"></span></button>
+                            </div>
+                            <div class="snippen-mobile-summary-time">
+                                <strong>15. sep. 2026</strong> &bull; 14:00 – 18:00
+                            </div>
+                            <div class="snippen-mobile-summary-objects">
+                                <span class="snippen-tag">Storsalen</span>
+                            </div>
+                        </div>
+                    </td>
                     <td data-label="Handlinger">
-                        <button type="button" class="button button-small">Rediger</button>
+                        <div style="display:flex; justify-content:flex-start; gap:8px;">
+                            <button class="snippen-btn-action cancel" data-id="101" title="Avbryt"><span class="dashicons dashicons-no"></span></button>
+                        </div>
                     </td>
                     <td data-label="Dato / Tid">
                         <strong>15. sep. 2026</strong><br>
@@ -95,8 +115,8 @@
                     <td data-label="Pris" style="font-weight:600;">2 500,-</td>
                     <td data-label="Status"><span class="snippen-badge snippen-status-confirmed">Bekreftet</span></td>
                     <td data-label="Betaling"><span class="snippen-badge" style="background:#dcfce7; color:#15803d;">Betalt</span></td>
-                    <td style="text-align:right;">
-                        <button class="snippen-btn-action toggle-details" title="Skjul detaljer"><span class="dashicons dashicons-arrow-up-alt2"></span></button>
+                    <td data-label="Detaljer" style="text-align:right;">
+                        <button class="snippen-btn-action toggle-details" title="Skjul detaljer" aria-expanded="true"><span class="dashicons dashicons-arrow-up-alt2"></span></button>
                     </td>
                 </tr>
 
@@ -104,6 +124,12 @@
                 <tr class="snippen-details-row active" id="details-101" style="display: table-row; background:#f8fafc;">
                     <td colspan="8">
                         <div class="details-content">
+                            <div class="booking-details-actions-wrap">
+                                <strong>Handlinger:</strong>
+                                <div class="booking-details-action-buttons">
+                                    <button type="button" class="snippen-btn-action cancel with-label" data-id="101" title="Avbryt"><span class="dashicons dashicons-no"></span> <span>Avbryt booking</span></button>
+                                </div>
+                            </div>
                             <div><strong>Kontaktinfo:</strong><br>+47 99 88 77 66</div>
                             <div><strong>Lokale(r):</strong><br>Storsalen</div>
                             <div><strong>Beskrivelse/Notater:</strong><br>Bursdagsfeiring</div>
@@ -130,6 +156,9 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="snippen-mobile-detail" style="display:none;"><strong>Pris:</strong><br>2 500,-</div>
+                            <div class="snippen-mobile-detail" style="display:none;"><strong>Status:</strong><br><span class="snippen-badge snippen-status-confirmed">Bekreftet</span></div>
 
                             <div class="booking-assistant-actions" data-id="101" data-uuid="test-uuid">
                                 <strong>Booking-hjelper:</strong><br>
@@ -174,30 +203,133 @@
                         </div>
                     </td>
                 </tr>
+
+                <!-- Booking 102: Pending, collapsed state -->
+                <tr class="snippen-booking-row" id="booking-102">
+                    <td class="snippen-booking-mobile-summary" colspan="8">
+                        <div class="snippen-mobile-summary-card">
+                            <div class="snippen-mobile-summary-header">
+                                <strong class="snippen-mobile-customer-name">Ola Nordmann</strong>
+                                <button type="button" class="snippen-btn-action toggle-details" title="Vis detaljer" aria-expanded="false"><span class="dashicons dashicons-arrow-down-alt2"></span></button>
+                            </div>
+                            <div class="snippen-mobile-summary-time">
+                                <strong>20. sep. 2026</strong> &bull; 10:00 – 16:00
+                            </div>
+                            <div class="snippen-mobile-summary-objects">
+                                <span class="snippen-tag">Peisestuen</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="Handlinger">
+                        <div style="display:flex; justify-content:flex-start; gap:8px;">
+                            <button class="snippen-btn-action approve" data-id="102" title="Godkjenn"><span class="dashicons dashicons-yes"></span></button>
+                            <button class="snippen-btn-action cancel" data-id="102" title="Avbryt"><span class="dashicons dashicons-no"></span></button>
+                        </div>
+                    </td>
+                    <td data-label="Dato / Tid">
+                        <strong>20. sep. 2026</strong><br>
+                        <small>10:00 – 16:00</small>
+                    </td>
+                    <td data-label="Kunde">
+                        <strong>Ola Nordmann</strong><br>
+                        <small>ola@example.com</small>
+                    </td>
+                    <td data-label="Lokaler"><span class="snippen-tag">Peisestuen</span></td>
+                    <td data-label="Pris" style="font-weight:600;">1 200,-</td>
+                    <td data-label="Status"><span class="snippen-badge snippen-status-pending">Avventer</span></td>
+                    <td data-label="Betaling"><span class="snippen-badge" style="background:#fef3c7; color:#b45309;">Ubetalt</span></td>
+                    <td data-label="Detaljer" style="text-align:right;">
+                        <button class="snippen-btn-action toggle-details" title="Vis detaljer" aria-expanded="false"><span class="dashicons dashicons-arrow-down-alt2"></span></button>
+                    </td>
+                </tr>
+
+                <!-- Details Row 102 (Hidden) -->
+                <tr class="snippen-details-row" id="details-102" style="display:none; background:#f8fafc;">
+                    <td colspan="8">
+                        <div class="details-content">
+                            <div class="booking-details-actions-wrap">
+                                <strong>Handlinger:</strong>
+                                <div class="booking-details-action-buttons">
+                                    <button type="button" class="snippen-btn-action approve with-label" data-id="102" title="Godkjenn"><span class="dashicons dashicons-yes"></span> <span>Godkjenn booking</span></button>
+                                    <button type="button" class="snippen-btn-action cancel with-label" data-id="102" title="Avbryt"><span class="dashicons dashicons-no"></span> <span>Avbryt booking</span></button>
+                                </div>
+                            </div>
+                            <div><strong>Kontaktinfo:</strong><br>+47 91 23 45 67</div>
+                            <div><strong>Lokale(r):</strong><br>Peisestuen</div>
+                            <div><strong>Beskrivelse/Notater:</strong><br>Styremøte</div>
+                            <div><strong>Tidsrom:</strong><br>10:00 – 16:00</div>
+                        </div>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
     </div>
 
     <script>
-        document.querySelector('.toggle-msg-history').addEventListener('click', function(e) {
-            e.preventDefault();
-            const body = document.querySelector('.msg-history-body');
-            const text = this.querySelector('.toggle-text');
-            const icon = this.querySelector('.dashicons');
-            const isOpen = body.style.display !== 'none';
+        // Toggle communication history
+        document.querySelectorAll('.toggle-msg-history').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const body = this.closest('.booking-messages-history').querySelector('.msg-history-body');
+                const text = this.querySelector('.toggle-text');
+                const icon = this.querySelector('.dashicons');
+                const isOpen = body.style.display !== 'none';
 
-            if (isOpen) {
-                body.style.display = 'none';
-                this.setAttribute('aria-expanded', 'false');
-                text.textContent = 'Vis kommunikasjon';
-                icon.className = 'dashicons dashicons-arrow-down-alt2';
-            } else {
-                body.style.display = 'block';
-                this.setAttribute('aria-expanded', 'true');
-                text.textContent = 'Skjul kommunikasjon';
-                icon.className = 'dashicons dashicons-arrow-up-alt2';
-            }
+                if (isOpen) {
+                    body.style.display = 'none';
+                    this.setAttribute('aria-expanded', 'false');
+                    text.textContent = 'Vis kommunikasjon';
+                    icon.className = 'dashicons dashicons-arrow-down-alt2';
+                } else {
+                    body.style.display = 'block';
+                    this.setAttribute('aria-expanded', 'true');
+                    text.textContent = 'Skjul kommunikasjon';
+                    icon.className = 'dashicons dashicons-arrow-up-alt2';
+                }
+            });
+        });
+
+        // Toggle booking details
+        document.querySelectorAll('.bookings-table').forEach(function(table) {
+            table.addEventListener('click', function(e) {
+                const toggleBtn = e.target.closest('.toggle-details');
+                const mobileCard = e.target.closest('.snippen-booking-mobile-summary');
+
+                if (toggleBtn || mobileCard) {
+                    if (mobileCard && e.target.closest('button, a, input, select, textarea')) {
+                        if (!toggleBtn) return;
+                    }
+                    const row = (toggleBtn || mobileCard).closest('tr.snippen-booking-row');
+                    const detailsRow = row.nextElementSibling;
+                    if (!detailsRow || !detailsRow.classList.contains('snippen-details-row')) return;
+
+                    const isCurrentlyExpanded = row.classList.contains('is-expanded');
+                    if (isCurrentlyExpanded) {
+                        row.classList.remove('is-expanded');
+                        detailsRow.classList.remove('active');
+                        detailsRow.style.display = 'none';
+                        row.querySelectorAll('.toggle-details .dashicons').forEach(function(icon) {
+                            icon.className = 'dashicons dashicons-arrow-down-alt2';
+                        });
+                        row.querySelectorAll('.toggle-details').forEach(function(b) {
+                            b.setAttribute('aria-expanded', 'false');
+                            b.setAttribute('title', 'Vis detaljer');
+                        });
+                    } else {
+                        row.classList.add('is-expanded');
+                        detailsRow.classList.add('active');
+                        detailsRow.style.display = window.innerWidth <= 768 ? 'block' : 'table-row';
+                        row.querySelectorAll('.toggle-details .dashicons').forEach(function(icon) {
+                            icon.className = 'dashicons dashicons-arrow-up-alt2';
+                        });
+                        row.querySelectorAll('.toggle-details').forEach(function(b) {
+                            b.setAttribute('aria-expanded', 'true');
+                            b.setAttribute('title', 'Skjul detaljer');
+                        });
+                    }
+                }
+            });
         });
     </script>
 </body>

@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.28.2] - 2026-09-06
+- (#293) Forbedre mobilvisning og kortvisning for booking-oversikten i admin:
+  - Introdusert 1-celles sammendragsvisning på mobil som samler leietakers navn, tidsrom (dato og tid), booking-objekt og åpne/lukke-pil (`v`/`^`) i ett kompakt kort.
+  - Skjult skrivebordskolonnene i sammenslått tilstand på mobil for å eliminere oppstykking i 6 separate linjer.
+  - Etablert en tydelig markert kortramme og farget aksentlinje (`border-left: 4px solid var(--primary-color)`) rundt hele bookingen som sømløst omslutter både hovedkort og detaljseksjon når den utvides.
+  - Handlingsknapper har fått distinkte farger (Avbryt: rød, Godkjenn: gul/grønn) med tekstetiketter i detaljseksjonen, slik at handlinger ikke forveksles med dialoglukking.
+  - Oppdatert `UserBookingsPage` med tilsvarende 1-celles kortvisning for mobil.
+  - Oppdatert Playwright-tester og golden snapshots for mobil- og desktopvisning.
+
 ## [2.28.1] - 2026-09-06
 - (#291) Rettet fatal error ved opplasting av betalingskvittering:
   - Fjernet referanse til ikke-eksisterende klasse `BookingObjectRepository` i `NotificationManager::send_payment_receipt_uploaded_notification`.

@@ -17,12 +17,36 @@
         // Toggle Details (Table version)
         $('.bookings-table').on('click', '.toggle-details', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             const $btn = $(this);
-            const $row = $btn.closest('tr');
+            const $row = $btn.closest('tr.snippen-booking-row');
             const $detailsRow = $row.next('.snippen-details-row');
             
-            $detailsRow.fadeToggle(200);
-            $btn.find('.dashicons').toggleClass('dashicons-arrow-down-alt2 dashicons-arrow-up-alt2');
+            const isCurrentlyExpanded = $row.hasClass('is-expanded') || $detailsRow.is(':visible');
+
+            if (isCurrentlyExpanded) {
+                $detailsRow.removeClass('active').slideUp(180);
+                $row.removeClass('is-expanded');
+                $row.find('.toggle-details .dashicons')
+                    .removeClass('dashicons-arrow-up-alt2')
+                    .addClass('dashicons-arrow-down-alt2');
+                $row.find('.toggle-details').attr('aria-expanded', 'false').attr('title', 'Vis detaljer');
+            } else {
+                $detailsRow.addClass('active').slideDown(180);
+                $row.addClass('is-expanded');
+                $row.find('.toggle-details .dashicons')
+                    .removeClass('dashicons-arrow-down-alt2')
+                    .addClass('dashicons-arrow-up-alt2');
+                $row.find('.toggle-details').attr('aria-expanded', 'true').attr('title', 'Skjul detaljer');
+            }
+        });
+
+        // Clicking mobile summary card toggles details
+        $('.bookings-table').on('click', '.snippen-booking-mobile-summary', function(e) {
+            if ($(e.target).closest('button, a, input, select, textarea').length) {
+                return;
+            }
+            $(this).find('.toggle-details').first().trigger('click');
         });
 
         // AJAX Status Update
@@ -31,8 +55,9 @@
             const $btn = $(this);
             const id = $btn.data('id');
             const newStatus = $btn.hasClass('approve') ? 'confirmed' : 'cancelled';
-            const $row = $btn.closest('tr');
-            const $badge = $row.find('.snippen-badge');
+            const $bookingRow = $('#booking-' + id);
+            const $detailsRow = $('#details-' + id);
+            const $badges = $bookingRow.find('.snippen-badge').add($detailsRow.find('.snippen-badge'));
 
             if (newStatus === 'cancelled' && !confirm(snippenAdmin.strings.confirmCancel)) {
                 return;
@@ -48,15 +73,17 @@
             }, function(response) {
                 if (response.success) {
                     // Update UI
-                    $badge.text(response.data.status_label)
+                    $badges.text(response.data.status_label)
                           .removeClass('snippen-status-pending snippen-status-confirmed snippen-status-cancelled')
                           .addClass('snippen-status-' + response.data.new_status);
                     
                     // Remove buttons if necessary
                     if (newStatus === 'confirmed') {
-                        $row.find('.snippen-btn-action.approve').fadeOut();
+                        $bookingRow.find('.snippen-btn-action.approve').fadeOut();
+                        $detailsRow.find('.snippen-btn-action.approve').fadeOut();
                     } else if (newStatus === 'cancelled') {
-                        $row.find('.snippen-btn-action.approve, .snippen-btn-action.cancel').fadeOut();
+                        $bookingRow.find('.snippen-btn-action.approve, .snippen-btn-action.cancel').fadeOut();
+                        $detailsRow.find('.snippen-btn-action.approve, .snippen-btn-action.cancel').fadeOut();
                     }
                 } else {
                     alert(response.data.message || snippenAdmin.strings.error);
