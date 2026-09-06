@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.27.5] - 2026-09-06
+- (#284) Oppdatert avhengigheter for å lukke kjente sårbarheter:
+  - Utførte `npm audit fix` som oppdaterte `browserslist` (4.28.2 => 4.28.9) og tilknyttede pakker (`caniuse-lite`, `update-browserslist-db`, `electron-to-chromium`, `node-releases`, `baseline-browser-mapping`) for å eliminere sårbarheter (GHSA-c83g-rgw3-j3cx, GHSA-73wf-gq98-2v4g).
+  - Oppdaterte Composer-avhengigheter (`composer update`) med tilgjengelige patch-oppdateringer for PHPUnit, PHPStan, php-parser, deep-copy og sebastian-biblioteker. Verifiserte at `composer audit` rapporterer 0 kjente sårbarheter.
+
 ## [2.27.4] - 2026-09-06
 - (#286) Fjernet hendelsesfiltre i kommunikasjonshistorikken for booking-detaljer:
   - Droppet filterkontrollene (`.msg-filter-controls`) og tilhørende avkryssingsbokser for hendelsestyper i booking-detaljer i administrasjonen.
