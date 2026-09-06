@@ -167,6 +167,7 @@ class BookingBlocksPage {
 
 		echo '<div class="snippen-card" style="margin-top: 20px;">';
 		echo '<h2>' . esc_html__( 'Alle bookingblokker', 'snippen-booking' ) . '</h2>';
+		echo '<div class="snippen-table-responsive">';
 		echo '<table class="snippen-list-table snippen-filterable-table" id="blocks-table">';
 		echo '<thead><tr>';
 		echo '<th data-filter-type="text" data-sort-type="string">' . esc_html__( 'Navn', 'snippen-booking' ) . '</th>';
@@ -234,7 +235,7 @@ class BookingBlocksPage {
 			}
 		}
 
-		echo '</tbody></table></div>';
+		echo '</tbody></table></div></div>';
 	}
 
 	/**

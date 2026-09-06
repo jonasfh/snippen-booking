@@ -48,6 +48,15 @@ class SnippenTableFilter {
         const savedState = sessionStorage.getItem(stateKey);
         let state = savedState ? JSON.parse(savedState) : { filters: {}, sort: { column: null, dir: 'asc' } };
 
+        // Ensure table is wrapped in responsive scroll container
+        let responsiveWrapper = table.closest('.snippen-table-responsive');
+        if (!responsiveWrapper && table.parentNode) {
+            responsiveWrapper = document.createElement('div');
+            responsiveWrapper.className = 'snippen-table-responsive';
+            table.parentNode.insertBefore(responsiveWrapper, table);
+            responsiveWrapper.appendChild(table);
+        }
+
         // Create filter row
         const filterRow = document.createElement('tr');
         filterRow.className = 'snippen-filter-row';
@@ -87,8 +96,10 @@ class SnippenTableFilter {
             filterRow.appendChild(cell);
         });
 
-        // Add filter row below headers
-        thead.appendChild(filterRow);
+        // Add filter row below headers if there are filter inputs
+        if (filterInputs.length > 0) {
+            thead.appendChild(filterRow);
+        }
 
         // Add reset and summary UI
         this.addControls(table, filterInputs, state, stateKey);
@@ -245,7 +256,8 @@ class SnippenTableFilter {
         controlsDiv.appendChild(summary);
         controlsDiv.appendChild(resetBtn);
 
-        table.parentNode.insertBefore(controlsDiv, table);
+        const insertTarget = table.closest('.snippen-table-responsive') || table;
+        insertTarget.parentNode.insertBefore(controlsDiv, insertTarget);
     }
 
     bindFilterEvents(table, filterInputs, state, stateKey) {
