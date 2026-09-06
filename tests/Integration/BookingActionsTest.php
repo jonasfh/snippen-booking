@@ -60,6 +60,52 @@ class BookingActionsTest extends TestCase {
     }
 
     /**
+     * Test that an admin confirming a booking triggers booking_confirmed notification
+     */
+    public function test_admin_confirming_booking_triggers_booking_confirmed_notification() {
+        $user_id = wp_insert_user([
+            'user_login' => 'admin_test_confirm',
+            'user_pass' => 'password',
+            'role' => 'administrator'
+        ]);
+        $user = get_user_by('id', $user_id);
+        $user->add_cap('manage_snippen_bookings');
+        wp_set_current_user($user_id);
+
+        $customer_id = wp_insert_user([
+            'user_login' => 'customer_confirm_test',
+            'user_pass' => 'password',
+            'role' => 'subscriber'
+        ]);
+        $booking_id = $this->create_test_booking($customer_id);
+
+        update_option('snippen_email_booking_confirmed_enabled', 'yes');
+
+        $_POST['id'] = $booking_id;
+        $_POST['status'] = 'confirmed';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
+
+        ob_start();
+        try {
+            BookingActionsApi::update_status();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        global $wpdb;
+        $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $this->assertEquals('confirmed', $status);
+
+        // Verify message was logged
+        $messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking($booking_id);
+        $this->assertNotEmpty($messages);
+        $confirmed_messages = array_filter($messages, function($m) {
+            return $m->message_type === 'booking_confirmed';
+        });
+        $this->assertNotEmpty($confirmed_messages);
+    }
+
+    /**
      * Test that a subscriber can cancel their own booking
      */
     public function test_user_can_cancel_own_booking() {

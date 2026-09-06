@@ -72,6 +72,11 @@ class BookingActionsApi {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_bookings';
 
+		$existing_booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d AND deleted_at IS NULL", $id ) );
+		if ( ! $existing_booking ) {
+			wp_send_json_error( array( 'message' => __( 'Booking ble ikke funnet.', 'snippen-booking' ) ) );
+		}
+
 		$updated = $wpdb->update(
 			$table,
 			array(
@@ -82,6 +87,11 @@ class BookingActionsApi {
 		);
 
 		if ( $updated !== false ) {
+			if ( 'confirmed' === $status && 'confirmed' !== $existing_booking->status ) {
+				$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+				$notification_manager->send_booking_confirmed_notification( $id );
+			}
+
 			wp_send_json_success(
 				array(
 					'message'      => __( 'Status oppdatert.', 'snippen-booking' ),
@@ -178,9 +188,12 @@ class BookingActionsApi {
 		$template_options = array();
 		$event_labels     = array(
 			'booking_confirmation' => __( 'Booking-bekreftelse', 'snippen-booking' ),
+			'booking_confirmed'    => __( 'Reservasjon bekreftet', 'snippen-booking' ),
+			'payment_received'     => __( 'Betaling mottatt', 'snippen-booking' ),
 			'admin_booking'        => __( 'Admin bookingvarsel', 'snippen-booking' ),
 			'user_activation'      => __( 'Kontoaktivering', 'snippen-booking' ),
 			'password_reset'       => __( 'Passordtilbakestilling', 'snippen-booking' ),
+			'payment_reminder'     => __( 'Betalingspurring', 'snippen-booking' ),
 		);
 
 		foreach ( $all_templates as $event_type => $channels ) {

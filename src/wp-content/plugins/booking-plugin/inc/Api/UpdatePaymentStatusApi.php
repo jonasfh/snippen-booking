@@ -43,7 +43,7 @@ class UpdatePaymentStatusApi {
 			wp_send_json_error( array( 'message' => __( 'Ugyldig betalingsstatus.', 'snippen-booking' ) ) );
 		}
 
-		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT status FROM $table_bookings WHERE id = %d", $booking_id ) );
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT status, payment_status_id FROM $table_bookings WHERE id = %d", $booking_id ) );
 
 		$update_data = array(
 			'payment_status_id'  => $payment_status_id,
@@ -67,6 +67,18 @@ class UpdatePaymentStatusApi {
 		);
 
 		if ( $updated !== false ) {
+			$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+
+			// Notify user when payment status is set to PAID
+			if ( 'PAID' === $status->slug && ( ! $booking || (int) $booking->payment_status_id !== $payment_status_id ) ) {
+				$notification_manager->send_payment_received_notification( $booking_id );
+			}
+
+			// Notify user if booking was automatically confirmed as part of payment update
+			if ( isset( $update_data['status'] ) && 'confirmed' === $update_data['status'] && $booking && 'confirmed' !== $booking->status ) {
+				$notification_manager->send_booking_confirmed_notification( $booking_id );
+			}
+
 			wp_send_json_success(
 				array(
 					'message'     => __( 'Betalingsstatus oppdatert.', 'snippen-booking' ),

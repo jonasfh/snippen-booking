@@ -249,7 +249,9 @@ class NotificationTemplatesPage {
 					'admin-booking-alert': 'admin_booking',
 					'password-reset': 'password_reset',
 					'payment-reminder': 'payment_reminder',
-					'payment-receipt-uploaded': 'payment_receipt_uploaded'
+					'payment-receipt-uploaded': 'payment_receipt_uploaded',
+					'booking-confirmed': 'booking_confirmed',
+					'payment-received': 'payment_received'
 				};
 				var normVal = normMap[val] || val;
 
@@ -385,6 +387,8 @@ class NotificationTemplatesPage {
 			'password-reset'           => __( 'password-reset (Tilbakestill passord)', 'snippen-booking' ),
 			'payment-reminder'         => __( 'payment-reminder (Betalingspurring)', 'snippen-booking' ),
 			'payment-receipt-uploaded' => __( 'payment-receipt-uploaded (Opplastet kvittering varsel)', 'snippen-booking' ),
+			'booking-confirmed'        => __( 'booking-confirmed (Reservasjon bekreftet)', 'snippen-booking' ),
+			'payment-received'         => __( 'payment-received (Betalingsstatus: Betalt)', 'snippen-booking' ),
 		);
 		?>
 		<div class="snippen-card" style="margin-top: 20px; background: white; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">

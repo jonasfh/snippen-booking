@@ -41,7 +41,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_name',
 				'label'        => __( 'User / Customer name', 'snippen-booking' ),
 				'description'  => __( 'Full name or display name of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'user_activation', 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_name', 'user.name', 'user.display_name' ) );
 				},
@@ -53,7 +53,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_email',
 				'label'        => __( 'Customer email', 'snippen-booking' ),
 				'description'  => __( 'Email address of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_email', 'user.email', 'user.user_email' ) );
 				},
@@ -65,7 +65,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_phone',
 				'label'        => __( 'Customer phone number', 'snippen-booking' ),
 				'description'  => __( 'Phone number of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_phone', 'user.phone', 'user.user_phone' ) );
 				},
@@ -89,7 +89,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_objects',
 				'label'        => __( 'Booked venue names', 'snippen-booking' ),
 				'description'  => __( 'Names of booked venues or resources.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_objects', 'booking.objects', 'booking.object_names' ) );
 				},
@@ -101,7 +101,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_date',
 				'label'        => __( 'Booking date', 'snippen-booking' ),
 				'description'  => __( 'Date for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_date', 'booking.date' ) );
 				},
@@ -113,7 +113,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_time',
 				'label'        => __( 'Booking time / time slot', 'snippen-booking' ),
 				'description'  => __( 'Time slot or range for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_time', 'booking.time' ) );
 				},
@@ -137,7 +137,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_url',
 				'label'        => __( 'Booking details URL', 'snippen-booking' ),
 				'description'  => __( 'URL to view booking details.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_url', 'booking.url' ) );
 				},
@@ -149,7 +149,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_price',
 				'label'        => __( 'Booking total price', 'snippen-booking' ),
 				'description'  => __( 'Total price for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'payment_reminder', 'payment_receipt_uploaded' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_price', 'booking.price' ) );
 				},
@@ -161,7 +161,7 @@ class PlaceholderRegistry {
 				'name'         => 'bank_account',
 				'label'        => __( 'Payment bank account number', 'snippen-booking' ),
 				'description'  => __( 'Bank account number for payment.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'payment_reminder' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'bank_account', 'payment.bank_account' ) );
 				},
@@ -173,7 +173,7 @@ class PlaceholderRegistry {
 				'name'         => 'vipps_number',
 				'label'        => __( 'Payment Vipps number / info', 'snippen-booking' ),
 				'description'  => __( 'Vipps number for payment.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'payment_reminder' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'vipps_number', 'payment.vipps_number' ) );
 				},
@@ -185,7 +185,7 @@ class PlaceholderRegistry {
 				'name'         => 'payment_instructions',
 				'label'        => __( 'Payment instructions / deadline text', 'snippen-booking' ),
 				'description'  => __( 'Payment instructions and deadline text from settings.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'payment_reminder' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'payment_instructions', 'payment.instructions' ) );
 				},
@@ -280,6 +280,16 @@ class PlaceholderRegistry {
 
 			'payment_receipt_uploaded' => 'payment-receipt-uploaded',
 			'payment-receipt-uploaded' => 'payment-receipt-uploaded',
+
+			'booking_confirmed'        => 'booking-confirmed',
+			'booking-confirmed'        => 'booking-confirmed',
+			'reservation_confirmed'    => 'booking-confirmed',
+			'reservation-confirmed'    => 'booking-confirmed',
+
+			'payment_received'         => 'payment-received',
+			'payment-received'         => 'payment-received',
+			'payment_paid'             => 'payment-received',
+			'payment-paid'             => 'payment-received',
 		);
 
 		return $map[ $context ] ?? $context;
