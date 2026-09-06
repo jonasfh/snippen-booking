@@ -92,4 +92,80 @@ class PaymentTemplateTest extends TestCase {
 		$this->assertStringContainsString( '2 000', $rendered['body'] );
 		$this->assertStringContainsString( 'https://example.com/?booking_uuid=456', $rendered['body'] );
 	}
+
+	/**
+	 * Test that booking_confirmed default template and placeholders render correctly.
+	 */
+	public function test_booking_confirmed_template_rendering() {
+		$template_service = new NotificationTemplateService();
+
+		$placeholders = $template_service->get_available_placeholders( 'booking_confirmed' );
+		$this->assertArrayHasKey( 'user_name', $placeholders );
+		$this->assertArrayHasKey( 'booking_objects', $placeholders );
+		$this->assertArrayHasKey( 'booking_date', $placeholders );
+		$this->assertArrayHasKey( 'booking_time', $placeholders );
+		$this->assertArrayHasKey( 'booking_url', $placeholders );
+
+		$context = array(
+			'user_name'       => 'Ola Nordmann',
+			'booking_objects' => 'Festsalen',
+			'booking_date'    => '2026-09-01',
+			'booking_time'    => '10:00 - 14:00',
+			'booking_url'     => 'https://example.com/?booking_uuid=123',
+		);
+
+		$rendered_email = $template_service->render_template( 'booking_confirmed', 'email', $context );
+		$this->assertStringContainsString( 'Festsalen', $rendered_email['subject'] );
+		$this->assertStringContainsString( 'godkjent og bekreftet', $rendered_email['subject'] );
+		$this->assertStringContainsString( 'Ola Nordmann', $rendered_email['body'] );
+		$this->assertStringContainsString( '2026-09-01', $rendered_email['body'] );
+		$this->assertStringContainsString( '10:00 - 14:00', $rendered_email['body'] );
+		$this->assertStringContainsString( 'https://example.com/?booking_uuid=123', $rendered_email['body'] );
+
+		$rendered_sms = $template_service->render_template( 'booking_confirmed', 'sms', $context );
+		$this->assertStringContainsString( 'Festsalen', $rendered_sms['body'] );
+		$this->assertStringContainsString( '2026-09-01', $rendered_sms['body'] );
+		$this->assertStringContainsString( '10:00 - 14:00', $rendered_sms['body'] );
+		$this->assertStringContainsString( 'godkjent og bekreftet', $rendered_sms['body'] );
+		$this->assertStringContainsString( 'https://example.com/?booking_uuid=123', $rendered_sms['body'] );
+	}
+
+	/**
+	 * Test that payment_received default template and placeholders render correctly.
+	 */
+	public function test_payment_received_template_rendering() {
+		$template_service = new NotificationTemplateService();
+
+		$placeholders = $template_service->get_available_placeholders( 'payment_received' );
+		$this->assertArrayHasKey( 'user_name', $placeholders );
+		$this->assertArrayHasKey( 'booking_objects', $placeholders );
+		$this->assertArrayHasKey( 'booking_date', $placeholders );
+		$this->assertArrayHasKey( 'booking_time', $placeholders );
+		$this->assertArrayHasKey( 'booking_price', $placeholders );
+		$this->assertArrayHasKey( 'booking_url', $placeholders );
+
+		$context = array(
+			'user_name'       => 'Ola Nordmann',
+			'booking_objects' => 'Festsalen',
+			'booking_date'    => '2026-09-01',
+			'booking_time'    => '10:00 - 14:00',
+			'booking_price'   => '1 500',
+			'booking_url'     => 'https://example.com/?booking_uuid=123',
+		);
+
+		$rendered_email = $template_service->render_template( 'payment_received', 'email', $context );
+		$this->assertStringContainsString( 'Festsalen', $rendered_email['subject'] );
+		$this->assertStringContainsString( 'Tusen takk for mottatt betaling for reservasjon', $rendered_email['body'] );
+		$this->assertStringContainsString( '2026-09-01', $rendered_email['body'] );
+		$this->assertStringContainsString( '10:00 - 14:00', $rendered_email['body'] );
+		$this->assertStringContainsString( '1 500', $rendered_email['body'] );
+		$this->assertStringContainsString( 'https://example.com/?booking_uuid=123', $rendered_email['body'] );
+
+		$rendered_sms = $template_service->render_template( 'payment_received', 'sms', $context );
+		$this->assertStringContainsString( 'Tusen takk for mottatt betaling for reservasjon', $rendered_sms['body'] );
+		$this->assertStringContainsString( 'Festsalen', $rendered_sms['body'] );
+		$this->assertStringContainsString( '2026-09-01', $rendered_sms['body'] );
+		$this->assertStringContainsString( '10:00 - 14:00', $rendered_sms['body'] );
+		$this->assertStringContainsString( 'https://example.com/?booking_uuid=123', $rendered_sms['body'] );
+	}
 }

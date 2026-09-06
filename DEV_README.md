@@ -355,6 +355,23 @@ add_filter('snippen_booking_notification_providers', function($providers) {
 
 Once registered, your provider will automatically appear as a card inside **Innstillinger > Varslingstilbyder (Transport)**, and its configuration fields will be rendered dynamically!
 
+### Notification Events and Template Contexts (`connected_to`)
+
+The notification system uses event identifiers (`connected_to`) to bind editable email and SMS templates to specific domain lifecycle events:
+
+| Context Key (`connected_to`) | Aliases | Description / Trigger | Default Channels |
+|---|---|---|---|
+| `account-activation` | `user_activation` | Triggered when a new user registers and needs a verification code | Email, SMS |
+| `booking-confirmation` | `booking_confirmation` | Sent to customer when a booking request is initially created | Email, SMS |
+| `admin-booking-alert` | `admin_booking` | Sent to booking administrators when a new booking request is submitted | Email, SMS |
+| `password-reset` | `password_reset` | Sent to user when requesting a password reset link | Email, SMS |
+| `payment-reminder` | `payment_reminder` | Scheduled reminder sent to customer for unpaid bookings | Email, SMS |
+| `payment-receipt-uploaded` | `payment_receipt_uploaded` | Sent to administrators when a customer uploads payment documentation | Email, SMS |
+| `booking-confirmed` | `booking_confirmed` | Sent to customer when admin confirms/approves their booking reservation | Email, SMS |
+| `payment-received` | `payment_received`, `payment-paid` | Sent to customer when payment status is registered as `PAID` | Email, SMS |
+
+Each event can be toggled on/off independently per channel in **Innstillinger > E-post** and **Innstillinger > KeySMS**, and standard templates can be customized with placeholders under **Notifikasjonsmaler**.
+
 ## Pluggable Resident Import System
 
 The plugin also supports a pluggable architecture for importing residents. You can easily add new import formats (like CSV, custom text formats, or integrations with external systems) via WordPress filter hooks.

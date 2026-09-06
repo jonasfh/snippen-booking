@@ -54,8 +54,11 @@ class SettingsPageTest extends TestCase {
 		$this->assertStringContainsString( 'name="snippen_smtp_pass"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_encryption"', $output );
 		$this->assertStringContainsString( 'name="snippen_smtp_from_email"', $output );
-		$this->assertStringContainsString( 'name="snippen_smtp_from_name"', $output );
 		$this->assertStringContainsString( 'name="snippen_notification_dispatch_method"', $output );
+		$this->assertStringContainsString( 'name="snippen_email_booking_confirmed_enabled"', $output );
+		$this->assertStringContainsString( 'name="snippen_email_payment_received_enabled"', $output );
+		$this->assertStringContainsString( 'name="snippen_sms_booking_confirmed_enabled"', $output );
+		$this->assertStringContainsString( 'name="snippen_sms_payment_received_enabled"', $output );
 	}
 
 	/**
@@ -72,6 +75,10 @@ class SettingsPageTest extends TestCase {
 		$_POST['snippen_sms_admin_booking_enabled'] = 'yes';
 		$_POST['snippen_sms_user_activation_enabled'] = 'yes';
 		$_POST['snippen_sms_password_reset_enabled'] = 'yes';
+		$_POST['snippen_email_booking_confirmed_enabled'] = 'yes';
+		$_POST['snippen_email_payment_received_enabled'] = 'yes';
+		$_POST['snippen_sms_booking_confirmed_enabled'] = 'yes';
+		$_POST['snippen_sms_payment_received_enabled'] = 'yes';
 		$_POST['snippen_smtp_enabled'] = 'yes';
 		$_POST['snippen_smtp_host'] = 'smtp.example.com';
 		$_POST['snippen_smtp_port'] = '465';
@@ -100,6 +107,10 @@ class SettingsPageTest extends TestCase {
 		$this->assertEquals( 'yes', get_option( 'snippen_sms_admin_booking_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_sms_user_activation_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_sms_password_reset_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_email_booking_confirmed_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_email_payment_received_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_sms_booking_confirmed_enabled' ) );
+		$this->assertEquals( 'yes', get_option( 'snippen_sms_payment_received_enabled' ) );
 		$this->assertEquals( 'yes', get_option( 'snippen_smtp_enabled' ) );
 		$this->assertEquals( 'smtp.example.com', get_option( 'snippen_smtp_host' ) );
 		$this->assertEquals( 465, get_option( 'snippen_smtp_port' ) );

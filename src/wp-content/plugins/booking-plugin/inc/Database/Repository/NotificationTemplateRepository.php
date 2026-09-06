@@ -324,6 +324,34 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hallo Admin,\n\nDet har blitt lastet opp ny betalingsdokumentasjon (kvittering/skjermbilde) for en booking.\n\nKunde: {{user_name}} ({{user_email}})\nBooking: {{booking_objects}} den {{booking_date}}\nBeløp: {{booking_price}} kr\n\nDu kan se bookingdetaljer og opplastet fil her:\n{{booking_url}}", 'snippen-booking' ),
 				'connected_to' => 'payment-receipt-uploaded',
 			),
+			array(
+				'name'         => __( 'Reservasjon bekreftet (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Din reservasjon for {{booking_objects}} den {{booking_date}} {{booking_time}} er nå godkjent og bekreftet! Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'connected_to' => 'booking-confirmed',
+			),
+			array(
+				'name'         => __( 'Reservasjon bekreftet (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Din reservasjon er godkjent og bekreftet - {{booking_objects}}', 'snippen-booking' ),
+				'message'      => __( "Hallo {{user_name}},\n\nDin reservasjon for {{booking_objects}} den {{booking_date}} {{booking_time}} er nå godkjent og bekreftet.\n\nDu kan se detaljer om din booking her:\n{{booking_url}}\n\nVelkommen til oss!", 'snippen-booking' ),
+				'connected_to' => 'booking-confirmed',
+			),
+			array(
+				'name'         => __( 'Betaling mottatt (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Tusen takk for mottatt betaling for reservasjon ({{booking_objects}}, {{booking_date}} {{booking_time}}). Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'connected_to' => 'payment-received',
+			),
+			array(
+				'name'         => __( 'Betaling mottatt (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Betaling bekreftet - {{booking_objects}}', 'snippen-booking' ),
+				'message'      => __( "Hallo {{user_name}},\n\nTusen takk for mottatt betaling for reservasjon ({{booking_objects}}, {{booking_date}} {{booking_time}}).\n\nBeløp: {{booking_price}} kr\n\nDu kan se oppdatert bookingstatus her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				'connected_to' => 'payment-received',
+			),
 		);
 
 		$this->cleanup_duplicates();

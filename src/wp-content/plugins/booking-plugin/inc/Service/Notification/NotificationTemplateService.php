@@ -167,6 +167,26 @@ class NotificationTemplateService {
 					'body'    => __( "Hallo Admin,\n\nDet har blitt lastet opp ny betalingsdokumentasjon (kvittering/skjermbilde) for en booking.\n\nKunde: {{user_name}} ({{user_email}})\nBooking: {{booking_objects}} den {{booking_date}}\nBeløp: {{booking_price}} kr\n\nDu kan se bookingdetaljer og opplastet fil her:\n{{booking_url}}", 'snippen-booking' ),
 				),
 			),
+			'booking-confirmed'        => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Din reservasjon for {{booking_objects}} den {{booking_date}} {{booking_time}} er nå godkjent og bekreftet! Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Din reservasjon er godkjent og bekreftet - {{booking_objects}}', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nDin reservasjon for {{booking_objects}} den {{booking_date}} {{booking_time}} er nå godkjent og bekreftet.\n\nDu kan se detaljer om din booking her:\n{{booking_url}}\n\nVelkommen til oss!", 'snippen-booking' ),
+				),
+			),
+			'payment-received'         => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Tusen takk for mottatt betaling for reservasjon ({{booking_objects}}, {{booking_date}} {{booking_time}}). Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Betaling bekreftet - {{booking_objects}}', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nTusen takk for mottatt betaling for reservasjon ({{booking_objects}}, {{booking_date}} {{booking_time}}).\n\nBeløp: {{booking_price}} kr\n\nDu kan se oppdatert bookingstatus her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				),
+			),
 		);
 
 		return $defaults[ $norm_type ][ $channel ] ?? array(

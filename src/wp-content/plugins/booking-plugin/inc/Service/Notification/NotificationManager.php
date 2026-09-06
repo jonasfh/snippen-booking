@@ -45,6 +45,16 @@ class NotificationManager {
 	const TYPE_PAYMENT_RECEIPT_UPLOADED = 'payment_receipt_uploaded';
 
 	/**
+	 * Notification type: Booking confirmed (approved by admin)
+	 */
+	const TYPE_BOOKING_CONFIRMED = 'booking_confirmed';
+
+	/**
+	 * Notification type: Payment received (marked as PAID)
+	 */
+	const TYPE_PAYMENT_RECEIVED = 'payment_received';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -667,5 +677,261 @@ class NotificationManager {
 		}
 
 		return $email_sent || $sms_sent;
+	}
+
+	/**
+	 * Send notification to customer when booking is confirmed/approved by admin.
+	 *
+	 * @param int $booking_id Booking ID.
+	 * @return bool True if at least one notification was sent successfully.
+	 */
+	public function send_booking_confirmed_notification( int $booking_id ): bool {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_booking_confirmed_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_booking_confirmed_enabled', 'yes' );
+
+		if ( ! $sms_enabled && ! $email_enabled ) {
+			return false;
+		}
+
+		// Fetch associated locales/objects
+		$objs         = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		$object_names = implode( ' og ', $objs );
+
+		// Fetch booking time string
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
+		$booking_url                  = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
+
+		$context = array(
+			'user_name'            => $booking->customer_name,
+			'user_email'           => $booking->customer_email,
+			'user_phone'           => $booking->customer_phone,
+			'booking_objects'      => $object_names,
+			'booking_date'         => $booking->booking_date,
+			'booking_time'         => $booking_time,
+			'booking_url'          => $booking_url,
+			'booking_price'        => number_format( (float) $booking->price, 0, ',', ' ' ),
+			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
+			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
+			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
+		);
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( 'booking_confirmed', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'booking_confirmed', 'email', $context );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		$phone = ! empty( $booking->customer_phone ) ? $booking->customer_phone : '';
+		if ( empty( $phone ) && ! empty( $booking->user_id ) ) {
+			$phone = (string) get_user_meta( $booking->user_id, 'snippen_phone', true );
+		}
+
+		if ( $sms_enabled && ! empty( $phone ) ) {
+			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$sms_provider = $this->get_provider( $provider_id );
+			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				$sms_sent = $sms_provider->send_sms( $phone, $rendered_sms['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_BOOKING_CONFIRMED,
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
+					array( 'provider' => $provider_id )
+				);
+			}
+		}
+
+		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
+		if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$recipient = $user->user_email;
+			}
+		}
+
+		if ( $email_enabled && ! empty( $recipient ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Din reservasjon er godkjent og bekreftet', 'snippen-booking' );
+				$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$recipient,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_BOOKING_CONFIRMED,
+					$email_sent ? 'sent' : 'failed'
+				);
+			}
+		}
+
+		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Send notification to customer when payment is registered as PAID.
+	 *
+	 * @param int $booking_id Booking ID.
+	 * @return bool True if at least one notification was sent successfully.
+	 */
+	public function send_payment_received_notification( int $booking_id ): bool {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_payment_received_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_payment_received_enabled', 'yes' );
+
+		if ( ! $sms_enabled && ! $email_enabled ) {
+			return false;
+		}
+
+		// Fetch associated locales/objects
+		$objs         = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		$object_names = implode( ' og ', $objs );
+
+		// Fetch booking time string
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
+		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+
+		$context = array(
+			'user_name'       => $booking->customer_name,
+			'user_email'      => $booking->customer_email,
+			'user_phone'      => $booking->customer_phone,
+			'booking_objects' => $object_names,
+			'booking_date'    => $booking->booking_date,
+			'booking_time'    => $booking_time,
+			'booking_url'     => $booking_url,
+			'booking_price'   => number_format( (float) $booking->price, 0, ',', ' ' ),
+		);
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( 'payment_received', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'payment_received', 'email', $context );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		$phone = ! empty( $booking->customer_phone ) ? $booking->customer_phone : '';
+		if ( empty( $phone ) && ! empty( $booking->user_id ) ) {
+			$phone = (string) get_user_meta( $booking->user_id, 'snippen_phone', true );
+		}
+
+		if ( $sms_enabled && ! empty( $phone ) ) {
+			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$sms_provider = $this->get_provider( $provider_id );
+			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				$sms_sent = $sms_provider->send_sms( $phone, $rendered_sms['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_PAYMENT_RECEIVED,
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
+					array( 'provider' => $provider_id )
+				);
+			}
+		}
+
+		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
+		if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$recipient = $user->user_email;
+			}
+		}
+
+		if ( $email_enabled && ! empty( $recipient ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Betaling bekreftet', 'snippen-booking' );
+				$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$recipient,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_PAYMENT_RECEIVED,
+					$email_sent ? 'sent' : 'failed'
+				);
+			}
+		}
+
+		return $sms_sent || $email_sent;
 	}
 }

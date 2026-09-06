@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.28.0] - 2026-09-06
+- (#289) Melding til bruker når admin endrer bookingstatus:
+  - Lagt til to nye connected_to-hendelser i varslingssystemet: `booking-confirmed` (Reservasjon bekreftet) og `payment-received` (Betalingsstatus: Betalt).
+  - Opprettet standard e-post- og SMS-maler med plassholdere for {{booking_date}} {{booking_time}} og tilpasset ordlyd.
+  - Lagt til innstillinger for å aktivere/deaktivere automatisk utsendelse av e-post og SMS for de nye hendelsene under admin-innstillinger.
+  - Koblet automatisk utsendelse til kunden ved administrativ godkjenning av booking (`BookingActionsApi::update_status`) og ved registrering av betalingsstatus som "Betalt" (`UpdatePaymentStatusApi::update_payment_status`).
+  - Opprettet migrasjon `Migration_2_28_0` for automatisk seeding av standardmaler i eksisterende installasjoner.
+
 ## [2.27.5] - 2026-09-06
 - (#284) Oppdatert avhengigheter for å lukke kjente sårbarheter:
   - Utførte `npm audit fix` som oppdaterte `browserslist` (4.28.2 => 4.28.9) og tilknyttede pakker (`caniuse-lite`, `update-browserslist-db`, `electron-to-chromium`, `node-releases`, `baseline-browser-mapping`) for å eliminere sårbarheter (GHSA-c83g-rgw3-j3cx, GHSA-73wf-gq98-2v4g).
