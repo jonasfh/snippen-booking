@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.27.1] - 2026-09-06
+- (#279) Forbedret mobilresponsivitet og kommunikasjonshistorikk i administrasjonens booking-oversikt:
+  - Fikset bredde og layout for detaljvisning på mobil: erstattet fastlåste `grid-column: span`-regler med responsive klasser og lagt til eksplisitt breddekontroll (`100%`, `box-sizing: border-box`, `min-width: 0`) slik at ingen felt eller knapper havner utenfor skjermkanten.
+  - Gjorde kommunikasjonshistorikken sammenleggbar som standard med en kompakt header og en "Vis kommunikasjon" / "Skjul kommunikasjon"-knapp for renere og mer oversiktlig detaljvisning.
+  - Fjernet interne scrollbars på meldingsliste og enkeltmeldinger slik at hele meldingsteksten er lesbar og visningen utelukkende styres av sidens hoved-scroll.
+  - Lagt til automatisk åpning av meldingshistorikken ved utsendelse av nye meldinger fra Booking-hjelperen.
+  - Etablert UI- og visuell regresjonstest for booking-oversikten under desktop og mobil i Playwright.
+
 ## [2.27.0] - 2026-09-06
 - (#259) Implemented two-way SMS inbox with rule-based booking resolution, quarantine management, and admin inbox UI:
   - Added `SmsInboxResolverService` (`inc/Service/Sms/`) with prioritized 6-rule resolution engine:

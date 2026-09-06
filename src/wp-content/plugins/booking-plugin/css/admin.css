@@ -236,6 +236,126 @@
     color: #475569;
 }
 
+.snippen-details-row td {
+    padding: 20px 30px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.bookings-table .snippen-details-row .details-content {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+}
+
+.snippen-details-row .payment-admin-container {
+    grid-column: span 2;
+    background: #fff;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.snippen-details-row .booking-assistant-actions {
+    box-sizing: border-box;
+}
+
+/* Communication History */
+.booking-messages-history {
+    grid-column: 1 / -1;
+    background: #fff;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-top: 10px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.msg-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.msg-history-header-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toggle-msg-history {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px !important;
+    height: 28px !important;
+    line-height: 26px !important;
+    padding: 0 10px !important;
+    cursor: pointer;
+}
+
+.msg-history-body {
+    margin-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 12px;
+}
+
+.msg-filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: #475569;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.msg-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.msg-item {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 12px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.msg-item-body {
+    white-space: pre-wrap;
+    color: #475569;
+    font-family: inherit;
+    background: #fff;
+    padding: 6px;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    margin-top: 4px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Tablet responsiveness for booking details */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .bookings-table .snippen-details-row .details-content {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 18px !important;
+    }
+
+    .snippen-details-row .payment-admin-container,
+    .snippen-details-row .booking-assistant-actions,
+    .snippen-details-row .booking-messages-history {
+        grid-column: 1 / -1 !important;
+    }
+}
+
 /* Pluggable Notification Provider Styles */
 .snippen-provider-selector {
     display: grid;
@@ -476,8 +596,11 @@ th.sorted-desc .sort-icon {
     }
     
     .snippen-details-row td {
-        padding: 20px 16px !important;
+        padding: 16px 12px !important;
         display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
     }
     
     .snippen-details-row td:before {
@@ -486,7 +609,45 @@ th.sorted-desc .sort-icon {
     
     .snippen-details-row .details-content {
         grid-template-columns: 1fr !important;
-        gap: 20px !important;
+        gap: 16px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .snippen-details-row .details-content > * {
+        grid-column: 1 / -1 !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .snippen-details-row .door-code-edit-container {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .snippen-details-row .payment-admin-container,
+    .snippen-details-row .booking-assistant-actions,
+    .snippen-details-row .booking-messages-history {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .snippen-details-row .booking-messages-history {
+        padding: 12px !important;
+    }
+
+    .msg-history-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .msg-filter-controls {
+        gap: 6px 10px;
     }
 }
 

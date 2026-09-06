@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Bookings Overview Fixture</title>
+    <link rel="stylesheet" href="../../src/wp-content/plugins/booking-plugin/css/admin.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: #f0f2f5;
+            color: #1e293b;
+            box-sizing: border-box;
+        }
+        .dashicons {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            font-size: 14px;
+            text-align: center;
+            vertical-align: middle;
+            font-style: normal;
+        }
+        .dashicons-format-chat:before { content: "💬"; }
+        .dashicons-arrow-down-alt2:before { content: "▾"; }
+        .dashicons-arrow-up-alt2:before { content: "▴"; }
+        .dashicons-email:before { content: "✉"; }
+        .dashicons-phone:before { content: "📞"; }
+        .dashicons-paperclip:before { content: "📎"; }
+        .dashicons-smartphone:before { content: "📱"; }
+        .dashicons-email-alt:before { content: "✉"; }
+    </style>
+</head>
+<body>
+    <div class="snippen-card" style="padding:0; overflow:hidden;">
+        <table class="snippen-list-table bookings-table">
+            <thead>
+                <tr>
+                    <th style="text-align:left; width:100px;">Handlinger</th>
+                    <th>Dato / Tid</th>
+                    <th>Kunde</th>
+                    <th>Lokaler</th>
+                    <th>Pris</th>
+                    <th>Status</th>
+                    <th>Betaling</th>
+                    <th style="width:40px; text-align:right;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="snippen-booking-row" id="booking-101">
+                    <td data-label="Handlinger">
+                        <button type="button" class="button button-small">Rediger</button>
+                    </td>
+                    <td data-label="Dato / Tid">
+                        <strong>15. sep. 2026</strong><br>
+                        <small>14:00 – 18:00</small>
+                    </td>
+                    <td data-label="Kunde">
+                        <strong>Kari Nordmann</strong><br>
+                        <small>kari@example.com</small>
+                    </td>
+                    <td data-label="Lokaler"><span class="snippen-tag">Storsalen</span></td>
+                    <td data-label="Pris" style="font-weight:600;">2 500,-</td>
+                    <td data-label="Status"><span class="snippen-badge snippen-status-confirmed">Bekreftet</span></td>
+                    <td data-label="Betaling"><span class="snippen-badge" style="background:#dcfce7; color:#15803d;">Betalt</span></td>
+                    <td style="text-align:right;">
+                        <button class="snippen-btn-action toggle-details" title="Skjul detaljer"><span class="dashicons dashicons-arrow-up-alt2"></span></button>
+                    </td>
+                </tr>
+
+                <!-- Details Row (Visible for testing) -->
+                <tr class="snippen-details-row active" id="details-101" style="display: table-row; background:#f8fafc;">
+                    <td colspan="8">
+                        <div class="details-content">
+                            <div><strong>Kontaktinfo:</strong><br>+47 99 88 77 66</div>
+                            <div><strong>Lokale(r):</strong><br>Storsalen</div>
+                            <div><strong>Beskrivelse/Notater:</strong><br>Bursdagsfeiring</div>
+                            <div><strong>Tidsrom:</strong><br>14:00 – 18:00</div>
+                            <div><strong>Dørkode:</strong><br>
+                                <div class="door-code-edit-container" data-id="101" style="display: flex; align-items: center; margin-top: 4px;">
+                                    <input type="text" class="door-code-input" value="4829#" style="width: 100px; margin-right: 5px; height: 30px;">
+                                    <button type="button" class="button button-small snippen-btn-save-door-code" style="height: 30px; line-height: 1;">Lagre</button>
+                                </div>
+                            </div>
+                            <div><strong>Rabatt:</strong><br>-</div>
+                            <div><strong>Booket den:</strong><br>2026-09-01 10:30:00</div>
+
+                            <div class="payment-admin-container" data-id="101">
+                                <strong>Betalingsadministrasjon:</strong><br>
+                                <div style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
+                                    <select class="payment-status-select" style="width:100%; height:30px;">
+                                        <option value="paid" selected>Betalt</option>
+                                        <option value="unpaid">Ubetalt</option>
+                                    </select>
+                                    <textarea class="payment-notes-input" placeholder="Betalingsnotat..." style="width:100%; height:45px; font-size:12px;">Vipps transaksjon #12345</textarea>
+                                    <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                        <button type="button" class="button button-small button-primary snippen-btn-save-payment">Lagre betalingsstatus</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="booking-assistant-actions" data-id="101" data-uuid="test-uuid">
+                                <strong>Booking-hjelper:</strong><br>
+                                <button class="button snippen-btn-dispatch" data-channel="email_customer" style="margin-top:6px; margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email"></span> E-post til kunde</button>
+                                <button class="button snippen-btn-dispatch" data-channel="sms_customer" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-phone"></span> SMS til kunde</button>
+                                <button class="button snippen-btn-dispatch" data-channel="email_admin" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email"></span> Varsel til admin</button>
+                            </div>
+
+                            <!-- Communication / Messages history block -->
+                            <div class="booking-messages-history" data-booking-id="101">
+                                <div class="msg-history-header">
+                                    <div class="msg-history-header-title">
+                                        <strong><span class="dashicons dashicons-format-chat"></span> Kommunikasjonshistorikk: (<span class="msg-count">2</span>)</strong>
+                                    </div>
+                                    <button type="button" class="button button-small toggle-msg-history" aria-expanded="false">
+                                        <span class="toggle-text">Vis kommunikasjon</span>
+                                        <span class="dashicons dashicons-arrow-down-alt2"></span>
+                                    </button>
+                                </div>
+
+                                <div class="msg-history-body" style="display:none;">
+                                    <div class="msg-filter-controls">
+                                        <span style="font-weight:600;">Filtrer hendelser:</span>
+                                        <label><input type="checkbox" class="msg-filter-cb" data-event-type="booking_confirmation" checked> Booking-bekreftelse</label>
+                                        <label><input type="checkbox" class="msg-filter-cb" data-event-type="manual_dispatch_customer" checked> Manuell leietakermelding</label>
+                                        <label><input type="checkbox" class="msg-filter-cb" data-event-type="inbound_sms" checked> Innkommende SMS</label>
+                                    </div>
+
+                                    <div class="msg-list-container">
+                                        <div class="msg-item" data-event-type="booking_confirmation">
+                                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                                <div><span class="dashicons dashicons-email-alt"></span> <strong>EMAIL &bull; kari@example.com</strong> <span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">Sendt</span> <span style="font-size:10px; color:#64748b; margin-left:4px;">(Booking-bekreftelse)</span></div>
+                                                <span style="font-size:11px; color:#64748b;">2026-09-01 10:31:00</span>
+                                            </div>
+                                            <div style="font-weight:600; color:#334155; margin-bottom:2px;">Emne: Bekreftelse på din booking av Storsalen</div>
+                                            <div class="msg-item-body">Hei Kari, din booking av Storsalen den 15. september er bekreftet. Velkommen til Snippen!</div>
+                                        </div>
+
+                                        <div class="msg-item" data-event-type="manual_dispatch_customer">
+                                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                                <div><span class="dashicons dashicons-smartphone"></span> <strong>SMS &bull; +4799887766</strong> <span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">Sendt</span> <span style="font-size:10px; color:#64748b; margin-left:4px;">(Manuell leietakermelding)</span></div>
+                                                <span style="font-size:11px; color:#64748b;">2026-09-02 14:15:00</span>
+                                            </div>
+                                            <div class="msg-item-body">Hei, husk at nøkkelkode aktiveres 30 min før arrangementet starter. Ta kontakt ved spørsmål.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.querySelector('.toggle-msg-history').addEventListener('click', function(e) {
+            e.preventDefault();
+            const body = document.querySelector('.msg-history-body');
+            const text = this.querySelector('.toggle-text');
+            const icon = this.querySelector('.dashicons');
+            const isOpen = body.style.display !== 'none';
+
+            if (isOpen) {
+                body.style.display = 'none';
+                this.setAttribute('aria-expanded', 'false');
+                text.textContent = 'Vis kommunikasjon';
+                icon.className = 'dashicons dashicons-arrow-down-alt2';
+            } else {
+                body.style.display = 'block';
+                this.setAttribute('aria-expanded', 'true');
+                text.textContent = 'Skjul kommunikasjon';
+                icon.className = 'dashicons dashicons-arrow-up-alt2';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -362,7 +362,7 @@
                 const eventType = msg.event_type || '';
                 const labelText = knownLabels[eventType] || eventType;
 
-                let $item = $('<div class="msg-item" data-event-type="' + escapeHtml(eventType) + '" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; padding:8px 10px; font-size:12px;"></div>');
+                let $item = $('<div class="msg-item" data-event-type="' + escapeHtml(eventType) + '"></div>');
                 
                 let subjectHtml = '';
                 if (msg.subject) {
@@ -375,13 +375,23 @@
                     '<span style="font-size:11px; color:#64748b;">' + escapeHtml(msg.created_at) + '</span>' +
                     '</div>' +
                     subjectHtml +
-                    '<div style="white-space:pre-wrap; color:#475569; font-family:inherit; background:#fff; padding:6px; border:1px solid #e2e8f0; border-radius:3px; max-height:100px; overflow-y:auto;">' + escapeHtml(msg.message) + '</div>'
+                    '<div class="msg-item-body">' + escapeHtml(msg.message) + '</div>'
                 );
 
                 $listContainer.append($item);
             });
 
             filterMessagesForContainer($container);
+
+            // If history body was closed when new message arrived, auto-expand it
+            const $body = $container.find('.msg-history-body');
+            if ($body.length && !$body.is(':visible')) {
+                $body.slideDown(200);
+                const $btn = $container.find('.toggle-msg-history');
+                $btn.attr('aria-expanded', 'true');
+                $btn.find('.toggle-text').text((window.snippenAdmin && window.snippenAdmin.strings && window.snippenAdmin.strings.hideCommunication) || 'Skjul kommunikasjon');
+                $btn.find('.dashicons').removeClass('dashicons-arrow-down-alt2').addClass('dashicons-arrow-up-alt2');
+            }
         }
 
         // Escape HTML utility
@@ -389,6 +399,36 @@
             if (!str) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
+
+        // Toggle communication history
+        $('.bookings-table').on('click', '.toggle-msg-history, .msg-history-header', function(e) {
+            if ($(e.target).closest('.msg-filter-controls, input, select, textarea').length) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+
+            const $header = $(this).closest('.booking-messages-history').find('.msg-history-header');
+            const $container = $header.closest('.booking-messages-history');
+            const $body = $container.find('.msg-history-body');
+            const $btn = $header.find('.toggle-msg-history');
+            const $text = $btn.find('.toggle-text');
+            const $icon = $btn.find('.dashicons');
+
+            $body.slideToggle(200, function() {
+                const isOpen = $body.is(':visible');
+                $btn.attr('aria-expanded', isOpen ? 'true' : 'false');
+                $text.text(isOpen
+                    ? ((window.snippenAdmin && window.snippenAdmin.strings && window.snippenAdmin.strings.hideCommunication) || 'Skjul kommunikasjon')
+                    : ((window.snippenAdmin && window.snippenAdmin.strings && window.snippenAdmin.strings.showCommunication) || 'Vis kommunikasjon')
+                );
+                if (isOpen) {
+                    $icon.removeClass('dashicons-arrow-down-alt2').addClass('dashicons-arrow-up-alt2');
+                } else {
+                    $icon.removeClass('dashicons-arrow-up-alt2').addClass('dashicons-arrow-down-alt2');
+                }
+            });
+        });
 
         // Handle Event Type Checkbox Filter change
         $('.bookings-table').on('change', '.msg-filter-cb', function() {

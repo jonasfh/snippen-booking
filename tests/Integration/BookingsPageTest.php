@@ -243,4 +243,62 @@ class BookingsPageTest extends TestCase {
         $this->assertEquals( '17:00 - 22:00', $snapshot['time_range_formatted'] );
         $this->assertEquals( 'Kveldsblokk', $snapshot['blocks'][0]['name'] );
     }
+
+    /**
+     * Test that render_details outputs communication history with collapsible toggle button and without nested scrollbars
+     */
+    public function test_render_booking_details_communication_toggle_and_structure() {
+        global $wpdb;
+
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_bookings',
+            array(
+                'booking_date'   => '2026-09-20',
+                'customer_name'  => 'Test Person',
+                'customer_email' => 'testperson@example.com',
+                'customer_phone' => '+4799887766',
+                'status'         => 'confirmed',
+                'price'          => 1500,
+            )
+        );
+        $booking_id = $wpdb->insert_id;
+
+        // Log a test message for this booking
+        \SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+            $booking_id,
+            null,
+            'email',
+            'testperson@example.com',
+            'Bookingbekreftelse',
+            'Hei Test Person, din booking er bekreftet.',
+            'booking_confirmation',
+            'sent'
+        );
+
+        $bookings_page = new BookingsPage();
+        $reflection    = new \ReflectionClass( BookingsPage::class );
+        $method        = $reflection->getMethod( 'render_details' );
+        $method->setAccessible( true );
+
+        $booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id ) );
+
+        ob_start();
+        $method->invoke( $bookings_page, $booking, array(), '' );
+        $output = ob_get_clean();
+
+        // Check header, toggle button, and closed body
+        $this->assertStringContainsString( 'class="booking-messages-history"', $output );
+        $this->assertStringContainsString( 'class="msg-history-header"', $output );
+        $this->assertStringContainsString( 'class="button button-small toggle-msg-history"', $output );
+        $this->assertStringContainsString( 'Vis kommunikasjon', $output );
+        $this->assertStringContainsString( 'class="msg-history-body" style="display:none;"', $output );
+
+        // Check message body markup
+        $this->assertStringContainsString( 'class="msg-item-body"', $output );
+        $this->assertStringContainsString( 'Hei Test Person, din booking er bekreftet.', $output );
+
+        // Ensure no internal scrollbar styles are present
+        $this->assertStringNotContainsString( 'max-height:240px; overflow-y:auto;', $output );
+        $this->assertStringNotContainsString( 'max-height:100px; overflow-y:auto;', $output );
+    }
 }
