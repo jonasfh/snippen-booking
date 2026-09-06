@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.29.0] - 2026-09-06
+- (#278) CLI-verktøy for testing av innkommende SMS: `composer demo:inbox`:
+  - Utviklet `bin/demo-inbox.php` for enkel simulering og testing av innkommende SMS mot toveis SMS-innboks (`POST /wp-json/snippen/v1/sms/inbox`).
+  - Støtter normalisering av telefonnummer (f.eks. automatisk `+47`-prefiks ved 8-sifrede nummer) via `PhoneHelper`.
+  - Støtter fleksibel API-tokenhåndtering (WordPress options, miljøvariabel `SNIPPEN_SMS_API_TOKEN`, auto-oppsett av `'test-integration-token'`, samt CLI-overstyring `--token=...` for testing av 401/403).
+  - Støtter automatisk fallback til intern `rest_do_request()` dersom lokal webserver ikke kjører.
+  - Strukturert og lettlest utskrift med oppløsningsstatus (`received`, `pending_selection`, `general_inquiry`, `quarantine`), oppløsningsregel, tilknyttet booking/bruker og generert valg-SMS i utboks.
+  - Lagt til opsjon `--raw` for ren JSON-respons.
+  - Opprettet omfattende integrasjonstester i `tests/Integration/DemoInboxTest.php`.
+  - Rettet oppslag av leietaker på `snippen_phone` usermeta i `SmsInboxResolverService`.
+
 ## [2.28.4] - 2026-09-06
 - (#297) Bytt dropdown med radio buttons for betalingsadministrasjon i admin:
   - Erstattet `<select>` dropdown med radioknapper for valg av betalingsstatus under Betalingsadministrasjon i detaljvisningen (`BookingsPage`).

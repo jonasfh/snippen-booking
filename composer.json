@@ -48,6 +48,7 @@
         "demo:reminders": "php bin/demo-payment-reminders.php",
         "demo:me": "php bin/demo-me.php",
         "demo:gateway": "php bin/demo-gateway.php",
+        "demo:inbox": "php bin/demo-inbox.php",
         "demo:e2e": "@demo:gateway",
         "healthcheck": "bash bin/healthcheck.sh",
         "demo:env": [

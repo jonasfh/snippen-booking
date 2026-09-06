@@ -500,6 +500,47 @@ composer healthcheck
 bash bin/healthcheck.sh
 ```
 
+### Simuler innkommende SMS (`composer demo:inbox`)
+
+For å teste toveis SMS-innboks (`POST /wp-json/snippen/v1/sms/inbox`), oppløsningsmotor og flervalgslogikk manuelt fra kommandolinjen:
+
+```bash
+# Grunnleggende syntaks
+composer demo:inbox <telefonnummer> "<meldingstekst>" [--token=<token>] [--raw]
+
+# Enkelt booking (avsender matches til leietakers aktive reservasjon)
+composer demo:inbox 99887766 "Hei, hva er koden til ytterdøren?"
+
+# Med norsk landskode (+47)
+composer demo:inbox +4799887766 "Takk for info!"
+
+# Flervalgsrespons (når bruker har flere bookinger og svarer på valg-SMS)
+composer demo:inbox 99887766 "1"
+
+# Ukjent avsender (rutes til karantene for manuell oppfølging)
+composer demo:inbox 91234567 "Hei, ønsker å leie lokalet til neste år"
+
+# Rå JSON-respons (for automatisert testing eller piping til jq)
+composer demo:inbox 99887766 "Status" raw
+# eller:
+composer demo:inbox -- 99887766 "Status" --raw
+
+# Teste autorisasjonsfeil (401/403) med overstyrt token
+composer demo:inbox 99887766 "Test" token=feil-token
+# eller:
+composer demo:inbox -- 99887766 "Test" --token=feil-token
+```
+
+#### Funksjonalitet og virkemåte:
+- **Automatisk normalisering**: Telefonnummer normaliseres via `PhoneHelper`. Hvis 8 siffer oppgis (f.eks. `99887766`), legges automatisk `+47` til.
+- **Hierarkisk tokenhåndtering**:
+  1. CLI-overstyring (`--token=...`, `token=...`).
+  2. WordPress-innstilling (`get_option('snippen_sms_service_api_token')`).
+  3. Miljøvariabel (`SNIPPEN_SMS_API_TOKEN` i `.env`).
+  4. Auto-oppsett: Dersom token ikke er satt, konfigureres automatisk `'test-integration-token'`.
+- **Sømløs transport**: Forsøker HTTP POST mot `/wp-json/snippen/v1/sms/inbox`. Dersom lokal webserver ikke kjører i miljøet, faller skriptet automatisk tilbake til intern dispatch (`rest_do_request()`).
+- **Strukturert rapport**: Gir umiddelbar oversikt over transport, HTTP-status, løsningsstatus (`received`, `pending_selection`, `general_inquiry`, `quarantine`), oppløsningsregel, tilknyttet booking/bruker og innholdet i generert valg-SMS dersom utgående prompt ble lagt i utboksen.
+
 ### Headless Container Startup & Environment Variables
 
 The container entrypoint (`.devcontainer/docker-entrypoint.sh` / `Dockerfile`) supports automated headless execution without interactive prompts:

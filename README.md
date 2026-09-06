@@ -56,7 +56,7 @@ By default, if the user is not logged in, the shortcode will return an empty str
 Granular SMS settings are available in the WordPress admin dashboard under **Snippen Booking > Innstillinger**.
 The plugin supports two SMS providers:
 - **KeySMS (Direkte API)**: Direct dispatch to KeySMS HTTP API.
-- **Snippen SMS Service (Gateway)**: Asynchronous edge gateway dispatch and two-way inbox. Outbound messages are queued in `snippen_messages`, polled by the `snippen-sms-service` daemon via `/wp-json/snippen/v1/sms/outbox`, delivery status reported back via `/wp-json/snippen/v1/sms/outbox/status`, and incoming tenant SMS messages matched against bookings and users via `/wp-json/snippen/v1/sms/inbox` with multi-booking disambiguation prompts, session continuation, quarantine management, and admin oversight under **Snippen Booking > SMS Innboks**.
+- **Snippen SMS Service (Gateway)**: Asynchronous edge gateway dispatch and two-way inbox. Outbound messages are queued in `snippen_messages`, polled by the `snippen-sms-service` daemon via `/wp-json/snippen/v1/sms/outbox`, delivery status reported back via `/wp-json/snippen/v1/sms/outbox/status`, and incoming tenant SMS messages matched against bookings and users via `/wp-json/snippen/v1/sms/inbox` with multi-booking disambiguation prompts, session continuation, quarantine management, and admin oversight under **Snippen Booking > SMS Innboks**. Developers can simulate incoming SMS messages from the command line using `composer demo:inbox <telefonnummer> "<melding>"` (see `DEV_README.md` for details).
 
 If an SMS notification is disabled, the system will automatically fall back to sending that notification via email to ensure that confirmation codes and booking details are still delivered to the user.
 
