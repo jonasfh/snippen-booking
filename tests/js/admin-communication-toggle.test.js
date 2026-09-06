@@ -6,7 +6,7 @@ describe('Admin Communication History Toggle', () => {
             if (!toggleTrigger) {
                 return;
             }
-            if (e.target.closest('.msg-filter-controls, input, select, textarea')) {
+            if (e.target.closest('input, select, textarea')) {
                 return;
             }
             e.preventDefault();
@@ -50,9 +50,6 @@ describe('Admin Communication History Toggle', () => {
                                 </button>
                             </div>
                             <div class="msg-history-body" style="display:none;">
-                                <div class="msg-filter-controls">
-                                    <label><input type="checkbox" class="msg-filter-cb" data-event-type="booking_confirmation" checked> Bekreftelse</label>
-                                </div>
                                 <div class="msg-list-container">
                                     <div class="msg-item" data-event-type="booking_confirmation">
                                         <div class="msg-item-body">Test melding</div>

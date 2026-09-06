@@ -429,19 +429,6 @@ class BookingsPage {
 
 		echo '<div class="msg-history-body" style="display:none;">';
 
-		// Event type checkboxes filter (Only booking_confirmation, manual_dispatch_customer, and inbound_sms checked by default)
-		$default_checked_events = array( 'booking_confirmation', 'manual_dispatch_customer', 'inbound_sms' );
-
-		echo '<div class="msg-filter-controls">';
-		echo '<span style="font-weight:600;">' . esc_html__( 'Filtrer hendelser:', 'snippen-booking' ) . '</span>';
-
-		foreach ( $known_event_types as $ev_key => $ev_label ) {
-			$checked = in_array( $ev_key, $default_checked_events, true ) ? 'checked' : '';
-			echo '<label style="cursor:pointer; display:inline-flex; align-items:center; gap:3px;"><input type="checkbox" class="msg-filter-cb" data-event-type="' . esc_attr( $ev_key ) . '" ' . $checked . '> ' . esc_html( $ev_label ) . '</label>';
-		}
-
-		echo '</div>'; // .msg-filter-controls
-
 		echo '<div class="msg-list-container">';
 		if ( empty( $messages ) ) {
 			echo '<p class="no-messages-text" style="margin:0; font-size:12px; color:#64748b;">' . esc_html__( 'Ingen meldinger registrert på denne bookingen ennå.', 'snippen-booking' ) . '</p>';
@@ -461,10 +448,9 @@ class BookingsPage {
 				}
 
 				$event_type = $msg->event_type ?? '';
-				$display    = in_array( $event_type, $default_checked_events, true ) ? 'block' : 'none';
 				$label_text = isset( $known_event_types[ $event_type ] ) ? $known_event_types[ $event_type ] : $event_type;
 
-				echo '<div class="msg-item" data-event-type="' . esc_attr( $event_type ) . '" style="display:' . esc_attr( $display ) . ';">';
+				echo '<div class="msg-item" data-event-type="' . esc_attr( $event_type ) . '">';
 				echo '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
 				echo '<div><span class="dashicons ' . esc_attr( $icon_class ) . '" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span> <strong>' . esc_html( $channel_label ) . ' &bull; ' . esc_html( $msg->recipient ) . '</strong> ' . $status_badge . ' <span style="font-size:10px; color:#64748b; margin-left:4px;">(' . esc_html( $label_text ) . ')</span></div>';
 				echo '<span style="font-size:11px; color:#64748b;">' . esc_html( $msg->created_at ) . '</span>';

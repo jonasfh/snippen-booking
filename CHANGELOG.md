@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.27.4] - 2026-09-06
+- (#286) Fjernet hendelsesfiltre i kommunikasjonshistorikken for booking-detaljer:
+  - Droppet filterkontrollene (`.msg-filter-controls`) og tilhørende avkryssingsbokser for hendelsestyper i booking-detaljer i administrasjonen.
+  - Viser all meldingshistorikk direkte og ufiltrert når kommunikasjonsseksjonen åpnes.
+  - Ryddet bort tilhørende filterlogikk i JavaScript (`admin.js`) og CSS (`admin.css`).
+  - Oppdatert tester og snapshots for visuell og funksjonell verifisering.
+
 ## [2.27.3] - 2026-09-06
 - (#283) Forbedret mobilvisning for hurtiglenker i administrasjonens booking-oversikt:
   - Erstattet fastlåst inline flex-styling i `BookingsPage::render_quick_links` med responsive CSS-klasser (`.snippen-quick-links`, `.snippen-quick-links-header`, `.snippen-quick-links-list`, `.snippen-quick-link`).
