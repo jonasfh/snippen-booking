@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.27.3] - 2026-09-06
+- (#283) Forbedret mobilvisning for hurtiglenker i administrasjonens booking-oversikt:
+  - Erstattet fastlåst inline flex-styling i `BookingsPage::render_quick_links` med responsive CSS-klasser (`.snippen-quick-links`, `.snippen-quick-links-header`, `.snippen-quick-links-list`, `.snippen-quick-link`).
+  - Tillatt naturlig wrapping (`flex-wrap: wrap`) av hurtiglenker ved mange lenker, og stablet layout på mobil (`<= 768px`) uten forstyrrende horisontale `|` skilletegn.
+  - Sikret at filtergrupper og inputs i booking-oversikten aldri overskrider skjermbredden på mobil.
+  - Oppdatert booking-oversikt UI-tester og fixtures til å verifisere responsiv oppførsel og fravær av horisontal scrolling ved mange hurtiglenker.
+
 ## [2.27.2] - 2026-09-06
 - (#281) Forbedret mobilvisning for prisregler og rabattregler i admin:
   - Fikset overlappende titteltekst i `.snippen-admin-header h1` med romslig linjehøyde (`line-height: 1.35;`) og fleksibel flyt/gap for handlingsknapper på smale skjermer.

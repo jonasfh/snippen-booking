@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Bookings Overview Fixture</title>
-    <link rel="stylesheet" href="../../src/wp-content/plugins/booking-plugin/css/admin.css">
+    <link rel="stylesheet" href="../../../src/wp-content/plugins/booking-plugin/css/admin.css">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
@@ -13,6 +13,11 @@
             background-color: #f0f2f5;
             color: #1e293b;
             box-sizing: border-box;
+        }
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 8px 6px;
+            }
         }
         .dashicons {
             display: inline-block;
@@ -24,6 +29,7 @@
             vertical-align: middle;
             font-style: normal;
         }
+        .dashicons-admin-links:before { content: "🔗"; }
         .dashicons-format-chat:before { content: "💬"; }
         .dashicons-arrow-down-alt2:before { content: "▾"; }
         .dashicons-arrow-up-alt2:before { content: "▴"; }
@@ -35,7 +41,30 @@
     </style>
 </head>
 <body>
-    <div class="snippen-card" style="padding:0; overflow:hidden;">
+    <div class="snippen-booking-admin-wrap">
+        <div class="snippen-admin-header">
+            <h1>Booking Oversikt</h1>
+        </div>
+
+        <div class="snippen-card snippen-quick-links">
+            <div class="snippen-quick-links-header">
+                <span class="dashicons dashicons-admin-links"></span>
+                <span class="snippen-quick-links-title">Hurtiglenker til bookingsider:</span>
+            </div>
+            <div class="snippen-quick-links-list">
+                <a href="#" class="snippen-quick-link">Booking Demo - Festsalen</a>
+                <span class="snippen-quick-links-separator">|</span>
+                <a href="#" class="snippen-quick-link">Booking Demo - Peisestuen</a>
+                <span class="snippen-quick-links-separator">|</span>
+                <a href="#" class="snippen-quick-link">Booking Demo - Felleskalender</a>
+                <span class="snippen-quick-links-separator">|</span>
+                <a href="#" class="snippen-quick-link">Booking Demo - Vilkår for leie</a>
+                <span class="snippen-quick-links-separator">|</span>
+                <a href="#" class="snippen-quick-link">Booking Demo - Ekstraside 5</a>
+            </div>
+        </div>
+
+        <div class="snippen-card snippen-booking-table-card" style="padding:0; overflow:hidden;">
         <table class="snippen-list-table bookings-table">
             <thead>
                 <tr>
@@ -154,6 +183,7 @@
                 </tr>
             </tbody>
         </table>
+    </div>
     </div>
 
     <script>

@@ -57,6 +57,8 @@ class BookingsPageTest extends TestCase {
 
         // 4. Assertions
         $this->assertStringContainsString( __( 'Hurtiglenker til bookingsider:', 'snippen-booking' ), $output );
+        $this->assertStringContainsString( 'snippen-quick-links', $output );
+        $this->assertStringContainsString( 'snippen-quick-link', $output );
         $this->assertStringContainsString( 'Test Booking Page X', $output );
         $this->assertStringContainsString( get_permalink( $page_id ), $output );
     }
