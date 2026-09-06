@@ -414,12 +414,15 @@ class BookingsPage {
 		// Payment Management Section in details row
 		echo '<div class="payment-admin-container" data-id="' . esc_attr( $booking->id ) . '">';
 		echo '<strong>' . esc_html__( 'Betalingsadministrasjon:', 'snippen-booking' ) . '</strong><br>';
-		echo '<div style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">';
-		echo '<select class="payment-status-select" style="width:100%; height:30px;">';
+		echo '<div class="payment-status-radio-group">';
 		foreach ( $all_statuses as $st ) {
-			echo '<option value="' . esc_attr( $st->id ) . '" ' . selected( $payment_status->id, $st->id, false ) . '>' . esc_html( $st->name ) . '</option>';
+			$radio_id = 'payment_status_' . esc_attr( $booking->id ) . '_' . esc_attr( $st->id );
+			echo '<label class="payment-status-radio-label" for="' . esc_attr( $radio_id ) . '">';
+			echo '<input type="radio" id="' . esc_attr( $radio_id ) . '" class="payment-status-radio" name="payment_status_' . esc_attr( $booking->id ) . '" value="' . esc_attr( $st->id ) . '" ' . checked( $payment_status->id, $st->id, false ) . '> ';
+			echo '<span>' . esc_html( $st->name ) . '</span>';
+			echo '</label>';
 		}
-		echo '</select>';
+		echo '</div>';
 
 		echo '<textarea class="payment-notes-input" placeholder="' . esc_attr__( 'Betalingsnotat (f.eks. transaksjons-ref)...', 'snippen-booking' ) . '" style="width:100%; height:45px; font-size:12px;">' . esc_textarea( $booking->payment_notes ?: '' ) . '</textarea>';
 

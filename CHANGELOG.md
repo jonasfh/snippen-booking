@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.28.4] - 2026-09-06
+- (#297) Bytt dropdown med radio buttons for betalingsadministrasjon i admin:
+  - Erstattet `<select>` dropdown med radioknapper for valg av betalingsstatus under Betalingsadministrasjon i detaljvisningen (`BookingsPage`).
+  - Lagt til stiler for `.payment-status-radio-group` og `.payment-status-radio-label` for ren oppstilling, god klikkeflate og hover-effekt.
+  - Oppdatert `admin.js` til å hente valgt verdi fra radioknappene ved lagring av betalingsstatus.
+  - Oppdatert UI-fixtures og Playwright visual snapshots.
+
 ## [2.28.3] - 2026-09-06
 - (#295) Vis booking-status og betalings-status i kompakt mobilvisning i admin:
   - Lagt til booking-status og betalings-status badges i den kompakte 1-celles mobilvisningen i admin (`BookingsPage`).

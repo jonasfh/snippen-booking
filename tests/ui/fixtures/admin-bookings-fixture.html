@@ -149,15 +149,23 @@
 
                             <div class="payment-admin-container" data-id="101">
                                 <strong>Betalingsadministrasjon:</strong><br>
-                                <div style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
-                                    <select class="payment-status-select" style="width:100%; height:30px;">
-                                        <option value="paid" selected>Betalt</option>
-                                        <option value="unpaid">Ubetalt</option>
-                                    </select>
-                                    <textarea class="payment-notes-input" placeholder="Betalingsnotat..." style="width:100%; height:45px; font-size:12px;">Vipps transaksjon #12345</textarea>
-                                    <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <button type="button" class="button button-small button-primary snippen-btn-save-payment">Lagre betalingsstatus</button>
-                                    </div>
+                                <div class="payment-status-radio-group">
+                                    <label class="payment-status-radio-label" for="payment_status_101_1">
+                                        <input type="radio" id="payment_status_101_1" class="payment-status-radio" name="payment_status_101" value="1">
+                                        <span>Mangler betaling</span>
+                                    </label>
+                                    <label class="payment-status-radio-label" for="payment_status_101_2">
+                                        <input type="radio" id="payment_status_101_2" class="payment-status-radio" name="payment_status_101" value="2" checked>
+                                        <span>Betalt</span>
+                                    </label>
+                                    <label class="payment-status-radio-label" for="payment_status_101_3">
+                                        <input type="radio" id="payment_status_101_3" class="payment-status-radio" name="payment_status_101" value="3">
+                                        <span>Fritatt / Gratis</span>
+                                    </label>
+                                </div>
+                                <textarea class="payment-notes-input" placeholder="Betalingsnotat..." style="width:100%; height:45px; font-size:12px;">Vipps transaksjon #12345</textarea>
+                                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <button type="button" class="button button-small button-primary snippen-btn-save-payment">Lagre betalingsstatus</button>
                                 </div>
                             </div>
 
