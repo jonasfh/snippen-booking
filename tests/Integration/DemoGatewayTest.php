@@ -21,6 +21,16 @@ class DemoGatewayTest extends TestCase {
 	protected $requires_db = true;
 
 	/**
+	 * Set up test environment
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_messages" );
+		$wpdb->query( 'COMMIT' );
+	}
+
+	/**
 	 * Test that demo-gateway provisions options, user, booking, and outbox message
 	 */
 	public function test_demo_gateway_execution_and_rest_endpoints() {

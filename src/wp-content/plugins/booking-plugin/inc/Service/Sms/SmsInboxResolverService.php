@@ -142,10 +142,10 @@ class SmsInboxResolverService {
 
 		$placeholders = implode( ',', array_fill( 0, count( $search_phones ), '%s' ) );
 
-		// 1. Check user meta (phone or billing_phone)
+		// 1. Check user meta (snippen_phone, phone, billing_phone, or user_phone)
 		$query = $wpdb->prepare(
 			"SELECT user_id FROM {$wpdb->usermeta} 
-			 WHERE meta_key IN ('phone', 'billing_phone', 'user_phone') 
+			 WHERE meta_key IN ('snippen_phone', 'phone', 'billing_phone', 'user_phone') 
 			   AND meta_value IN ({$placeholders}) 
 			 LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			...$search_phones
