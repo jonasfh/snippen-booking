@@ -149,6 +149,125 @@ class SmsInboxResolverServiceTest extends TestCase {
 	}
 
 	/**
+	 * Test that active session is invalidated if a new booking is created after the session message
+	 */
+	public function test_active_session_invalidated_when_new_booking_created() {
+		global $wpdb;
+
+		// 1. Create booking 1
+		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
+
+		// 2. Simulate conversation on booking 1 (set created_at 10 minutes ago)
+		$past_time = gmdate( 'Y-m-d H:i:s', time() - 600 );
+		MessageLoggerService::log_message(
+			$b1_id,
+			null,
+			'sms',
+			'+4799887766',
+			null,
+			'Takk for bekreftelsen på booking 1',
+			'inbound_sms',
+			'received'
+		);
+		$msg_id = $wpdb->insert_id;
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_messages',
+			array( 'created_at' => $past_time ),
+			array( 'id' => $msg_id )
+		);
+
+		// 3. User creates a NEW booking 2 (created now, after past_time)
+		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
+
+		// 4. User sends new incoming SMS
+		$res = SmsInboxResolverService::resolve_message(
+			'+4799887766',
+			'Hei, jeg har et spørsmål'
+		);
+
+		// Active session should be invalidated and system asks for selection
+		$this->assertSame( 'multiple_active_bookings', $res['rule'] );
+		$this->assertSame( SmsInboxResolverService::STATUS_PENDING_SELECTION, $res['status'] );
+		$this->assertTrue( $res['prompt_sent'] );
+		$this->assertNull( $res['booking_id'] );
+	}
+
+	/**
+	 * Test that active session is invalidated if another booking is modified after the session message
+	 */
+	public function test_active_session_invalidated_when_other_booking_modified() {
+		global $wpdb;
+
+		// 1. Create two bookings in the past
+		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
+
+		$past_time = gmdate( 'Y-m-d H:i:s', time() - 600 );
+		$wpdb->update( $wpdb->prefix . 'snippen_bookings', array( 'created_at' => $past_time, 'modified_at' => $past_time ), array( 'id' => $b1_id ) );
+		$wpdb->update( $wpdb->prefix . 'snippen_bookings', array( 'created_at' => $past_time, 'modified_at' => $past_time ), array( 'id' => $b2_id ) );
+
+		// 2. Session message on booking 1 (set created_at 5 minutes ago)
+		$session_time = gmdate( 'Y-m-d H:i:s', time() - 300 );
+		MessageLoggerService::log_message(
+			$b1_id,
+			null,
+			'sms',
+			'+4799887766',
+			null,
+			'Spørsmål om booking 1',
+			'inbound_sms',
+			'received'
+		);
+		$msg_id = $wpdb->insert_id;
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_messages',
+			array( 'created_at' => $session_time ),
+			array( 'id' => $msg_id )
+		);
+
+		// 3. Admin or user modifies booking 2 (set modified_at to now, which is after session_time)
+		$now = gmdate( 'Y-m-d H:i:s', time() );
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			array( 'modified_at' => $now, 'description' => 'Endret tidspunkt' ),
+			array( 'id' => $b2_id )
+		);
+
+		// 4. User sends new incoming SMS
+		$res = SmsInboxResolverService::resolve_message(
+			'+4799887766',
+			'Hei igjen'
+		);
+
+		// Active session on booking 1 should be invalidated because booking 2 was modified
+		$this->assertSame( 'multiple_active_bookings', $res['rule'] );
+		$this->assertSame( SmsInboxResolverService::STATUS_PENDING_SELECTION, $res['status'] );
+		$this->assertTrue( $res['prompt_sent'] );
+	}
+
+	/**
+	 * Test that replying to a prompt reinstates active session for subsequent messages
+	 */
+	public function test_active_session_reinstated_after_selection_reply() {
+		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
+
+		// 1. Trigger disambiguation prompt
+		$prompt_res = SmsInboxResolverService::resolve_message( '+4799887766', 'Trenger hjelp' );
+		$this->assertSame( 'multiple_active_bookings', $prompt_res['rule'] );
+
+		// 2. User selects option 2 (booking 2)
+		$reply_res = SmsInboxResolverService::resolve_message( '+4799887766', '2' );
+		$this->assertSame( 'disambiguation_selection', $reply_res['rule'] );
+		$this->assertSame( $b2_id, $reply_res['booking_id'] );
+
+		// 3. User follows up with another question
+		$followup_res = SmsInboxResolverService::resolve_message( '+4799887766', 'Flott, hvor finner jeg nøkkelen?' );
+		$this->assertSame( 'active_session', $followup_res['rule'] );
+		$this->assertSame( $b2_id, $followup_res['booking_id'] );
+	}
+
+	/**
 	 * Test Regel 2: Svar på flervalgsforespørsel
 	 */
 	public function test_rule_2_disambiguation_selection() {
