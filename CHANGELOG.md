@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.28.3] - 2026-09-06
+- (#295) Vis booking-status og betalings-status i kompakt mobilvisning i admin:
+  - Lagt til booking-status og betalings-status badges i den kompakte 1-celles mobilvisningen i admin (`BookingsPage`).
+  - Fjernet redundant status-visning langt nede i detaljvisningen.
+  - Gjort statusoppdatering via AJAX i `admin.js` mer presis ved målrettet oppdatering av `.snippen-status-badge` uten å påvirke betalingsstatus.
+  - Oppdatert UI-fixtures og Playwright visual snapshots for mobil.
+
 ## [2.28.2] - 2026-09-06
 - (#293) Forbedre mobilvisning og kortvisning for booking-oversikten i admin:
   - Introdusert 1-celles sammendragsvisning på mobil som samler leietakers navn, tidsrom (dato og tid), booking-objekt og åpne/lukke-pil (`v`/`^`) i ett kompakt kort.
