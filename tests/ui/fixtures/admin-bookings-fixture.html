@@ -179,10 +179,10 @@
                             </div>
 
                             <!-- Communication / Messages history block -->
-                            <div class="booking-messages-history" data-booking-id="101">
+                            <div class="booking-messages-history has-visible-messages" data-booking-id="101">
                                 <div class="msg-history-header">
                                     <div class="msg-history-header-title">
-                                        <strong><span class="dashicons dashicons-format-chat"></span> Kommunikasjonshistorikk: (<span class="msg-count">2</span>)</strong>
+                                        <strong><span class="dashicons dashicons-format-chat"></span> Kommunikasjonshistorikk: (<span class="msg-count" data-visible-count="2" data-total-count="3">2</span>)</strong>
                                     </div>
                                     <button type="button" class="button button-small toggle-msg-history" aria-expanded="false">
                                         <span class="toggle-text">Vis kommunikasjon</span>
@@ -191,6 +191,14 @@
                                 </div>
 
                                 <div class="msg-history-body" style="display:none;">
+                                    <div class="msg-history-toolbar">
+                                        <label class="msg-history-filter-toggle">
+                                            <input type="checkbox" class="snippen-toggle-all-messages">
+                                            <span>Vis all kommunikasjon</span>
+                                        </label>
+                                        <span class="msg-filtered-indicator">(1 skjult)</span>
+                                    </div>
+                                    <p class="no-visible-messages-text" style="margin:0; font-size:12px; color:#64748b;">Ingen meldinger å vise med gjeldende filter.</p>
                                     <div class="msg-list-container">
                                         <div class="msg-item" data-event-type="booking_confirmation">
                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -207,6 +215,15 @@
                                                 <span style="font-size:11px; color:#64748b;">2026-09-02 14:15:00</span>
                                             </div>
                                             <div class="msg-item-body">Hei, husk at nøkkelkode aktiveres 30 min før arrangementet starter. Ta kontakt ved spørsmål.</div>
+                                        </div>
+
+                                        <div class="msg-item msg-item-filtered" data-event-type="admin_booking">
+                                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                                <div><span class="dashicons dashicons-email-alt"></span> <strong>EMAIL &bull; admin@example.com</strong> <span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">Sendt</span> <span style="font-size:10px; color:#64748b; margin-left:4px;">(Admin bookingvarsel)</span></div>
+                                                <span style="font-size:11px; color:#64748b;">2026-09-01 10:30:00</span>
+                                            </div>
+                                            <div style="font-weight:600; color:#334155; margin-bottom:2px;">Emne: Ny Bookingforespørsel - Storsalen</div>
+                                            <div class="msg-item-body">Ny bookingforespørsel mottatt for Storsalen.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -301,6 +318,27 @@
                     this.setAttribute('aria-expanded', 'true');
                     text.textContent = 'Skjul kommunikasjon';
                     icon.className = 'dashicons dashicons-arrow-up-alt2';
+                }
+            });
+        });
+
+        // Toggle "Vis all kommunikasjon"
+        document.querySelectorAll('.snippen-toggle-all-messages').forEach(function(cb) {
+            cb.addEventListener('change', function(e) {
+                const container = this.closest('.booking-messages-history');
+                const countSpan = container.querySelector('.msg-count');
+                const indicator = container.querySelector('.msg-filtered-indicator');
+                const visibleCount = parseInt(countSpan.getAttribute('data-visible-count'), 10) || 0;
+                const totalCount = parseInt(countSpan.getAttribute('data-total-count'), 10) || 0;
+
+                if (this.checked) {
+                    container.classList.add('show-all-messages');
+                    countSpan.textContent = totalCount;
+                    if (indicator) indicator.textContent = '(viser alle)';
+                } else {
+                    container.classList.remove('show-all-messages');
+                    countSpan.textContent = visibleCount;
+                    if (indicator) indicator.textContent = '(1 skjult)';
                 }
             });
         });

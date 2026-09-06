@@ -361,17 +361,107 @@
             });
         }
 
+        // Determine if a message is an admin alert or numeric choice reply
+        function isSecondaryCommunication(msg) {
+            if (!msg) {
+                return false;
+            }
+            const adminEventTypes = ['admin_booking', 'manual_dispatch_admin', 'payment_receipt_uploaded'];
+            const eventType = msg.event_type || '';
+            if (adminEventTypes.indexOf(eventType) !== -1 || eventType.indexOf('admin') !== -1) {
+                return true;
+            }
+
+            let meta = {};
+            if (msg.metadata) {
+                try {
+                    meta = (typeof msg.metadata === 'string') ? JSON.parse(msg.metadata) : msg.metadata;
+                } catch (e) {}
+            }
+            if (meta && meta.matched_rule === 'disambiguation_selection') {
+                return true;
+            }
+
+            const isInbound = (eventType === 'inbound_sms' || msg.status === 'received');
+            if (isInbound && msg.message) {
+                const trimmed = String(msg.message).trim();
+                if (/^\s*(?:nr\.?|nummer|valg|booking|#)?\s*\d+\.?\s*$/i.test(trimmed)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // Render messages into container
         function renderMessagesHistory($container, messages) {
-            const $listContainer = $container.find('.msg-list-container');
             const $countSpan = $container.find('.msg-count');
-            $countSpan.text(messages.length);
-            $listContainer.empty();
+            const $body = $container.find('.msg-history-body');
+
+            const totalCount = messages ? messages.length : 0;
+            let visibleCount = 0;
+            let filteredCount = 0;
+
+            // Preserve current checkbox state if it exists
+            const $existingCheckbox = $container.find('.snippen-toggle-all-messages');
+            const isShowAll = $existingCheckbox.length ? $existingCheckbox.is(':checked') : false;
+
+            if (messages && messages.length > 0) {
+                messages.forEach(function(m) {
+                    if (isSecondaryCommunication(m)) {
+                        filteredCount++;
+                    } else {
+                        visibleCount++;
+                    }
+                });
+            }
+
+            $countSpan.attr('data-visible-count', visibleCount);
+            $countSpan.attr('data-total-count', totalCount);
+            $countSpan.text(isShowAll ? totalCount : visibleCount);
+
+            if (visibleCount > 0) {
+                $container.addClass('has-visible-messages');
+            } else {
+                $container.removeClass('has-visible-messages');
+            }
+
+            if (isShowAll) {
+                $container.addClass('show-all-messages');
+            } else {
+                $container.removeClass('show-all-messages');
+            }
+
+            $body.empty();
 
             if (!messages || messages.length === 0) {
-                $listContainer.html('<p class="no-messages-text" style="margin:0; font-size:12px; color:#64748b;">Ingen meldinger registrert på denne bookingen ennå.</p>');
+                $body.html('<p class="no-messages-text" style="margin:0; font-size:12px; color:#64748b;">' +
+                    ((window.snippenAdmin && window.snippenAdmin.strings && window.snippenAdmin.strings.noMessages) || 'Ingen meldinger registrert på denne bookingen ennå.') +
+                    '</p>');
                 return;
             }
+
+            const hiddenText = filteredCount === 1 ? '1 skjult' : filteredCount + ' skjulte';
+            const indicatorText = isShowAll ? '(viser alle)' : '(' + hiddenText + ')';
+            const indicatorDisplay = filteredCount > 0 ? '' : 'style="display:none;"';
+
+            const toolbarHtml = '<div class="msg-history-toolbar">' +
+                '<label class="msg-history-filter-toggle">' +
+                '<input type="checkbox" class="snippen-toggle-all-messages"' + (isShowAll ? ' checked' : '') + ' /> ' +
+                '<span>' + ((window.snippenAdmin && window.snippenAdmin.strings && window.snippenAdmin.strings.showAllCommunication) || 'Vis all kommunikasjon') + '</span>' +
+                '</label>' +
+                '<span class="msg-filtered-indicator" ' + indicatorDisplay + '>' + escapeHtml(indicatorText) + '</span>' +
+                '</div>';
+
+            const noVisibleTextHtml = '<p class="no-visible-messages-text" style="margin:0; font-size:12px; color:#64748b;">' +
+                ((window.snippenAdmin && window.snippenAdmin.strings && window.snippenAdmin.strings.noFilteredMessages) || 'Ingen meldinger å vise med gjeldende filter.') +
+                '</p>';
+
+            $body.append(toolbarHtml);
+            $body.append(noVisibleTextHtml);
+
+            const $listContainer = $('<div class="msg-list-container"></div>');
+            $body.append($listContainer);
 
             const knownLabels = {
                 'booking_confirmation': 'Booking-bekreftelse',
@@ -379,21 +469,35 @@
                 'admin_booking': 'Admin bookingvarsel',
                 'manual_dispatch_admin': 'Manuell adminmelding',
                 'user_activation': 'Kontoaktivering',
-                'password_reset': 'Passordtilbakestilling'
+                'password_reset': 'Passordtilbakestilling',
+                'payment_reminder': 'Betalingspåminnelse',
+                'payment_receipt_uploaded': 'Kvittering lastet opp',
+                'booking_confirmed': 'Booking godkjent',
+                'payment_received': 'Betaling bekreftet',
+                'inbound_sms': 'Innkommende SMS'
             };
 
             messages.forEach(function(msg) {
                 const iconClass = (msg.channel === 'sms') ? 'dashicons-smartphone' : 'dashicons-email-alt';
                 const channelLabel = (msg.channel || '').toUpperCase();
-                const statusBadge = (msg.status === 'sent')
-                    ? '<span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">Sendt</span>'
-                    : '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">Feilet</span>';
+                let statusBadge = '';
+                if (msg.status === 'sent') {
+                    statusBadge = '<span class="snippen-badge" style="background:#dcfce7; color:#15803d; font-size:10px; padding:1px 5px;">Sendt</span>';
+                } else if (msg.status === 'queued') {
+                    statusBadge = '<span class="snippen-badge" style="background:#fef3c7; color:#b45309; font-size:10px; padding:1px 5px;">I kø</span>';
+                } else if (msg.status === 'received') {
+                    statusBadge = '<span class="snippen-badge" style="background:#e0e7ff; color:#3730a3; font-size:10px; padding:1px 5px;">Mottatt</span>';
+                } else {
+                    statusBadge = '<span class="snippen-badge" style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:1px 5px;">Feilet</span>';
+                }
 
                 const eventType = msg.event_type || '';
                 const labelText = knownLabels[eventType] || eventType;
+                const isFiltered = isSecondaryCommunication(msg);
 
-                let $item = $('<div class="msg-item" data-event-type="' + escapeHtml(eventType) + '"></div>');
-                
+                const itemClasses = 'msg-item' + (isFiltered ? ' msg-item-filtered' : '');
+                let $item = $('<div class="' + itemClasses + '" data-event-type="' + escapeHtml(eventType) + '"></div>');
+
                 let subjectHtml = '';
                 if (msg.subject) {
                     subjectHtml = '<div style="font-weight:600; color:#334155; margin-bottom:2px;">Emne: ' + escapeHtml(msg.subject) + '</div>';
@@ -412,8 +516,7 @@
             });
 
             // If history body was closed when new message arrived, auto-expand it
-            const $body = $container.find('.msg-history-body');
-            if ($body.length && !$body.is(':visible')) {
+            if (!$body.is(':visible')) {
                 $body.slideDown(200);
                 const $btn = $container.find('.toggle-msg-history');
                 $btn.attr('aria-expanded', 'true');
@@ -456,6 +559,35 @@
                     $icon.removeClass('dashicons-arrow-up-alt2').addClass('dashicons-arrow-down-alt2');
                 }
             });
+        });
+
+        // Toggle "Vis all kommunikasjon"
+        $('.bookings-table').on('change', '.snippen-toggle-all-messages', function(e) {
+            e.stopPropagation();
+            const $cb = $(this);
+            const $container = $cb.closest('.booking-messages-history');
+            const $countSpan = $container.find('.msg-count');
+            const $indicator = $container.find('.msg-filtered-indicator');
+            const isChecked = $cb.is(':checked');
+
+            const visibleCount = parseInt($countSpan.attr('data-visible-count'), 10) || 0;
+            const totalCount = parseInt($countSpan.attr('data-total-count'), 10) || 0;
+            const filteredCount = totalCount - visibleCount;
+
+            if (isChecked) {
+                $container.addClass('show-all-messages');
+                $countSpan.text(totalCount);
+                if (filteredCount > 0) {
+                    $indicator.text('(viser alle)').show();
+                }
+            } else {
+                $container.removeClass('show-all-messages');
+                $countSpan.text(visibleCount);
+                if (filteredCount > 0) {
+                    const hiddenText = filteredCount === 1 ? '1 skjult' : filteredCount + ' skjulte';
+                    $indicator.text('(' + hiddenText + ')').show();
+                }
+            }
         });
 
         // AJAX Save Door Code

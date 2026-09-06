@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.30.0] - 2026-09-06
+- (#300) Filtrer ut adminvarsler og svarnumre i kommunikasjonshistorikk:
+  - Skjult administrative varsler (`admin_booking`, `manual_dispatch_admin`, `payment_receipt_uploaded` osv.) som standard i kommunikasjonshistorikken under booking-detaljer.
+  - Skjult innkommende SMS som kun er et svarnummer på flervalgsforespørsel ("Hvilken booking gjelder dette") som standard.
+  - Lagt til en ren og responsiv filter-avkrysningsboks øverst i kommunikasjonshistorikken for «Vis all kommunikasjon» med indikator for antall skjulte meldinger.
+  - Implementert dynamisk oppdatering i både server-render (`BookingsPage.php`) og klientside-render / AJAX-oppdatering (`admin.js`).
+  - Oppdatert stiler i `admin.css` for visning/skjuling og håndtering av tilfeller der alle meldinger er filtrert.
+  - Oppdatert UI-fixtures, Jest-enhetstester, PHPUnit-integrasjonstester og Playwright visuelle regresjonstester.
+
 ## [2.29.0] - 2026-09-06
 - (#278) CLI-verktøy for testing av innkommende SMS: `composer demo:inbox`:
   - Utviklet `bin/demo-inbox.php` for enkel simulering og testing av innkommende SMS mot toveis SMS-innboks (`POST /wp-json/snippen/v1/sms/inbox`).

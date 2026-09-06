@@ -289,7 +289,7 @@ class BookingsPageTest extends TestCase {
         $output = ob_get_clean();
 
         // Check header, toggle button, and closed body
-        $this->assertStringContainsString( 'class="booking-messages-history"', $output );
+        $this->assertStringContainsString( 'class="booking-messages-history', $output );
         $this->assertStringContainsString( 'class="msg-history-header"', $output );
         $this->assertStringContainsString( 'class="button button-small toggle-msg-history"', $output );
         $this->assertStringContainsString( 'Vis kommunikasjon', $output );
@@ -307,5 +307,147 @@ class BookingsPageTest extends TestCase {
         // Ensure no internal scrollbar styles are present
         $this->assertStringNotContainsString( 'max-height:240px; overflow-y:auto;', $output );
         $this->assertStringNotContainsString( 'max-height:100px; overflow-y:auto;', $output );
+
+        // Ensure filter toolbar is present
+        $this->assertStringContainsString( 'class="msg-history-toolbar"', $output );
+        $this->assertStringContainsString( 'class="snippen-toggle-all-messages"', $output );
+        $this->assertStringContainsString( 'Vis all kommunikasjon', $output );
+    }
+
+    /**
+     * Test BookingsPage::is_filtered_message detects admin notifications and disambiguation replies.
+     */
+    public function test_is_filtered_message() {
+        // Admin alerts should be filtered
+        $admin_msg = (object) array(
+            'event_type' => 'admin_booking',
+            'status'     => 'sent',
+            'message'    => 'Ny bookingforespørsel',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $admin_msg ) );
+
+        $dispatch_admin_msg = (object) array(
+            'event_type' => 'manual_dispatch_admin',
+            'status'     => 'sent',
+            'message'    => 'Admin varsel',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $dispatch_admin_msg ) );
+
+        $receipt_admin_msg = (object) array(
+            'event_type' => 'payment_receipt_uploaded',
+            'status'     => 'sent',
+            'message'    => 'Kvittering lastet opp',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $receipt_admin_msg ) );
+
+        // Customer notifications should NOT be filtered
+        $customer_msg = (object) array(
+            'event_type' => 'booking_confirmation',
+            'status'     => 'sent',
+            'message'    => 'Din booking er bekreftet',
+        );
+        $this->assertFalse( BookingsPage::is_filtered_message( $customer_msg ) );
+
+        $manual_customer_msg = (object) array(
+            'event_type' => 'manual_dispatch_customer',
+            'status'     => 'sent',
+            'message'    => 'Hei på deg',
+        );
+        $this->assertFalse( BookingsPage::is_filtered_message( $manual_customer_msg ) );
+
+        // Disambiguation reply with matched_rule in metadata should be filtered
+        $disambiguation_meta_msg = (object) array(
+            'event_type' => 'inbound_sms',
+            'status'     => 'received',
+            'message'    => '1',
+            'metadata'   => wp_json_encode( array( 'matched_rule' => 'disambiguation_selection' ) ),
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $disambiguation_meta_msg ) );
+
+        // Inbound SMS with numeric body should be filtered
+        $numeric_sms = (object) array(
+            'event_type' => 'inbound_sms',
+            'status'     => 'received',
+            'message'    => '2',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $numeric_sms ) );
+
+        $numeric_choice_sms = (object) array(
+            'event_type' => 'inbound_sms',
+            'status'     => 'received',
+            'message'    => 'valg 1',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $numeric_choice_sms ) );
+
+        // Regular inbound SMS message should NOT be filtered
+        $normal_inbound_sms = (object) array(
+            'event_type' => 'inbound_sms',
+            'status'     => 'received',
+            'message'    => 'Hei, kan vi leie bord også?',
+        );
+        $this->assertFalse( BookingsPage::is_filtered_message( $normal_inbound_sms ) );
+    }
+
+    /**
+     * Test render_booking_row marks filtered messages and updates visible message count.
+     */
+    public function test_render_booking_row_filters_admin_alerts() {
+        global $wpdb;
+
+        $wpdb->insert(
+            $wpdb->prefix . 'snippen_bookings',
+            array(
+                'booking_date'   => '2026-09-25',
+                'customer_name'  => 'Filter Test Person',
+                'customer_email' => 'filtertest@example.com',
+                'customer_phone' => '+4799887755',
+                'status'         => 'confirmed',
+                'price'          => 2000,
+            )
+        );
+        $booking_id = $wpdb->insert_id;
+
+        // Add 1 customer message and 1 admin message
+        \SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+            $booking_id,
+            null,
+            'email',
+            'kunde@example.com',
+            'Bekreftelse',
+            'Din booking er mottatt',
+            'booking_confirmation',
+            'sent'
+        );
+
+        \SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+            $booking_id,
+            null,
+            'email',
+            'admin@example.com',
+            'Admin varsel',
+            'Ny reservasjon registrert',
+            'admin_booking',
+            'sent'
+        );
+
+        $bookings_page = new BookingsPage();
+        $reflection    = new \ReflectionClass( BookingsPage::class );
+        $method        = $reflection->getMethod( 'render_booking_row' );
+        $method->setAccessible( true );
+
+        $booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id ) );
+
+        ob_start();
+        $method->invoke( $bookings_page, $booking );
+        $output = ob_get_clean();
+
+        // Customer message should have standard class
+        $this->assertStringContainsString( 'data-event-type="booking_confirmation"', $output );
+        // Admin message should have filtered class
+        $this->assertStringContainsString( 'class="msg-item msg-item-filtered" data-event-type="admin_booking"', $output );
+        // Container has visible messages class
+        $this->assertStringContainsString( 'class="booking-messages-history has-visible-messages"', $output );
+        // Filter toggle checkbox is rendered
+        $this->assertStringContainsString( 'class="snippen-toggle-all-messages"', $output );
     }
 }
