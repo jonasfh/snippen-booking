@@ -540,6 +540,62 @@ th.sorted-desc .sort-icon {
     opacity: 1;
 }
 
+/* Quick links banner */
+.snippen-quick-links {
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #0073aa;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.snippen-quick-links-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1d2327;
+    flex-shrink: 0;
+}
+
+.snippen-quick-links-header .dashicons {
+    color: #0073aa;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+}
+
+.snippen-quick-links-list {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
+}
+
+.snippen-quick-link {
+    font-weight: 500;
+    text-decoration: none;
+    color: #0073aa;
+    word-break: break-word;
+    transition: color 0.15s ease;
+}
+
+.snippen-quick-link:hover {
+    text-decoration: underline;
+    color: #005177;
+}
+
+.snippen-quick-links-separator {
+    color: #c3c4c7;
+    user-select: none;
+}
+
 /* Responsive Admin Layout & Tables */
 @media screen and (max-width: 768px) {
     .snippen-booking-admin-wrap {
@@ -559,6 +615,46 @@ th.sorted-desc .sort-icon {
     .snippen-card {
         padding: 16px 12px;
         border-radius: 10px;
+    }
+
+    .snippen-quick-links {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .snippen-quick-links-header {
+        width: 100%;
+    }
+
+    .snippen-quick-links-list {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .snippen-quick-links-separator {
+        display: none;
+    }
+
+    .snippen-quick-link {
+        display: inline-block;
+        padding: 2px 0;
+        width: 100%;
+    }
+
+    .snippen-filter-group {
+        max-width: 100%;
+    }
+
+    .snippen-filter-group select,
+    .snippen-filter-group input[type="text"] {
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .snippen-table-controls {

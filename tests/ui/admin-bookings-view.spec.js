@@ -6,7 +6,7 @@ test.describe('Admin Bookings Overview & Details View', () => {
         const fixturePath = 'file://' + path.resolve(__dirname, 'fixtures/admin-bookings-fixture.html');
         await page.goto(fixturePath);
 
-        const card = page.locator('.snippen-card');
+        const card = page.locator('.snippen-booking-table-card');
         await expect(card).toBeVisible();
 
         // Focused snapshot of the booking table with details
@@ -36,7 +36,24 @@ test.describe('Admin Bookings Overview & Details View', () => {
         expect(hasHorizontalOverflow).toBe(false);
 
         // Snapshot with communication expanded
-        const card = page.locator('.snippen-card');
+        const card = page.locator('.snippen-booking-table-card');
         await expect(card).toHaveScreenshot('admin-bookings-table-expanded-comm.png');
+    });
+
+    test('renders quick links banner without horizontal overflow', async ({ page }) => {
+        const fixturePath = 'file://' + path.resolve(__dirname, 'fixtures/admin-bookings-fixture.html');
+        await page.goto(fixturePath);
+
+        const quickLinks = page.locator('.snippen-quick-links');
+        await expect(quickLinks).toBeVisible();
+
+        // Verify that the document has no horizontal overflow
+        const hasHorizontalOverflow = await page.evaluate(() => {
+            return document.documentElement.scrollWidth > document.documentElement.clientWidth;
+        });
+        expect(hasHorizontalOverflow).toBe(false);
+
+        // Snapshot of quick links
+        await expect(quickLinks).toHaveScreenshot('admin-quick-links.png');
     });
 });

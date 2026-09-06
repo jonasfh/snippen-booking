@@ -64,18 +64,22 @@ class BookingsPage {
 			return;
 		}
 
-		echo '<div class="snippen-card" style="padding: 15px 24px; margin-bottom: 20px; border-left: 4px solid #0073aa; display: flex; align-items: center; gap: 10px;">';
-		echo '<span class="dashicons dashicons-admin-links" style="color: #0073aa; font-size: 20px; width: 20px; height: 20px; line-height: 20px;"></span>';
-		echo '<span style="font-weight: 600; color: #1d2327;">' . esc_html__( 'Hurtiglenker til bookingsider:', 'snippen-booking' ) . '</span> ';
+		echo '<div class="snippen-card snippen-quick-links">';
+		echo '<div class="snippen-quick-links-header">';
+		echo '<span class="dashicons dashicons-admin-links"></span>';
+		echo '<span class="snippen-quick-links-title">' . esc_html__( 'Hurtiglenker til bookingsider:', 'snippen-booking' ) . '</span>';
+		echo '</div>';
+		echo '<div class="snippen-quick-links-list">';
 
 		$first = true;
 		foreach ( $pages as $p ) {
 			if ( ! $first ) {
-				echo ' <span style="color: #c3c4c7;">|</span> ';
+				echo '<span class="snippen-quick-links-separator">|</span>';
 			}
 			$first = false;
-			echo '<a href="' . esc_url( get_permalink( $p->ID ) ) . '" target="_blank" style="font-weight: 500; text-decoration: none; color: #0073aa;">' . esc_html( $p->post_title ) . '</a>';
+			echo '<a href="' . esc_url( get_permalink( $p->ID ) ) . '" target="_blank" class="snippen-quick-link">' . esc_html( $p->post_title ) . '</a>';
 		}
+		echo '</div>';
 		echo '</div>';
 	}
 

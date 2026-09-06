@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Snippen Booking
  * Description: Booking plugin for Snippen community house.
- * Version: 2.27.2
+ * Version: 2.27.3
  * Author: Snippen
  * Text Domain: snippen-booking
  * Domain Path: /languages
@@ -23,7 +23,7 @@ if ( ! function_exists( 'snippen_save_phone_number' ) ) {
 }
 
 // Define version constant
-define( 'SNIPPEN_BOOKING_VERSION', '2.27.2' );
+define( 'SNIPPEN_BOOKING_VERSION', '2.27.3' );
 
 
 // Load autoloader
