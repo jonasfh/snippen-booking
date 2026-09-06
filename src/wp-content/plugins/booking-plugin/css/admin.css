@@ -218,12 +218,15 @@
     border-radius: 6px;
     width: 32px;
     height: 32px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
     color: #64748b;
+    box-sizing: border-box;
+    text-decoration: none;
+    line-height: 1;
 }
 
 .snippen-btn-action:hover {
@@ -232,8 +235,71 @@
     border-color: var(--primary-color);
 }
 
-.snippen-btn-action.approve:hover { color: var(--success-color); border-color: var(--success-color); }
-.snippen-btn-action.cancel:hover { color: var(--error-color); border-color: var(--error-color); }
+.snippen-btn-action.approve {
+    background: #fefce8;
+    border-color: #facc15;
+    color: #a16207;
+}
+
+.snippen-btn-action.approve:hover {
+    background: #16a34a;
+    border-color: #15803d;
+    color: #ffffff;
+}
+
+.snippen-btn-action.cancel {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+}
+
+.snippen-btn-action.cancel:hover {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+.snippen-btn-action.with-label {
+    width: auto;
+    height: 34px;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.snippen-btn-action.with-label .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+}
+
+.snippen-booking-mobile-summary {
+    display: none !important;
+}
+
+.booking-details-actions-wrap {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.booking-details-actions-wrap strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.booking-details-action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
 
 /* Details Section */
 .snippen-card-details {
@@ -713,53 +779,90 @@ th.sorted-desc .sort-icon {
     }
 
     .bookings-table tr.snippen-booking-row {
-        border: 1px solid var(--border-color);
-        margin-bottom: 20px;
+        border: 1.5px solid #cbd5e1;
+        border-left: 4px solid var(--primary-color, #0284c7);
+        margin-bottom: 14px;
         border-radius: 8px;
         background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: border-color 0.2s, box-shadow 0.2s;
     }
-    
+
+    .bookings-table tr.snippen-booking-row.is-expanded {
+        margin-bottom: 0 !important;
+        border-bottom: 1px dashed #e2e8f0;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
     .bookings-table tr.snippen-details-row.active {
         display: block !important;
-        border: 1px solid var(--border-color);
+        border: 1.5px solid #cbd5e1;
         border-top: none;
-        margin-top: -20px;
-        margin-bottom: 20px;
-        border-radius: 0 0 8px 8px;
+        border-left: 4px solid var(--primary-color, #0284c7);
+        margin-top: 0 !important;
+        margin-bottom: 14px;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        background: #f8fafc;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
-    .bookings-table td {
-        border: none;
-        border-bottom: 1px solid var(--border-color);
-        position: relative;
-        padding: 14px 16px 14px 45% !important;
-        text-align: left !important;
-        min-height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-    }
-
-    .bookings-table td:last-child {
-        border-bottom: none;
-    }
-    
-    /* Hide some columns on the main row to save space */
-    .bookings-table td[data-label="Pris"],
-    .bookings-table td[data-label="Status"] {
+    /* Hide standard desktop table cells in booking row on mobile */
+    .bookings-table tr.snippen-booking-row td:not(.snippen-booking-mobile-summary) {
         display: none !important;
     }
 
-    .bookings-table td:before {
-        content: attr(data-label);
-        position: absolute;
-        left: 16px;
-        width: 40%;
-        padding-right: 10px;
-        white-space: nowrap;
-        font-weight: 600;
-        color: #475569;
+    /* Show single-cell mobile summary */
+    .bookings-table td.snippen-booking-mobile-summary {
+        display: block !important;
+        padding: 0 !important;
+        border: none !important;
+        width: 100% !important;
+        box-sizing: border-box;
+        min-height: auto;
+    }
+
+    .bookings-table td.snippen-booking-mobile-summary:before {
+        display: none !important;
+    }
+
+    .snippen-mobile-summary-card {
+        padding: 12px 14px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .snippen-mobile-summary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .snippen-mobile-customer-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.3;
+    }
+
+    .snippen-mobile-summary-time {
         font-size: 13px;
+        color: #334155;
+        line-height: 1.4;
+    }
+
+    .snippen-mobile-summary-objects {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
     }
     
     .snippen-mobile-detail {

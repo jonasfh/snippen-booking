@@ -56,4 +56,29 @@ test.describe('Admin Bookings Overview & Details View', () => {
         // Snapshot of quick links
         await expect(quickLinks).toHaveScreenshot('admin-quick-links.png');
     });
+
+    test('expands collapsed booking and displays colored action buttons', async ({ page }) => {
+        const fixturePath = 'file://' + path.resolve(__dirname, 'fixtures/admin-bookings-fixture.html');
+        await page.goto(fixturePath);
+
+        const booking102 = page.locator('#booking-102');
+        const details102 = page.locator('#details-102');
+
+        // Initially collapsed
+        await expect(details102).not.toBeVisible();
+
+        // Click to expand using visible toggle button
+        await booking102.locator('.toggle-details:visible').click();
+        await expect(details102).toBeVisible();
+
+        // Verify action buttons exist in details
+        const approveBtn = details102.locator('.snippen-btn-action.approve');
+        const cancelBtn = details102.locator('.snippen-btn-action.cancel');
+        await expect(approveBtn).toBeVisible();
+        await expect(cancelBtn).toBeVisible();
+
+        // Click again to collapse
+        await booking102.locator('.toggle-details:visible').click();
+        await expect(details102).not.toBeVisible();
+    });
 });

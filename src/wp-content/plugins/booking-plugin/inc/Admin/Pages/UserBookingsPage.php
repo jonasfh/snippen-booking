@@ -206,6 +206,27 @@ class UserBookingsPage {
 		}
 
 		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
+
+		// Mobile single-cell summary (Visible on mobile <= 768px, hidden on desktop)
+		echo '<td class="snippen-booking-mobile-summary" colspan="7">';
+		echo '<div class="snippen-mobile-summary-card">';
+		echo '<div class="snippen-mobile-summary-header">';
+		echo '<strong class="snippen-mobile-customer-name">' . esc_html( implode( ', ', $objs ) ) . '</strong>';
+		echo '<button type="button" class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '" aria-expanded="false"><span class="dashicons dashicons-arrow-down-alt2"></span></button>';
+		echo '</div>';
+		echo '<div class="snippen-mobile-summary-time">';
+		echo '<strong>' . esc_html( $booking_date ) . '</strong>';
+		if ( ! empty( $time_range ) ) {
+			echo ' &bull; ' . esc_html( $time_range );
+		}
+		echo '</div>';
+		echo '<div class="snippen-mobile-summary-objects">';
+		echo '<span class="snippen-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span> ';
+		echo '<span class="snippen-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
+		echo '</div>';
+		echo '</div>';
+		echo '</td>';
+
 		echo '<td data-label="' . esc_attr__( 'Handlinger', 'snippen-booking' ) . '">';
 		echo '<div style="display:flex; justify-content:flex-start; gap:8px;">';
 		if ( $can_user_cancel ) {
@@ -226,12 +247,12 @@ class UserBookingsPage {
 		if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
 			$r_url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
 			if ( $r_url ) {
-				echo '<br><a href="' . esc_url( $r_url ) . '" target="_blank" style="font-size:11px; text-decoration:none; color:#0284c7; margin-top:3px; display:inline-block;"><span class="dashicons dashicons-paperclip" style="font-size:13px; width:13px; height:13px; line-height:13px; vertical-align:middle;"></span> ' . esc_html__( 'Kvittering', 'snippen-booking' ) . '</a>';
+				echo '<br><a href="' . esc_url( $r_url ) . '" target="_blank" style="font-size:11px; text-decoration:none; color:#0284c7; margin-top:3px; display:inline-block;" title="' . esc_attr__( 'Vis kvittering', 'snippen-booking' ) . '"><span class="dashicons dashicons-paperclip" style="font-size:13px; width:13px; height:13px; line-height:13px; vertical-align:middle;"></span> ' . esc_html__( 'Kvittering', 'snippen-booking' ) . '</a>';
 			}
 		}
 		echo '</td>';
 
-		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
+		echo '<td data-label="' . esc_attr__( 'Detaljer', 'snippen-booking' ) . '" style="text-align:right;"><button class="snippen-btn-action toggle-details" title="' . esc_attr__( 'Vis detaljer', 'snippen-booking' ) . '" aria-expanded="false"><span class="dashicons dashicons-arrow-down-alt2"></span></button></td>';
 		echo '</tr>';
 
 		// Details Row
@@ -251,6 +272,15 @@ class UserBookingsPage {
 
 		echo '<tr class="snippen-details-row" id="details-' . esc_attr( $booking->id ) . '" style="display:none; background:#f8fafc;">';
 		echo '<td colspan="7" style="padding:20px 30px; border-bottom: 2px solid var(--border-color);">';
+
+		if ( $can_user_cancel ) {
+			echo '<div class="booking-details-actions-wrap">';
+			echo '<strong>' . esc_html__( 'Handlinger:', 'snippen-booking' ) . '</strong>';
+			echo '<div class="booking-details-action-buttons">';
+			echo '<button type="button" class="snippen-btn-action cancel with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span> <span>' . esc_html__( 'Avbryt booking', 'snippen-booking' ) . '</span></button>';
+			echo '</div></div>';
+		}
+
 		echo '<div class="details-content" style="display:grid; grid-template-columns: repeat(' . $cols . ', 1fr); gap:30px; margin-bottom:15px;">';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
