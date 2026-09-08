@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.33.0] - 2026-09-08
+- (#306) Vipps ePayment API-integrasjon, klienttjeneste og administrasjonsinnstillinger med feature-switch:
+  - Introdusert `VippsClient` (`SnippenBooking\Service\Vipps\VippsClient`) for robust kommunikasjon mot Vipps MobilePay moderne ePayment API v1:
+    - OAuth 2.0 access token henting (`POST /accesstoken/v1`) med caching i WordPress transients basert på `expires_in` og 60 sekunders sikkerhetsbuffer.
+    - Betalingsopprettelse (`POST /epayment/v1/payments`) med `WEB_REDIRECT` og idempotency key (UUID v4).
+    - Henting av betalingsdetaljer (`GET /epayment/v1/payments/{reference}`).
+    - Capture av betaling (`POST /epayment/v1/payments/{reference}/capture`).
+    - Cancel av betaling (`POST /epayment/v1/payments/{reference}/cancel`).
+    - Tilkoblingstest (`test_connection`) med umiddelbar tilbakemelding.
+  - Etablert `VippsService` (`SnippenBooking\Service\Vipps\VippsService`) for forretningslogikk:
+    - Konvertering av leiebeløp fra NOK til øre (`format_amount_to_ore`).
+    - Generering av unike betalingsreferanser som tilfredsstiller Vipps-krav (`^[a-zA-Z0-9_-]{1,50}$`).
+    - Generering av retur-URL til bookingens visningsside.
+    - Metoder for opprettelse, status, capture og kansellering av bookingbetalinger.
+  - Administrasjonsinnstillinger i WordPress admin under fanen **Betaling** (`SettingsPage.php`):
+    - Egen seksjon for **Vipps MobilePay ePayment API (Mobilbetaling)**.
+    - Feature-switch toggle: `snippen_vipps_enabled` (`yes`/`no`, standard `no`).
+    - Miljøvelger: `snippen_vipps_environment` (`test` / Sandbox MT vs. `prod` / Produksjon).
+    - Konfigurasjonsfelter for Client ID, Client Secret, Subscription Key og Merchant Serial Number (MSN).
+    - Knapp for «Test tilkobling mot Vipps» koblet til AJAX-endepunktet `snippen_vipps_test_connection` (`VippsTestConnectionApi`) med visuell spinner og sanntidsrespons.
+  - Støtte for utviklingsmiljø via `.env` (`VIPPS_*`) og CLI-seeding via `bin/demo-vipps.php` (`composer demo:vipps` og `composer demo:env`).
+  - 100 % bakoverkompatibilitet: Eksisterende manuell betalingsflyt forblir fullstendig uberørt når Vipps er deaktivert.
+
 ## [2.32.0] - 2026-09-08
 - (#304) Støtte for bookingtyper (privat, åpen for sameiet, utvask) og administrativ godkjenning:
   - Introdusert bookingtyper (`booking_type`) i databasen og API:

@@ -114,6 +114,14 @@ class SettingsPage {
 		$reminder_days = isset( $_POST['snippen_payment_reminder_days'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_reminder_days'] ) ) : '30, 21';
 		update_option( 'snippen_payment_reminder_days', $reminder_days );
 
+		// Save Vipps ePayment Settings
+		update_option( 'snippen_vipps_enabled', isset( $_POST['snippen_vipps_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_vipps_environment', isset( $_POST['snippen_vipps_environment'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_environment'] ) ) : 'test' );
+		update_option( 'snippen_vipps_client_id', isset( $_POST['snippen_vipps_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_client_id'] ) ) : '' );
+		update_option( 'snippen_vipps_client_secret', isset( $_POST['snippen_vipps_client_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_client_secret'] ) ) : '' );
+		update_option( 'snippen_vipps_subscription_key', isset( $_POST['snippen_vipps_subscription_key'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_subscription_key'] ) ) : '' );
+		update_option( 'snippen_vipps_msn', isset( $_POST['snippen_vipps_msn'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_msn'] ) ) : '' );
+
 		if ( isset( $_POST['snippen_active_notification_provider'] ) ) {
 			update_option( 'snippen_active_notification_provider', sanitize_text_field( wp_unslash( $_POST['snippen_active_notification_provider'] ) ) );
 		}
@@ -155,10 +163,16 @@ class SettingsPage {
 		$horizon_weeks          = get_option( 'snippen_booking_horizon_weeks', 52 );
 		$disable_all_emails     = get_option( 'snippen_disable_all_emails', 'no' );
 
-		$payment_bank_account = get_option( 'snippen_payment_bank_account', '' );
-		$payment_vipps_number = get_option( 'snippen_payment_vipps_number', '' );
-		$payment_instructions = get_option( 'snippen_payment_instructions', '' );
-		$payment_admin_emails = get_option( 'snippen_payment_admin_emails', '' );
+		$payment_bank_account   = get_option( 'snippen_payment_bank_account', '' );
+		$payment_vipps_number   = get_option( 'snippen_payment_vipps_number', '' );
+		$payment_instructions   = get_option( 'snippen_payment_instructions', '' );
+		$payment_admin_emails   = get_option( 'snippen_payment_admin_emails', '' );
+		$vipps_enabled          = get_option( 'snippen_vipps_enabled', 'no' );
+		$vipps_environment      = get_option( 'snippen_vipps_environment', 'test' );
+		$vipps_client_id        = get_option( 'snippen_vipps_client_id', '' );
+		$vipps_client_secret    = get_option( 'snippen_vipps_client_secret', '' );
+		$vipps_subscription_key = get_option( 'snippen_vipps_subscription_key', '' );
+		$vipps_msn              = get_option( 'snippen_vipps_msn', '' );
 
 		$email_booking           = get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 		$email_admin             = get_option( 'snippen_email_admin_booking_enabled', 'yes' );
@@ -349,6 +363,59 @@ class SettingsPage {
 		echo '<p class="description">' . esc_html__( 'Kommaseparert liste over antall dager før bookingdato hvor automatisk betalingspurring skal sendes (f.eks. "30, 21").', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 		echo '</div>';
+
+		// Vipps ePayment API Section
+		echo '<hr style="margin:28px 0; border:0; border-top:1px solid #e2e8f0;">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'Vipps MobilePay ePayment API (Mobilbetaling)', 'snippen-booking' ) . '</h3>';
+		echo '<p class="description" style="margin-bottom:16px;">' . esc_html__( 'Integrasjon mot Vipps MobilePay moderne ePayment API v1. Når denne er aktivert, kan kunder betale direkte med Vipps. Dersom denne er slått av, benyttes manuell overføring og kvitteringsopplasting som 100 % fallback.', 'snippen-booking' ) . '</p>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0; padding:16px; border-radius:8px;">';
+		echo '<label style="font-weight:700; color:#166534; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_vipps_enabled" id="snippen_vipps_enabled" value="yes" ' . checked( $vipps_enabled, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Aktiver Vipps ePayment i bookingflyten', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Kryss av her for å aktivere Vipps som betalingsmetode. Ha denne deaktivert inntil du har verifisert API-tilkoblingen med testknappen under.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_vipps_environment" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Miljø / API-endepunkt', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_vipps_environment" id="snippen_vipps_environment" style="min-width:300px;">';
+		echo '<option value="test" ' . selected( $vipps_environment, 'test', false ) . '>' . esc_html__( 'Test / Sandbox (MT) - https://apitest.vipps.no', 'snippen-booking' ) . '</option>';
+		echo '<option value="prod" ' . selected( $vipps_environment, 'prod', false ) . '>' . esc_html__( 'Produksjon - https://api.vipps.no', 'snippen-booking' ) . '</option>';
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'Bruk Test / Sandbox for å teste med Vipps MT-testbrukere før publisering i produksjon.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_vipps_client_id" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Client ID', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_vipps_client_id" id="snippen_vipps_client_id" value="' . esc_attr( $vipps_client_id ) . '" class="regular-text" placeholder="f.eks. 3fa85f64-5717-4562-b3fc-2c963f66afa6">';
+		echo '<p class="description">' . esc_html__( 'Klient-ID fra Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_vipps_client_secret" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Client Secret', 'snippen-booking' ) . '</label>';
+		echo '<input type="password" name="snippen_vipps_client_secret" id="snippen_vipps_client_secret" value="' . esc_attr( $vipps_client_secret ) . '" class="regular-text" autocomplete="new-password">';
+		echo '<p class="description">' . esc_html__( 'Klienthemmelighet fra Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_vipps_subscription_key" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Subscription Key (Ocp-Apim-Subscription-Key)', 'snippen-booking' ) . '</label>';
+		echo '<input type="password" name="snippen_vipps_subscription_key" id="snippen_vipps_subscription_key" value="' . esc_attr( $vipps_subscription_key ) . '" class="regular-text" autocomplete="new-password">';
+		echo '<p class="description">' . esc_html__( 'Abonnementsnøkkel for API-produktet (ePayment) i Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label for="snippen_vipps_msn" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Merchant Serial Number (MSN)', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_vipps_msn" id="snippen_vipps_msn" value="' . esc_attr( $vipps_msn ) . '" class="regular-text" placeholder="f.eks. 123456">';
+		echo '<p class="description">' . esc_html__( 'Salgsstedsnummer / bedriftsnummer hos Vipps.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-top:20px;">';
+		echo '<button type="button" id="snippen-vipps-test-btn" class="button button-secondary">' . esc_html__( 'Test tilkobling mot Vipps', 'snippen-booking' ) . '</button>';
+		echo '<span id="snippen-vipps-test-spinner" class="spinner" style="float:none; margin:0 0 0 8px; vertical-align:middle;"></span>';
+		echo '<div id="snippen-vipps-test-result" style="display:none; margin-top:12px; padding:10px 14px; border-radius:4px; max-width:600px;"></div>';
+		echo '</div>';
+
 		echo '</div>';
 
 		// 4. Generelt tab content
@@ -444,6 +511,47 @@ class SettingsPage {
 				} else {
 					$("#snippen-door-code-hours-settings").hide();
 				}
+			});
+			$("#snippen-vipps-test-btn").on("click", function(e) {
+				e.preventDefault();
+				var $btn = $(this);
+				var $spinner = $("#snippen-vipps-test-spinner");
+				var $result = $("#snippen-vipps-test-result");
+
+				$btn.prop("disabled", true);
+				$spinner.addClass("is-active");
+				$result.hide();
+
+				var payload = {
+					action: "snippen_vipps_test_connection",
+					nonce: typeof snippenAdmin !== "undefined" ? snippenAdmin.nonce : "' . esc_js( wp_create_nonce( 'snippen_admin_nonce' ) ) . '",
+					client_id: $("#snippen_vipps_client_id").val(),
+					client_secret: $("#snippen_vipps_client_secret").val(),
+					subscription_key: $("#snippen_vipps_subscription_key").val(),
+					msn: $("#snippen_vipps_msn").val(),
+					environment: $("#snippen_vipps_environment").val()
+				};
+
+				var ajaxUrl = typeof snippenAdmin !== "undefined" ? snippenAdmin.ajaxUrl : "' . esc_url( admin_url( 'admin-ajax.php' ) ) . '";
+
+				$.post(ajaxUrl, payload, function(res) {
+					$btn.prop("disabled", false);
+					$spinner.removeClass("is-active");
+					$result.show();
+					if (res && res.success) {
+						$result.css({ "background": "#f0fdf4", "border": "1px solid #86efac", "color": "#166534" })
+							.html("<strong>✓ " + (res.data && res.data.message ? res.data.message : "Tilkobling vellykket!") + "</strong>");
+					} else {
+						var errMsg = (res && res.data && res.data.message) ? res.data.message : "Tilkobling feilet. Vennligst kontroller opplysningene.";
+						$result.css({ "background": "#fef2f2", "border": "1px solid #fca5a5", "color": "#991b1b" })
+							.html("<strong>✕ " + errMsg + "</strong>");
+					}
+				}).fail(function() {
+					$btn.prop("disabled", false);
+					$spinner.removeClass("is-active");
+					$result.show().css({ "background": "#fef2f2", "border": "1px solid #fca5a5", "color": "#991b1b" })
+						.html("<strong>✕ Kunne ikke nå serveren for test av tilkobling.</strong>");
+				});
 			});
 		});
 		</script>';

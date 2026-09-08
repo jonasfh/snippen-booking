@@ -56,6 +56,7 @@ class Plugin {
 		\SnippenBooking\Service\PhoneAuthenticationService::register();
 		\SnippenBooking\Shortcode\AccountConfirmationShortcode::register();
 		\SnippenBooking\Shortcode\BookingListShortcode::register();
+		\SnippenBooking\Api\VippsTestConnectionApi::register();
 
 		// Allow tagging pages (required for issue #25)
 		register_taxonomy_for_object_type( 'post_tag', 'page' );
