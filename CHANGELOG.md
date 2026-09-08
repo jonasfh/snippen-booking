@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.32.0] - 2026-09-08
+- (#304) Støtte for bookingtyper (privat, åpen for sameiet, utvask) og administrativ godkjenning:
+  - Introdusert bookingtyper (`booking_type`) i databasen og API:
+    - `private`: Standard privat leie (avgiftsbelagt).
+    - `open`: Åpen for sameiet (kostnadsfri `price=0`, `payment_status_id=3 (EXEMPT)`), krever administrativ godkjenning (`status='pending'`).
+    - `cleaning`: Gratis utvask fram til kl. 11:00 neste formiddag for kveldsarrangementer.
+  - Konfigurerbart flagg `supports_cleaning` på tidsblokker (`snippen_booking_blocks`) under **Bookingblokker**, som indikerer om blokken kvalifiserer for tilbud om utvask neste morgen.
+  - Dynamisk avkrysningsboks for utvask i booking-skjemaet: Vises kun dersom valgt tidsblokk støtter utvask OG lokalet/lokalene faktisk er ledige neste formiddag (fram til kl. 11:00). Ved avkrysning opprettes en koblet gratis reservasjon for utvask automatisk.
+  - Valg av type arrangement (Privat vs. Åpen for sameiet) i booking-veiviseren med informasjonsvarsel om administrativ godkjenning for åpne arrangementer.
+  - Støtte for frivillig begrunnelse (`rejection_reason`) ved avslag/kansellering fra administrator i adminpanelet, med visning av begrunnelsen i bookingdetaljene.
+  - Filter for bookingtyper (`private`, `open`, `cleaning`, `open_pending`) og tydelige fargekodede type-merker (`[Privat]`, `[Åpen for sameiet]`, `[Utvask]`) i adminoversikten.
+  - Databasemigrasjon `Migration_2_32_0` for `booking_type` og `rejection_reason` i `snippen_bookings`, samt `supports_cleaning` i `snippen_booking_blocks`.
+
 ## [2.31.0] - 2026-09-06
 - (#302) Send bekreftelsesmelding ved valg av reservasjon (SMS flervalg):
   - Automatisk utsending av bekreftelses-SMS til leietaker når et valg gjøres på en flervalgsdialog («Henvendelsen og kommende meldinger knyttes til reservasjon: Peisestuen (27.09.2026 kl. 11:00)»).

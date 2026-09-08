@@ -77,12 +77,18 @@ class BookingActionsApi {
 			wp_send_json_error( array( 'message' => __( 'Booking ble ikke funnet.', 'snippen-booking' ) ) );
 		}
 
+		$update_data = array(
+			'status'      => $status,
+			'modified_at' => current_time( 'mysql' ),
+		);
+
+		if ( 'cancelled' === $status && isset( $_POST['rejection_reason'] ) ) {
+			$update_data['rejection_reason'] = sanitize_textarea_field( $_POST['rejection_reason'] );
+		}
+
 		$updated = $wpdb->update(
 			$table,
-			array(
-				'status'      => $status,
-				'modified_at' => current_time( 'mysql' ),
-			),
+			$update_data,
 			array( 'id' => $id )
 		);
 
@@ -94,9 +100,10 @@ class BookingActionsApi {
 
 			wp_send_json_success(
 				array(
-					'message'      => __( 'Status oppdatert.', 'snippen-booking' ),
-					'new_status'   => $status,
-					'status_label' => self::get_status_label( $status ),
+					'message'          => __( 'Status oppdatert.', 'snippen-booking' ),
+					'new_status'       => $status,
+					'status_label'     => self::get_status_label( $status ),
+					'rejection_reason' => isset( $update_data['rejection_reason'] ) ? $update_data['rejection_reason'] : $existing_booking->rejection_reason,
 				)
 			);
 		} else {

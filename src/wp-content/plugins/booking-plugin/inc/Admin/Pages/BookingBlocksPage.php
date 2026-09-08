@@ -97,6 +97,7 @@ class BookingBlocksPage {
 		$sort_order          = isset( $_POST['sort_order'] ) ? intval( $_POST['sort_order'] ) : 0;
 		$is_active           = isset( $_POST['is_active'] ) ? 1 : 0;
 		$custom_instructions = ! empty( $_POST['custom_instructions'] ) ? sanitize_text_field( $_POST['custom_instructions'] ) : null;
+		$supports_cleaning   = isset( $_POST['supports_cleaning'] ) ? 1 : 0;
 		$object_ids          = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
 		$days_of_week        = isset( $_POST['days_of_week'] ) ? array_map( 'sanitize_text_field', $_POST['days_of_week'] ) : array();
 		$days_of_week        = ! empty( $days_of_week ) ? implode( ',', $days_of_week ) : null;
@@ -112,6 +113,7 @@ class BookingBlocksPage {
 			'sort_order'          => $sort_order,
 			'is_active'           => $is_active,
 			'custom_instructions' => $custom_instructions,
+			'supports_cleaning'   => $supports_cleaning,
 		);
 
 		$saved_id = $repo->save( $data, $id > 0 ? $id : null );
@@ -215,12 +217,13 @@ class BookingBlocksPage {
 
 				$is_active = ! isset( $block->is_active ) || (int) $block->is_active === 1;
 
-				$display_start   = substr( $block->start_time, 0, 5 );
-				$display_end     = ( substr( $block->end_time, 0, 5 ) === '23:59' || $block->end_time === '23:59:59' ) ? '24:00' : substr( $block->end_time, 0, 5 );
-				$has_custom_inst = ! empty( $block->custom_instructions );
+				$display_start         = substr( $block->start_time, 0, 5 );
+				$display_end           = ( substr( $block->end_time, 0, 5 ) === '23:59' || $block->end_time === '23:59:59' ) ? '24:00' : substr( $block->end_time, 0, 5 );
+				$has_custom_inst       = ! empty( $block->custom_instructions );
+				$has_supports_cleaning = ! empty( $block->supports_cleaning );
 
 				echo '<tr>';
-				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $block->name ) . '</a></strong>' . ( $has_custom_inst ? ' <span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px;" title="' . esc_attr( $block->custom_instructions ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
+				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $block->name ) . '</a></strong>' . ( $has_custom_inst ? ' <span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px;" title="' . esc_attr( $block->custom_instructions ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>' : '' ) . ( $has_supports_cleaning ? ' <span class="snippen-badge" style="background:#ccfbf1; color:#0f766e; font-size:10px; padding:2px 6px;" title="' . esc_attr__( 'Støtter utvask neste morgen (frem til kl. 11:00)', 'snippen-booking' ) . '">' . esc_html__( 'Utvask', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
 				echo '<td>' . esc_html( $block->object_names ?: '-' ) . '</td>';
 				echo '<td>' . esc_html( $display_start . ' - ' . $display_end ) . '</td>';
 				echo '<td>' . esc_html( $days_text ) . '</td>';
@@ -437,6 +440,12 @@ class BookingBlocksPage {
 		$custom_inst_val = $block && isset( $block->custom_instructions ) ? $block->custom_instructions : '';
 		echo '<input type="text" name="custom_instructions" id="custom_instructions" value="' . esc_attr( $custom_inst_val ) . '" class="regular-text" placeholder="' . esc_attr__( 'F.eks. Inkluderer utvask neste morgen frem til kl. 11:00', 'snippen-booking' ) . '">';
 		echo '<p class="description">' . esc_html__( 'Valgfri tekst som vises på bookingblokken og i oppsummeringen når kunden booker.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group">';
+		$supports_cleaning_val = $block && ! empty( $block->supports_cleaning );
+		echo '<label><input type="checkbox" name="supports_cleaning" id="supports_cleaning" value="1" ' . checked( $supports_cleaning_val, true, false ) . '> ' . esc_html__( 'Støtter gratis utvask neste morgen (frem til kl. 11:00)', 'snippen-booking' ) . '</label>';
+		echo '<p class="description">' . esc_html__( 'Når aktivert, vil kunder som booker denne blokken få mulighet til å inkludere gratis utvask neste morgen dersom neste formiddag er ledig.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';

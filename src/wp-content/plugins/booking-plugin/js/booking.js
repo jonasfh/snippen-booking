@@ -515,6 +515,8 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 if (response.success) {
+                    lastPricingData = response.data;
+
                     if (response.data.custom_instructions && response.data.custom_instructions.length > 0) {
                         $('#summary-wash-notice-text').text(response.data.custom_instructions.join(' | '));
                         $('#summary-wash-notice').slideDown(200);
@@ -522,18 +524,50 @@ jQuery(document).ready(function ($) {
                         $('#summary-wash-notice').slideUp(200);
                     }
 
-                    if (response.data.discount_amount > 0) {
-                        var html = '<div style="text-decoration: line-through; color: #64748b; font-size: 0.9em;">kr. ' + Math.round(response.data.base_price) + ',-</div>';
-                        html += '<div style="color: #16a34a; font-size: 0.9em; margin-bottom: 5px;">Rabatt: -kr. ' + Math.round(response.data.discount_amount) + ',-</div>';
-                        html += '<div style="font-weight: bold; font-size: 1.2em;">kr. ' + Math.round(response.data.price) + ',-</div>';
-                        $('#summary-price').html(html);
+                    if (response.data.cleaning_available) {
+                        $('#cleaning-option-container').slideDown(200);
                     } else {
-                        $('#summary-price').text('kr. ' + Math.round(response.data.price) + ',-');
+                        $('#cleaning-option-container').slideUp(200);
+                        $('#include_cleaning').prop('checked', false);
                     }
+
+                    renderSummaryPrice();
                 }
             }
         });
     }
+
+    var lastPricingData = null;
+
+    function renderSummaryPrice() {
+        var bookingType = $('input[name="booking_type"]:checked').val() || 'private';
+        if (bookingType === 'open') {
+            $('#summary-price').html('<span style="color: #16a34a; font-weight: bold;">kr 0,- (Gratis – krever styregodkjenning)</span>');
+            $('#open-booking-notice').slideDown(200);
+            return;
+        }
+
+        $('#open-booking-notice').slideUp(200);
+
+        if (!lastPricingData) {
+            return;
+        }
+
+        if (lastPricingData.discount_amount > 0) {
+            var html = '<div style="text-decoration: line-through; color: #64748b; font-size: 0.9em;">kr. ' + Math.round(lastPricingData.base_price) + ',-</div>';
+            html += '<div style="color: #16a34a; font-size: 0.9em; margin-bottom: 5px;">Rabatt: -kr. ' + Math.round(lastPricingData.discount_amount) + ',-</div>';
+            html += '<div style="font-weight: bold; font-size: 1.2em;">kr. ' + Math.round(lastPricingData.price) + ',-</div>';
+            $('#summary-price').html(html);
+        } else {
+            $('#summary-price').text('kr. ' + Math.round(lastPricingData.price) + ',-');
+        }
+    }
+
+    $(document).on('change', 'input[name="booking_type"]', function() {
+        $('.booking-type-card').removeClass('selected');
+        $(this).closest('.booking-type-card').addClass('selected');
+        renderSummaryPrice();
+    });
 
     /**
      * Handle form submit
@@ -553,6 +587,8 @@ jQuery(document).ready(function ($) {
             booking_object_id: selectedObjectIds,
             event_date: selectedDate,
             block_ids: selectedBlockIds,
+            booking_type: $('input[name="booking_type"]:checked').val() || 'private',
+            include_cleaning: $('#include_cleaning').is(':checked') ? 1 : 0,
             name: $('#name').val(),
             email: $('#email').val(),
             phone: $('#phone').val(),

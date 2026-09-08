@@ -1805,3 +1805,58 @@ body.snippen-modal-open {
     font-style: italic;
     margin-bottom: 4px;
 }
+
+/* Booking Type Cards & Cleaning Option */
+.booking-type-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.booking-type-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.booking-type-card:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+}
+
+.booking-type-card.selected {
+    border-color: #0284c7;
+    background: #f0f9ff;
+    box-shadow: 0 0 0 1px #0284c7;
+}
+
+.booking-type-card input[type="radio"] {
+    margin-top: 3px;
+    cursor: pointer;
+}
+
+.booking-type-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.booking-type-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.booking-type-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.35;
+}
+

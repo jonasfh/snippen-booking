@@ -161,6 +161,7 @@ class AvailabilityApi {
 					'start_time'             => $block->start_time,
 					'end_time'               => $block->end_time,
 					'custom_instructions'    => ! empty( $block->custom_instructions ) ? $block->custom_instructions : null,
+					'supports_cleaning'      => ! empty( $block->supports_cleaning ) ? 1 : 0,
 					'is_available'           => $is_available,
 					'available_capacity'     => $available_capacity,
 					'total_capacity'         => $total_capacity,
@@ -328,12 +329,45 @@ class AvailabilityApi {
 		}
 
 		$custom_instructions_list = array();
+		$supports_cleaning_any    = false;
+		$cleaning_available       = false;
+		$cleaning_block_ids       = array();
+		$next_date                = date( 'Y-m-d', strtotime( $event_date . ' + 1 day' ) );
+
 		if ( ! empty( $block_ids ) ) {
 			$block_repo = new BookingBlockRepository();
 			$blocks     = $block_repo->find_by_ids( $block_ids );
 			foreach ( $blocks as $b ) {
 				if ( ! empty( $b->custom_instructions ) ) {
 					$custom_instructions_list[] = $b->custom_instructions;
+				}
+				if ( ! empty( $b->supports_cleaning ) ) {
+					$supports_cleaning_any = true;
+				}
+			}
+
+			if ( $supports_cleaning_any && ! empty( $selected_object_ids ) ) {
+				$all_blocks      = $block_repo->find_all();
+				$holiday_service = new HolidayService();
+				$is_next_holiday = $holiday_service->isHoliday( $next_date );
+
+				foreach ( $all_blocks as $ab ) {
+					if ( $availability_service->isBlockApplicable( $ab, $next_date, $is_next_holiday ) ) {
+						if ( strtotime( $ab->end_time ) <= strtotime( '11:00:00' ) && strtotime( $ab->start_time ) < strtotime( '11:00:00' ) ) {
+							$cleaning_block_ids[] = (int) $ab->id;
+						}
+					}
+				}
+
+				if ( ! empty( $cleaning_block_ids ) ) {
+					$all_objects_avail = true;
+					foreach ( $selected_object_ids as $so_id ) {
+						if ( ! $availability_service->areBlocksAvailable( $so_id, $next_date, $cleaning_block_ids ) ) {
+							$all_objects_avail = false;
+							break;
+						}
+					}
+					$cleaning_available = $all_objects_avail;
 				}
 			}
 		}
@@ -346,6 +380,10 @@ class AvailabilityApi {
 				'discount_amount'     => $discount_amount,
 				'discount_name'       => $discount_name,
 				'custom_instructions' => array_values( array_unique( $custom_instructions_list ) ),
+				'supports_cleaning'   => $supports_cleaning_any,
+				'cleaning_available'  => $cleaning_available,
+				'cleaning_date'       => $next_date,
+				'cleaning_block_ids'  => $cleaning_block_ids,
 			)
 		);
 	}

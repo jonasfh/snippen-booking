@@ -14,6 +14,7 @@ class BookingsPage {
 		global $wpdb;
 
 		$status_filter         = isset( $_GET['status'] ) ? sanitize_text_field( $_GET['status'] ) : '';
+		$booking_type_filter   = isset( $_GET['booking_type'] ) ? sanitize_text_field( $_GET['booking_type'] ) : '';
 		$payment_status_filter = isset( $_GET['payment_status'] ) ? sanitize_text_field( $_GET['payment_status'] ) : '';
 		$object_filter         = isset( $_GET['object_id'] ) ? intval( $_GET['object_id'] ) : 0;
 		$search                = isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : '';
@@ -26,8 +27,8 @@ class BookingsPage {
 
 		$this->render_header();
 		$this->render_tagged_pages();
-		$this->render_filters( $status_filter, $payment_status_filter, $object_filter, $search, $show_all, $door_code_filter );
-		$this->render_list( $status_filter, $payment_status_filter, $object_filter, $search, $orderby, $order, $show_all, $door_code_filter );
+		$this->render_filters( $status_filter, $payment_status_filter, $object_filter, $search, $show_all, $door_code_filter, $booking_type_filter );
+		$this->render_list( $status_filter, $payment_status_filter, $object_filter, $search, $orderby, $order, $show_all, $door_code_filter, $booking_type_filter );
 		$this->render_dispatch_modal();
 
 		echo '</div>';
@@ -86,7 +87,7 @@ class BookingsPage {
 	/**
 	 * Render filters
 	 */
-	private function render_filters( $status = '', $payment_status = '', $obj_id = 0, $s = '', $show_all = false, $door_code_filter = '' ) {
+	private function render_filters( $status = '', $payment_status = '', $obj_id = 0, $s = '', $show_all = false, $door_code_filter = '', $booking_type = '' ) {
 		global $wpdb;
 		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
 		$objects       = $wpdb->get_results( "SELECT id, name FROM $table_objects WHERE deleted_at IS NULL ORDER BY name ASC" );
@@ -101,6 +102,15 @@ class BookingsPage {
 		echo '<option value="pending" ' . selected( $status, 'pending', false ) . '>' . esc_html__( 'Venter på godkjenning', 'snippen-booking' ) . '</option>';
 		echo '<option value="confirmed" ' . selected( $status, 'confirmed', false ) . '>' . esc_html__( 'Bekreftet', 'snippen-booking' ) . '</option>';
 		echo '<option value="cancelled" ' . selected( $status, 'cancelled', false ) . '>' . esc_html__( 'Avbrutt', 'snippen-booking' ) . '</option>';
+		echo '</select></div>';
+
+		echo '<div class="snippen-filter-group">';
+		echo '<select name="booking_type" onchange="this.form.submit()">';
+		echo '<option value="">' . esc_html__( 'Alle bookingtyper', 'snippen-booking' ) . '</option>';
+		echo '<option value="private" ' . selected( $booking_type, 'private', false ) . '>' . esc_html__( 'Privat', 'snippen-booking' ) . '</option>';
+		echo '<option value="open" ' . selected( $booking_type, 'open', false ) . '>' . esc_html__( 'Åpen for sameiet', 'snippen-booking' ) . '</option>';
+		echo '<option value="cleaning" ' . selected( $booking_type, 'cleaning', false ) . '>' . esc_html__( 'Utvask', 'snippen-booking' ) . '</option>';
+		echo '<option value="open_pending" ' . selected( $booking_type, 'open_pending', false ) . '>' . esc_html__( 'Åpne som venter på godkjenning', 'snippen-booking' ) . '</option>';
 		echo '</select></div>';
 
 		echo '<div class="snippen-filter-group">';
@@ -139,7 +149,7 @@ class BookingsPage {
 		echo '</form></div>';
 	}
 
-	private function render_list( $status = '', $payment_status = '', $obj_id = 0, $s = '', $orderby = 'booking_date', $order = 'ASC', $show_all = false, $door_code_filter = '' ) {
+	private function render_list( $status = '', $payment_status = '', $obj_id = 0, $s = '', $orderby = 'booking_date', $order = 'ASC', $show_all = false, $door_code_filter = '', $booking_type = '' ) {
 		global $wpdb;
 		$table_bookings         = $wpdb->prefix . 'snippen_bookings';
 		$table_slots            = $wpdb->prefix . 'snippen_time_slots';
@@ -163,6 +173,23 @@ class BookingsPage {
 			$query .= $wpdb->prepare( ' AND b.status = %s', $status );
 		} else {
 			$query .= " AND b.status != 'cancelled'";
+		}
+
+		if ( $booking_type ) {
+			switch ( $booking_type ) {
+				case 'private':
+					$query .= " AND (b.booking_type = 'private' OR b.booking_type IS NULL OR b.booking_type = '')";
+					break;
+				case 'open':
+					$query .= " AND b.booking_type = 'open'";
+					break;
+				case 'cleaning':
+					$query .= " AND b.booking_type = 'cleaning'";
+					break;
+				case 'open_pending':
+					$query .= " AND b.booking_type = 'open' AND b.status = 'pending'";
+					break;
+			}
 		}
 
 		if ( $payment_status ) {
@@ -343,6 +370,7 @@ class BookingsPage {
 		echo '</div>';
 		echo '<div class="snippen-mobile-summary-badges" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:2px;">';
 		echo '<span class="snippen-badge snippen-status-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span>';
+		echo $this->render_type_badge( $booking->booking_type ?? 'private' );
 		echo '<span class="snippen-badge snippen-payment-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
 		echo '</div>';
 		echo '</div>';
@@ -365,7 +393,7 @@ class BookingsPage {
 		}
 		echo '</td>';
 		echo '<td data-label="' . esc_attr__( 'Pris', 'snippen-booking' ) . '" style="font-weight:600;">' . number_format( $booking->price, 0, ',', ' ' ) . ',-</td>';
-		echo '<td data-label="' . esc_attr__( 'Status', 'snippen-booking' ) . '"><span class="snippen-badge snippen-status-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span></td>';
+		echo '<td data-label="' . esc_attr__( 'Status', 'snippen-booking' ) . '"><div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;"><span class="snippen-badge snippen-status-badge ' . esc_attr( $status_class ) . '">' . esc_html( $this->get_status_label( $booking->status ) ) . '</span>' . $this->render_type_badge( $booking->booking_type ?? 'private' ) . '</div></td>';
 
 		echo '<td data-label="' . esc_attr__( 'Betaling', 'snippen-booking' ) . '">';
 		echo '<span class="snippen-badge snippen-payment-badge" style="background:' . ( $payment_status->is_settled ? '#dcfce7; color:#15803d' : '#fef3c7; color:#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span>';
@@ -399,8 +427,15 @@ class BookingsPage {
 			echo '</div></div>';
 		}
 		echo '<div><strong>' . esc_html__( 'Kontaktinfo:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->customer_phone ?: '-' ) . '</div>';
+		echo '<div><strong>' . esc_html__( 'Type arrangement:', 'snippen-booking' ) . '</strong><br>' . $this->render_type_badge( $booking->booking_type ?? 'private' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Beskrivelse/Notater:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->description ?: '-' ) . '</div>';
+		if ( ! empty( $booking->rejection_reason ) ) {
+			echo '<div style="grid-column: 1 / -1; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:10px 14px; color:#991b1b; font-size:13px; margin: 4px 0;">';
+			echo '<strong><span class="dashicons dashicons-warning" style="vertical-align:middle; font-size:16px;"></span> ' . esc_html__( 'Begrunnelse for avslag:', 'snippen-booking' ) . '</strong><br>';
+			echo esc_html( $booking->rejection_reason );
+			echo '</div>';
+		}
 		echo '<div><strong>' . esc_html__( 'Tidsrom:', 'snippen-booking' ) . '</strong><br>' . esc_html( $time_range ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Dørkode:', 'snippen-booking' ) . '</strong><br>';
 		echo '<div class="door-code-edit-container" data-id="' . esc_attr( $booking->id ) . '" style="display: flex; align-items: center; margin-top: 4px;">';
@@ -604,6 +639,24 @@ class BookingsPage {
 			'cancelled' => __( 'Avbrutt', 'snippen-booking' ),
 		);
 		return isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
+	}
+
+	/**
+	 * Render booking type badge
+	 *
+	 * @param string $booking_type
+	 * @return string HTML badge
+	 */
+	private function render_type_badge( $booking_type ) {
+		switch ( $booking_type ) {
+			case 'open':
+				return '<span class="snippen-badge snippen-type-badge snippen-type-open" style="background:#e0e7ff; color:#3730a3; font-weight:600;">' . esc_html__( 'Åpen for sameiet', 'snippen-booking' ) . '</span>';
+			case 'cleaning':
+				return '<span class="snippen-badge snippen-type-badge snippen-type-cleaning" style="background:#ccfbf1; color:#0f766e; font-weight:600;">' . esc_html__( 'Utvask', 'snippen-booking' ) . '</span>';
+			case 'private':
+			default:
+				return '<span class="snippen-badge snippen-type-badge snippen-type-private" style="background:#f1f5f9; color:#475569;">' . esc_html__( 'Privat', 'snippen-booking' ) . '</span>';
+		}
 	}
 
 	/**
