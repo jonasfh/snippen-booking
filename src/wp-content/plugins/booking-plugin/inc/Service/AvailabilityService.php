@@ -292,4 +292,36 @@ class AvailabilityService {
 
 		return true;
 	}
+
+	/**
+	 * Find all applicable block IDs for next day cleaning up to a specified end time.
+	 *
+	 * @param string      $next_date YYYY-MM-DD
+	 * @param string|null $cleaning_end_time HH:MM or HH:MM:SS (defaults to option or 11:00)
+	 * @return array<int>
+	 */
+	public function getCleaningBlockIds( $next_date, $cleaning_end_time = null ) {
+		if ( null === $cleaning_end_time || '' === $cleaning_end_time ) {
+			$cleaning_end_time = get_option( 'snippen_cleaning_end_time', '11:00' );
+		}
+		if ( empty( $cleaning_end_time ) ) {
+			$cleaning_end_time = '11:00';
+		}
+		$cleaning_end_time_full = strlen( $cleaning_end_time ) === 5 ? $cleaning_end_time . ':00' : $cleaning_end_time;
+
+		$all_blocks      = $this->block_repository->find_all();
+		$holiday_service = new HolidayService();
+		$is_next_holiday = $holiday_service->isHoliday( $next_date );
+		$cleaning_blocks = array();
+
+		foreach ( $all_blocks as $ab ) {
+			if ( $this->isBlockApplicable( $ab, $next_date, $is_next_holiday ) ) {
+				if ( strtotime( $ab->end_time ) <= strtotime( $cleaning_end_time_full ) && strtotime( $ab->start_time ) < strtotime( $cleaning_end_time_full ) ) {
+					$cleaning_blocks[] = (int) $ab->id;
+				}
+			}
+		}
+
+		return $cleaning_blocks;
+	}
 }

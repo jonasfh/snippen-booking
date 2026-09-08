@@ -5,9 +5,12 @@ namespace SnippenBooking\Tests\Integration;
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Api\BookingApi;
 use SnippenBooking\Api\BookingActionsApi;
+use SnippenBooking\Api\AvailabilityApi;
 use SnippenBooking\Admin\Pages\BookingsPage;
+use SnippenBooking\Admin\Pages\SettingsPage;
 use SnippenBooking\Database\Repository\BookingBlockRepository;
 use SnippenBooking\Database\Repository\BookingRepository;
+use SnippenBooking\Service\AvailabilityService;
 
 class BookingTypesTest extends TestCase {
 
@@ -379,5 +382,180 @@ class BookingTypesTest extends TestCase {
 		$this->assertStringContainsString( 'Private Filter Customer', $output_private );
 		$this->assertStringNotContainsString( 'Open Filter Customer', $output_private );
 		$this->assertStringNotContainsString( 'Cleaning Filter Customer', $output_private );
+	}
+
+	/**
+	 * Test that configurable cleaning_end_time dynamically determines cleaning blocks and API response
+	 */
+	public function test_configurable_cleaning_end_time() {
+		update_option( 'snippen_cleaning_end_time', '12:00' );
+
+		global $wpdb;
+		$block_repo = new BookingBlockRepository();
+		$object_id  = (int) $wpdb->get_var( "SELECT id FROM {$wpdb->prefix}snippen_booking_objects LIMIT 1" );
+
+		// 1. Create Saturday evening block
+		$sat_block_id = $block_repo->save(
+			array(
+				'name'              => 'Sat Eve Custom',
+				'start_time'        => '16:00:00',
+				'end_time'          => '23:00:00',
+				'days_of_week'      => '6',
+				'supports_cleaning' => 1,
+				'sort_order'        => 100,
+			)
+		);
+		$block_repo->sync_booking_objects( $sat_block_id, array( $object_id ) );
+
+		// 2. Create Sunday 08:00-11:00 block
+		$sun_block_1 = $block_repo->save(
+			array(
+				'name'              => 'Sun Morning Part 1',
+				'start_time'        => '08:00:00',
+				'end_time'          => '11:00:00',
+				'days_of_week'      => '0,7',
+				'supports_cleaning' => 0,
+				'sort_order'        => 10,
+			)
+		);
+		$block_repo->sync_booking_objects( $sun_block_1, array( $object_id ) );
+
+		// 3. Create Sunday 11:00-12:00 block (should be included because cleaning_end_time is 12:00)
+		$sun_block_2 = $block_repo->save(
+			array(
+				'name'              => 'Sun Morning Part 2',
+				'start_time'        => '11:00:00',
+				'end_time'          => '12:00:00',
+				'days_of_week'      => '0,7',
+				'supports_cleaning' => 0,
+				'sort_order'        => 20,
+			)
+		);
+		$block_repo->sync_booking_objects( $sun_block_2, array( $object_id ) );
+
+		// 4. Create Sunday 12:00-16:00 block (should NOT be included)
+		$sun_block_3 = $block_repo->save(
+			array(
+				'name'              => 'Sun Afternoon',
+				'start_time'        => '12:00:00',
+				'end_time'          => '16:00:00',
+				'days_of_week'      => '0,7',
+				'supports_cleaning' => 0,
+				'sort_order'        => 30,
+			)
+		);
+		$block_repo->sync_booking_objects( $sun_block_3, array( $object_id ) );
+
+		$sat_date = '2026-11-21'; // Saturday
+		$sun_date = '2026-11-22'; // Sunday
+
+		$availability_service = new AvailabilityService();
+		$cleaning_block_ids   = $availability_service->getCleaningBlockIds( $sun_date );
+
+		$this->assertContains( (int) $sun_block_1, $cleaning_block_ids );
+		$this->assertContains( (int) $sun_block_2, $cleaning_block_ids );
+		$this->assertNotContains( (int) $sun_block_3, $cleaning_block_ids );
+
+		// Check AvailabilityApi returns cleaning_end_time = '12:00'
+		$_GET['nonce']               = wp_create_nonce( 'snippen_booking_nonce' );
+		$_GET['event_date']          = $sat_date;
+		$_GET['object_id']           = array( $object_id );
+		$_GET['selected_object_ids'] = array( $object_id );
+		$_GET['block_ids']           = array( $sat_block_id );
+
+		ob_start();
+		try {
+			AvailabilityApi::get_objects_availability();
+		} catch ( \Throwable $e ) {
+			unset( $e );
+		}
+		$avail_out  = ob_get_clean();
+		$avail_data = json_decode( $avail_out, true );
+
+		$this->assertTrue( $avail_data['success'] );
+		$this->assertTrue( $avail_data['data']['supports_cleaning'] );
+		$this->assertTrue( $avail_data['data']['cleaning_available'] );
+		$this->assertEquals( '12:00', $avail_data['data']['cleaning_end_time'] );
+
+		// Submit booking with include_cleaning
+		$login   = 'resident_12clean_' . uniqid();
+		$user_id = wp_insert_user(
+			array(
+				'user_login' => $login,
+				'user_pass'  => 'password',
+				'user_email' => $login . '@example.com',
+				'role'       => 'subscriber',
+			)
+		);
+		update_user_meta( $user_id, 'snippen_phone', '99887766' );
+		wp_set_current_user( $user_id );
+
+		$_POST['nonce']             = wp_create_nonce( 'snippen_booking_nonce' );
+		$_POST['event_date']        = $sat_date;
+		$_POST['booking_object_id'] = array( $object_id );
+		$_POST['block_ids']         = array( $sat_block_id );
+		$_POST['name']              = 'Helgefest 12';
+		$_POST['email']             = 'party12@example.com';
+		$_POST['description']       = 'Fest på lørdag med 12 utvask';
+		$_POST['booking_type']      = 'private';
+		$_POST['include_cleaning']  = '1';
+		$_POST['accept_terms']      = '1';
+
+		ob_start();
+		try {
+			BookingApi::submit_booking();
+		} catch ( \Throwable $e ) {
+			unset( $e );
+		}
+		ob_get_clean();
+
+		$cleaning_booking = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}snippen_bookings WHERE user_id = %d AND booking_date = %s AND booking_type = 'cleaning' LIMIT 1",
+				$user_id,
+				$sun_date
+			)
+		);
+
+		$this->assertNotNull( $cleaning_booking );
+		$attached_blocks = array_map(
+			'intval',
+			$wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT booking_block_id FROM {$wpdb->prefix}snippen_booking_booking_blocks WHERE booking_id = %d",
+					(int) $cleaning_booking->id
+				)
+			)
+		);
+		$this->assertContains( (int) $sun_block_1, $attached_blocks );
+		$this->assertContains( (int) $sun_block_2, $attached_blocks );
+		$this->assertNotContains( (int) $sun_block_3, $attached_blocks );
+	}
+
+	/**
+	 * Test SettingsPage handles saving snippen_cleaning_end_time
+	 */
+	public function test_settings_page_saves_cleaning_end_time() {
+		$settings_page = new SettingsPage();
+		$reflection    = new \ReflectionClass( SettingsPage::class );
+		$method        = $reflection->getMethod( 'handle_request' );
+		$method->setAccessible( true );
+
+		$_POST['snippen_settings_nonce']     = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_cleaning_end_time'] = '10:30';
+
+		ob_start();
+		$method->invoke( $settings_page );
+		ob_get_clean();
+
+		$this->assertEquals( '10:30', get_option( 'snippen_cleaning_end_time' ) );
+
+		// Invalid format falls back to default 11:00
+		$_POST['snippen_cleaning_end_time'] = 'invalid-time';
+		ob_start();
+		$method->invoke( $settings_page );
+		ob_get_clean();
+
+		$this->assertEquals( '11:00', get_option( 'snippen_cleaning_end_time' ) );
 	}
 }

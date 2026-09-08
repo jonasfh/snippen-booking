@@ -453,14 +453,15 @@ The plugin distinguishes between different rental purposes and supports conditio
 ### Booking Types (`booking_type`)
 - **`private`** (default): Standard private rental. Uses standard pricing tiers from selected blocks.
 - **`open`**: Events open for all residents in the community. Completely free (`price = 0`, `payment_status_id = 3` (EXEMPT)), created in `pending` status awaiting explicit admin review/confirmation.
-- **`cleaning`**: Automatic complimentary cleaning reservation created for the following morning (up to 11:00 AM) when requested during evening bookings. Free (`price = 0`, `payment_status_id = 3` (EXEMPT)).
+- **`cleaning`**: Automatic complimentary cleaning reservation created for the following morning (up to a configurable end time, default 11:00 AM) when requested during evening bookings. Free (`price = 0`, `payment_status_id = 3` (EXEMPT)).
 
 ### Next-Day Cleaning Availability Logic
 1. Booking blocks (`wp_snippen_booking_blocks`) include a `supports_cleaning` flag (`TINYINT(1)`).
-2. When a user selects a block with `supports_cleaning = 1`, the availability API (`AvailabilityApi::get_objects_availability`) checks whether all selected objects are free from 00:00 to 11:00 on `selected_date + 1 day`.
-3. If free, blocks falling within that window on the next morning are detected and `cleaning_available: true` is returned to the booking wizard.
-4. The user can toggle `"Inkluder gratis utvask neste formiddag (frem til kl. 11:00)"`.
-5. Upon form submission with `include_cleaning = 1`, `BookingApi::submit_booking` creates both the primary booking and an linked `cleaning` booking for the morning blocks.
+2. The end time for cleaning is configured in WordPress Admin under **Snippen Booking > Innstillinger > Generelt** (`snippen_cleaning_end_time`, default `11:00`).
+3. When a user selects a block with `supports_cleaning = 1`, the availability service (`AvailabilityService::getCleaningBlockIds`) and API (`AvailabilityApi::get_objects_availability`) check whether all selected objects are free up to the configured `cleaning_end_time` on `selected_date + 1 day`.
+4. If free, blocks falling within that window on the next morning are detected and `cleaning_available: true` along with `cleaning_end_time` is returned to the booking wizard.
+5. The user can toggle `"Utvask til neste dag kl <n>"`.
+6. Upon form submission with `include_cleaning = 1`, `BookingApi::submit_booking` creates both the primary booking and a linked `cleaning` booking for the morning blocks.
 
 ### Admin Status & Rejection Reason
 - Administrators can review pending open bookings from **Snippen Booking > Booking Oversikt** (with dedicated filter for `open_pending`).
