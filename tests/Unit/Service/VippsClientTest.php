@@ -75,7 +75,7 @@ class VippsClientTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) use ( &$http_call_count ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					$http_call_count++;
 					$this->assertEquals( 'test-client-id', $args['headers']['client_id'] );
 					$this->assertEquals( 'test-client-secret', $args['headers']['client_secret'] );
@@ -133,7 +133,7 @@ class VippsClientTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
 						'response' => array( 'code' => 401 ),
 						'body'     => wp_json_encode( array( 'error' => 'invalid_client' ) ),
@@ -157,7 +157,7 @@ class VippsClientTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					if ( $args['headers']['client_id'] === 'valid-id' ) {
 						return array(
 							'response' => array( 'code' => 200 ),
@@ -200,7 +200,7 @@ class VippsClientTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) use ( &$created_payload ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
 						'response' => array( 'code' => 200 ),
 						'body'     => wp_json_encode( array( 'access_token' => 'test-token' ) ),
@@ -255,7 +255,7 @@ class VippsClientTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
 						'response' => array( 'code' => 200 ),
 						'body'     => wp_json_encode( array( 'access_token' => 'test-token' ) ),

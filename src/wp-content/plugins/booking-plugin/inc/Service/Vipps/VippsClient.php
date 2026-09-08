@@ -146,19 +146,22 @@ class VippsClient {
 			}
 		}
 
-		$endpoint = $this->get_base_url() . '/accesstoken/v1';
+		$endpoint = $this->get_base_url() . '/accesstoken/get';
 		$headers  = array(
 			'client_id'                 => $this->client_id,
 			'client_secret'             => $this->client_secret,
 			'Ocp-Apim-Subscription-Key' => $this->subscription_key,
 			'Merchant-Serial-Number'    => $this->msn,
+			'Content-Length'            => '0',
 		);
 
 		$response = wp_remote_post(
 			$endpoint,
 			array(
-				'headers' => $headers,
-				'timeout' => 15,
+				'headers'     => $headers,
+				'httpversion' => '1.1',
+				'timeout'     => 15,
+				'body'        => '',
 			)
 		);
 
@@ -228,19 +231,22 @@ class VippsClient {
 			);
 		}
 
-		$endpoint = $client->get_base_url() . '/accesstoken/v1';
+		$endpoint = $client->get_base_url() . '/accesstoken/get';
 		$headers  = array(
 			'client_id'                 => $client->client_id,
 			'client_secret'             => $client->client_secret,
 			'Ocp-Apim-Subscription-Key' => $client->subscription_key,
 			'Merchant-Serial-Number'    => $client->msn,
+			'Content-Length'            => '0',
 		);
 
 		$response = wp_remote_post(
 			$endpoint,
 			array(
-				'headers' => $headers,
-				'timeout' => 15,
+				'headers'     => $headers,
+				'httpversion' => '1.1',
+				'timeout'     => 15,
+				'body'        => '',
 			)
 		);
 
@@ -325,6 +331,7 @@ class VippsClient {
 			$endpoint,
 			array(
 				'headers'     => $headers,
+				'httpversion' => '1.1',
 				'body'        => wp_json_encode( $payment_data ),
 				'timeout'     => 20,
 				'data_format' => 'body',
@@ -356,8 +363,9 @@ class VippsClient {
 		$response = wp_remote_get(
 			$endpoint,
 			array(
-				'headers' => $headers,
-				'timeout' => 15,
+				'headers'     => $headers,
+				'httpversion' => '1.1',
+				'timeout'     => 15,
 			)
 		);
 
@@ -397,6 +405,7 @@ class VippsClient {
 			$endpoint,
 			array(
 				'headers'     => $headers,
+				'httpversion' => '1.1',
 				'body'        => wp_json_encode( $payload ),
 				'timeout'     => 20,
 				'data_format' => 'body',
@@ -431,6 +440,7 @@ class VippsClient {
 			$endpoint,
 			array(
 				'headers'     => $headers,
+				'httpversion' => '1.1',
 				'body'        => wp_json_encode( new \stdClass() ),
 				'timeout'     => 20,
 				'data_format' => 'body',
