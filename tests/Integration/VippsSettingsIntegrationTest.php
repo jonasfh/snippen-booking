@@ -131,7 +131,7 @@ class VippsSettingsIntegrationTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
 						'response' => array( 'code' => 200 ),
 						'body'     => wp_json_encode(
@@ -180,7 +180,7 @@ class VippsSettingsIntegrationTest extends TestCase {
 		add_filter(
 			'pre_http_request',
 			function ( $pre, $args, $url ) {
-				if ( strpos( $url, '/accesstoken/v1' ) !== false ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
 						'response' => array( 'code' => 401 ),
 						'body'     => wp_json_encode(

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.33.1] - 2026-09-08
+- (#312) Rette Vipps autentiseringsendepunkt og påkrev HTTP/1.1:
+  - Rettet OAuth 2.0 token-endepunkt i `VippsClient` fra `/accesstoken/v1` (som returnerte 404 fra Vipps gateway) til Vipps sitt offisielle endepunkt `/accesstoken/get`.
+  - Satt eksplisitt `'httpversion' => '1.1'`, `'Content-Length' => '0'` og tom body på token-forespørsler for å forhindre heng eller avvisning fra Vipps Kestrel/Azure gateway.
+  - Påkrevd `'httpversion' => '1.1'` for samtlige ePayment API v1-kall (`create_payment`, `get_payment`, `capture_payment`, `cancel_payment`).
+  - Oppdatert alle relaterte enhets- og integrasjonstester.
+
 ## [2.33.0] - 2026-09-08
 - (#306) Vipps ePayment API-integrasjon, klienttjeneste og administrasjonsinnstillinger med feature-switch:
   - Introdusert `VippsClient` (`SnippenBooking\Service\Vipps\VippsClient`) for robust kommunikasjon mot Vipps MobilePay moderne ePayment API v1:
