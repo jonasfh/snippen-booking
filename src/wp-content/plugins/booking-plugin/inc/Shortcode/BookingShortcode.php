@@ -225,9 +225,18 @@ class BookingShortcode {
 									<label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0; font-weight: normal;">
 										<input type="checkbox" name="include_cleaning" id="include_cleaning" value="1" style="margin-top: 3px;">
 										<div>
-											<strong style="color: #166534;"><?php esc_html_e( 'Inkluder gratis utvask neste morgen (frem til kl. 11:00)', 'snippen-booking' ); ?></strong>
-											<p style="margin: 2px 0 0 0; color: #15803d; font-size: 0.85em;">
-												<?php esc_html_e( 'Neste formiddag er ledig og kan reserveres vederlagsfritt til utvask.', 'snippen-booking' ); ?>
+											<?php
+											$cleaning_end_time    = get_option( 'snippen_cleaning_end_time', '11:00' );
+											$cleaning_end_display = preg_replace( '/:00$/', '', $cleaning_end_time );
+											/* translators: %s: cleaning end time */
+											$cleaning_label = sprintf( __( 'Utvask til neste dag kl %s', 'snippen-booking' ), $cleaning_end_display );
+											?>
+											<strong style="color: #166534;" id="cleaning-option-label"><?php echo esc_html( $cleaning_label ); ?></strong>
+											<p style="margin: 2px 0 0 0; color: #15803d; font-size: 0.85em;" id="cleaning-option-desc">
+												<?php
+												/* translators: %s: cleaning end time */
+												printf( esc_html__( 'Neste formiddag er ledig og kan reserveres vederlagsfritt til utvask (fram til kl. %s).', 'snippen-booking' ), esc_html( $cleaning_end_display ) );
+												?>
 											</p>
 										</div>
 									</label>

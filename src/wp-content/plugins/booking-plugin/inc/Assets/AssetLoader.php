@@ -44,7 +44,10 @@ class AssetLoader {
 				'admin_nonce'         => wp_create_nonce( 'snippen_admin_nonce' ),
 				'login_nonce'         => wp_create_nonce( 'snippen_login_nonce' ),
 				'bookingHorizonWeeks' => get_option( 'snippen_booking_horizon_weeks', 52 ),
+				'cleaningEndTime'     => get_option( 'snippen_cleaning_end_time', '11:00' ),
 				'strings'             => array(
+					/* translators: %s: cleaning end time e.g. 11:00 or 11 */
+					'cleaningOptionLabel'  => __( 'Utvask til neste dag kl %s', 'snippen-booking' ),
 					'updatingAvailability' => __( 'Oppdaterer tilgjengelighet...', 'snippen-booking' ),
 					'errorLoadingCalendar' => __( 'Kunne ikke laste kalender.', 'snippen-booking' ),
 					'blockedByCleanup'     => __( 'Blokkert av utvasktid', 'snippen-booking' ),

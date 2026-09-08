@@ -347,17 +347,7 @@ class AvailabilityApi {
 			}
 
 			if ( $supports_cleaning_any && ! empty( $selected_object_ids ) ) {
-				$all_blocks      = $block_repo->find_all();
-				$holiday_service = new HolidayService();
-				$is_next_holiday = $holiday_service->isHoliday( $next_date );
-
-				foreach ( $all_blocks as $ab ) {
-					if ( $availability_service->isBlockApplicable( $ab, $next_date, $is_next_holiday ) ) {
-						if ( strtotime( $ab->end_time ) <= strtotime( '11:00:00' ) && strtotime( $ab->start_time ) < strtotime( '11:00:00' ) ) {
-							$cleaning_block_ids[] = (int) $ab->id;
-						}
-					}
-				}
+				$cleaning_block_ids = $availability_service->getCleaningBlockIds( $next_date );
 
 				if ( ! empty( $cleaning_block_ids ) ) {
 					$all_objects_avail = true;
@@ -372,6 +362,11 @@ class AvailabilityApi {
 			}
 		}
 
+		$cleaning_end_time = get_option( 'snippen_cleaning_end_time', '11:00' );
+		if ( empty( $cleaning_end_time ) ) {
+			$cleaning_end_time = '11:00';
+		}
+
 		wp_send_json_success(
 			array(
 				'objects'             => $objects_data,
@@ -384,6 +379,7 @@ class AvailabilityApi {
 				'cleaning_available'  => $cleaning_available,
 				'cleaning_date'       => $next_date,
 				'cleaning_block_ids'  => $cleaning_block_ids,
+				'cleaning_end_time'   => $cleaning_end_time,
 			)
 		);
 	}

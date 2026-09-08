@@ -324,18 +324,7 @@ class BookingApi {
 				}
 
 				if ( $has_supports_cleaning ) {
-					$all_blocks         = $block_repo->find_all();
-					$holiday_service    = new \SnippenBooking\Service\HolidayService();
-					$is_next_holiday    = $holiday_service->isHoliday( $next_date );
-					$cleaning_block_ids = array();
-
-					foreach ( $all_blocks as $ab ) {
-						if ( $availability_service->isBlockApplicable( $ab, $next_date, $is_next_holiday ) ) {
-							if ( strtotime( $ab->end_time ) <= strtotime( '11:00:00' ) && strtotime( $ab->start_time ) < strtotime( '11:00:00' ) ) {
-								$cleaning_block_ids[] = (int) $ab->id;
-							}
-						}
-					}
+					$cleaning_block_ids = $availability_service->getCleaningBlockIds( $next_date );
 
 					if ( ! empty( $cleaning_block_ids ) ) {
 						$cleaning_avail = true;

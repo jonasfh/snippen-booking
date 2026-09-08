@@ -74,6 +74,12 @@ class SettingsPage {
 		$user_cancellation_days = isset( $_POST['snippen_user_cancellation_days'] ) ? intval( $_POST['snippen_user_cancellation_days'] ) : 14;
 		update_option( 'snippen_user_cancellation_days', $user_cancellation_days );
 
+		$cleaning_end_time = isset( $_POST['snippen_cleaning_end_time'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_cleaning_end_time'] ) ) : '11:00';
+		if ( ! preg_match( '/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $cleaning_end_time ) ) {
+			$cleaning_end_time = '11:00';
+		}
+		update_option( 'snippen_cleaning_end_time', $cleaning_end_time );
+
 		// Save Payment Settings
 		$payment_bank_account = isset( $_POST['snippen_payment_bank_account'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_bank_account'] ) ) : '';
 		update_option( 'snippen_payment_bank_account', $payment_bank_account );
@@ -476,6 +482,16 @@ class SettingsPage {
 		echo '<label for="snippen_user_cancellation_days" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Frist for avbestilling (dager før booking start)', 'snippen-booking' ) . '</label>';
 		echo '<input type="number" name="snippen_user_cancellation_days" id="snippen_user_cancellation_days" value="' . esc_attr( $user_cancellation_days ) . '" class="small-text" min="0">';
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Antall dager før booking start at bruker kan slette egne ubekreftede og ubetalte bookinger. Standard er 14 dager.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		$cleaning_end_time = get_option( 'snippen_cleaning_end_time', '11:00' );
+		if ( empty( $cleaning_end_time ) ) {
+			$cleaning_end_time = '11:00';
+		}
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_cleaning_end_time" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Varighet for utvask neste dag (sluttidspunkt)', 'snippen-booking' ) . '</label>';
+		echo '<input type="time" name="snippen_cleaning_end_time" id="snippen_cleaning_end_time" value="' . esc_attr( $cleaning_end_time ) . '" class="small-text" style="min-width:120px;">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Klokkeslett neste formiddag som utvask-reservasjonen strekker seg fram til (f.eks. 11:00). Standard er 11:00.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="background:#fff1f2; border:1px solid #fecdd3; padding:16px; border-radius:8px; margin-top:20px;">';

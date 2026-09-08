@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.34.0] - 2026-09-08
+- (#314) Konfigurerbar varighet for utvask og frontend-valg i bookingskjema:
+  - Introdusert innstilling for `snippen_cleaning_end_time` (standard `11:00`) under **Generelt** i admininnstillingene (`SettingsPage.php`), som styrer hvor lenge utvask neste dag varer.
+  - Etablert `AvailabilityService::getCleaningBlockIds()` for dynamisk oppslag av relevante tidsblokker neste formiddag basert på den konfigurerte sluttiden.
+  - Oppdatert `AvailabilityApi` og `BookingApi` til å benytte konfigurert sluttid for å evaluere ledighet og opprette den koblede utvask-reservasjonen.
+  - Oppdatert bookingskjemaet (`BookingShortcode.php` og `booking.js`) med avkrysningsboks for `[ x ] Utvask til neste dag kl <n>`, som dynamisk viser konfigurert tidspunkt og kun vises dersom neste formiddag er ledig.
+  - Tilpasset hjelpetekster i adminpanelet (`BookingBlocksPage.php`) for bookingblokker som støtter utvask.
+
 ## [2.33.1] - 2026-09-08
 - (#312) Rette Vipps autentiseringsendepunkt og påkrev HTTP/1.1:
   - Rettet OAuth 2.0 token-endepunkt i `VippsClient` fra `/accesstoken/v1` (som returnerte 404 fra Vipps gateway) til Vipps sitt offisielle endepunkt `/accesstoken/get`.

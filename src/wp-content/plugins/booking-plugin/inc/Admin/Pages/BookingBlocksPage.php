@@ -444,8 +444,14 @@ class BookingBlocksPage {
 
 		echo '<div class="snippen-form-group">';
 		$supports_cleaning_val = $block && ! empty( $block->supports_cleaning );
-		echo '<label><input type="checkbox" name="supports_cleaning" id="supports_cleaning" value="1" ' . checked( $supports_cleaning_val, true, false ) . '> ' . esc_html__( 'Støtter gratis utvask neste morgen (frem til kl. 11:00)', 'snippen-booking' ) . '</label>';
-		echo '<p class="description">' . esc_html__( 'Når aktivert, vil kunder som booker denne blokken få mulighet til å inkludere gratis utvask neste morgen dersom neste formiddag er ledig.', 'snippen-booking' ) . '</p>';
+		$cleaning_end_time     = get_option( 'snippen_cleaning_end_time', '11:00' );
+		$cleaning_end_disp     = preg_replace( '/:00$/', '', $cleaning_end_time );
+		/* translators: %s: cleaning end time */
+		$supports_label = sprintf( __( 'Støtter gratis utvask neste morgen (frem til kl. %s)', 'snippen-booking' ), $cleaning_end_disp );
+		/* translators: %s: cleaning end time */
+		$supports_desc = sprintf( __( 'Når aktivert, vil kunder som booker denne blokken få mulighet til å inkludere gratis utvask neste morgen dersom neste formiddag er ledig fram til kl. %s.', 'snippen-booking' ), $cleaning_end_disp );
+		echo '<label><input type="checkbox" name="supports_cleaning" id="supports_cleaning" value="1" ' . checked( $supports_cleaning_val, true, false ) . '> ' . esc_html( $supports_label ) . '</label>';
+		echo '<p class="description">' . esc_html( $supports_desc ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group">';

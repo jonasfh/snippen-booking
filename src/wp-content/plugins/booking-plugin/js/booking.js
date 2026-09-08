@@ -525,6 +525,11 @@ jQuery(document).ready(function ($) {
                     }
 
                     if (response.data.cleaning_available) {
+                        var rawEndTime = response.data.cleaning_end_time || (typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.cleaningEndTime) || '11:00';
+                        var timeDisplay = rawEndTime.replace(/:00$/, '');
+                        var labelTemplate = (typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.cleaningOptionLabel) || 'Utvask til neste dag kl %s';
+                        var labelText = labelTemplate.replace('%s', timeDisplay);
+                        $('#cleaning-option-label').text(labelText);
                         $('#cleaning-option-container').slideDown(200);
                     } else {
                         $('#cleaning-option-container').slideUp(200);
