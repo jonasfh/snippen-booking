@@ -28,8 +28,14 @@ To limit the form to a specific object or multiple objects, you can pass the `ob
 
 When multiple objects are available or selected, only time slots marked as "delt" (shared) will be available in this mode.
 
-### Custom Instructions / Wash Time (Egendefinert melding)
-Booking blocks and time slots can be configured in the WordPress Admin dashboard under **Snippen Booking > Bookingblokker** with the **Egendefinert melding / instruksjoner** text field (e.g. "Inkluderer utvask neste morgen frem til kl. 11:00").
+### Booking Types & Free Next-Day Cleaning (Bookingtyper og utvask)
+The booking system supports three distinct booking types:
+- **Privat arrangement (`private`)**: Standard private rental that calculates price according to configured block rates.
+- **Åpen for sameiet (`open`)**: Community-wide events open to all residents. These bookings are free (`price = 0`, `EXEMPT`), but require administrator approval (`status = 'pending'`). Administrators can confirm the booking or reject it with an optional explanation message (`rejection_reason`).
+- **Utvask (`cleaning`)**: For evening bookings where the time block is marked with **Støtter utvask** (`supports_cleaning = 1`), residents can optionally request free cleaning time until 11:00 AM the next morning. If the venue is available the following morning up to 11:00 AM, a checkbox appears in the booking wizard: *"Inkluder gratis utvask neste formiddag (frem til kl. 11:00)"*. Checking this automatically creates a linked cleaning reservation at no extra charge.
+
+### Custom Instructions (Egendefinert melding)
+Booking blocks and time slots can be configured in the WordPress Admin dashboard under **Snippen Booking > Bookingblokker** with the **Egendefinert melding / instruksjoner** text field.
 When configured for a time slot, users booking that slot are informed directly in the booking wizard and summary confirmation box. Bookings with custom instructions are also flagged with an **Info** badge in the admin bookings overview.
 
 ### User Account Confirmation

@@ -189,6 +189,7 @@ class BookingRepository {
 			'blocks'               => $blocks,
 			'price'                => isset( $data['price'] ) ? (float) $data['price'] : 0.0,
 			'discount_amount'      => isset( $data['discount_amount'] ) ? (float) $data['discount_amount'] : 0.0,
+			'booking_type'         => isset( $data['booking_type'] ) ? $data['booking_type'] : 'private',
 			'created_at'           => current_time( 'mysql' ),
 		);
 	}

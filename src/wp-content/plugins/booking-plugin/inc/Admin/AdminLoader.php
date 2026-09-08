@@ -273,6 +273,7 @@ class AdminLoader {
 				'strings' => array(
 					'confirmDelete'        => __( 'Er du sikker på at du vil slette dette?', 'snippen-booking' ),
 					'confirmCancel'        => __( 'Vil du virkelig avbryte denne bookingen?', 'snippen-booking' ),
+					'rejectionPrompt'      => __( 'Oppgi eventuell begrunnelse for avslag / avbrudd til beboeren (valgfritt):', 'snippen-booking' ),
 					'error'                => __( 'Det oppsto en feil. Prøv igjen.', 'snippen-booking' ),
 					'resetFilters'         => __( 'Rens alle filtre', 'snippen-booking' ),
 					'showing'              => __( 'Viser', 'snippen-booking' ),

@@ -96,6 +96,9 @@ class BookingBlockRepository {
 		if ( isset( $data['custom_instructions'] ) ) {
 			$data['custom_instructions'] = sanitize_text_field( $data['custom_instructions'] );
 		}
+		if ( isset( $data['supports_cleaning'] ) ) {
+			$data['supports_cleaning'] = ! empty( $data['supports_cleaning'] ) ? 1 : 0;
+		}
 
 		if ( $id ) {
 			$wpdb->update( $table, $data, array( 'id' => $id ) );

@@ -443,6 +443,27 @@ The plugin includes a manual payment tracking system, allowing users to view pay
 - **`SnippenBooking\Api\UpdatePaymentStatusApi`**: AJAX endpoint (`snippen_update_payment_status`) for administrators (`manage_bookings`) to update payment status and notes.
 - **`SnippenBooking\Database\Migrations\Migration_2_6_0`**: Database migration creating table `wp_snippen_payment_statuses` and adding payment metadata columns to `wp_snippen_bookings`.
 
+## Booking Types & Next-Day Cleaning Architecture
+
+The plugin distinguishes between different rental purposes and supports conditional next-day cleaning reservations:
+
+### Booking Types (`booking_type`)
+- **`private`** (default): Standard private rental. Uses standard pricing tiers from selected blocks.
+- **`open`**: Events open for all residents in the community. Completely free (`price = 0`, `payment_status_id = 3` (EXEMPT)), created in `pending` status awaiting explicit admin review/confirmation.
+- **`cleaning`**: Automatic complimentary cleaning reservation created for the following morning (up to 11:00 AM) when requested during evening bookings. Free (`price = 0`, `payment_status_id = 3` (EXEMPT)).
+
+### Next-Day Cleaning Availability Logic
+1. Booking blocks (`wp_snippen_booking_blocks`) include a `supports_cleaning` flag (`TINYINT(1)`).
+2. When a user selects a block with `supports_cleaning = 1`, the availability API (`AvailabilityApi::get_objects_availability`) checks whether all selected objects are free from 00:00 to 11:00 on `selected_date + 1 day`.
+3. If free, blocks falling within that window on the next morning are detected and `cleaning_available: true` is returned to the booking wizard.
+4. The user can toggle `"Inkluder gratis utvask neste formiddag (frem til kl. 11:00)"`.
+5. Upon form submission with `include_cleaning = 1`, `BookingApi::submit_booking` creates both the primary booking and an linked `cleaning` booking for the morning blocks.
+
+### Admin Status & Rejection Reason
+- Administrators can review pending open bookings from **Snippen Booking > Booking Oversikt** (with dedicated filter for `open_pending`).
+- When cancelling or rejecting a booking, administrators can provide an optional explanation message (`rejection_reason`), which is stored in `wp_snippen_bookings.rejection_reason` and displayed in the booking details card.
+- Database changes are managed by `SnippenBooking\Database\Migrations\Migration_2_32_0`.
+
 ## SMS Gateway REST API Synchronization
 
 The plugin integrates with the `snippen-sms-service` daemon via REST API endpoints under `/wp-json/snippen/v1/sms`.

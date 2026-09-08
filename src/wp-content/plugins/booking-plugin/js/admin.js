@@ -62,8 +62,16 @@
                 $badges = $bookingRow.find('td[data-label="Status"] .snippen-badge');
             }
 
-            if (newStatus === 'cancelled' && !confirm(snippenAdmin.strings.confirmCancel)) {
-                return;
+            let rejectionReason = '';
+            if (newStatus === 'cancelled') {
+                if (!confirm(snippenAdmin.strings.confirmCancel)) {
+                    return;
+                }
+                const promptMsg = snippenAdmin.strings.rejectionPrompt || 'Oppgi eventuell begrunnelse for avslag / avbrudd til beboeren (valgfritt):';
+                const enteredReason = prompt(promptMsg);
+                if (enteredReason !== null && enteredReason.trim() !== '') {
+                    rejectionReason = enteredReason.trim();
+                }
             }
 
             $btn.prop('disabled', true).css('opacity', '0.5');
@@ -72,7 +80,8 @@
                 action: 'snippen_update_booking_status',
                 nonce: snippenAdmin.nonce,
                 id: id,
-                status: newStatus
+                status: newStatus,
+                rejection_reason: rejectionReason
             }, function(response) {
                 if (response.success) {
                     // Update UI

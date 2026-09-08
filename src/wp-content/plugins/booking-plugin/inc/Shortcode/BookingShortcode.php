@@ -196,6 +196,43 @@ class BookingShortcode {
 						<input type="hidden" name="user_id" id="selected-user-id" value="<?php echo esc_attr( get_current_user_id() ); ?>">
 						
 						<div class="form-grid">
+							<div class="form-group full-width booking-type-group">
+								<label class="booking-type-main-label" style="font-weight:600; margin-bottom:8px; display:block;"><?php esc_html_e( 'Type arrangement', 'snippen-booking' ); ?></label>
+								<div class="booking-type-cards">
+									<label class="booking-type-card selected" for="booking_type_private">
+										<input type="radio" name="booking_type" id="booking_type_private" value="private" checked>
+										<div class="booking-type-card-text">
+											<span class="booking-type-title"><?php esc_html_e( 'Privat arrangement', 'snippen-booking' ); ?></span>
+											<span class="booking-type-desc"><?php esc_html_e( 'Kun for meg og mine gjester – krever leiebetaling.', 'snippen-booking' ); ?></span>
+										</div>
+									</label>
+									<label class="booking-type-card" for="booking_type_open">
+										<input type="radio" name="booking_type" id="booking_type_open" value="open">
+										<div class="booking-type-card-text">
+											<span class="booking-type-title"><?php esc_html_e( 'Åpent arrangement for sameiet', 'snippen-booking' ); ?></span>
+											<span class="booking-type-desc"><?php esc_html_e( 'Åpent for alle beboere (f.eks. felleskaffe, dugnad, brettspillkveld) – gratis, krever styregodkjenning.', 'snippen-booking' ); ?></span>
+										</div>
+									</label>
+								</div>
+								<div id="open-booking-notice" class="open-booking-notice" style="display: none; margin-top: 10px; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; color: #1e40af; font-size: 0.9em;">
+									<span style="font-weight: 700;">ℹ️ <?php esc_html_e( 'Styregodkjenning:', 'snippen-booking' ); ?></span>
+									<span><?php esc_html_e( 'Åpne arrangementer må forhåndsgodkjennes av styret/administrator. Dersom reservasjonen avslås, avbrytes bookingen og du kan eventuelt booke på nytt som en privat reservasjon.', 'snippen-booking' ); ?></span>
+								</div>
+							</div>
+
+							<div class="form-group full-width cleaning-option-group" id="cleaning-option-container" style="display: none;">
+								<div class="cleaning-option-card" style="padding: 12px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+									<label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0; font-weight: normal;">
+										<input type="checkbox" name="include_cleaning" id="include_cleaning" value="1" style="margin-top: 3px;">
+										<div>
+											<strong style="color: #166534;"><?php esc_html_e( 'Inkluder gratis utvask neste morgen (frem til kl. 11:00)', 'snippen-booking' ); ?></strong>
+											<p style="margin: 2px 0 0 0; color: #15803d; font-size: 0.85em;">
+												<?php esc_html_e( 'Neste formiddag er ledig og kan reserveres vederlagsfritt til utvask.', 'snippen-booking' ); ?>
+											</p>
+										</div>
+									</label>
+								</div>
+							</div>
 							<?php if ( Capabilities::can_manage_bookings() ) : ?>
 							<div class="form-group full-width admin-only-field">
 								<label for="user-search"><?php esc_html_e( 'Søk etter beboer (Admin)', 'snippen-booking' ); ?></label>

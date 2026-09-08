@@ -159,23 +159,39 @@ class BookingApi {
 				$discount_rule_id = $rule->id;
 			}
 
+			$booking_type = isset( $_POST['booking_type'] ) ? sanitize_text_field( $_POST['booking_type'] ) : 'private';
+			if ( ! in_array( $booking_type, array( 'private', 'open', 'cleaning' ), true ) ) {
+				$booking_type = 'private';
+			}
+
+			if ( 'open' === $booking_type || 'cleaning' === $booking_type ) {
+				$final_price       = 0.0;
+				$discount_amount   = 0.0;
+				$discount_rule_id  = null;
+				$payment_status_id = 3; // EXEMPT
+			} else {
+				$payment_status_id = 1; // UNPAID
+			}
+
 			$uuid = wp_generate_uuid4();
 
 			$booking_data = array(
-				'uuid'             => $uuid,
-				'booking_date'     => $booking_date,
-				'user_id'          => $booking_user_id,
-				'slot_id'          => $slot_id,
-				'customer_name'    => $customer_name,
-				'customer_email'   => $customer_email,
-				'customer_phone'   => $customer_phone,
-				'description'      => $description,
-				'price'            => $final_price,
-				'discount_amount'  => $discount_amount,
-				'discount_rule_id' => $discount_rule_id,
-				'status'           => 'pending',
-				'created_at'       => current_time( 'mysql' ),
-				'modified_at'      => current_time( 'mysql' ),
+				'uuid'              => $uuid,
+				'booking_date'      => $booking_date,
+				'user_id'           => $booking_user_id,
+				'slot_id'           => $slot_id,
+				'customer_name'     => $customer_name,
+				'customer_email'    => $customer_email,
+				'customer_phone'    => $customer_phone,
+				'description'       => $description,
+				'booking_type'      => $booking_type,
+				'price'             => $final_price,
+				'discount_amount'   => $discount_amount,
+				'discount_rule_id'  => $discount_rule_id,
+				'payment_status_id' => $payment_status_id,
+				'status'            => 'pending',
+				'created_at'        => current_time( 'mysql' ),
+				'modified_at'       => current_time( 'mysql' ),
 			);
 
 			$booking_repository = new BookingRepository();
@@ -242,38 +258,118 @@ class BookingApi {
 		$customer_email = sanitize_email( $_POST['email'] ?? '' );
 		$description    = sanitize_textarea_field( $_POST['description'] ?? '' );
 
-		// Calculate total price
-		$pricing_service = new PricingService();
-		$base_price      = $pricing_service->getPrice( $booking_object_ids, $block_ids, $booking_date );
-		if ( $base_price === null ) {
-			$base_price = 0.0;
+		$booking_type = isset( $_POST['booking_type'] ) ? sanitize_text_field( $_POST['booking_type'] ) : 'private';
+		if ( ! in_array( $booking_type, array( 'private', 'open', 'cleaning' ), true ) ) {
+			$booking_type = 'private';
 		}
 
-		$discount_service = new DiscountService();
-		$discount_info    = $discount_service->applyDiscount( $base_price, $booking_object_ids, $block_ids, $booking_date );
+		if ( 'open' === $booking_type || 'cleaning' === $booking_type ) {
+			$final_price       = 0.0;
+			$discount_amount   = 0.0;
+			$discount_rule_id  = null;
+			$payment_status_id = 3; // EXEMPT
+		} else {
+			// Calculate total price
+			$pricing_service = new PricingService();
+			$base_price      = $pricing_service->getPrice( $booking_object_ids, $block_ids, $booking_date );
+			if ( $base_price === null ) {
+				$base_price = 0.0;
+			}
+
+			$discount_service  = new DiscountService();
+			$discount_info     = $discount_service->applyDiscount( $base_price, $booking_object_ids, $block_ids, $booking_date );
+			$final_price       = $discount_info['final_price'];
+			$discount_amount   = $discount_info['discount_amount'];
+			$discount_rule_id  = $discount_info['discount_rule'] ? $discount_info['discount_rule']->id : null;
+			$payment_status_id = 1; // UNPAID
+		}
 
 		$uuid = wp_generate_uuid4();
 
 		$booking_data = array(
-			'uuid'             => $uuid,
-			'booking_date'     => $booking_date,
-			'user_id'          => $booking_user_id,
-			'customer_name'    => $customer_name,
-			'customer_email'   => $customer_email,
-			'customer_phone'   => $customer_phone,
-			'description'      => $description,
-			'price'            => $discount_info['final_price'],
-			'discount_amount'  => $discount_info['discount_amount'],
-			'discount_rule_id' => $discount_info['discount_rule'] ? $discount_info['discount_rule']->id : null,
-			'status'           => 'pending',
-			'created_at'       => current_time( 'mysql' ),
-			'modified_at'      => current_time( 'mysql' ),
+			'uuid'              => $uuid,
+			'booking_date'      => $booking_date,
+			'user_id'           => $booking_user_id,
+			'customer_name'     => $customer_name,
+			'customer_email'    => $customer_email,
+			'customer_phone'    => $customer_phone,
+			'description'       => $description,
+			'booking_type'      => $booking_type,
+			'price'             => $final_price,
+			'discount_amount'   => $discount_amount,
+			'discount_rule_id'  => $discount_rule_id,
+			'payment_status_id' => $payment_status_id,
+			'status'            => 'pending',
+			'created_at'        => current_time( 'mysql' ),
+			'modified_at'       => current_time( 'mysql' ),
 		);
 
 		$booking_repository = new BookingRepository();
 		$booking_id         = $booking_repository->create( $booking_data, $booking_object_ids, $block_ids );
 
 		if ( $booking_id ) {
+			// Handle optional included cleaning for next day
+			$include_cleaning = ! empty( $_POST['include_cleaning'] );
+			if ( $include_cleaning && 'cleaning' !== $booking_type ) {
+				$next_date  = date( 'Y-m-d', strtotime( $booking_date . ' + 1 day' ) );
+				$block_repo = new \SnippenBooking\Database\Repository\BookingBlockRepository();
+				$blocks     = $block_repo->find_by_ids( $block_ids );
+
+				$has_supports_cleaning = false;
+				foreach ( $blocks as $b ) {
+					if ( ! empty( $b->supports_cleaning ) ) {
+						$has_supports_cleaning = true;
+						break;
+					}
+				}
+
+				if ( $has_supports_cleaning ) {
+					$all_blocks         = $block_repo->find_all();
+					$holiday_service    = new \SnippenBooking\Service\HolidayService();
+					$is_next_holiday    = $holiday_service->isHoliday( $next_date );
+					$cleaning_block_ids = array();
+
+					foreach ( $all_blocks as $ab ) {
+						if ( $availability_service->isBlockApplicable( $ab, $next_date, $is_next_holiday ) ) {
+							if ( strtotime( $ab->end_time ) <= strtotime( '11:00:00' ) && strtotime( $ab->start_time ) < strtotime( '11:00:00' ) ) {
+								$cleaning_block_ids[] = (int) $ab->id;
+							}
+						}
+					}
+
+					if ( ! empty( $cleaning_block_ids ) ) {
+						$cleaning_avail = true;
+						foreach ( $booking_object_ids as $so_id ) {
+							if ( ! $availability_service->areBlocksAvailable( $so_id, $next_date, $cleaning_block_ids ) ) {
+								$cleaning_avail = false;
+								break;
+							}
+						}
+
+						if ( $cleaning_avail ) {
+							$cleaning_data = array(
+								'uuid'              => wp_generate_uuid4(),
+								'booking_date'      => $next_date,
+								'user_id'           => $booking_user_id,
+								'customer_name'     => $customer_name,
+								'customer_email'    => $customer_email,
+								'customer_phone'    => $customer_phone,
+								/* translators: %d: booking ID */
+								'description'       => sprintf( __( 'Utvask etter booking #%d', 'snippen-booking' ), $booking_id ),
+								'booking_type'      => 'cleaning',
+								'price'             => 0.0,
+								'discount_amount'   => 0.0,
+								'discount_rule_id'  => null,
+								'payment_status_id' => 3, // EXEMPT
+								'status'            => 'pending',
+								'created_at'        => current_time( 'mysql' ),
+								'modified_at'       => current_time( 'mysql' ),
+							);
+							$booking_repository->create( $cleaning_data, $booking_object_ids, $cleaning_block_ids );
+						}
+					}
+				}
+			}
 			$dispatch_method = get_option( 'snippen_notification_dispatch_method', 'async' );
 
 			if ( 'sync' === $dispatch_method ) {
