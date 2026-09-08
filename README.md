@@ -78,6 +78,14 @@ Automated payment reminders are sent to customers with unpaid bookings via WP-Cr
 - **Exemptions**: Bookings with uploaded payment receipts (`payment_receipt_attachment_id`), settled/paid statuses (`PAID` or `EXEMPT`), or cancelled/deleted statuses are automatically exempt. Custom exemption rules can be programmatically added via the filter `snippen_booking_should_send_payment_reminder`.
 - **Idempotency**: All dispatched reminders are recorded in the database table `wp_snippen_booking_payment_reminders` with unique `(booking_id, days_before)` tracking. Re-running WP-Cron multiple times a day will never resend a reminder for an interval step already sent.
 
+### Vipps MobilePay ePayment API
+The plugin integrates with Vipps MobilePay modern ePayment API v1 to enable direct mobile payments during booking.
+- **Admin Configuration**: Located in **Snippen Booking > Innstillinger** under the **Betaling** tab.
+- **Feature-Switch Controlled**: Toggle `snippen_vipps_enabled` (`yes`/`no`, defaults to `no`). When disabled, manual bank transfer and receipt uploads remain 100% active as the fallback.
+- **Environment Toggle**: Switch seamlessly between `Test / Sandbox (MT)` (`https://apitest.vipps.no`) and `Produksjon` (`https://api.vipps.no`).
+- **Connection Test**: Includes a built-in «Test tilkobling mot Vipps» button with immediate feedback verifying OAuth 2.0 access token retrieval.
+- **Token Caching**: OAuth 2.0 access tokens are retrieved from Vipps and cached in WordPress transients based on `expires_in` with safety buffers.
+
 ### Communication History (Lagre brukerkommunikasjon)
 All SMS and Email messages sent to users and administrators (including automatic booking confirmations, account activation codes, admin alert notifications, and manual messages sent via the Booking Assistant) are automatically logged in the database with recipient details, timestamps, delivery channel, and `user_id`/`booking_id` associations.
 Administrators can inspect full communication logs directly for any booking by expanding the details row in the **Snippen Booking > Booking Oversikt** admin table.

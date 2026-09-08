@@ -30,6 +30,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
         global $wpdb;
         
         // Prevent translations from loading during tests to keep original Norwegian strings for assertions
+        add_filter( 'override_load_textdomain', '__return_true' );
         unload_textdomain('snippen-booking');
         
         if (function_exists('wp_cache_flush')) {
