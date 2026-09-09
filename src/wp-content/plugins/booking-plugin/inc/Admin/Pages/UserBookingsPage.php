@@ -378,9 +378,10 @@ class UserBookingsPage {
 	 */
 	private function get_status_label( $status ) {
 		$labels = array(
-			'pending'   => __( 'Venter', 'snippen-booking' ),
-			'confirmed' => __( 'Bekreftet', 'snippen-booking' ),
-			'cancelled' => __( 'Avbrutt', 'snippen-booking' ),
+			'pending'         => __( 'Venter', 'snippen-booking' ),
+			'pending_payment' => __( 'Venter på betaling', 'snippen-booking' ),
+			'confirmed'       => __( 'Bekreftet', 'snippen-booking' ),
+			'cancelled'       => __( 'Avbrutt', 'snippen-booking' ),
 		);
 		return isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
 	}

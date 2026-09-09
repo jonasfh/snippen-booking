@@ -73,16 +73,18 @@ class VippsService {
 	/**
 	 * Build return URL for customer after completing Vipps flow.
 	 *
-	 * @param string $uuid Booking UUID.
+	 * @param string      $uuid     Booking UUID.
+	 * @param string|null $base_url Optional base URL (defaults to home_url('/')).
 	 * @return string Full return URL.
 	 */
-	public static function build_return_url( $uuid ) {
+	public static function build_return_url( $uuid, $base_url = null ) {
+		$base = ! empty( $base_url ) ? $base_url : home_url( '/' );
 		return add_query_arg(
 			array(
 				'booking_uuid'     => sanitize_text_field( $uuid ),
 				'payment_provider' => 'vipps',
 			),
-			home_url( '/' )
+			$base
 		);
 	}
 
@@ -93,9 +95,10 @@ class VippsService {
 	 * @param float|int|string $amount_nok  Amount in NOK.
 	 * @param string|null      $phone       Optional customer phone number.
 	 * @param string|null      $description Optional payment description.
+	 * @param string|null      $return_url  Optional custom return URL.
 	 * @return array|\WP_Error Result containing reference and redirectUrl or \WP_Error on failure.
 	 */
-	public function create_booking_payment( $booking, $amount_nok, $phone = null, $description = null ) {
+	public function create_booking_payment( $booking, $amount_nok, $phone = null, $description = null, $return_url = null ) {
 		if ( empty( $booking ) || empty( $booking->id ) || empty( $booking->uuid ) ) {
 			return new \WP_Error( 'invalid_booking', __( 'Ugyldig bookingobjekt for Vipps-betaling.', 'snippen-booking' ) );
 		}
@@ -117,7 +120,7 @@ class VippsService {
 			),
 			'reference'          => $reference,
 			'userFlow'           => 'WEB_REDIRECT',
-			'returnUrl'          => self::build_return_url( $booking->uuid ),
+			'returnUrl'          => $return_url ?: self::build_return_url( $booking->uuid ),
 			'paymentDescription' => $description ?: sprintf(
 				/* translators: %d: Booking ID */
 				__( 'Booking #%d Snippen Samfunnshus', 'snippen-booking' ),
@@ -171,5 +174,55 @@ class VippsService {
 	 */
 	public function cancel_booking_payment( $reference ) {
 		return $this->client->cancel_payment( $reference );
+	}
+
+	/**
+	 * Cancel bookings that have had status 'pending_payment' for longer than specified minutes.
+	 *
+	 * @param int $older_than_minutes Time limit in minutes (default 30).
+	 * @return int Number of cancelled bookings.
+	 */
+	public function cleanup_expired_pending_bookings( int $older_than_minutes = 30 ): int {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		// Compare using MySQL datetime format
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $older_than_minutes * 60 ) );
+
+		$expired = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, uuid, payment_notes FROM $table WHERE status = 'pending_payment' AND created_at < %s AND deleted_at IS NULL",
+				$cutoff
+			)
+		);
+
+		if ( empty( $expired ) ) {
+			return 0;
+		}
+
+		$cancelled_count  = 0;
+		$rejection_reason = __( 'Utløpt: Vipps-betaling ble ikke fullført innen 30 minutter.', 'snippen-booking' );
+
+		foreach ( $expired as $booking ) {
+			if ( ! empty( $booking->payment_notes ) && preg_match( '/snippen-\d+-\d+-\d+/', $booking->payment_notes, $matches ) ) {
+				$this->cancel_booking_payment( $matches[0] );
+			}
+
+			$updated = $wpdb->update(
+				$table,
+				array(
+					'status'           => 'cancelled',
+					'rejection_reason' => $rejection_reason,
+					'modified_at'      => current_time( 'mysql' ),
+				),
+				array( 'id' => $booking->id )
+			);
+
+			if ( false !== $updated ) {
+				++$cancelled_count;
+			}
+		}
+
+		return $cancelled_count;
 	}
 }

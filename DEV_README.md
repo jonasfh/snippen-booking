@@ -580,6 +580,44 @@ The container entrypoint (`.devcontainer/docker-entrypoint.sh` / `Dockerfile`) s
 | `INIT_DEMO` / `AUTO_DEMO` | Run full `composer demo` automatically on container start | `false` |
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PWD` | Database connection details | `localhost` / `wpuser` / `wppass` |
 
+## Vipps MobilePay Integration Architecture
+
+The plugin integrates with Vipps MobilePay modern ePayment API v1 for direct digital checkout:
+
+```
+┌─────────────────────────────────┐        1. POST /submit_booking       ┌─────────────────────────────────┐
+│                                 ├─────────────────────────────────────►│  BookingApi                     │
+│  User Browser / Wizard          │                                      │  - status = 'pending_payment'   │
+│  (booking.js)                   │◄─────────────────────────────────────┤  - VippsService::create_payment │
+│                                 │      2. redirect_url                 └────────────────┬────────────────┘
+└───────────────┬─────────────────┘                                                       │
+                │                                                                         │
+                │ 3. Redirect to Vipps                                                    ▼
+                ▼                                                        ┌─────────────────────────────────┐
+┌─────────────────────────────────┐                                      │  Vipps MobilePay API (v1)       │
+│  Vipps Checkout Portal          │                                      │  (apitest.vipps.no / api.vipps) │
+│  - User approves payment        │                                      └────────────────┬────────────────┘
+└───────────────┬─────────────────┘                                                       │
+                │                                                                         │ 5. POST /webhook
+                │ 4. Return to shortcode                                                  ▼
+                ▼                                                        ┌─────────────────────────────────┐
+┌─────────────────────────────────┐                                      │  VippsWebhookApi                │
+│  BookingShortcode               │                                      │  - POST /vipps/webhook          │
+│  - Verify/capture on return     │                                      │  - Capture & confirm booking    │
+│  - Render receipt / notice      │                                      │  - Send alerts (email/SMS)      │
+└─────────────────────────────────┘                                      └─────────────────────────────────┘
+```
+
+### Endpoints & Handlers
+1. **`POST /wp-json/snippen/v1/vipps/webhook`**: Public REST endpoint for receiving asynchronous webhook events from Vipps:
+   - `epayments.payment.authorized`: Automatically captures the payment via `VippsClient::capture_payment()`, updates the booking to `confirmed` and `payment_status_id = 2` (PAID), and triggers customer & admin notifications. Idempotent against repeat deliveries.
+   - `epayments.payment.terminated`: Updates booking status to `cancelled` and records the termination event in `payment_notes`.
+2. **Return URL Handling (`BookingShortcode.php`)**: When the user returns from Vipps with `booking_uuid` and `payment_provider=vipps`, the shortcode automatically checks the payment status, triggers capture if still pending authorization, and displays a user-friendly receipt.
+3. **WP-Cron Cleanup (`snippen_cleanup_unpaid_vipps_bookings`)**:
+   - Interval: Every 15 minutes (`every_fifteen_minutes`).
+   - Handler: `Plugin::handle_cleanup_unpaid_vipps_bookings()` -> `VippsService::cleanup_expired_pending_bookings(30)`.
+   - Action: Any booking with `status = 'pending_payment'` created more than 30 minutes ago is cancelled, cancelling the payment in Vipps and freeing the calendar slot for other tenants.
+
 ## Modal & Overlay Architecture
 
 All modal and overlay dialogs across the plugin (direct-link booking UUID popup, calendar booking info modal, rental terms iframe modal, and admin notification dispatch dialog) adhere to standard mobile-friendly and responsive rules:

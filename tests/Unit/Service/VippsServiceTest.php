@@ -22,6 +22,19 @@ class VippsServiceTest extends TestCase {
 	protected $requires_db = false;
 
 	/**
+	 * Tear down after each test
+	 */
+	protected function tearDown(): void {
+		delete_option( 'snippen_vipps_enabled' );
+		delete_option( 'snippen_vipps_environment' );
+		delete_option( 'snippen_vipps_client_id' );
+		delete_option( 'snippen_vipps_client_secret' );
+		delete_option( 'snippen_vipps_subscription_key' );
+		delete_option( 'snippen_vipps_msn' );
+		parent::tearDown();
+	}
+
+	/**
 	 * Test format_amount_to_ore with various inputs
 	 */
 	public function test_format_amount_to_ore() {

@@ -137,10 +137,10 @@ class BookingMismatchTest extends TestCase {
         try {
             BookingApi::submit_booking();
             $json = ob_get_clean();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $json = ob_get_clean();
             $response = json_decode($json, true);
-            $this->assertTrue($response['success'], 'Expected booking to succeed.');
+            $this->assertTrue($response['success'] ?? false, 'Expected booking to succeed.');
         }
     }
 }

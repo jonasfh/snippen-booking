@@ -115,8 +115,15 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
          if (function_exists('wp_cache_flush')) {
              wp_cache_flush();
          }
-         if ($this->requires_db && function_exists('delete_option')) {
-             delete_option( 'snippen_enable_door_code' );
+         if (function_exists('delete_option')) {
+            delete_option( 'snippen_enable_door_code' );
+            delete_option( 'snippen_cleaning_end_time' );
+            delete_option( 'snippen_vipps_enabled' );
+            delete_option( 'snippen_vipps_environment' );
+            delete_option( 'snippen_vipps_client_id' );
+            delete_option( 'snippen_vipps_client_secret' );
+            delete_option( 'snippen_vipps_subscription_key' );
+            delete_option( 'snippen_vipps_msn' );
          }
          remove_filter( 'pre_wp_mail', array( $this, 'global_prevent_wp_mail' ), 5 );
          remove_filter( 'pre_http_request', array( $this, 'global_mock_http_requests' ), 5 );

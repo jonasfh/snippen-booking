@@ -173,7 +173,9 @@ class BookingApi {
 				$payment_status_id = 1; // UNPAID
 			}
 
-			$uuid = wp_generate_uuid4();
+			$is_vipps_enabled = ( new \SnippenBooking\Service\Vipps\VippsService() )->is_enabled();
+			$status           = ( $is_vipps_enabled && 'private' === $booking_type && $final_price > 0 ) ? 'pending_payment' : 'pending';
+			$uuid             = wp_generate_uuid4();
 
 			$booking_data = array(
 				'uuid'              => $uuid,
@@ -189,7 +191,7 @@ class BookingApi {
 				'discount_amount'   => $discount_amount,
 				'discount_rule_id'  => $discount_rule_id,
 				'payment_status_id' => $payment_status_id,
-				'status'            => 'pending',
+				'status'            => $status,
 				'created_at'        => current_time( 'mysql' ),
 				'modified_at'       => current_time( 'mysql' ),
 			);
@@ -198,14 +200,7 @@ class BookingApi {
 			$booking_id         = $booking_repository->create( $booking_data, $booking_object_ids, array() );
 
 			if ( $booking_id ) {
-				$dispatch_method = get_option( 'snippen_notification_dispatch_method', 'async' );
-				if ( 'sync' === $dispatch_method ) {
-					$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
-					$notification_manager->send_booking_notifications( $booking_id, $uuid );
-				} elseif ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
-						wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
-				}
-				wp_send_json_success( array( 'message' => __( 'Bookingforespørsel sendt! Vi kontakter deg snart.', 'snippen-booking' ) ) );
+				self::handle_vipps_checkout_or_notifications( $booking_id, $uuid, $booking_type, $final_price, $customer_phone );
 			} else {
 				wp_send_json_error( array( 'message' => __( 'Kunne ikke lagre booking. Vennligst prøv igjen.', 'snippen-booking' ) ) );
 			}
@@ -286,6 +281,9 @@ class BookingApi {
 
 		$uuid = wp_generate_uuid4();
 
+		$is_vipps_enabled = ( new \SnippenBooking\Service\Vipps\VippsService() )->is_enabled();
+		$status           = ( $is_vipps_enabled && 'private' === $booking_type && $final_price > 0 ) ? 'pending_payment' : 'pending';
+
 		$booking_data = array(
 			'uuid'              => $uuid,
 			'booking_date'      => $booking_date,
@@ -299,7 +297,7 @@ class BookingApi {
 			'discount_amount'   => $discount_amount,
 			'discount_rule_id'  => $discount_rule_id,
 			'payment_status_id' => $payment_status_id,
-			'status'            => 'pending',
+			'status'            => $status,
 			'created_at'        => current_time( 'mysql' ),
 			'modified_at'       => current_time( 'mysql' ),
 		);
@@ -359,26 +357,100 @@ class BookingApi {
 					}
 				}
 			}
-			$dispatch_method = get_option( 'snippen_notification_dispatch_method', 'async' );
 
-			if ( 'sync' === $dispatch_method ) {
-				error_log( 'Booking API: Booking opprettet. Sender varsler synkront (direkte) for booking ID ' . $booking_id );
-				$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
-				$notification_manager->send_booking_notifications( $booking_id, $uuid );
-			} else {
-				error_log( 'Booking API: Booking opprettet. Planlegger asynkron utsendelse av varsler for booking ID ' . $booking_id );
-				if ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
-					wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
-				}
+			self::handle_vipps_checkout_or_notifications( $booking_id, $uuid, $booking_type, $final_price, $customer_phone );
+		} else {
+			wp_send_json_error( array( 'message' => __( 'Kunne ikke lagre booking. Vennligst prøv igjen.', 'snippen-booking' ) ) );
+		}
+	}
+
+	/**
+	 * Handle Vipps checkout flow or regular booking notifications.
+	 *
+	 * @param int    $booking_id     Booking ID.
+	 * @param string $uuid           Booking UUID.
+	 * @param string $booking_type   Booking type ('private', 'open', 'cleaning').
+	 * @param float  $final_price    Final booking price.
+	 * @param string $customer_phone Customer phone number.
+	 */
+	private static function handle_vipps_checkout_or_notifications( $booking_id, $uuid, $booking_type, $final_price, $customer_phone ) {
+		global $wpdb;
+
+		$vipps_service = new \SnippenBooking\Service\Vipps\VippsService();
+		$is_vipps      = $vipps_service->is_enabled() && 'private' === $booking_type && $final_price > 0;
+
+		if ( $is_vipps ) {
+			$booking_obj = (object) array(
+				'id'   => $booking_id,
+				'uuid' => $uuid,
+			);
+			$return_url  = ! empty( $_POST['return_url'] ) ? sanitize_url( wp_unslash( $_POST['return_url'] ) ) : wp_get_referer();
+			$payment_res = $vipps_service->create_booking_payment( $booking_obj, $final_price, $customer_phone, null, $return_url );
+
+			if ( is_wp_error( $payment_res ) ) {
+				error_log( 'Vipps create_booking_payment failed: ' . $payment_res->get_error_message() );
+				$wpdb->update(
+					$wpdb->prefix . 'snippen_bookings',
+					array(
+						'status'           => 'cancelled',
+						'rejection_reason' => sprintf(
+							/* translators: %s: Vipps error message */
+							__( 'Vipps-betaling kunne ikke opprettes: %s', 'snippen-booking' ),
+							$payment_res->get_error_message()
+						),
+						'modified_at'      => current_time( 'mysql' ),
+					),
+					array( 'id' => $booking_id )
+				);
+				wp_send_json_error(
+					array(
+						'message' => sprintf(
+							/* translators: %s: Vipps error message */
+							__( 'Kunne ikke opprette Vipps-betaling: %s', 'snippen-booking' ),
+							$payment_res->get_error_message()
+						),
+					)
+				);
+			}
+
+			$reference = ! empty( $payment_res['reference'] ) ? $payment_res['reference'] : '';
+			if ( $reference ) {
+				$wpdb->update(
+					$wpdb->prefix . 'snippen_bookings',
+					array(
+						'payment_notes' => 'Vipps ref: ' . $reference,
+						'modified_at'   => current_time( 'mysql' ),
+					),
+					array( 'id' => $booking_id )
+				);
 			}
 
 			wp_send_json_success(
 				array(
-					'message' => __( 'Bookingforespørsel sendt! Vi kontakter deg snart.', 'snippen-booking' ),
+					'message'      => __( 'Videresender til Vipps...', 'snippen-booking' ),
+					'redirect_url' => $payment_res['redirectUrl'],
+					'reference'    => $reference,
 				)
 			);
-		} else {
-			wp_send_json_error( array( 'message' => __( 'Kunne ikke lagre booking. Vennligst prøv igjen.', 'snippen-booking' ) ) );
 		}
+
+		$dispatch_method = get_option( 'snippen_notification_dispatch_method', 'async' );
+
+		if ( 'sync' === $dispatch_method ) {
+			error_log( 'Booking API: Booking opprettet. Sender varsler synkront (direkte) for booking ID ' . $booking_id );
+			$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+			$notification_manager->send_booking_notifications( $booking_id, $uuid );
+		} else {
+			error_log( 'Booking API: Booking opprettet. Planlegger asynkron utsendelse av varsler for booking ID ' . $booking_id );
+			if ( ! wp_next_scheduled( 'snippen_booking_send_notifications', array( $booking_id, $uuid ) ) ) {
+				wp_schedule_single_event( time(), 'snippen_booking_send_notifications', array( $booking_id, $uuid ) );
+			}
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Bookingforespørsel sendt! Vi kontakter deg snart.', 'snippen-booking' ),
+			)
+		);
 	}
 }

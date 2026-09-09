@@ -57,6 +57,7 @@ class Plugin {
 		\SnippenBooking\Shortcode\AccountConfirmationShortcode::register();
 		\SnippenBooking\Shortcode\BookingListShortcode::register();
 		\SnippenBooking\Api\VippsTestConnectionApi::register();
+		\SnippenBooking\Api\VippsWebhookApi::register();
 
 		// Allow tagging pages (required for issue #25)
 		register_taxonomy_for_object_type( 'post_tag', 'page' );
@@ -97,6 +98,39 @@ class Plugin {
 		if ( ! wp_next_scheduled( 'snippen_booking_daily_payment_reminders' ) ) {
 			wp_schedule_event( time(), 'daily', 'snippen_booking_daily_payment_reminders' );
 		}
+
+		// Automated Vipps unpaid bookings cleanup cron hook (Issue #307)
+		add_filter( 'cron_schedules', array( __CLASS__, 'register_cron_schedules' ) );
+		add_action( 'snippen_cleanup_unpaid_vipps_bookings', array( __CLASS__, 'handle_cleanup_unpaid_vipps_bookings' ) );
+		if ( ! wp_next_scheduled( 'snippen_cleanup_unpaid_vipps_bookings' ) ) {
+			wp_schedule_event( time(), 'every_fifteen_minutes', 'snippen_cleanup_unpaid_vipps_bookings' );
+		}
+	}
+
+	/**
+	 * Register custom cron schedules
+	 *
+	 * @param array $schedules Existing cron schedules.
+	 * @return array
+	 */
+	public static function register_cron_schedules( $schedules ) {
+		if ( ! isset( $schedules['every_fifteen_minutes'] ) ) {
+			$schedules['every_fifteen_minutes'] = array(
+				'interval' => 15 * MINUTE_IN_SECONDS,
+				'display'  => __( 'Hvert 15. minutt', 'snippen-booking' ),
+			);
+		}
+		return $schedules;
+	}
+
+	/**
+	 * Handle cleanup of unpaid Vipps bookings cron trigger
+	 *
+	 * @return int Number of cancelled bookings.
+	 */
+	public static function handle_cleanup_unpaid_vipps_bookings() {
+		$service = new \SnippenBooking\Service\Vipps\VippsService();
+		return $service->cleanup_expired_pending_bookings( 30 );
 	}
 
 	/**
@@ -248,6 +282,9 @@ class Plugin {
 			switch ( $booking->status ) {
 				case 'pending':
 					$status_label = __( 'Venter', 'snippen-booking' );
+					break;
+				case 'pending_payment':
+					$status_label = __( 'Venter på betaling', 'snippen-booking' );
 					break;
 				case 'confirmed':
 					$status_label = __( 'Bekreftet', 'snippen-booking' );
