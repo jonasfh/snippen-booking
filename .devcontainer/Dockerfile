@@ -30,6 +30,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && a2enmod rewrite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install cloudflared (Cloudflare Tunnel for webhook and local testing)
+RUN ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}.deb" -o /tmp/cloudflared.deb \
+    && dpkg -i /tmp/cloudflared.deb \
+    && rm -f /tmp/cloudflared.deb
+
 # Pre-install Chromium and system dependencies for Playwright visual regression tests
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN npx --yes playwright install chromium --with-deps \
