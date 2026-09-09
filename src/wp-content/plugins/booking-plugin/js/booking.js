@@ -346,6 +346,7 @@ jQuery(document).ready(function ($) {
         } else {
             $submitBtn.prop('disabled', true);
         }
+        $submitBtn.removeClass('vipps-submit-btn');
         $submitBtn.text(originalSubmitText);
     }
 
@@ -545,26 +546,44 @@ jQuery(document).ready(function ($) {
     var lastPricingData = null;
 
     function renderSummaryPrice() {
+        var isVipps = typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.vippsEnabled === true;
+        var $submitBtn = $('#booking-form').find('.booking-submit');
         var bookingType = $('input[name="booking_type"]:checked').val() || 'private';
+
         if (bookingType === 'open') {
             $('#summary-price').html('<span style="color: #16a34a; font-weight: bold;">kr 0,- (Gratis – krever styregodkjenning)</span>');
             $('#open-booking-notice').slideDown(200);
+            $submitBtn.removeClass('vipps-submit-btn');
+            $submitBtn.text((typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.sendBookingRequest) || originalSubmitText);
             return;
         }
 
         $('#open-booking-notice').slideUp(200);
 
         if (!lastPricingData) {
+            $submitBtn.removeClass('vipps-submit-btn');
+            $submitBtn.text((typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.sendBookingRequest) || originalSubmitText);
             return;
         }
+
+        var finalPrice = Math.round(lastPricingData.price);
 
         if (lastPricingData.discount_amount > 0) {
             var html = '<div style="text-decoration: line-through; color: #64748b; font-size: 0.9em;">kr. ' + Math.round(lastPricingData.base_price) + ',-</div>';
             html += '<div style="color: #16a34a; font-size: 0.9em; margin-bottom: 5px;">Rabatt: -kr. ' + Math.round(lastPricingData.discount_amount) + ',-</div>';
-            html += '<div style="font-weight: bold; font-size: 1.2em;">kr. ' + Math.round(lastPricingData.price) + ',-</div>';
+            html += '<div style="font-weight: bold; font-size: 1.2em;">kr. ' + finalPrice + ',-</div>';
             $('#summary-price').html(html);
         } else {
-            $('#summary-price').text('kr. ' + Math.round(lastPricingData.price) + ',-');
+            $('#summary-price').text('kr. ' + finalPrice + ',-');
+        }
+
+        if (isVipps && bookingType === 'private' && finalPrice > 0) {
+            var payTextTpl = (typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.payWithVipps) || 'Betal med Vipps kr %s,-';
+            $submitBtn.addClass('vipps-submit-btn');
+            $submitBtn.text(payTextTpl.replace('%s', finalPrice));
+        } else {
+            $submitBtn.removeClass('vipps-submit-btn');
+            $submitBtn.text((typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.sendBookingRequest) || originalSubmitText);
         }
     }
 
@@ -583,7 +602,15 @@ jQuery(document).ready(function ($) {
         var $submitBtn = $form.find('.booking-submit');
         var $response = $('#booking-response');
 
-        $submitBtn.prop('disabled', true).text(snippenBookingAjax.strings.sendingRequest);
+        var isVipps = typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.vippsEnabled === true;
+        var bookingType = $('input[name="booking_type"]:checked').val() || 'private';
+        var isVippsPayment = isVipps && bookingType === 'private' && lastPricingData && Math.round(lastPricingData.price) > 0;
+
+        var submitWaitText = isVippsPayment
+            ? ((typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.redirectingToVipps) || 'Videresender til Vipps...')
+            : ((typeof snippenBookingAjax !== 'undefined' && snippenBookingAjax.strings && snippenBookingAjax.strings.sendingRequest) || 'Sender forespørsel...');
+
+        $submitBtn.prop('disabled', true).text(submitWaitText);
         $response.hide();
 
         var formData = {
@@ -592,14 +619,15 @@ jQuery(document).ready(function ($) {
             booking_object_id: selectedObjectIds,
             event_date: selectedDate,
             block_ids: selectedBlockIds,
-            booking_type: $('input[name="booking_type"]:checked').val() || 'private',
+            booking_type: bookingType,
             include_cleaning: $('#include_cleaning').is(':checked') ? 1 : 0,
             name: $('#name').val(),
             email: $('#email').val(),
             phone: $('#phone').val(),
             description: $('#description').val(),
             user_id: $('#selected-user-id').val(),
-            accept_terms: $('#accept_terms').length ? ($('#accept_terms').is(':checked') ? 1 : 0) : 1
+            accept_terms: $('#accept_terms').length ? ($('#accept_terms').is(':checked') ? 1 : 0) : 1,
+            return_url: window.location.href
         };
 
         $.ajax({
@@ -608,6 +636,11 @@ jQuery(document).ready(function ($) {
             data: formData,
             success: function (response) {
                 if (response.success) {
+                    if (response.data && response.data.redirect_url) {
+                        $response.removeClass('error').addClass('success').html(response.data.message || submitWaitText).fadeIn();
+                        window.location.href = response.data.redirect_url;
+                        return;
+                    }
                     $response.removeClass('error').addClass('success').html(response.data.message).fadeIn();
                     $form[0].reset();
                     setTimeout(function () {

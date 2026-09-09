@@ -21,6 +21,13 @@ class VippsClientTest extends TestCase {
 	protected $requires_db = false;
 
 	/**
+	 * Active HTTP mock callback.
+	 *
+	 * @var callable|null
+	 */
+	protected $http_mock_callback = null;
+
+	/**
 	 * Set up test environment
 	 */
 	protected function setUp(): void {
@@ -34,10 +41,32 @@ class VippsClientTest extends TestCase {
 	}
 
 	/**
+	 * Set a mock HTTP response filter and track it for cleanup.
+	 *
+	 * @param callable $callback Callback function.
+	 * @param int      $priority Filter priority.
+	 */
+	protected function set_http_mock( callable $callback, int $priority = 10 ) {
+		if ( null !== $this->http_mock_callback ) {
+			remove_filter( 'pre_http_request', $this->http_mock_callback, 10 );
+		}
+		$this->http_mock_callback = $callback;
+		add_filter( 'pre_http_request', $this->http_mock_callback, $priority, 3 );
+	}
+
+	/**
 	 * Clean up after test
 	 */
 	protected function tearDown(): void {
-		remove_all_filters( 'pre_http_request' );
+		if ( null !== $this->http_mock_callback ) {
+			remove_filter( 'pre_http_request', $this->http_mock_callback, 10 );
+			$this->http_mock_callback = null;
+		}
+		delete_option( 'snippen_vipps_client_id' );
+		delete_option( 'snippen_vipps_client_secret' );
+		delete_option( 'snippen_vipps_subscription_key' );
+		delete_option( 'snippen_vipps_msn' );
+		delete_option( 'snippen_vipps_environment' );
 		delete_transient( 'snippen_vp_token_' . md5( 'testtest-client-idtest-sub-key123456' ) );
 		parent::tearDown();
 	}
@@ -72,8 +101,7 @@ class VippsClientTest extends TestCase {
 	public function test_get_access_token_caching() {
 		$http_call_count = 0;
 
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) use ( &$http_call_count ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					$http_call_count++;
@@ -94,9 +122,7 @@ class VippsClientTest extends TestCase {
 					);
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		$client = new VippsClient();
@@ -130,8 +156,7 @@ class VippsClientTest extends TestCase {
 	 * Test token request failure on HTTP error
 	 */
 	public function test_get_access_token_http_error() {
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
@@ -140,9 +165,7 @@ class VippsClientTest extends TestCase {
 					);
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		$client = new VippsClient();
@@ -154,8 +177,7 @@ class VippsClientTest extends TestCase {
 	 * Test test_connection helper method
 	 */
 	public function test_connection_helper() {
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					if ( $args['headers']['client_id'] === 'valid-id' ) {
@@ -171,9 +193,7 @@ class VippsClientTest extends TestCase {
 					}
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		// Missing fields
@@ -197,8 +217,7 @@ class VippsClientTest extends TestCase {
 	public function test_create_payment() {
 		$created_payload = null;
 
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) use ( &$created_payload ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
@@ -225,9 +244,7 @@ class VippsClientTest extends TestCase {
 					);
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		$client = new VippsClient();
@@ -252,8 +269,7 @@ class VippsClientTest extends TestCase {
 	 * Test get_payment, capture_payment, and cancel_payment
 	 */
 	public function test_payment_operations() {
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
@@ -287,9 +303,7 @@ class VippsClientTest extends TestCase {
 					);
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		$client = new VippsClient();

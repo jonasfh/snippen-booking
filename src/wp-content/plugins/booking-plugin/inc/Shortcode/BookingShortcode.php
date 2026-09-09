@@ -64,6 +64,8 @@ class BookingShortcode {
 		$user_email   = $is_logged_in ? esc_attr( $current_user->user_email ) : '';
 		$user_phone   = $is_logged_in ? get_user_meta( $current_user->ID, 'snippen_phone', true ) : '';
 
+		$vipps_return_notice = self::handle_and_render_vipps_return();
+
 		ob_start();
 		?>
 		<div class="snippen-booking-container" 
@@ -74,6 +76,12 @@ class BookingShortcode {
 			data-user-email="<?php echo esc_attr( $user_email ); ?>"
 			data-user-phone="<?php echo esc_attr( $user_phone ); ?>"
 			data-is-admin="<?php echo Capabilities::can_manage_bookings() ? 'true' : 'false'; ?>">
+
+			<?php
+			if ( ! empty( $vipps_return_notice ) ) {
+				echo $vipps_return_notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			?>
 			
 			<div class="booking-header-section">
 				<?php if ( $is_multiple_objects ) : ?>
@@ -320,5 +328,93 @@ class BookingShortcode {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Check and render Vipps return notice if arriving from Vipps redirect.
+	 *
+	 * @return string HTML notice or empty string.
+	 */
+	public static function handle_and_render_vipps_return() {
+		if ( empty( $_GET['booking_uuid'] ) || empty( $_GET['payment_provider'] ) || 'vipps' !== $_GET['payment_provider'] ) {
+			return '';
+		}
+
+		global $wpdb;
+		$uuid = sanitize_text_field( wp_unslash( $_GET['booking_uuid'] ) );
+
+		$booking_repo = new \SnippenBooking\Database\Repository\BookingRepository();
+		$booking      = $booking_repo->find_by_uuid( $uuid );
+
+		if ( ! $booking ) {
+			return '<div class="snippen-vipps-return-notice error"><h4>' . esc_html__( 'Ugyldig reservasjon', 'snippen-booking' ) . '</h4><p>' . esc_html__( 'Fant ikke den forespurte bookingen.', 'snippen-booking' ) . '</p></div>';
+		}
+
+		// Extract Vipps reference if stored in payment_notes
+		$reference = '';
+		if ( ! empty( $booking->payment_notes ) && preg_match( '/snippen-\d+-\d+-\d+/', $booking->payment_notes, $matches ) ) {
+			$reference = $matches[0];
+		}
+
+		// If booking is pending_payment, verify status directly against Vipps API
+		if ( 'pending_payment' === $booking->status && $reference ) {
+			$vipps_service = new \SnippenBooking\Service\Vipps\VippsService();
+			$payment_info  = $vipps_service->get_booking_payment_status( $reference );
+
+			if ( ! is_wp_error( $payment_info ) && ! empty( $payment_info['state'] ) ) {
+				$state = $payment_info['state'];
+
+				if ( 'AUTHORIZED' === $state ) {
+					// Capture and confirm
+					$capture = $vipps_service->capture_booking_payment( $reference, $booking->price );
+					if ( ! is_wp_error( $capture ) ) {
+						$table = $wpdb->prefix . 'snippen_bookings';
+						$wpdb->update(
+							$table,
+							array(
+								'status'             => 'confirmed',
+								'payment_status_id'  => 2, // PAID
+								'payment_updated_at' => current_time( 'mysql' ),
+								'modified_at'        => current_time( 'mysql' ),
+							),
+							array( 'id' => $booking->id )
+						);
+						$booking->status            = 'confirmed';
+						$booking->payment_status_id = 2;
+
+						$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+						$notification_manager->send_booking_confirmed_notification( (int) $booking->id );
+					}
+				} elseif ( in_array( $state, array( 'TERMINATED', 'CANCELLED', 'EXPIRED' ), true ) ) {
+					$table = $wpdb->prefix . 'snippen_bookings';
+					$wpdb->update(
+						$table,
+						array(
+							'status'           => 'cancelled',
+							'rejection_reason' => __( 'Vipps-betaling ble avbrutt eller utløpt.', 'snippen-booking' ),
+							'modified_at'      => current_time( 'mysql' ),
+						),
+						array( 'id' => $booking->id )
+					);
+					$booking->status = 'cancelled';
+				}
+			}
+		}
+
+		if ( 'confirmed' === $booking->status ) {
+			$ref_html = $reference ? '<div class="vipps-ref">' . esc_html__( 'Vipps-referanse:', 'snippen-booking' ) . ' ' . esc_html( $reference ) . '</div>' : '';
+			return '<div class="snippen-vipps-return-notice success"><h4>' . esc_html__( '✓ Betaling fullført og reservasjon bekreftet!', 'snippen-booking' ) . '</h4><p>' . sprintf(
+				/* translators: 1: Booking date, 2: Customer name */
+				esc_html__( 'Takk, %2$s! Din reservasjon for %1$s er bekreftet. Bekreftelse er sendt på SMS/e-post.', 'snippen-booking' ),
+				esc_html( date_i18n( get_option( 'date_format', 'd.m.Y' ), strtotime( $booking->booking_date ) ) ),
+				esc_html( $booking->customer_name )
+			) . '</p>' . $ref_html . '</div>';
+		}
+
+		if ( 'cancelled' === $booking->status ) {
+			return '<div class="snippen-vipps-return-notice cancelled"><h4>' . esc_html__( 'Betaling ble ikke gjennomført', 'snippen-booking' ) . '</h4><p>' . esc_html__( 'Vipps-betalingen ble avbrutt eller utløp. Tidsluken er frigjort, og du kan velge et nytt tidspunkt i kalenderen under.', 'snippen-booking' ) . '</p></div>';
+		}
+
+		return '<div class="snippen-vipps-return-notice"><h4>' . esc_html__( 'Betaling behandles...', 'snippen-booking' ) . '</h4><p>' . esc_html__( 'Vi venter på bekreftelse fra Vipps. Du vil motta en bekreftelse så snart betalingen er registrert.', 'snippen-booking' ) . '</p></div>';
 	}
 }

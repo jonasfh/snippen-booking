@@ -17,35 +17,65 @@ use SnippenBooking\Api\VippsTestConnectionApi;
 class VippsSettingsIntegrationTest extends TestCase {
 
 	/**
+	/**
+	 * WP die callback.
+	 *
+	 * @var callable|null
+	 */
+	protected $wp_die_callback = null;
+
+	/**
+	 * HTTP mock callback.
+	 *
+	 * @var callable|null
+	 */
+	protected $http_mock_callback = null;
+
+	/**
 	 * Set up test environment
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		if ( ! defined( 'DOING_AJAX' ) ) {
-			define( 'DOING_AJAX', true );
-		}
-		add_filter(
-			'wp_die_ajax_handler',
-			function () {
-				return function ( $message ) {
-					throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
-				};
-			}
-		);
+		$this->wp_die_callback = function () {
+			return function ( $message ) {
+				throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
+			};
+		};
+		add_filter( 'wp_die_ajax_handler', $this->wp_die_callback );
 		VippsTestConnectionApi::register();
+	}
+
+	/**
+	 * Set mock HTTP filter.
+	 *
+	 * @param callable $callback Filter callback.
+	 */
+	protected function set_http_mock( callable $callback ) {
+		if ( null !== $this->http_mock_callback ) {
+			remove_filter( 'pre_http_request', $this->http_mock_callback, 10 );
+		}
+		$this->http_mock_callback = $callback;
+		add_filter( 'pre_http_request', $this->http_mock_callback, 10, 3 );
 	}
 
 	/**
 	 * Tear down after each test
 	 */
 	protected function tearDown(): void {
+		if ( null !== $this->wp_die_callback ) {
+			remove_filter( 'wp_die_ajax_handler', $this->wp_die_callback );
+			$this->wp_die_callback = null;
+		}
+		if ( null !== $this->http_mock_callback ) {
+			remove_filter( 'pre_http_request', $this->http_mock_callback, 10 );
+			$this->http_mock_callback = null;
+		}
 		delete_option( 'snippen_vipps_enabled' );
 		delete_option( 'snippen_vipps_environment' );
 		delete_option( 'snippen_vipps_client_id' );
 		delete_option( 'snippen_vipps_client_secret' );
 		delete_option( 'snippen_vipps_subscription_key' );
 		delete_option( 'snippen_vipps_msn' );
-		remove_all_filters( 'pre_http_request' );
 		$_POST    = array();
 		$_REQUEST = array();
 		parent::tearDown();
@@ -128,8 +158,7 @@ class VippsSettingsIntegrationTest extends TestCase {
 		$user->add_cap( 'manage_options' );
 		wp_set_current_user( $admin_id );
 
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
@@ -144,9 +173,7 @@ class VippsSettingsIntegrationTest extends TestCase {
 					);
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		$_POST['nonce']            = wp_create_nonce( 'snippen_admin_nonce' );
@@ -177,8 +204,7 @@ class VippsSettingsIntegrationTest extends TestCase {
 		$user->add_cap( 'manage_options' );
 		wp_set_current_user( $admin_id );
 
-		add_filter(
-			'pre_http_request',
+		$this->set_http_mock(
 			function ( $pre, $args, $url ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
@@ -191,9 +217,7 @@ class VippsSettingsIntegrationTest extends TestCase {
 					);
 				}
 				return $pre;
-			},
-			10,
-			3
+			}
 		);
 
 		$_POST['nonce']            = wp_create_nonce( 'snippen_admin_nonce' );

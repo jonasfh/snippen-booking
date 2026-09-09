@@ -332,6 +332,9 @@ class BookingListShortcode {
 			case 'pending':
 				$status_label = __( 'Venter', 'snippen-booking' );
 				break;
+			case 'pending_payment':
+				$status_label = __( 'Venter på betaling', 'snippen-booking' );
+				break;
 			case 'confirmed':
 				$status_label = __( 'Bekreftet', 'snippen-booking' );
 				break;

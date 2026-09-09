@@ -85,6 +85,10 @@ The plugin integrates with Vipps MobilePay modern ePayment API v1 to enable dire
 - **Environment Toggle**: Switch seamlessly between `Test / Sandbox (MT)` (`https://apitest.vipps.no`) and `Produksjon` (`https://api.vipps.no`).
 - **Connection Test**: Includes a built-in «Test tilkobling mot Vipps» button with immediate feedback verifying OAuth 2.0 access token retrieval.
 - **Token Caching**: OAuth 2.0 access tokens are retrieved from Vipps and cached in WordPress transients based on `expires_in` with safety buffers.
+- **Frontend Checkout Flow**: When Vipps is enabled and a private booking has a price > 0, the submit button dynamically updates to «Betal med Vipps kr X,-» with official Vipps styling (`#ff5b24`). Submitting initiates a payment order via `VippsService` and redirects the user directly to the Vipps payment screen.
+- **Webhook Integration**: The plugin provides a dedicated REST endpoint `POST /wp-json/snippen/v1/vipps/webhook` to handle asynchronous payment events (`epayments.payment.authorized` captures payment and confirms booking; `epayments.payment.terminated` cancels the booking).
+- **Return URL Handling**: Inspects return parameters (`booking_uuid` & `payment_provider=vipps`) upon user return, automatically verifying and capturing authorized payments and displaying a responsive receipt confirmation.
+- **Automated Unpaid Bookings Cleanup**: A scheduled WP-Cron job (`snippen_cleanup_unpaid_vipps_bookings`) runs every 15 minutes to cancel bookings remaining in `pending_payment` for longer than 30 minutes, releasing held slots and cancelling the payment session in Vipps.
 
 ### Communication History (Lagre brukerkommunikasjon)
 All SMS and Email messages sent to users and administrators (including automatic booking confirmations, account activation codes, admin alert notifications, and manual messages sent via the Booking Assistant) are automatically logged in the database with recipient details, timestamps, delivery channel, and `user_id`/`booking_id` associations.

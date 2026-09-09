@@ -100,6 +100,7 @@ class BookingsPage {
 		echo '<select name="status" onchange="this.form.submit()">';
 		echo '<option value="">' . esc_html__( 'Alle statuser', 'snippen-booking' ) . '</option>';
 		echo '<option value="pending" ' . selected( $status, 'pending', false ) . '>' . esc_html__( 'Venter på godkjenning', 'snippen-booking' ) . '</option>';
+		echo '<option value="pending_payment" ' . selected( $status, 'pending_payment', false ) . '>' . esc_html__( 'Venter på betaling', 'snippen-booking' ) . '</option>';
 		echo '<option value="confirmed" ' . selected( $status, 'confirmed', false ) . '>' . esc_html__( 'Bekreftet', 'snippen-booking' ) . '</option>';
 		echo '<option value="cancelled" ' . selected( $status, 'cancelled', false ) . '>' . esc_html__( 'Avbrutt', 'snippen-booking' ) . '</option>';
 		echo '</select></div>';
@@ -634,9 +635,10 @@ class BookingsPage {
 	 */
 	private function get_status_label( $status ) {
 		$labels = array(
-			'pending'   => __( 'Venter', 'snippen-booking' ),
-			'confirmed' => __( 'Bekreftet', 'snippen-booking' ),
-			'cancelled' => __( 'Avbrutt', 'snippen-booking' ),
+			'pending'         => __( 'Venter', 'snippen-booking' ),
+			'pending_payment' => __( 'Venter på betaling', 'snippen-booking' ),
+			'confirmed'       => __( 'Bekreftet', 'snippen-booking' ),
+			'cancelled'       => __( 'Avbrutt', 'snippen-booking' ),
 		);
 		return isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
 	}

@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.35.0] - 2026-09-09
+- (#307) Frontend Vipps checkout, REST webhook for betalingsbekreftelse og automatisk opprydding av ubetalte bookinger:
+  - **Frontend Vipps Checkout** (`booking.js`, `booking.css`, `BookingShortcode.php`, `AssetLoader.php`):
+    - Dynamisk innsendingsknapp «Betal med Vipps kr X,-» med offisiell Vipps-oransje styling (`#ff5b24`) når Vipps er aktivert, bookingtypen er privat og beløp > 0.
+    - Automatisk omdirigering til Vipps Checkout URL (`redirect_url`) etter opprettelse av bookingforespørsel.
+    - Håndtering av retur-URL (`booking_uuid` og `payment_provider=vipps`) med sanntidsstatus, automatisk capture dersom betalingen er autorisert, samt responsive bekreftelses- og kanselleringsbannere.
+  - **Booking API** (`BookingApi.php`):
+    - Setter bookingstatus til `pending_payment` («Venter på betaling») under Vipps-flyt, oppretter betalingsordre via `VippsService`, lagrer betalingsreferanse og holder tilbake bekreftelsesvarsler inntil betalingen er fullført.
+    - Avbryter og kansellerer reservasjonen umiddelbart dersom Vipps API returnerer feil.
+  - **REST Webhook Endepunkt** (`VippsWebhookApi.php`):
+    - Registrert `POST /wp-json/snippen/v1/vipps/webhook` for asynkrone statusoppdateringer fra Vipps MobilePay ePayment v1.
+    - Håndterer `epayments.payment.authorized` med automatisk `capture_payment()`, oppdatering til `confirmed` og `payment_status_id = 2` (BETALT), samt utsendelse av e-post og SMS-bekreftelser.
+    - Håndterer `epayments.payment.terminated` med kansellering av reservasjon og frigjøring av tidsblokker.
+    - Inkluderer full idempotens mot duplikate webhooks.
+  - **Automatisk Opprydding via WP-Cron** (`VippsService.php`, `Plugin.php`):
+    - Planlagt cron-jobb (`snippen_cleanup_unpaid_vipps_bookings`) hvert 15. minutt som automatisk kansellerer bookinger i `pending_payment` eldre enn 30 minutter, kaller Vipps `cancel_payment()` og frigjør låste lokaler.
+  - **Admin- og Brukergrensesnitt** (`BookingsPage.php`, `UserBookingsPage.php`, `BookingListShortcode.php`):
+    - Lagt til statusfilter og visuell badge for «Venter på betaling» (`pending_payment`) i adminoversikten og beboeroversikten.
+
 ## [2.34.0] - 2026-09-08
 - (#314) Konfigurerbar varighet for utvask og frontend-valg i bookingskjema:
   - Introdusert innstilling for `snippen_cleaning_end_time` (standard `11:00`) under **Generelt** i admininnstillingene (`SettingsPage.php`), som styrer hvor lenge utvask neste dag varer.
