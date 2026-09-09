@@ -38,7 +38,7 @@ jobs:
       run: npm ci
 
     - name: Remove problematic third-party APT sources
-      run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list*
+      run: sudo rm -f /etc/apt/sources.list.d/*chrome* /etc/apt/sources.list.d/*google*
 
     - name: Install Playwright Browsers
       run: npx playwright install chromium --with-deps
