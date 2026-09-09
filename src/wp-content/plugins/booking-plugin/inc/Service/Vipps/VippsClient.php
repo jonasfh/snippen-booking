@@ -451,6 +451,117 @@ class VippsClient {
 	}
 
 	/**
+	 * List all registered webhooks for the sales unit.
+	 *
+	 * @return array|\WP_Error
+	 */
+	public function list_webhooks() {
+		$token = $this->get_access_token();
+		if ( empty( $token ) ) {
+			return new \WP_Error( 'vipps_auth_failed', __( 'Kunne ikke hente Vipps access token.', 'snippen-booking' ) );
+		}
+
+		$endpoint = $this->get_base_url() . '/webhooks/v1/webhooks';
+		$headers  = array(
+			'Authorization'             => 'Bearer ' . $token,
+			'Ocp-Apim-Subscription-Key' => $this->subscription_key,
+			'Merchant-Serial-Number'    => $this->msn,
+		);
+
+		$response = wp_remote_get(
+			$endpoint,
+			array(
+				'headers'     => $headers,
+				'httpversion' => '1.1',
+				'timeout'     => 15,
+			)
+		);
+
+		return $this->handle_response( $response, 'list_webhooks' );
+	}
+
+	/**
+	 * Register a webhook subscription.
+	 *
+	 * @param string $url    Webhook endpoint URL.
+	 * @param array  $events Array of events to subscribe to.
+	 * @return array|\WP_Error
+	 */
+	public function register_webhook( $url, array $events = array() ) {
+		$token = $this->get_access_token();
+		if ( empty( $token ) ) {
+			return new \WP_Error( 'vipps_auth_failed', __( 'Kunne ikke hente Vipps access token.', 'snippen-booking' ) );
+		}
+
+		if ( empty( $events ) ) {
+			$events = array(
+				'epayments.payment.authorized.v1',
+				'epayments.payment.aborted.v1',
+				'epayments.payment.expired.v1',
+				'epayments.payment.terminated.v1',
+			);
+		}
+
+		$endpoint = $this->get_base_url() . '/webhooks/v1/webhooks';
+		$headers  = array(
+			'Authorization'             => 'Bearer ' . $token,
+			'Ocp-Apim-Subscription-Key' => $this->subscription_key,
+			'Merchant-Serial-Number'    => $this->msn,
+			'Content-Type'              => 'application/json',
+		);
+
+		$payload = array(
+			'url'    => esc_url_raw( $url ),
+			'events' => $events,
+		);
+
+		$response = wp_remote_post(
+			$endpoint,
+			array(
+				'headers'     => $headers,
+				'httpversion' => '1.1',
+				'body'        => wp_json_encode( $payload ),
+				'timeout'     => 20,
+				'data_format' => 'body',
+			)
+		);
+
+		return $this->handle_response( $response, 'register_webhook' );
+	}
+
+	/**
+	 * Delete a webhook registration.
+	 *
+	 * @param string $id Webhook ID.
+	 * @return array|\WP_Error
+	 */
+	public function delete_webhook( $id ) {
+		$token = $this->get_access_token();
+		if ( empty( $token ) ) {
+			return new \WP_Error( 'vipps_auth_failed', __( 'Kunne ikke hente Vipps access token.', 'snippen-booking' ) );
+		}
+
+		$endpoint = $this->get_base_url() . '/webhooks/v1/webhooks/' . rawurlencode( $id );
+		$headers  = array(
+			'Authorization'             => 'Bearer ' . $token,
+			'Ocp-Apim-Subscription-Key' => $this->subscription_key,
+			'Merchant-Serial-Number'    => $this->msn,
+		);
+
+		$response = wp_remote_request(
+			$endpoint,
+			array(
+				'method'      => 'DELETE',
+				'headers'     => $headers,
+				'httpversion' => '1.1',
+				'timeout'     => 15,
+			)
+		);
+
+		return $this->handle_response( $response, 'delete_webhook' );
+	}
+
+	/**
 	 * Helper to process HTTP responses and wrap errors in \WP_Error.
 	 *
 	 * @param array|\WP_Error $response HTTP response.
@@ -478,6 +589,10 @@ class VippsClient {
 					'body'   => $body,
 				)
 			);
+		}
+
+		if ( 204 === $code || '' === trim( (string) $body ) ) {
+			return array( 'success' => true );
 		}
 
 		$data = json_decode( $body, true );

@@ -711,9 +711,13 @@ Bruk CLI-hjelpeverktøyet `bin/vipps-webhook.php` for å registrere tunnel-adres
 ```bash
 # Registrer tunnel-adressen som webhook-mottaker:
 php bin/vipps-webhook.php register https://<din-tunnel-adresse>/wp-json/snippen/v1/vipps/webhook
+# eller via composer:
+composer vipps:webhook -- register https://<din-tunnel-adresse>/wp-json/snippen/v1/vipps/webhook
 
 # Kontroller at registreringen er aktiv:
 php bin/vipps-webhook.php list
+# eller via composer:
+composer vipps:webhook list
 ```
 
 ---
@@ -752,6 +756,8 @@ Etter fullført testkjøring bør midlertidige test-ressurser ryddes opp:
 1. Slett test-webhooken fra Vipps MT:
    ```bash
    php bin/vipps-webhook.php delete <webhook-id>
+   # eller via composer:
+   composer vipps:webhook -- delete <webhook-id>
    ```
 2. Sett port 8080 tilbake til **Private** i Codespaces Ports-fanen (eller stopp `cloudflared` / `ngrok`).
 

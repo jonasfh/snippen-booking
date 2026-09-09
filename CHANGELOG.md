@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.40.0] - 2026-09-09
+- (#323) Støtte for offisielle Vipps ePayment v1 webhooks og CLI-administrasjonsverktøy:
+  - **Vipps Webhook API (`VippsWebhookApi.php`)**:
+    - Støtte for offisielle ePayment v1-hendelsesnavn: `epayments.payment.authorized.v1`, `epayments.payment.aborted.v1`, `epayments.payment.expired.v1`, `epayments.payment.terminated.v1`, og `epayments.payment.cancelled.v1`.
+    - Bakoverkompatibel støtte for enkle hendelsesnavn og statuser (`AUTHORIZED`, `ABORTED`, `TERMINATED`, `EXPIRED`, `CANCELLED`).
+    - Detaljert debug-logging av innkommende webhook headers, metoder og payload ved aktiv `WP_DEBUG`.
+  - **VippsClient Webhooks API (`VippsClient.php`)**:
+    - Implementert `list_webhooks()` for inspeksjon av aktive webhooks.
+    - Implementert `register_webhook( $url, $events )` for automatisk opprettelse av abonnement på ePayment v1-hendelser.
+    - Implementert `delete_webhook( $id )` for fjerning av utløpte eller midlertidige test-webhooks.
+  - **CLI-verktøy (`bin/vipps-webhook.php`)**:
+    - Nytt administrasjonsskript for Vipps webhooks med kommandoene `list`, `register <url>` og `delete <id>`.
+  - **Tester & Kvalitetssikring**:
+    - Utvidede integrasjonstester i `VippsWebhookIntegrationTest.php` for offisielle `.v1`-formater og statuser.
+    - Nye enhetstester i `VippsClientTest.php` for `list_webhooks`, `register_webhook` og `delete_webhook`.
+
 ## [2.39.0] - 2026-09-09
 - (#321) Forbedre bookingtype-kort og forstørr Vipps-branding:
   - **Fjerning av radio-knapp visuelt (`booking.css`)**:
