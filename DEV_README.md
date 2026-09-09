@@ -628,6 +628,7 @@ Developers and site administrators configure Vipps credentials under **Snippen B
 - **Environment (`snippen_vipps_environment`)**: `test` (`https://apitest.vipps.no`) for sandbox development or `prod` (`https://api.vipps.no`) for production.
 - **Connection Handshake Test**: Built-in AJAX test (`snippen_test_vipps_connection`) executes OAuth 2.0 token exchange to verify credentials.
 - **CLI Seeding**: For local development, set credentials in root `.env` and run `composer demo:vipps` (or `composer demo:env`) to populate WordPress options directly.
+- **Frontend Branding & Design Guidelines**: Adheres strictly to Vipps MobilePay Brand Guidelines. Features official SVG vector marks (`assets/images/vipps-mark.svg` and `assets/images/vipps-mark-white.svg`), an inline `.vipps-tag` badge on the «Privat arrangement» selection card in `BookingShortcode.php`, and the white Vipps smile icon in the submit button (`.vipps-submit-btn`) styled with `#ff5b24`.
 
 ### Booking Types & Board Approval Lifecycle
 The system supports three booking types (`booking_type` in `wp_snippen_bookings`):

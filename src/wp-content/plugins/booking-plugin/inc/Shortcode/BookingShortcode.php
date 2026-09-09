@@ -65,6 +65,7 @@ class BookingShortcode {
 		$user_phone   = $is_logged_in ? get_user_meta( $current_user->ID, 'snippen_phone', true ) : '';
 
 		$vipps_return_notice = self::handle_and_render_vipps_return();
+		$is_vipps_enabled    = ( new \SnippenBooking\Service\Vipps\VippsService() )->is_enabled();
 
 		ob_start();
 		?>
@@ -210,14 +211,27 @@ class BookingShortcode {
 									<label class="booking-type-card selected" for="booking_type_private">
 										<input type="radio" name="booking_type" id="booking_type_private" value="private" checked>
 										<div class="booking-type-card-text">
-											<span class="booking-type-title"><?php esc_html_e( 'Privat arrangement', 'snippen-booking' ); ?></span>
+											<div class="booking-type-title-row">
+												<span class="booking-type-title"><?php esc_html_e( 'Privat arrangement', 'snippen-booking' ); ?></span>
+												<?php if ( $is_vipps_enabled ) : ?>
+													<span class="vipps-tag" title="<?php esc_attr_e( 'Betales med Vipps', 'snippen-booking' ); ?>">
+														<svg class="vipps-tag-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-label="<?php esc_attr_e( 'Vipps', 'snippen-booking' ); ?>" role="img" focusable="false">
+															<path fill="#ff5b24" fill-rule="evenodd" d="M20,6.33c0-.24,0-.49,0-.73,0-.21,0-.41,0-.61,0-.45-.05-.89-.12-1.33-.08-.44-.22-.87-.42-1.26-.41-.8-1.06-1.45-1.86-1.86-.4-.2-.82-.34-1.26-.42-.44-.07-.88-.11-1.33-.12-.2,0-.41,0-.61,0-.24,0-.48,0-.73,0h-7.33C6.09,0,5.85,0,5.61,0c-.2,0-.41,0-.61,0-.45,0-.89.05-1.33.12-.44.07-.87.22-1.26.42-.8.41-1.45,1.06-1.86,1.86-.2.4-.34.83-.42,1.26-.07.44-.11.88-.12,1.33,0,.21,0,.41,0,.61C0,5.85,0,6.09,0,6.33v7.33C0,13.91,0,14.15,0,14.39c0,.21,0,.41,0,.61,0,.45.04.89.12,1.33.08.44.22.87.42,1.27.41.8,1.06,1.45,1.86,1.86.4.2.82.34,1.26.42.44.07.88.11,1.33.12.2,0,.41,0,.61,0,.24,0,.48,0,.73,0h7.33c.24,0,.48,0,.73,0,.2,0,.41,0,.61,0,.45,0,.89-.04,1.33-.12.44-.07.87-.22,1.26-.42.8-.41,1.45-1.06,1.86-1.86.2-.4.34-.83.42-1.27.07-.44.11-.88.12-1.33,0-.2,0-.41,0-.61,0-.24,0-.48,0-.73v-7.33h0Z"/>
+															<path fill="#ffffff" d="M10.3,12.72c1.75,0,2.74-.85,3.69-2.08.52-.66,1.18-.8,1.66-.43.47.38.52,1.09,0,1.75-1.37,1.8-3.12,2.89-5.35,2.89-2.41,0-4.54-1.32-6.01-3.64-.43-.62-.33-1.28.14-1.61s1.18-.19,1.61.47c1.04,1.56,2.46,2.65,4.26,2.65h0ZM13.57,6.9c0,.85-.66,1.42-1.42,1.42s-1.42-.57-1.42-1.42.66-1.42,1.42-1.42,1.42.62,1.42,1.42Z"/>
+														</svg>
+														<span class="vipps-tag-text"><?php esc_html_e( 'Vipps', 'snippen-booking' ); ?></span>
+													</span>
+												<?php endif; ?>
+											</div>
 											<span class="booking-type-desc"><?php esc_html_e( 'Kun for meg og mine gjester – krever leiebetaling.', 'snippen-booking' ); ?></span>
 										</div>
 									</label>
 									<label class="booking-type-card" for="booking_type_open">
 										<input type="radio" name="booking_type" id="booking_type_open" value="open">
 										<div class="booking-type-card-text">
-											<span class="booking-type-title"><?php esc_html_e( 'Åpent arrangement for sameiet', 'snippen-booking' ); ?></span>
+											<div class="booking-type-title-row">
+												<span class="booking-type-title"><?php esc_html_e( 'Åpent arrangement for sameiet', 'snippen-booking' ); ?></span>
+											</div>
 											<span class="booking-type-desc"><?php esc_html_e( 'Åpent for alle beboere (f.eks. felleskaffe, dugnad, brettspillkveld) – gratis, krever styregodkjenning.', 'snippen-booking' ); ?></span>
 										</div>
 									</label>
