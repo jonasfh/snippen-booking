@@ -46,11 +46,16 @@ Users must confirm their account via SMS before they can create bookings. The ac
 ```
 
 ### Displaying User Bookings
-Residents can see their booking history (and self-cancel active bookings) on the frontend in a beautiful card list using the following shortcode:
+Residents can see their booking history (and self-cancel active bookings) on the frontend in a beautiful card list using the following shortcode (or in the WordPress admin menu under **Mine bookinger**):
 
 ```text
 [snippen_booking_list]
 ```
+
+The view provides:
+- Clear tags for booking types: `[Åpen for sameiet]` vs. `[Privat arrangement]`.
+- Vipps payment verification and transaction reference for Vipps-paid bookings (hiding manual receipt upload forms).
+- Clear explanatory notice with board rationale (`rejection_reason`) if an open community event was rejected, explaining that it can still be booked as a private event.
 
 By default, if the user is not logged in, the shortcode will return an empty string. To display a premium login form to guest users, you can set the `login-form` attribute:
 

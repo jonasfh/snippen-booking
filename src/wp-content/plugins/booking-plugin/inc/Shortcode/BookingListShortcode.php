@@ -376,90 +376,156 @@ class BookingListShortcode {
 					<span class="snippen-badge <?php echo esc_attr( $status_class ); ?>">
 						<?php echo esc_html( $status_label ); ?>
 					</span>
+					<?php echo self::render_type_badge( ! empty( $booking->booking_type ) ? $booking->booking_type : 'private' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					<span class="snippen-badge" style="background:<?php echo $payment_status->is_settled ? '#dcfce7; color:#15803d;' : '#fef3c7; color:#b45309;'; ?>">
 						<?php echo esc_html( $payment_status->name ); ?>
 					</span>
 				</div>
 			</div>
 
-			<div class="booking-compact-payment" style="margin-top:12px; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
-				<strong><?php esc_html_e( 'Betalingsinformasjon:', 'snippen-booking' ); ?></strong>
-				<?php if ( $bank_acc || $vipps_no || $payment_instructs ) : ?>
-					<div style="margin-top:4px; color:#334155; line-height:1.4;">
-						<?php if ( $bank_acc ) : ?>
-							<div><strong><?php esc_html_e( 'Bankkontonr:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $bank_acc ); ?></div>
-						<?php endif; ?>
-						<?php if ( $vipps_no ) : ?>
-							<div><strong><?php esc_html_e( 'Vipps:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $vipps_no ); ?></div>
-						<?php endif; ?>
-						<?php if ( $payment_instructs ) : ?>
-							<div style="margin-top:4px; color:#475569; white-space:pre-line;"><?php echo esc_html( $payment_instructs ); ?></div>
-						<?php endif; ?>
+			<?php if ( 'open' === ( ! empty( $booking->booking_type ) ? $booking->booking_type : 'private' ) && 'cancelled' === $booking->status ) : ?>
+				<div class="snippen-rejection-notice">
+					<div class="snippen-rejection-notice-header">
+						<span class="rejection-icon">⚠️</span>
+						<strong><?php esc_html_e( 'Forespørsel om åpent arrangement ble avslått', 'snippen-booking' ); ?></strong>
 					</div>
-				<?php endif; ?>
-
-				<?php if ( ! empty( $booking->payment_receipt_attachment_id ) ) : ?>
-					<?php $r_url = wp_get_attachment_url( $booking->payment_receipt_attachment_id ); ?>
-					<?php if ( $r_url ) : ?>
-						<div style="margin-top:8px;">
-							<strong><?php esc_html_e( 'Opplastet kvittering:', 'snippen-booking' ); ?></strong> 
-							<a href="<?php echo esc_url( $r_url ); ?>" target="_blank" style="color:#0284c7; text-decoration:underline;">
-								<?php esc_html_e( 'Vis kvittering', 'snippen-booking' ); ?>
-							</a>
+					<?php if ( ! empty( $booking->rejection_reason ) ) : ?>
+						<div class="snippen-rejection-reason">
+							<strong><?php esc_html_e( 'Begrunnelse fra styret:', 'snippen-booking' ); ?></strong>
+							<span><?php echo esc_html( $booking->rejection_reason ); ?></span>
 						</div>
 					<?php endif; ?>
-				<?php endif; ?>
+					<div class="snippen-rejection-instruction">
+						<?php esc_html_e( 'Hvis du fremdeles ønsker arrangementet kan det reserveres og betales privat.', 'snippen-booking' ); ?>
+					</div>
+				</div>
+			<?php endif; ?>
 
-				<?php if ( ! $payment_status->is_settled ) : ?>
-					<?php
-					$form_id = 'upload-form-sc-' . $booking->id;
-					$msg_id  = 'upload-msg-sc-' . $booking->id;
-					?>
-					<form id="<?php echo esc_attr( $form_id ); ?>" style="margin-top:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-						<label style="font-weight:600;"><?php esc_html_e( 'Last opp kvittering / skjermbilde:', 'snippen-booking' ); ?></label>
-						<input type="file" name="payment_receipt" class="snippen-receipt-input" accept="image/*,.pdf" required style="font-size:12px;">
-						<button type="submit" class="booking-submit" style="padding:4px 10px; font-size:12px; background:#0284c7; border:none; color:#fff; border-radius:4px; cursor:pointer;">
-							<?php esc_html_e( 'Last opp', 'snippen-booking' ); ?>
-						</button>
-						<span id="<?php echo esc_attr( $msg_id ); ?>" style="font-weight:600;"></span>
-					</form>
+			<?php if ( 'cancelled' !== $booking->status ) : ?>
+				<?php
+				$is_free   = ( floatval( $booking->price ) <= 0 ) || ( 'open' === ( ! empty( $booking->booking_type ) ? $booking->booking_type : 'private' ) );
+				$is_vipps  = ! empty( $booking->payment_notes ) && ( false !== stripos( $booking->payment_notes, 'Vipps' ) || preg_match( '/snippen-\d+-\d+-\d+/', $booking->payment_notes ) );
+				$vipps_ref = '';
+				if ( $is_vipps ) {
+					if ( preg_match( '/snippen-\d+-\d+-\d+/', $booking->payment_notes, $matches ) ) {
+						$vipps_ref = $matches[0];
+					} elseif ( preg_match( '/(?:Vipps\s*ref[:#]?\s*)([A-Za-z0-9_-]+)/i', $booking->payment_notes, $matches ) ) {
+						$vipps_ref = $matches[1];
+					} else {
+						$vipps_ref = trim( $booking->payment_notes );
+					}
+				}
+				?>
+				<div class="booking-compact-payment" style="margin-top:12px; padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+					<strong><?php esc_html_e( 'Betalingsinformasjon:', 'snippen-booking' ); ?></strong>
+					<?php if ( $is_free ) : ?>
+						<div style="margin-top:4px; color:#15803d; font-weight:500;">
+							<?php esc_html_e( 'Gratis arrangement – ingen betaling kreves.', 'snippen-booking' ); ?>
+						</div>
+					<?php elseif ( $is_vipps ) : ?>
+						<div class="snippen-vipps-payment-info" style="margin-top:6px;">
+							<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+								<span class="snippen-badge vipps-badge">
+									<?php esc_html_e( 'Vipps', 'snippen-booking' ); ?>
+								</span>
+								<span style="font-weight:600; color:#334155;">
+									<?php
+									if ( $payment_status->is_settled ) {
+										esc_html_e( 'Betalt med Vipps', 'snippen-booking' );
+									} elseif ( 'pending_payment' === $booking->status ) {
+										esc_html_e( 'Venter på Vipps-betaling', 'snippen-booking' );
+									} else {
+										echo esc_html( $payment_status->name );
+									}
+									?>
+								</span>
+							</div>
+							<?php if ( ! empty( $vipps_ref ) ) : ?>
+								<div style="margin-top:6px; color:#64748b; font-size:12px;">
+									<strong><?php esc_html_e( 'Transaksjonsreferanse:', 'snippen-booking' ); ?></strong> 
+									<code><?php echo esc_html( $vipps_ref ); ?></code>
+								</div>
+							<?php endif; ?>
+						</div>
+					<?php else : ?>
+						<?php if ( $bank_acc || $vipps_no || $payment_instructs ) : ?>
+							<div style="margin-top:4px; color:#334155; line-height:1.4;">
+								<?php if ( $bank_acc ) : ?>
+									<div><strong><?php esc_html_e( 'Bankkontonr:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $bank_acc ); ?></div>
+								<?php endif; ?>
+								<?php if ( $vipps_no ) : ?>
+									<div><strong><?php esc_html_e( 'Vipps:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $vipps_no ); ?></div>
+								<?php endif; ?>
+								<?php if ( $payment_instructs ) : ?>
+									<div style="margin-top:4px; color:#475569; white-space:pre-line;"><?php echo esc_html( $payment_instructs ); ?></div>
+								<?php endif; ?>
+							</div>
+						<?php endif; ?>
 
-					<script>
-					document.getElementById("<?php echo esc_js( $form_id ); ?>").addEventListener("submit", function(e) {
-						e.preventDefault();
-						var fileInput = this.querySelector(".snippen-receipt-input");
-						if (!fileInput.files.length) return;
-						var formData = new FormData();
-						formData.append("action", "snippen_upload_payment_receipt");
-						formData.append("booking_id", "<?php echo intval( $booking->id ); ?>");
-						formData.append("booking_uuid", "<?php echo esc_js( $booking->uuid ); ?>");
-						formData.append("payment_receipt", fileInput.files[0]);
+						<?php if ( ! empty( $booking->payment_receipt_attachment_id ) ) : ?>
+							<?php $r_url = wp_get_attachment_url( $booking->payment_receipt_attachment_id ); ?>
+							<?php if ( $r_url ) : ?>
+								<div style="margin-top:8px;">
+									<strong><?php esc_html_e( 'Opplastet kvittering:', 'snippen-booking' ); ?></strong> 
+									<a href="<?php echo esc_url( $r_url ); ?>" target="_blank" style="color:#0284c7; text-decoration:underline;">
+										<?php esc_html_e( 'Vis kvittering', 'snippen-booking' ); ?>
+									</a>
+								</div>
+							<?php endif; ?>
+						<?php endif; ?>
 
-						var msgSpan = document.getElementById("<?php echo esc_js( $msg_id ); ?>");
-						msgSpan.style.color = "#0284c7";
-						msgSpan.textContent = "<?php echo esc_js( __( 'Laster opp...', 'snippen-booking' ) ); ?>";
+						<?php if ( ! $payment_status->is_settled ) : ?>
+							<?php
+							$form_id = 'upload-form-sc-' . $booking->id;
+							$msg_id  = 'upload-msg-sc-' . $booking->id;
+							?>
+							<form id="<?php echo esc_attr( $form_id ); ?>" style="margin-top:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+								<label style="font-weight:600;"><?php esc_html_e( 'Last opp kvittering / skjermbilde:', 'snippen-booking' ); ?></label>
+								<input type="file" name="payment_receipt" class="snippen-receipt-input" accept="image/*,.pdf" required style="font-size:12px;">
+								<button type="submit" class="booking-submit" style="padding:4px 10px; font-size:12px; background:#0284c7; border:none; color:#fff; border-radius:4px; cursor:pointer;">
+									<?php esc_html_e( 'Last opp', 'snippen-booking' ); ?>
+								</button>
+								<span id="<?php echo esc_attr( $msg_id ); ?>" style="font-weight:600;"></span>
+							</form>
 
-						fetch("<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>", {
-							method: "POST",
-							body: formData
-						}).then(function(r) { return r.json(); })
-						.then(function(res) {
-							if (res.success) {
-								msgSpan.style.color = "#16a34a";
-								msgSpan.textContent = res.data.message;
-								setTimeout(function() { window.location.reload(); }, 1500);
-							} else {
-								msgSpan.style.color = "#dc2626";
-								msgSpan.textContent = res.data.message || "<?php echo esc_js( __( 'Feil ved opplasting.', 'snippen-booking' ) ); ?>";
-							}
-						}).catch(function(err) {
-							msgSpan.style.color = "#dc2626";
-							msgSpan.textContent = "<?php echo esc_js( __( 'Tilkoblingsfeil.', 'snippen-booking' ) ); ?>";
-						});
-					});
-					</script>
-				<?php endif; ?>
-			</div>
+							<script>
+							document.getElementById("<?php echo esc_js( $form_id ); ?>").addEventListener("submit", function(e) {
+								e.preventDefault();
+								var fileInput = this.querySelector(".snippen-receipt-input");
+								if (!fileInput.files.length) return;
+								var formData = new FormData();
+								formData.append("action", "snippen_upload_payment_receipt");
+								formData.append("booking_id", "<?php echo intval( $booking->id ); ?>");
+								formData.append("booking_uuid", "<?php echo esc_js( $booking->uuid ); ?>");
+								formData.append("payment_receipt", fileInput.files[0]);
+
+								var msgSpan = document.getElementById("<?php echo esc_js( $msg_id ); ?>");
+								msgSpan.style.color = "#0284c7";
+								msgSpan.textContent = "<?php echo esc_js( __( 'Laster opp...', 'snippen-booking' ) ); ?>";
+
+								fetch("<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>", {
+									method: "POST",
+									body: formData
+								}).then(function(r) { return r.json(); })
+								.then(function(res) {
+									if (res.success) {
+										msgSpan.style.color = "#16a34a";
+										msgSpan.textContent = res.data.message;
+										setTimeout(function() { window.location.reload(); }, 1500);
+									} else {
+										msgSpan.style.color = "#dc2626";
+										msgSpan.textContent = res.data.message || "<?php echo esc_js( __( 'Feil ved opplasting.', 'snippen-booking' ) ); ?>";
+									}
+								}).catch(function(err) {
+									msgSpan.style.color = "#dc2626";
+									msgSpan.textContent = "<?php echo esc_js( __( 'Tilkoblingsfeil.', 'snippen-booking' ) ); ?>";
+								});
+							});
+							</script>
+						<?php endif; ?>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 
 			<?php
 			$can_user_delete = false;
@@ -541,5 +607,23 @@ class BookingListShortcode {
 		}
 		</script>
 		<?php
+	}
+
+	/**
+	 * Render booking type badge
+	 *
+	 * @param string $type Booking type ('private', 'open', 'cleaning').
+	 * @return string
+	 */
+	public static function render_type_badge( $type ) {
+		switch ( $type ) {
+			case 'open':
+				return '<span class="snippen-badge snippen-type-badge snippen-type-open" style="background:#e0e7ff; color:#3730a3; font-weight:600;">' . esc_html__( 'Åpen for sameiet', 'snippen-booking' ) . '</span>';
+			case 'cleaning':
+				return '<span class="snippen-badge snippen-type-badge snippen-type-cleaning" style="background:#ccfbf1; color:#0f766e; font-weight:600;">' . esc_html__( 'Utvask', 'snippen-booking' ) . '</span>';
+			case 'private':
+			default:
+				return '<span class="snippen-badge snippen-type-badge snippen-type-private" style="background:#f1f5f9; color:#475569; font-weight:500;">' . esc_html__( 'Privat arrangement', 'snippen-booking' ) . '</span>';
+		}
 	}
 }
