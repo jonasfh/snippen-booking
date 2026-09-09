@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.37.0] - 2026-09-09
+- (#309) Varslingsmaler, plassholdere, dokumentasjon og versjonsoppdatering for Vipps & bookingtyper:
+  - **Varslingsmaler & avslagsvarsel (`booking_rejected`)**:
+    - Ny standard varslingsmal `booking_rejected` (E-post & SMS) som sendes til beboer når en åpen reservasjon avslås av styret eller status settes til kansellert med begrunnelse.
+    - Integrert i `NotificationTemplateInstall.php`, `NotificationTemplateRepository.php` og `NotificationTemplateService.php`.
+    - Tilgjengelig for redigering i administrasjonsgrensesnittet under **Snippen Booking > Varslingsmaler** (`NotificationTemplatesPage.php`).
+    - Egne innstillingsbrytere under **Snippen Booking > Innstillinger** under E-post (`snippen_email_booking_rejected_enabled`) og SMS (`snippen_sms_booking_rejected_enabled`).
+  - **Nye dynamiske plassholdere (`PlaceholderRegistry.php`)**:
+    - `{{booking_type}}`: Erstattes med «Privat arrangement», «Åpent arrangement» eller «Utvask».
+    - `{{rejection_reason}}`: Begrunnelse oppgitt av administrator ved avslag.
+    - `{{payment_method}}`: Erstattes med «Vipps», «Bankoverføring» eller «Fritatt».
+    - Tilgjengelig på tvers av relevante hendelseskontekster med sentral validering og resolverlogikk.
+  - **Orkestrering i NotificationManager & BookingActionsApi**:
+    - Lagt til `TYPE_BOOKING_REJECTED` og `send_booking_rejected_notification()`.
+    - Etablert felles `build_booking_context()` i `NotificationManager` for konsistent oppsett av alle plassholdere på tvers av varslingstyper.
+    - Automatisk utsendelse i `BookingActionsApi::update_status()` ved kansellering av reservasjoner.
+  - **Omfattende dokumentasjon**:
+    - `README.md` og `DEV_README.md` oppdatert med detaljert veiledning for Vipps ePayment-oppsett (MSN, Client ID, Client Secret, Subscription Key), forklaring av feature-switch og testmodus, samt bookingtyper, godkjenningsprosessen og varslingsmaler.
+    - `.agents/ARCHITECTURE.md` oppdatert med Vipps ePayment og varslingsarkitektur.
+  - **Tester**:
+    - Utvidede enhetstester i `PlaceholderRegistryTest.php` for alle 17 standard plassholdere og nye kontekster.
+    - Ny integrasjonstest `BookingRejectedNotificationTest.php` for avslagsvarsler, innstillinger og loggføring.
+
 ## [2.36.0] - 2026-09-09
 - (#308) Beboeroversikt i «Mine bookinger»: Tydelig status, bookingtype, Vipps-transaksjon og håndtering av avslåtte åpne arrangementer:
   - **Bookingtype-merkelapper** (`BookingListShortcode.php`, `UserBookingsPage.php`, `booking.css`, `admin.css`):

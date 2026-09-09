@@ -618,6 +618,33 @@ The plugin integrates with Vipps MobilePay modern ePayment API v1 for direct dig
    - Handler: `Plugin::handle_cleanup_unpaid_vipps_bookings()` -> `VippsService::cleanup_expired_pending_bookings(30)`.
    - Action: Any booking with `status = 'pending_payment'` created more than 30 minutes ago is cancelled, cancelling the payment in Vipps and freeing the calendar slot for other tenants.
 
+### Vipps Configuration & Environment Setup
+Developers and site administrators configure Vipps credentials under **Snippen Booking > Innstillinger > Betaling**:
+- **Merchant Serial Number (`snippen_vipps_msn`)**: 5-6 digit identifier for the sales unit in Vipps MobilePay.
+- **Client ID (`snippen_vipps_client_id`)**: OAuth 2.0 client credential ID.
+- **Client Secret (`snippen_vipps_client_secret`)**: OAuth 2.0 client secret.
+- **Subscription Key (`snippen_vipps_subscription_key`)**: API subscription key sent via `Ocp-Apim-Subscription-Key`.
+- **Feature-Switch (`snippen_vipps_enabled`)**: Master toggle (`yes`/`no`). When disabled or missing credentials, the plugin operates in standard bank transfer mode with zero downtime.
+- **Environment (`snippen_vipps_environment`)**: `test` (`https://apitest.vipps.no`) for sandbox development or `prod` (`https://api.vipps.no`) for production.
+- **Connection Handshake Test**: Built-in AJAX test (`snippen_test_vipps_connection`) executes OAuth 2.0 token exchange to verify credentials.
+- **CLI Seeding**: For local development, set credentials in root `.env` and run `composer demo:vipps` (or `composer demo:env`) to populate WordPress options directly.
+
+### Booking Types & Board Approval Lifecycle
+The system supports three booking types (`booking_type` in `wp_snippen_bookings`):
+1. **`private` (Privat arrangement)**: Standard private reservation. Price is calculated and must be paid either immediately via Vipps or through bank transfer.
+2. **`open` (Åpen for sameiet)**: Community events open to all neighbors. Booking is free (`price = 0`, payment status `EXEMPT`), but enters `pending` status requiring board review.
+   - **Approval**: Board sets status to `confirmed` in admin, triggering `booking_confirmed` email/SMS.
+   - **Rejection**: Board sets status to `cancelled` and enters a `rejection_reason`. The system dispatches `booking_rejected` notification to the resident with explanation and guidance to re-book as private if desired.
+3. **`cleaning` (Utvask)**: Complimentary next-day cleaning time slot linked to evening events where `supports_cleaning = 1`.
+
+### Notification Templates & Placeholders
+- **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, and `password-reset`.
+- **System Placeholders**: Managed by `PlaceholderRegistry`:
+  - `{{booking_type}}`: Resolves to «Privat arrangement», «Åpent arrangement» or «Utvask».
+  - `{{rejection_reason}}`: Board's reason for rejecting a booking request.
+  - `{{payment_method}}`: Resolves to «Vipps», «Bankoverføring» or «Fritatt».
+  - Plus standard placeholders: `{{user_name}}`, `{{user_email}}`, `{{user_phone}}`, `{{booking_objects}}`, `{{booking_date}}`, `{{booking_time}}`, `{{booking_url}}`, `{{booking_price}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{payment_instructions}}`, and `{{reset_link}}`.
+
 ## Modal & Overlay Architecture
 
 All modal and overlay dialogs across the plugin (direct-link booking UUID popup, calendar booking info modal, rental terms iframe modal, and admin notification dispatch dialog) adhere to standard mobile-friendly and responsive rules:

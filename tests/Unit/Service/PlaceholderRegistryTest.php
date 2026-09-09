@@ -34,12 +34,12 @@ class PlaceholderRegistryTest extends TestCase {
 	}
 
 	/**
-	 * Test that all 14 standard placeholders are registered
+	 * Test that all 17 standard placeholders are registered
 	 */
-	public function test_all_14_standard_placeholders_registered() {
+	public function test_all_17_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 14, $placeholders );
+		$this->assertCount( 17, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -56,6 +56,9 @@ class PlaceholderRegistryTest extends TestCase {
 			'vipps_number',
 			'payment_instructions',
 			'reset_link',
+			'booking_type',
+			'rejection_reason',
+			'payment_method',
 		);
 
 		foreach ( $expected_keys as $key ) {
@@ -186,5 +189,69 @@ class PlaceholderRegistryTest extends TestCase {
 		$errors          = $this->registry->validate_template( $invalid_payment, 'payment-received' );
 		$this->assertCount( 1, $errors );
 		$this->assertStringContainsString( 'ikke tillatt', $errors[0] );
+	}
+
+	/**
+	 * Test validating template strings for booking-rejected context
+	 */
+	public function test_validate_template_booking_rejected_context() {
+		$rejected_text = 'Hello {{user_name}}, booking for {{booking_objects}} on {{booking_date}} of type {{booking_type}} was rejected: {{rejection_reason}}. Method: {{payment_method}}';
+		$this->assertEmpty( $this->registry->validate_template( $rejected_text, 'booking-rejected' ) );
+		$this->assertEmpty( $this->registry->validate_template( $rejected_text, 'booking_rejected' ) );
+
+		// Disallowed placeholder in booking-rejected context (e.g., confirmation_code)
+		$invalid_rejected = 'Booking rejected with code {{confirmation_code}}';
+		$errors           = $this->registry->validate_template( $invalid_rejected, 'booking-rejected' );
+		$this->assertCount( 1, $errors );
+		$this->assertStringContainsString( 'ikke tillatt', $errors[0] );
+	}
+
+	/**
+	 * Test resolving booking_type, rejection_reason, and payment_method placeholders
+	 */
+	public function test_resolve_new_placeholders() {
+		// Test booking_type conversion
+		$context_open = array( 'booking_type' => 'open' );
+		$this->assertEquals( 'Åpent arrangement', $this->registry->resolve( 'booking_type', 'booking_rejected', $context_open ) );
+
+		$context_clean = array( 'booking_type' => 'cleaning' );
+		$this->assertEquals( 'Utvask', $this->registry->resolve( 'booking_type', 'booking_rejected', $context_clean ) );
+
+		$context_private = array( 'booking_type' => 'private' );
+		$this->assertEquals( 'Privat arrangement', $this->registry->resolve( 'booking_type', 'booking_rejected', $context_private ) );
+
+		// Test rejection_reason
+		$context_reason = array( 'rejection_reason' => 'Arrangementet kolliderer med dugnad.' );
+		$this->assertEquals( 'Arrangementet kolliderer med dugnad.', $this->registry->resolve( 'rejection_reason', 'booking_rejected', $context_reason ) );
+
+		$context_empty_reason = array();
+		$this->assertEquals( 'Ingen begrunnelse oppgitt.', $this->registry->resolve( 'rejection_reason', 'booking_rejected', $context_empty_reason ) );
+
+		// Test payment_method
+		$this->assertEquals( 'Vipps', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'payment_method' => 'vipps' ) ) );
+		$this->assertEquals( 'Bankoverføring', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'payment_method' => 'bank' ) ) );
+		$this->assertEquals( 'Fritatt', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'payment_method' => 'exempt' ) ) );
+
+		// Test fallback detection from booking object
+		$booking_vipps = (object) array(
+			'price'         => '500',
+			'payment_notes' => 'Vipps ref: snippen-123',
+			'booking_type'  => 'private',
+		);
+		$this->assertEquals( 'Vipps', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'booking' => $booking_vipps ) ) );
+
+		$booking_free = (object) array(
+			'price'         => 0,
+			'payment_notes' => null,
+			'booking_type'  => 'open',
+		);
+		$this->assertEquals( 'Fritatt', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'booking' => $booking_free ) ) );
+
+		$booking_bank = (object) array(
+			'price'         => '1000',
+			'payment_notes' => null,
+			'booking_type'  => 'private',
+		);
+		$this->assertEquals( 'Bankoverføring', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'booking' => $booking_bank ) ) );
 	}
 }

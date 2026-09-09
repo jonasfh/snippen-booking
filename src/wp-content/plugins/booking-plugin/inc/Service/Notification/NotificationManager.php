@@ -55,6 +55,11 @@ class NotificationManager {
 	const TYPE_PAYMENT_RECEIVED = 'payment_received';
 
 	/**
+	 * Notification type: Booking rejected / cancelled by admin
+	 */
+	const TYPE_BOOKING_REJECTED = 'booking_rejected';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -233,15 +238,8 @@ class NotificationManager {
 			}
 		}
 
-		$admin_context        = array(
-			'user_name'           => $booking->customer_name,
-			'user_email'          => $booking->customer_email,
-			'user_phone'          => $booking->customer_phone,
-			'booking_objects'     => $object_names,
-			'booking_date'        => $booking->booking_date,
-			'booking_time'        => $booking_time,
-			'booking_description' => $booking->description,
-		);
+		$sms_link             = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
+		$admin_context        = $this->build_booking_context( $booking, $object_names, $booking_time, $sms_link );
 		$rendered_admin_email = $template_service->render_template( 'admin_booking', 'email', $admin_context );
 		$rendered_admin_sms   = $template_service->render_template( 'admin_booking', 'sms', $admin_context );
 
@@ -338,19 +336,8 @@ class NotificationManager {
 		$sms_sent   = false;
 		$email_sent = false;
 
-		$template_service             = new NotificationTemplateService();
-		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
-		$context                      = array(
-			'user_name'            => $booking->customer_name,
-			'booking_objects'      => $object_names,
-			'booking_date'         => $booking->booking_date,
-			'booking_time'         => $booking_time,
-			'booking_url'          => $sms_link,
-			'booking_price'        => number_format( $booking->price, 0, ',', ' ' ),
-			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
-			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
-			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
-		);
+		$template_service = new NotificationTemplateService();
+		$context          = $this->build_booking_context( $booking, $object_names, $booking_time, $sms_link );
 
 		$rendered_sms   = $template_service->render_template( 'booking_confirmation', 'sms', $context );
 		$rendered_email = $template_service->render_template( 'booking_confirmation', 'email', $context );
@@ -480,22 +467,8 @@ class NotificationManager {
 			}
 		}
 
-		$booking_url                  = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
-		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen kort tid. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
-
-		$context = array(
-			'user_name'            => $booking->customer_name,
-			'user_email'           => $booking->customer_email,
-			'user_phone'           => $booking->customer_phone,
-			'booking_objects'      => $object_names,
-			'booking_date'         => $booking->booking_date,
-			'booking_time'         => $booking_time,
-			'booking_url'          => $booking_url,
-			'booking_price'        => number_format( (float) $booking->price, 0, ',', ' ' ),
-			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
-			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
-			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
-		);
+		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$context     = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
 
 		$rendered_sms   = $template_service->render_template( 'payment_reminder', 'sms', $context );
 		$rendered_email = $template_service->render_template( 'payment_reminder', 'email', $context );
@@ -635,17 +608,7 @@ class NotificationManager {
 		}
 
 		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
-
-		$context = array(
-			'user_name'       => $booking->customer_name,
-			'user_email'      => $booking->customer_email,
-			'user_phone'      => $booking->customer_phone,
-			'booking_objects' => $object_names,
-			'booking_date'    => $booking->booking_date,
-			'booking_time'    => $booking_time,
-			'booking_url'     => $booking_url,
-			'booking_price'   => number_format( (float) $booking->price, 0, ',', ' ' ),
-		);
+		$context     = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
 
 		$template_service = new NotificationTemplateService();
 		$rendered_sms     = $template_service->render_template( 'payment_receipt_uploaded', 'sms', $context );
@@ -777,22 +740,8 @@ class NotificationManager {
 			}
 		}
 
-		$booking_url                  = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
-		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
-
-		$context = array(
-			'user_name'            => $booking->customer_name,
-			'user_email'           => $booking->customer_email,
-			'user_phone'           => $booking->customer_phone,
-			'booking_objects'      => $object_names,
-			'booking_date'         => $booking->booking_date,
-			'booking_time'         => $booking_time,
-			'booking_url'          => $booking_url,
-			'booking_price'        => number_format( (float) $booking->price, 0, ',', ' ' ),
-			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
-			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
-			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
-		);
+		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$context     = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
 
 		$template_service = new NotificationTemplateService();
 		$rendered_sms     = $template_service->render_template( 'booking_confirmed', 'sms', $context );
@@ -908,17 +857,7 @@ class NotificationManager {
 		}
 
 		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
-
-		$context = array(
-			'user_name'       => $booking->customer_name,
-			'user_email'      => $booking->customer_email,
-			'user_phone'      => $booking->customer_phone,
-			'booking_objects' => $object_names,
-			'booking_date'    => $booking->booking_date,
-			'booking_time'    => $booking_time,
-			'booking_url'     => $booking_url,
-			'booking_price'   => number_format( (float) $booking->price, 0, ',', ' ' ),
-		);
+		$context     = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
 
 		$template_service = new NotificationTemplateService();
 		$rendered_sms     = $template_service->render_template( 'payment_received', 'sms', $context );
@@ -972,6 +911,186 @@ class NotificationManager {
 					$subject,
 					$rendered_email['body'],
 					self::TYPE_PAYMENT_RECEIVED,
+					$email_sent ? 'sent' : 'failed'
+				);
+			}
+		}
+
+		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Build common placeholder context array for a booking.
+	 *
+	 * @param object $booking          Booking database row.
+	 * @param string $object_names     Comma/and-separated object names.
+	 * @param string $booking_time     Formatted booking time range.
+	 * @param string $booking_url      Full booking URL.
+	 * @param string $rejection_reason Optional rejection reason.
+	 * @return array
+	 */
+	private function build_booking_context( $booking, string $object_names, string $booking_time, string $booking_url, string $rejection_reason = '' ): array {
+		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
+
+		$booking_type_label = 'open' === ( $booking->booking_type ?? 'private' )
+			? __( 'Åpent arrangement', 'snippen-booking' )
+			: ( 'cleaning' === ( $booking->booking_type ?? 'private' ) ? __( 'Utvask', 'snippen-booking' ) : __( 'Privat arrangement', 'snippen-booking' ) );
+
+		$payment_method_label = ( floatval( $booking->price ) <= 0 || 'open' === ( $booking->booking_type ?? 'private' ) )
+			? __( 'Fritatt', 'snippen-booking' )
+			: ( ( ! empty( $booking->payment_notes ) && false !== stripos( (string) $booking->payment_notes, 'vipps' ) ) ? __( 'Vipps', 'snippen-booking' ) : __( 'Bankoverføring', 'snippen-booking' ) );
+
+		$reason = ! empty( $rejection_reason )
+			? $rejection_reason
+			: ( ! empty( $booking->rejection_reason ) ? $booking->rejection_reason : __( 'Ingen begrunnelse oppgitt.', 'snippen-booking' ) );
+
+		return array(
+			'user_name'            => $booking->customer_name,
+			'user_email'           => $booking->customer_email,
+			'user_phone'           => $booking->customer_phone,
+			'booking_objects'      => $object_names,
+			'booking_date'         => $booking->booking_date,
+			'booking_time'         => $booking_time,
+			'booking_url'          => $booking_url,
+			'booking_price'        => number_format( (float) $booking->price, 0, ',', ' ' ),
+			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
+			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
+			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
+			'booking_description'  => $booking->description ?? '',
+			'booking_type'         => $booking_type_label,
+			'rejection_reason'     => $reason,
+			'payment_method'       => $payment_method_label,
+			'booking'              => $booking,
+		);
+	}
+
+	/**
+	 * Send notification to customer when booking is rejected by admin/board.
+	 *
+	 * @param int    $booking_id       Booking ID.
+	 * @param string $rejection_reason Optional rejection reason.
+	 * @return bool True if at least one notification was sent successfully.
+	 */
+	public function send_booking_rejected_notification( int $booking_id, string $rejection_reason = '' ): bool {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_booking_rejected_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_booking_rejected_enabled', 'yes' );
+
+		if ( ! $sms_enabled && ! $email_enabled ) {
+			return false;
+		}
+
+		// Fetch associated locales/objects
+		$objs = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		if ( empty( $objs ) ) {
+			$table_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
+			$objs                  = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT o.name 
+					 FROM {$table_booking_objects} bo 
+					 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+					 WHERE bo.booking_id = %d",
+					$booking_id
+				)
+			);
+		}
+		if ( empty( $objs ) && ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['objects'] ) ) {
+				$objs = array_column( $snapshot['objects'], 'name' );
+			}
+		}
+		$object_names = implode( ' og ', $objs );
+
+		// Fetch booking time string
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
+		$booking_url = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$context     = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url, $rejection_reason );
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( 'booking_rejected', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'booking_rejected', 'email', $context );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		$phone = ! empty( $booking->customer_phone ) ? $booking->customer_phone : '';
+		if ( empty( $phone ) && ! empty( $booking->user_id ) ) {
+			$phone = (string) get_user_meta( $booking->user_id, 'snippen_phone', true );
+		}
+
+		if ( $sms_enabled && ! empty( $phone ) ) {
+			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$sms_provider = $this->get_provider( $provider_id );
+			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				$sms_sent = $sms_provider->send_sms( $phone, $rendered_sms['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_BOOKING_REJECTED,
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
+					array( 'provider' => $provider_id )
+				);
+			}
+		}
+
+		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
+		if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$recipient = $user->user_email;
+			}
+		}
+
+		if ( $email_enabled && ! empty( $recipient ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Reservasjonsforespørsel avslått', 'snippen-booking' );
+				$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$recipient,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_BOOKING_REJECTED,
 					$email_sent ? 'sent' : 'failed'
 				);
 			}

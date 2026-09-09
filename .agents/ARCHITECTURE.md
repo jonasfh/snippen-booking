@@ -29,3 +29,15 @@ src/wp-content/plugins/booking-plugin/
 - **Database Tables**: Always include `created_at` and `modified_at` timestamp columns on custom database tables.
 - **Thin Controllers**: Keep AJAX handlers in `inc/Api/` thin and delegate logic to domain classes.
 - **Design & Styling**: Inherit styles from the active WordPress default theme (Twenty Twenty-Five). Keep custom CSS minimal and functional.
+
+## Payment & Vipps ePayment Architecture
+- **Service Layer**: High-level domain logic lives in `VippsService`, low-level HTTP client in `VippsClient`.
+- **Checkout Flow**: Frontend wizard dynamically toggles Vipps checkout when enabled, booking is private, and price > 0.
+- **Webhooks & Return Flow**: REST endpoint `/wp-json/snippen/v1/vipps/webhook` captures and confirms bookings asynchronously; return URL handler provides seamless status resolution and confirmation receipt.
+- **Unpaid Bookings Cleanup**: WP-Cron job `snippen_cleanup_unpaid_vipps_bookings` purges expired reservations older than 30 minutes.
+
+## Booking Types & Notification Architecture
+- **Booking Types**: `private` (paid rental), `open` (free community events requiring board approval), and `cleaning` (complimentary next-day cleaning).
+- **Approval / Rejection**: Rejection of open bookings stores `rejection_reason` and dispatches `booking_rejected` notification via `NotificationManager`.
+- **Central Placeholder Registry**: `PlaceholderRegistry` handles placeholder registration, context scoping (`connected_to`), syntax validation, and dynamic resolution for both SMS and Email templates.
+
