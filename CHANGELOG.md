@@ -10,8 +10,9 @@
     - Implementert `list_webhooks()` for inspeksjon av aktive webhooks.
     - Implementert `register_webhook( $url, $events )` for automatisk opprettelse av abonnement på ePayment v1-hendelser.
     - Implementert `delete_webhook( $id )` for fjerning av utløpte eller midlertidige test-webhooks.
-  - **CLI-verktøy (`bin/vipps-webhook.php`)**:
+  - **CLI-verktøy (`bin/vipps-webhook.php` & Composer-oppgaver)**:
     - Nytt administrasjonsskript for Vipps webhooks med kommandoene `list`, `register <url>` og `delete <id>`.
+    - Lagt til Composer-oppgaver: `composer vipps:webhook:list`, `composer vipps:webhook:register -- <url>` og `composer vipps:webhook:delete -- <id>`.
   - **Tester & Kvalitetssikring**:
     - Utvidede integrasjonstester i `VippsWebhookIntegrationTest.php` for offisielle `.v1`-formater og statuser.
     - Nye enhetstester i `VippsClientTest.php` for `list_webhooks`, `register_webhook` og `delete_webhook`.
