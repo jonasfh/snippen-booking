@@ -68,4 +68,94 @@ class UserBookingsSnapshotTest extends TestCase {
 		$this->assertStringContainsString( '08:00 - 09:00', $shortcode_output );
 		$this->assertStringContainsString( 'Festsalen', $shortcode_output );
 	}
+
+	public function test_user_bookings_page_renders_type_badge_and_rejection_notice() {
+		global $wpdb;
+
+		$user_id = wp_insert_user(
+			array(
+				'user_login' => 'testuser_reject_' . uniqid(),
+				'user_pass'  => 'password123',
+				'user_email' => 'testuser_reject_' . uniqid() . '@example.com',
+				'role'       => 'subscriber',
+			)
+		);
+		wp_set_current_user( $user_id );
+
+		$reason = 'Lokalet er opptatt til vedlikehold.';
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'              => wp_generate_uuid4(),
+				'user_id'           => $user_id,
+				'booking_date'      => '2026-11-20',
+				'customer_name'     => 'Rejected User',
+				'customer_email'    => 'testuser_reject@example.com',
+				'status'            => 'cancelled',
+				'price'             => 0,
+				'booking_type'      => 'open',
+				'rejection_reason'  => $reason,
+				'payment_status_id' => 1,
+			)
+		);
+
+		$_GET['page']   = 'snippen-my-bookings';
+		$_GET['status'] = 'cancelled';
+		ob_start();
+		$page = new UserBookingsPage();
+		$page->render();
+		$output = ob_get_clean();
+		unset( $_GET['page'], $_GET['status'] );
+
+		$this->assertStringContainsString( 'Åpen for sameiet', $output );
+		$this->assertStringContainsString( 'Forespørsel om åpent arrangement ble avslått', $output );
+		$this->assertStringContainsString( 'Begrunnelse fra styret:', $output );
+		$this->assertStringContainsString( $reason, $output );
+		$this->assertStringContainsString( 'Hvis du fremdeles ønsker arrangementet kan det reserveres og betales privat.', $output );
+	}
+
+	public function test_user_bookings_page_renders_vipps_info_without_upload_form() {
+		global $wpdb;
+
+		$user_id = wp_insert_user(
+			array(
+				'user_login' => 'testuser_vipps_' . uniqid(),
+				'user_pass'  => 'password123',
+				'user_email' => 'testuser_vipps_' . uniqid() . '@example.com',
+				'role'       => 'subscriber',
+			)
+		);
+		wp_set_current_user( $user_id );
+
+		$ref = 'snippen-77-1725900000-888';
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'              => wp_generate_uuid4(),
+				'user_id'           => $user_id,
+				'booking_date'      => '2026-11-21',
+				'customer_name'     => 'Vipps User',
+				'customer_email'    => 'testuser_vipps@example.com',
+				'status'            => 'confirmed',
+				'price'             => 750,
+				'booking_type'      => 'private',
+				'payment_status_id' => 2,
+				'payment_notes'     => 'Vipps ref: ' . $ref,
+			)
+		);
+
+		$_GET['page'] = 'snippen-my-bookings';
+		ob_start();
+		$page = new UserBookingsPage();
+		$page->render();
+		$output = ob_get_clean();
+		unset( $_GET['page'] );
+
+		$this->assertStringContainsString( 'Privat arrangement', $output );
+		$this->assertStringContainsString( 'Betalt med Vipps', $output );
+		$this->assertStringContainsString( 'Transaksjonsreferanse:', $output );
+		$this->assertStringContainsString( $ref, $output );
+		$this->assertStringNotContainsString( 'name="payment_receipt"', $output );
+		$this->assertStringNotContainsString( 'Bankkontonr', $output );
+	}
 }

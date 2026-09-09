@@ -212,6 +212,51 @@
 .snippen-type-private { background: #f1f5f9; color: #475569; }
 .snippen-type-open { background: #e0e7ff; color: #3730a3; }
 .snippen-type-cleaning { background: #ccfbf1; color: #0f766e; }
+ 
+/* Vipps payment info */
+.snippen-vipps-payment-info {
+    font-size: 13px;
+}
+.snippen-vipps-payment-info .vipps-badge {
+    background: #ff5b24;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+/* Rejection notice */
+.snippen-rejection-notice {
+    margin-bottom: 15px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.snippen-rejection-notice-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.snippen-rejection-notice-header strong {
+    font-size: 14px;
+    color: #991b1b;
+}
+.snippen-rejection-reason {
+    margin: 4px 0;
+    color: #7f1d1d;
+}
+.snippen-rejection-instruction {
+    margin-top: 4px;
+    color: #450a0a;
+}
 
 .snippen-tag {
     background: #f1f5f9;

@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.36.0] - 2026-09-09
+- (#308) Beboeroversikt i «Mine bookinger»: Tydelig status, bookingtype, Vipps-transaksjon og håndtering av avslåtte åpne arrangementer:
+  - **Bookingtype-merkelapper** (`BookingListShortcode.php`, `UserBookingsPage.php`, `booking.css`, `admin.css`):
+    - Tydelige visuelle merkelapper for arrangementstype: `[Åpen for sameiet]` vs. `[Privat arrangement]` (og `[Utvask]`) i både shortcode-visningen (`[snippen_booking_list]`) og i administrasjonsmenyen for beboere («Mine bookinger» / `UserBookingsPage`).
+  - **Vipps-transaksjon og betalingsstatus**:
+    - For Vipps-betalte eller initierte reservasjoner: Viser Vipps-badge, sanntidsstatus (`Betalt med Vipps` eller `Venter på Vipps-betaling`) og transaksjonsreferanse.
+    - Fjerner instruksjoner for manuell bankoverføring og skjema for manuell kvitteringsopplasting for Vipps-bookinger og gratis reservasjoner.
+  - **Avslåtte åpne arrangementer**:
+    - Infoboks (`.snippen-rejection-notice`) ved avslåtte/kansellerte åpne arrangementer med tittel «Forespørsel om åpent arrangement ble avslått».
+    - Viser eventuell administratorbegrunnelse (`rejection_reason`) fra styret.
+    - Viser veiledende tekst: «Hvis du fremdeles ønsker arrangementet kan det reserveres og betales privat.».
+  - **Konsistent visning i admin og frontend**:
+    - Samkjørt visningslogikk, filtre og statusvisning mellom shortcoden og «Mine bookinger» i WordPress admin.
+
 ## [2.35.0] - 2026-09-09
 - (#307) Frontend Vipps checkout, REST webhook for betalingsbekreftelse og automatisk opprydding av ubetalte bookinger:
   - **Frontend Vipps Checkout** (`booking.js`, `booking.css`, `BookingShortcode.php`, `AssetLoader.php`):
