@@ -1921,15 +1921,16 @@ body.snippen-modal-open {
 }
 
 .booking-type-card {
+    position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 14px;
+    flex-direction: column;
+    padding: 14px 16px;
     border: 1.5px solid #cbd5e1;
     border-radius: 8px;
     cursor: pointer;
     background: #ffffff;
     transition: all 0.2s ease;
+    user-select: none;
 }
 
 .booking-type-card:hover {
@@ -1943,61 +1944,72 @@ body.snippen-modal-open {
     box-shadow: 0 0 0 1px #0284c7;
 }
 
+.booking-type-card:focus-within {
+    outline: none;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+
 .booking-type-card input[type="radio"] {
-    margin-top: 3px;
-    cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    pointer-events: none;
 }
 
 .booking-type-card-text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    flex: 1;
+    gap: 4px;
+    width: 100%;
 }
 
 .booking-type-title-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
 }
 
 .booking-type-title {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 15px;
     color: #1e293b;
+    line-height: 1.3;
 }
 
 .booking-type-desc {
-    font-size: 12px;
+    font-size: 13px;
     color: #64748b;
-    line-height: 1.35;
+    line-height: 1.4;
 }
 
 .vipps-tag {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 2px 7px;
+    gap: 6px;
+    padding: 3px 10px;
     background: #fff5f2;
-    border: 1px solid #ffdcd2;
-    border-radius: 12px;
+    border: 1.5px solid #ffdcd2;
+    border-radius: 16px;
     line-height: 1;
     user-select: none;
     flex-shrink: 0;
 }
 
 .vipps-tag-logo {
-    width: 13px;
-    height: 13px;
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
     display: block;
 }
 
 .vipps-tag-text {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
     color: #ff5b24;
 }
 

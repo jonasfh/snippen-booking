@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.39.0] - 2026-09-09
+- (#321) Forbedre bookingtype-kort og forstørr Vipps-branding:
+  - **Fjerning av radio-knapp visuelt (`booking.css`)**:
+    - Skjult standard radio-sirkel i `.booking-type-card` med `position: absolute; opacity: 0; pointer-events: none;` for et rent og moderne kortbasert grensesnitt.
+    - Kortene fungerer nå som rene knapper hvor aktivt valg tydelig indikeres med farget ramme og bakgrunn (`.selected`).
+    - Støtte for fokusmarkering via `:focus-within` for universell utforming og tastaturnavigasjon.
+  - **Forstørret Vipps-tag**:
+    - Økt størrelse på Vipps-ikonet fra 13px til 18px og tekststørrelse til 13px fet skrift for økt synlighet og lesbarhet.
+    - Forbedret padding og proporsjoner på `.vipps-tag`.
+
 ## [2.38.0] - 2026-09-09
 - (#319) Vipps-branding og logo i booking-veiviser:
   - **Offisielle Vipps-merkevareressurser (`assets/images/`)**:
