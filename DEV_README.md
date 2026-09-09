@@ -630,6 +630,133 @@ Developers and site administrators configure Vipps credentials under **Snippen B
 - **CLI Seeding**: For local development, set credentials in root `.env` and run `composer demo:vipps` (or `composer demo:env`) to populate WordPress options directly.
 - **Frontend Branding & Design Guidelines**: Adheres strictly to Vipps MobilePay Brand Guidelines. Features official SVG vector marks (`assets/images/vipps-mark.svg` and `assets/images/vipps-mark-white.svg`), an inline `.vipps-tag` badge on the «Privat arrangement» selection card in `BookingShortcode.php`, and the white Vipps smile icon in the submit button (`.vipps-submit-btn`) styled with `#ff5b24`.
 
+### Manuell testing av Vipps ePayment & Webhook lokalt (End-to-End Guide)
+
+Denne oppskriften beskriver hvordan du tester hele betalings- og webhook-flyten ende-til-ende fra Vipps sitt offisielle testmiljø (Merchant Test / MT) til lokalt utviklingsmiljø (referanse: [#323](https://github.com/jonasfh/snippen-booking/issues/323) og [#324](https://github.com/jonasfh/snippen-booking/issues/324)).
+
+#### 1. Forutsetninger & Vipps Testmiljø (MT)
+
+##### A. Oppsett av testbruker i Vipps-portalen
+1. Logg inn på [Vipps MobilePay Merchant Portal (Testmiljø)](https://portal.vippsmobilepay.com/) med BankID.
+2. Naviger til **Utvikler (Developer)** > **Test users**.
+3. Klikk **Create test user** (eller velg en eksisterende tildelt testbruker).
+4. Noter ned testbrukerens detaljer:
+   - **Mobilnummer**: F.eks. `+47 9999xxxx` (eller generert 8-sifret norsk mobilnummer).
+   - **Fødselsnummer (personnummer)**: Det fiktive 11-sifrede test-fødselsnummeret.
+   - **PIN-kode**: Standard test-PIN er `1234`.
+   *(Testbrukeren har ferdigkonfigurerte virtuelle betalingskort og midler i testmiljøet).*
+
+##### B. Installasjon av Vipps MT-appen på mobil
+
+- **Android (via Google Group)**:
+  1. Meld deg inn i den offisielle gruppen for Vipps-utviklere: [Vipps Developers Google Group](https://groups.google.com/a/vipps.no/g/vipps-developers) med samme Google-konto som er aktiv på din Android-telefon.
+  2. Åpne test-sporet i Google Play Store: [Vipps MT i Google Play](https://play.google.com/apps/testing/no.dnb.vipps.test) og trykk **Bli tester / Become a tester**.
+  3. Last ned og installer appen **Vipps MobilePay MT** fra Google Play.
+     - Appen installeres side-om-side med vanlig Vipps uten konflikt (bruker URL-scheme `vippsMT://` og har et tydelig test-ikon).
+  4. Åpne appen og logg inn med **mobilnummer** og **fødselsnummer** for testbrukeren du hentet i Vipps-portalen. Tast PIN `1234`.
+- **iOS**:
+  - Last ned via TestFlight-invitasjon tilgjengelig i [Vipps Developer Documentation - Test Environment](https://developer.vippsmobilepay.com/docs/test-environment/).
+- **Testing via desktop**:
+  - Du kan også gjennomføre betalingsflyten i nettleser på desktop: Når du videresendes til Vipps Checkout, taster du inn testbrukerens mobilnummer og godkjenner varselet i Vipps MT-appen på telefonen din.
+
+---
+
+#### 2. Lokal konfigurasjon i `.env`
+
+Sørg for at test-nøklene fra Vipps-portalen er lagt inn i rotmappens `.env`:
+```env
+VIPPS_ENABLED=yes
+VIPPS_ENVIRONMENT=test
+VIPPS_CLIENT_ID=ditt_test_client_id
+VIPPS_CLIENT_SECRET=ditt_test_client_secret
+VIPPS_SUBSCRIPTION_KEY=din_test_subscription_key
+VIPPS_MSN=ditt_test_msn
+```
+
+Synkroniser innstillingene inn i WordPress-databasen:
+```bash
+composer demo:vipps
+# eller: php bin/demo-vipps.php
+```
+
+Verifiser forbindelsen i WP Admin under **Snippen Booking > Innstillinger > Betaling** ved å klikke på **Test tilkobling**.
+
+---
+
+#### 3. Etablere offentlig HTTPS-tunnel til lokalt miljø
+
+Vipps MT-servere over internett må kunne levere HTTP POST-forespørsler til webhooks på `localhost:8080`.
+
+- **I GitHub Codespaces (anbefalt og enklest)**:
+  1. Åpne fanen **Ports** i det nedre panelet i VS Code.
+  2. Finn raden for port **8080**.
+  3. Høyreklikk på **Port Visibility** og endre fra *Private* til **Public**.
+  4. Kopier adressen under *Forwarded Address* (f.eks. `https://<codespace-id>-8080.app.github.dev`).
+- **I lokalt Docker-miljø (utenfor Codespaces)**:
+  - Bruk Cloudflare Tunnel eller ngrok:
+    ```bash
+    # Cloudflare Tunnel (krever ingen konto):
+    cloudflared tunnel --url http://localhost:8080
+    # eller ngrok:
+    ngrok http 8080
+    ```
+  - Noter den tildelte offentlige `https://...`-adressen.
+
+---
+
+#### 4. Registrere webhook-endepunktet hos Vipps MT
+
+Bruk CLI-hjelpeverktøyet `bin/vipps-webhook.php` for å registrere tunnel-adressen mot Vipps Webhooks API:
+
+```bash
+# Registrer tunnel-adressen som webhook-mottaker:
+php bin/vipps-webhook.php register https://<din-tunnel-adresse>/wp-json/snippen/v1/vipps/webhook
+
+# Kontroller at registreringen er aktiv:
+php bin/vipps-webhook.php list
+```
+
+---
+
+#### 5. Gjennomføring av testkjøringer
+
+##### Scenario A: Godkjent betaling (Happy Path)
+1. Åpne booking-veiviseren i nettleseren (`http://localhost:8080/book-rom/` eller via tunnelen).
+2. Velg en ledig dato og arrangementstype **«Privat arrangement»** (pris > 0 kr).
+3. Fyll ut leietakers navn, e-post og test-mobilnummer.
+4. Klikk på **«Betal med Vipps kr ...»**.
+5. Du omdirigeres til Vipps Checkout (`apitest.vipps.no`).
+6. Oppgi testbrukerens mobilnummer (eller skann QR-koden med Vipps MT-appen).
+7. Åpne Vipps MT-appen og godkjenn betalingen med PIN-kode (`1234`).
+8. **Observer webhook-håndteringen**:
+   - Vipps sender asynkron webhook (`epayments.payment.authorized.v1`) til tunnel-URL-en.
+   - WordPress mottar `POST /wp-json/snippen/v1/vipps/webhook` og svarer med `HTTP 200 OK`.
+   - WordPress utfører automatisk capture via Vipps API (`VippsClient::capture_payment()`).
+   - Bookingen oppdateres i databasen: `status = 'confirmed'` og `payment_status_id = 2` (PAID).
+   - Bekreftelsesvarsel på e-post og SMS trigges til leietaker.
+9. Du omdirigeres tilbake til Snippens kvitteringsside og ser bekreftet reservasjon.
+
+##### Scenario B: Avbrutt / kansellert betaling
+1. Start en ny reservasjon av et privat arrangement og trykk **«Betal med Vipps»**.
+2. I Vipps Checkout: Klikk på **«Avbryt»** (eller lukk betalingsvinduet).
+3. **Observer avbrudds-håndteringen**:
+   - Vipps sender event `epayments.payment.aborted.v1` eller `epayments.payment.terminated.v1`.
+   - WordPress mottar webhooken og oppdaterer bookingen til `status = 'cancelled'`.
+   - Reservasjonen slettes/frigjøres umiddelbart slik at datoen og tidsluken igjen blir ledig for andre beboere.
+
+---
+
+#### 6. Opprydding etter test
+
+Etter fullført testkjøring bør midlertidige test-ressurser ryddes opp:
+1. Slett test-webhooken fra Vipps MT:
+   ```bash
+   php bin/vipps-webhook.php delete <webhook-id>
+   ```
+2. Sett port 8080 tilbake til **Private** i Codespaces Ports-fanen (eller stopp `cloudflared` / `ngrok`).
+
+---
+
 ### Booking Types & Board Approval Lifecycle
 The system supports three booking types (`booking_type` in `wp_snippen_bookings`):
 1. **`private` (Privat arrangement)**: Standard private reservation. Price is calculated and must be paid either immediately via Vipps or through bank transfer.
