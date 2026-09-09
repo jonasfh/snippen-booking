@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.38.0] - 2026-09-09
+- (#319) Vipps-branding og logo i booking-veiviser:
+  - **Offisielle Vipps-merkevareressurser (`assets/images/`)**:
+    - Lagt til `vipps-mark.svg` (offisiell oransje avrundet firkant med hvitt smil for lys bakgrunn) og `vipps-mark-white.svg` (hvitt smil for bruk på oransje knapp).
+    - Følger offisielle Vipps MobilePay Brand Guidelines og Developer Design Guidelines med korrekte fargekoder (`#FF5B24`) og proporsjoner.
+  - **Bookingveiviser (`BookingShortcode.php`)**:
+    - «Privat arrangement»-valgkortet har fått en elegant `.vipps-tag` (SVG-logo + tekst) ved siden av tittelen når Vipps ePayment er aktivert.
+    - Dynamisk og betinget visning: Skjules automatisk når Vipps er deaktivert eller hvis bookingtypen er «Åpent arrangement».
+  - **Betalingsknapp & styling (`booking.css`)**:
+    - Innsendingsknappen (`.booking-submit.vipps-submit-btn`) viser det offisielle Vipps-smileikonet før teksten «Betal med Vipps kr X,-\".
+    - Responsiv flex-layout på `.booking-type-title-row` som tilpasser seg sømløst på både smale mobilskjermer og desktop.
+  - **Tester**:
+    - Ny integrasjonstest `BookingShortcodeVippsBrandingTest.php` som verifiserer rendering av Vipps-badge ved aktiv/inaktiv Vipps-konfigurasjon.
+
 ## [2.37.0] - 2026-09-09
 - (#309) Varslingsmaler, plassholdere, dokumentasjon og versjonsoppdatering for Vipps & bookingtyper:
   - **Varslingsmaler & avslagsvarsel (`booking_rejected`)**:

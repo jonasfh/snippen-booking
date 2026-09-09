@@ -540,6 +540,20 @@
     font-weight: 600;
     transition: background-color 0.2s ease, transform 0.1s ease;
     box-shadow: 0 2px 4px rgba(255, 91, 36, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.booking-submit.vipps-submit-btn::before {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: url('../assets/images/vipps-mark-white.svg') no-repeat center center;
+    background-size: contain;
+    flex-shrink: 0;
 }
 
 .booking-submit.vipps-submit-btn:hover {
@@ -1938,6 +1952,14 @@ body.snippen-modal-open {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
+}
+
+.booking-type-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .booking-type-title {
@@ -1950,6 +1972,33 @@ body.snippen-modal-open {
     font-size: 12px;
     color: #64748b;
     line-height: 1.35;
+}
+
+.vipps-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    background: #fff5f2;
+    border: 1px solid #ffdcd2;
+    border-radius: 12px;
+    line-height: 1;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.vipps-tag-logo {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    display: block;
+}
+
+.vipps-tag-text {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: #ff5b24;
 }
 
 /* Vipps return receipts */
