@@ -389,6 +389,7 @@ class NotificationTemplatesPage {
 			'payment-receipt-uploaded' => __( 'payment-receipt-uploaded (Opplastet kvittering varsel)', 'snippen-booking' ),
 			'booking-confirmed'        => __( 'booking-confirmed (Reservasjon bekreftet)', 'snippen-booking' ),
 			'payment-received'         => __( 'payment-received (Betalingsstatus: Betalt)', 'snippen-booking' ),
+			'booking-rejected'         => __( 'booking-rejected (Reservasjon avslått)', 'snippen-booking' ),
 		);
 		?>
 		<div class="snippen-card" style="margin-top: 20px; background: white; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">

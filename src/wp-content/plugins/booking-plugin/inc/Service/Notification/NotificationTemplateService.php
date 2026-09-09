@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -185,6 +185,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Betaling bekreftet - {{booking_objects}}', 'snippen-booking' ),
 					'body'    => __( "Hallo {{user_name}},\n\nTusen takk for mottatt betaling for reservasjon ({{booking_objects}}, {{booking_date}} {{booking_time}}).\n\nBeløp: {{booking_price}} kr\n\nDu kan se oppdatert bookingstatus her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				),
+			),
+			'booking-rejected'         => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Din reservasjonsforespørsel for {{booking_objects}} den {{booking_date}} har dessverre blitt avslått. Begrunnelse: {{rejection_reason}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Reservasjonsforespørsel avslått - {{booking_objects}}', 'snippen-booking' ),
+					'body'    => __( "Hallo {{user_name}},\n\nDin reservasjonsforespørsel for {{booking_objects}} den {{booking_date}} {{booking_time}} har dessverre blitt avslått av styret.\n\nBegrunnelse:\n{{rejection_reason}}\n\nDu kan se detaljer om din reservasjon her:\n{{booking_url}}\n\nTa gjerne kontakt med styret ved spørsmål.\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
 				),
 			),
 		);

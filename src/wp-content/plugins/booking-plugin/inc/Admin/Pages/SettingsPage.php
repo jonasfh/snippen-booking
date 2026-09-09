@@ -107,6 +107,7 @@ class SettingsPage {
 		update_option( 'snippen_payment_notify_admin', $email_receipt_uploaded );
 		update_option( 'snippen_email_booking_confirmed_enabled', isset( $_POST['snippen_email_booking_confirmed_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_payment_received_enabled', isset( $_POST['snippen_email_payment_received_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_email_booking_rejected_enabled', isset( $_POST['snippen_email_booking_rejected_enabled'] ) ? 'yes' : 'no' );
 
 		update_option( 'snippen_sms_booking_confirmation_enabled', isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_admin_booking_enabled', isset( $_POST['snippen_sms_admin_booking_enabled'] ) ? 'yes' : 'no' );
@@ -116,6 +117,7 @@ class SettingsPage {
 		update_option( 'snippen_sms_payment_receipt_uploaded_enabled', isset( $_POST['snippen_sms_payment_receipt_uploaded_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_booking_confirmed_enabled', isset( $_POST['snippen_sms_booking_confirmed_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_payment_received_enabled', isset( $_POST['snippen_sms_payment_received_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_sms_booking_rejected_enabled', isset( $_POST['snippen_sms_booking_rejected_enabled'] ) ? 'yes' : 'no' );
 
 		$reminder_days = isset( $_POST['snippen_payment_reminder_days'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_reminder_days'] ) ) : '30, 21';
 		update_option( 'snippen_payment_reminder_days', $reminder_days );
@@ -188,6 +190,7 @@ class SettingsPage {
 		$email_receipt_uploaded  = get_option( 'snippen_email_payment_receipt_uploaded_enabled', 'yes' );
 		$email_booking_confirmed = get_option( 'snippen_email_booking_confirmed_enabled', 'yes' );
 		$email_payment_received  = get_option( 'snippen_email_payment_received_enabled', 'yes' );
+		$email_booking_rejected  = get_option( 'snippen_email_booking_rejected_enabled', 'yes' );
 
 		$sms_booking           = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
 		$sms_admin             = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
@@ -197,6 +200,7 @@ class SettingsPage {
 		$sms_receipt_uploaded  = get_option( 'snippen_sms_payment_receipt_uploaded_enabled', 'no' );
 		$sms_booking_confirmed = get_option( 'snippen_sms_booking_confirmed_enabled', 'no' );
 		$sms_payment_received  = get_option( 'snippen_sms_payment_received_enabled', 'no' );
+		$sms_booking_rejected  = get_option( 'snippen_sms_booking_rejected_enabled', 'no' );
 
 		$payment_reminder_days = get_option( 'snippen_payment_reminder_days', '30, 21' );
 		$active_provider       = get_option( 'snippen_active_notification_provider', 'keysms' );
@@ -251,9 +255,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_email_booking_confirmed_enabled" value="yes" ' . checked( $email_booking_confirmed, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send bekreftelse på godkjent booking til kunde på e-post', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_payment_received_enabled" value="yes" ' . checked( $email_payment_received, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send bekreftelse på mottatt betaling til kunde på e-post', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_email_booking_rejected_enabled" value="yes" ' . checked( $email_booking_rejected, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om avslått reservasjon til kunde på e-post', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
@@ -307,9 +315,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_sms_booking_confirmed_enabled" value="yes" ' . checked( $sms_booking_confirmed, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send bekreftelse på godkjent booking til kunde på SMS', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_payment_received_enabled" value="yes" ' . checked( $sms_payment_received, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send bekreftelse på mottatt betaling til kunde på SMS', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_sms_booking_rejected_enabled" value="yes" ' . checked( $sms_booking_rejected, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om avslått reservasjon til kunde på SMS', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 

@@ -96,6 +96,10 @@ class BookingActionsApi {
 			if ( 'confirmed' === $status && 'confirmed' !== $existing_booking->status ) {
 				$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
 				$notification_manager->send_booking_confirmed_notification( $id );
+			} elseif ( 'cancelled' === $status && 'cancelled' !== $existing_booking->status ) {
+				$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+				$reason               = isset( $update_data['rejection_reason'] ) ? $update_data['rejection_reason'] : ( $existing_booking->rejection_reason ?? '' );
+				$notification_manager->send_booking_rejected_notification( $id, $reason );
 			}
 
 			wp_send_json_success(

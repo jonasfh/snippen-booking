@@ -23,7 +23,7 @@ class NotificationTemplateInstall {
 	public static function initialize_defaults() {
 		$template_service = new \SnippenBooking\Service\Notification\NotificationTemplateService();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {

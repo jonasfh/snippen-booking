@@ -41,7 +41,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_name',
 				'label'        => __( 'User / Customer name', 'snippen-booking' ),
 				'description'  => __( 'Full name or display name of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'user_activation', 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'user_activation', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_name', 'user.name', 'user.display_name' ) );
 				},
@@ -53,7 +53,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_email',
 				'label'        => __( 'Customer email', 'snippen-booking' ),
 				'description'  => __( 'Email address of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_email', 'user.email', 'user.user_email' ) );
 				},
@@ -65,7 +65,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_phone',
 				'label'        => __( 'Customer phone number', 'snippen-booking' ),
 				'description'  => __( 'Phone number of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_phone', 'user.phone', 'user.user_phone' ) );
 				},
@@ -89,7 +89,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_objects',
 				'label'        => __( 'Booked venue names', 'snippen-booking' ),
 				'description'  => __( 'Names of booked venues or resources.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_objects', 'booking.objects', 'booking.object_names' ) );
 				},
@@ -101,7 +101,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_date',
 				'label'        => __( 'Booking date', 'snippen-booking' ),
 				'description'  => __( 'Date for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_date', 'booking.date' ) );
 				},
@@ -113,7 +113,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_time',
 				'label'        => __( 'Booking time / time slot', 'snippen-booking' ),
 				'description'  => __( 'Time slot or range for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_time', 'booking.time' ) );
 				},
@@ -137,7 +137,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_url',
 				'label'        => __( 'Booking details URL', 'snippen-booking' ),
 				'description'  => __( 'URL to view booking details.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_url', 'booking.url' ) );
 				},
@@ -149,7 +149,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_price',
 				'label'        => __( 'Booking total price', 'snippen-booking' ),
 				'description'  => __( 'Total price for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_price', 'booking.price' ) );
 				},
@@ -200,6 +200,80 @@ class PlaceholderRegistry {
 				'connected_to' => array( 'password_reset' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'reset_link', 'password_reset.link' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'booking_type',
+				'label'        => __( 'Booking type (Privat / Åpent arrangement)', 'snippen-booking' ),
+				'description'  => __( 'Type reservasjon: Privat arrangement, Åpent arrangement eller Utvask.', 'snippen-booking' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'resolver'     => function ( array $context ) {
+					$raw = $this->resolve_path( $context, array( 'booking_type', 'booking.booking_type' ) );
+					if ( 'open' === $raw ) {
+						return __( 'Åpent arrangement', 'snippen-booking' );
+					} elseif ( 'cleaning' === $raw ) {
+						return __( 'Utvask', 'snippen-booking' );
+					} elseif ( 'private' === $raw ) {
+						return __( 'Privat arrangement', 'snippen-booking' );
+					}
+					return $raw ?: __( 'Privat arrangement', 'snippen-booking' );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'rejection_reason',
+				'label'        => __( 'Rejection reason', 'snippen-booking' ),
+				'description'  => __( 'Reason provided by administrator when rejecting a booking.', 'snippen-booking' ),
+				'connected_to' => array( 'booking_rejected', 'admin_booking' ),
+				'resolver'     => function ( array $context ) {
+					$val = $this->resolve_path( $context, array( 'rejection_reason', 'booking.rejection_reason' ) );
+					return ! empty( $val ) ? $val : __( 'Ingen begrunnelse oppgitt.', 'snippen-booking' );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'payment_method',
+				'label'        => __( 'Payment method (Vipps / Bankoverføring / Fritatt)', 'snippen-booking' ),
+				'description'  => __( 'Payment method: Vipps, Bankoverføring, or Fritatt.', 'snippen-booking' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received' ),
+				'resolver'     => function ( array $context ) {
+					$raw = $this->resolve_path( $context, array( 'payment_method', 'booking.payment_method' ) );
+					if ( ! empty( $raw ) ) {
+						if ( in_array( $raw, array( 'Vipps', 'Bankoverføring', 'Fritatt' ), true ) ) {
+							return $raw;
+						}
+						if ( 'vipps' === strtolower( (string) $raw ) ) {
+							return __( 'Vipps', 'snippen-booking' );
+						}
+						if ( 'bank' === strtolower( (string) $raw ) || 'bankoverføring' === strtolower( (string) $raw ) ) {
+							return __( 'Bankoverføring', 'snippen-booking' );
+						}
+						if ( 'exempt' === strtolower( (string) $raw ) || 'fritatt' === strtolower( (string) $raw ) ) {
+							return __( 'Fritatt', 'snippen-booking' );
+						}
+						return $raw;
+					}
+
+					// Fallback to checking booking properties
+					$b_type  = $this->resolve_path( $context, array( 'booking.booking_type', 'booking_type' ) );
+					$b_price = $this->resolve_path( $context, array( 'booking.price', 'booking_price' ) );
+					$b_notes = $this->resolve_path( $context, array( 'booking.payment_notes', 'payment_notes' ) );
+
+					$clean_price = (float) str_replace( array( ' ', ',' ), array( '', '.' ), (string) $b_price );
+					if ( 'open' === $b_type || $clean_price <= 0 ) {
+						return __( 'Fritatt', 'snippen-booking' );
+					}
+					if ( ! empty( $b_notes ) && false !== stripos( (string) $b_notes, 'vipps' ) ) {
+						return __( 'Vipps', 'snippen-booking' );
+					}
+					return __( 'Bankoverføring', 'snippen-booking' );
 				},
 			)
 		);
@@ -290,6 +364,11 @@ class PlaceholderRegistry {
 			'payment-received'         => 'payment-received',
 			'payment_paid'             => 'payment-received',
 			'payment-paid'             => 'payment-received',
+
+			'booking_rejected'         => 'booking-rejected',
+			'booking-rejected'         => 'booking-rejected',
+			'reservation_rejected'     => 'booking-rejected',
+			'reservation-rejected'     => 'booking-rejected',
 		);
 
 		return $map[ $context ] ?? $context;

@@ -28,10 +28,14 @@ To limit the form to a specific object or multiple objects, you can pass the `ob
 
 When multiple objects are available or selected, only time slots marked as "delt" (shared) will be available in this mode.
 
-### Booking Types & Free Next-Day Cleaning (Bookingtyper og utvask)
-The booking system supports three distinct booking types:
-- **Privat arrangement (`private`)**: Standard private rental that calculates price according to configured block rates.
-- **Åpen for sameiet (`open`)**: Community-wide events open to all residents. These bookings are free (`price = 0`, `EXEMPT`), but require administrator approval (`status = 'pending'`). Administrators can confirm the booking or reject it with an optional explanation message (`rejection_reason`).
+### Booking Types & Approval Lifecycle (Bookingtyper og godkjenningsprosess)
+The booking system supports three distinct booking types with tailored pricing and approval workflows:
+- **Privat arrangement (`private`)**: Standard private rental for the resident and their invited guests. Pricing is calculated automatically based on configured hourly/block rates. When Vipps is enabled, payment is executed directly during checkout; otherwise, manual bank transfer with receipt upload is utilized.
+- **Åpen for sameiet (`open`)**: Community-wide events open to all residents in the co-op (e.g. game nights, common coffee, joint neighborhood activities). These bookings are 100% free (`price = 0`, payment status `EXEMPT`), but require board approval:
+  - **Submission**: Created with status `pending` («Venter på godkjenning»).
+  - **Review**: Administrators review the booking request under **Snippen Booking > Bookinger**.
+  - **Approval**: Administrator clicks «Godkjenn» (`confirmed`), confirming the slot and notifying the resident via `booking_confirmed`.
+  - **Rejection**: Administrator clicks «Avslå» (`cancelled`) and is prompted to enter an explanatory rejection reason (`rejection_reason`). Status updates to `cancelled` and the resident receives an immediate rejection notice (`booking_rejected`) via email (and SMS if enabled) containing the explanation and a link. In «Mine bookinger» (`[snippen_booking_list]`), the resident sees a clear rejection notice with the board's reason and guidance that the event can alternatively be booked as a private rental.
 - **Utvask (`cleaning`)**: For evening bookings where the time block is marked with **Støtter utvask** (`supports_cleaning = 1`), residents can optionally request free cleaning time next morning up to a configurable end time (default 11:00 AM / kl. 11, configured under **Snippen Booking > Innstillinger > Generelt** as `snippen_cleaning_end_time`). If the venue is available the following morning up to that time, a checkbox appears in the booking wizard: *"Utvask til neste dag kl <n>"*. Checking this automatically creates a linked cleaning reservation at no extra charge.
 
 ### Custom Instructions (Egendefinert melding)
@@ -71,11 +75,35 @@ The plugin supports two SMS providers:
 
 If an SMS notification is disabled, the system will automatically fall back to sending that notification via email to ensure that confirmation codes and booking details are still delivered to the user.
 
+### Notification Templates & Placeholders (Varslingsmaler og plassholdere)
+You can customize templates for both Email and SMS notifications under **Snippen Booking > Varslingsmaler** in the WordPress Admin dashboard:
+- **Available Templates**:
+  - `account-activation`: Verification code for resident registration.
+  - `booking-confirmation`: Booking request received confirmation.
+  - `admin-booking-alert`: New booking alert sent to administrators.
+  - `booking-confirmed`: Confirmation sent to resident when booking is approved.
+  - `booking-rejected`: Notification sent to resident when an open booking request is rejected by the board.
+  - `payment-received`: Confirmation sent to resident when payment is registered as PAID.
+  - `payment-reminder`: Automated reminder sent to resident before unpaid bookings.
+  - `payment-receipt-uploaded`: Alert sent to admin when resident uploads a payment receipt.
+  - `password-reset`: Password reset link.
+- **Dynamic Placeholders**:
+  - `{{user_name}}`: Resident/customer full name or display name.
+  - `{{user_email}}`: Resident email address.
+  - `{{user_phone}}`: Resident telephone number.
+  - `{{booking_objects}}`: Booked venue name(s) (e.g. «Storsalen» or «Festsalen og Peisestuen»).
+  - `{{booking_date}}`: Booking date (YYYY-MM-DD).
+  - `{{booking_time}}`: Booking time range (e.g. «17:00 - 23:00»).
+  - `{{booking_url}}`: Direct URL to view and manage booking details.
+  - `{{booking_price}}`: Total rental price in NOK (e.g. «1 500»).
+  - `{{booking_type}}`: Type of reservation («Privat arrangement», «Åpent arrangement» eller «Utvask»).
+  - `{{rejection_reason}}`: Rationale entered by administrator when rejecting a booking.
+  - `{{payment_method}}`: Payment method («Vipps», «Bankoverføring» eller «Fritatt»).
+  - `{{bank_account}}`: Co-op bank account number for manual wire transfers.
+  - `{{vipps_number}}`: Co-op Vipps number / instructions.
+  - `{{payment_instructions}}`: Payment terms and instructions text.
 
-### Notification Templates (Varslingsmaler)
-You can configure custom templates for SMS and Email notifications (such as booking confirmations, account confirmations, admin alerts, payment reminders, and payment instructions/deadlines).
-Navigate to **Snippen Booking > Varslingsmaler** in the WordPress Admin dashboard.
-Here you can edit the text and subject lines. You can use dynamic placeholders (e.g. `{{user_name}}`, `{{booking_date}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{booking_price}}`) to personalize the messages. Default templates are provided out of the box, and you can easily revert to them at any time.
+Default templates are provided out of the box, and you can easily edit or revert them at any time.
 
 ### Automated Payment Reminders (Betalingspurring)
 Automated payment reminders are sent to customers with unpaid bookings via WP-Cron (scheduled daily).
@@ -83,15 +111,24 @@ Automated payment reminders are sent to customers with unpaid bookings via WP-Cr
 - **Exemptions**: Bookings with uploaded payment receipts (`payment_receipt_attachment_id`), settled/paid statuses (`PAID` or `EXEMPT`), or cancelled/deleted statuses are automatically exempt. Custom exemption rules can be programmatically added via the filter `snippen_booking_should_send_payment_reminder`.
 - **Idempotency**: All dispatched reminders are recorded in the database table `wp_snippen_booking_payment_reminders` with unique `(booking_id, days_before)` tracking. Re-running WP-Cron multiple times a day will never resend a reminder for an interval step already sent.
 
-### Vipps MobilePay ePayment API
-The plugin integrates with Vipps MobilePay modern ePayment API v1 to enable direct mobile payments during booking.
-- **Admin Configuration**: Located in **Snippen Booking > Innstillinger** under the **Betaling** tab.
-- **Feature-Switch Controlled**: Toggle `snippen_vipps_enabled` (`yes`/`no`, defaults to `no`). When disabled, manual bank transfer and receipt uploads remain 100% active as the fallback.
-- **Environment Toggle**: Switch seamlessly between `Test / Sandbox (MT)` (`https://apitest.vipps.no`) and `Produksjon` (`https://api.vipps.no`).
-- **Connection Test**: Includes a built-in «Test tilkobling mot Vipps» button with immediate feedback verifying OAuth 2.0 access token retrieval.
-- **Token Caching**: OAuth 2.0 access tokens are retrieved from Vipps and cached in WordPress transients based on `expires_in` with safety buffers.
+### Vipps MobilePay ePayment API Configuration & Architecture
+The plugin integrates directly with Vipps MobilePay modern ePayment API v1 for instant mobile checkout.
+
+#### Admin Configuration Guide
+Navigate to **Snippen Booking > Innstillinger** and click the **Betaling** tab:
+1. **Aktivér Vipps ePayment (`snippen_vipps_enabled`)**: Master feature-switch. Check to enable digital Vipps checkout. When unchecked (`no`), the system automatically falls back to manual bank transfer and receipt uploads with zero interruption.
+2. **Miljø / Testmodus (`snippen_vipps_environment`)**:
+   - `Test / Sandbox (MT)`: Points to `https://apitest.vipps.no` for sandbox development using Vipps test app.
+   - `Produksjon`: Points to `https://api.vipps.no` for live real-money payments.
+3. **Merchant Serial Number (`snippen_vipps_msn`)**: 5-6 digit sales unit ID (MSN) from the Vipps portal.
+4. **Client ID (`snippen_vipps_client_id`)**: OAuth 2.0 client ID from Developer Portal.
+5. **Client Secret (`snippen_vipps_client_secret`)**: OAuth 2.0 client secret.
+6. **Subscription Key (`snippen_vipps_subscription_key`)**: API subscription key (`Ocp-Apim-Subscription-Key`).
+7. **Test tilkobling mot Vipps**: Click the test button to initiate an instant OAuth 2.0 token handshake with Vipps. A success banner confirms that the credentials and network connection are valid.
+
+#### Payment Flow & Operations
 - **Frontend Checkout Flow**: When Vipps is enabled and a private booking has a price > 0, the submit button dynamically updates to «Betal med Vipps kr X,-» with official Vipps styling (`#ff5b24`). Submitting initiates a payment order via `VippsService` and redirects the user directly to the Vipps payment screen.
-- **Webhook Integration**: The plugin provides a dedicated REST endpoint `POST /wp-json/snippen/v1/vipps/webhook` to handle asynchronous payment events (`epayments.payment.authorized` captures payment and confirms booking; `epayments.payment.terminated` cancels the booking).
+- **Webhook Integration**: The plugin provides a dedicated REST endpoint `POST /wp-json/snippen/v1/vipps/webhook` to handle asynchronous payment events (`epayments.payment.authorized` captures payment, confirms booking, and dispatches confirmation notifications; `epayments.payment.terminated` cancels the booking).
 - **Return URL Handling**: Inspects return parameters (`booking_uuid` & `payment_provider=vipps`) upon user return, automatically verifying and capturing authorized payments and displaying a responsive receipt confirmation.
 - **Automated Unpaid Bookings Cleanup**: A scheduled WP-Cron job (`snippen_cleanup_unpaid_vipps_bookings`) runs every 15 minutes to cancel bookings remaining in `pending_payment` for longer than 30 minutes, releasing held slots and cancelling the payment session in Vipps.
 

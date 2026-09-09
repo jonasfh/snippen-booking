@@ -352,6 +352,20 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hallo {{user_name}},\n\nTusen takk for mottatt betaling for reservasjon ({{booking_objects}}, {{booking_date}} {{booking_time}}).\n\nBeløp: {{booking_price}} kr\n\nDu kan se oppdatert bookingstatus her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
 				'connected_to' => 'payment-received',
 			),
+			array(
+				'name'         => __( 'Reservasjon avslått (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Din reservasjonsforespørsel for {{booking_objects}} den {{booking_date}} har dessverre blitt avslått. Begrunnelse: {{rejection_reason}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'connected_to' => 'booking-rejected',
+			),
+			array(
+				'name'         => __( 'Reservasjon avslått (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Reservasjonsforespørsel avslått - {{booking_objects}}', 'snippen-booking' ),
+				'message'      => __( "Hallo {{user_name}},\n\nDin reservasjonsforespørsel for {{booking_objects}} den {{booking_date}} {{booking_time}} har dessverre blitt avslått av styret.\n\nBegrunnelse:\n{{rejection_reason}}\n\nDu kan se detaljer om din reservasjon her:\n{{booking_url}}\n\nTa gjerne kontakt med styret ved spørsmål.\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				'connected_to' => 'booking-rejected',
+			),
 		);
 
 		$this->cleanup_duplicates();
