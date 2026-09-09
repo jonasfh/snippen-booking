@@ -90,6 +90,17 @@ class VippsWebhookApi {
 	public static function handle_webhook( \WP_REST_Request $request ) {
 		global $wpdb;
 
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log(
+				sprintf(
+					'VippsWebhookApi: Webhook received. Method: %s, Headers: %s, Body: %s',
+					$request->get_method(),
+					wp_json_encode( $request->get_headers() ),
+					$request->get_body()
+				)
+			);
+		}
+
 		$params = $request->get_json_params();
 		if ( empty( $params ) || ! is_array( $params ) ) {
 			$params = $request->get_params();
@@ -125,12 +136,24 @@ class VippsWebhookApi {
 			);
 		}
 
-		$event_name = ! empty( $params['name'] ) ? $params['name'] : ( ! empty( $params['eventType'] ) ? $params['eventType'] : '' );
+		$event_name        = ! empty( $params['name'] ) ? $params['name'] : ( ! empty( $params['eventType'] ) ? $params['eventType'] : '' );
+		$event_normalized  = strtolower( trim( (string) $event_name ) );
+		$status_normalized = ! empty( $params['status'] ) ? strtoupper( trim( (string) $params['status'] ) ) : '';
 
 		$vipps_service = self::$vipps_service ?: new VippsService();
 
-		// Case 1: Payment authorized (or state AUTHORIZED)
-		if ( 'epayments.payment.authorized' === $event_name || ( isset( $params['status'] ) && 'AUTHORIZED' === $params['status'] ) ) {
+		// Case 1: Payment authorized (matches epayments.payment.authorized.v1, epayments.payment.authorized, AUTHORIZED)
+		$is_authorized = in_array(
+			$event_normalized,
+			array(
+				'epayments.payment.authorized.v1',
+				'epayments.payment.authorized',
+				'authorized',
+			),
+			true
+		) || 'AUTHORIZED' === $status_normalized;
+
+		if ( $is_authorized ) {
 			// Idempotency check: if already confirmed and paid, do not re-process
 			if ( 'confirmed' === $booking->status && 2 === (int) $booking->payment_status_id ) {
 				return new \WP_REST_Response(
@@ -207,8 +230,27 @@ class VippsWebhookApi {
 			);
 		}
 
-		// Case 2: Payment terminated, cancelled or expired
-		if ( in_array( $event_name, array( 'epayments.payment.terminated', 'epayments.payment.cancelled', 'epayments.payment.expired' ), true ) ) {
+		// Case 2: Payment terminated, cancelled, aborted or expired
+		$is_cancelled = in_array(
+			$event_normalized,
+			array(
+				'epayments.payment.aborted.v1',
+				'epayments.payment.aborted',
+				'epayments.payment.terminated.v1',
+				'epayments.payment.terminated',
+				'epayments.payment.expired.v1',
+				'epayments.payment.expired',
+				'epayments.payment.cancelled.v1',
+				'epayments.payment.cancelled',
+				'aborted',
+				'terminated',
+				'expired',
+				'cancelled',
+			),
+			true
+		) || in_array( $status_normalized, array( 'ABORTED', 'TERMINATED', 'EXPIRED', 'CANCELLED' ), true );
+
+		if ( $is_cancelled ) {
 			if ( 'pending_payment' === $booking->status ) {
 				$table = $wpdb->prefix . 'snippen_bookings';
 				$wpdb->update(

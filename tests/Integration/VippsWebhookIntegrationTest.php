@@ -289,4 +289,260 @@ class VippsWebhookIntegrationTest extends TestCase {
 		$this->assertEquals( 'cancelled', $updated->status );
 		$this->assertStringContainsString( 'Vipps-betaling ble avbrutt', $updated->rejection_reason );
 	}
+
+	/**
+	 * Test that official Vipps ePayment v1 event name epayments.payment.authorized.v1 captures and confirms booking
+	 */
+	public function test_webhook_authorized_v1_event_captures_payment_and_confirms_booking() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'              => $uuid,
+				'user_id'           => 1,
+				'booking_date'      => '2026-11-04',
+				'customer_name'     => 'V1 Authorized User',
+				'customer_email'    => 'v1auth@example.com',
+				'customer_phone'    => '99887766',
+				'booking_type'      => 'private',
+				'price'             => 750.0,
+				'payment_status_id' => 1,
+				'status'            => 'pending_payment',
+			)
+		);
+		$booking_id = (int) $wpdb->insert_id;
+		$reference  = sprintf( 'snippen-%d-1718000000-111', $booking_id );
+
+		$captured = false;
+		$this->set_http_mock(
+			function ( $preempt, $parsed_args, $url ) use ( $reference, &$captured ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'access_token' => 'mock_token_v1',
+								'expires_in'   => 3600,
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/capture' ) !== false ) {
+					$captured = true;
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => $reference,
+								'state'     => 'CAPTURED',
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/epayment/v1/payments/' . $reference ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => $reference,
+								'state'     => 'AUTHORIZED',
+							)
+						),
+					);
+				}
+				return $preempt;
+			}
+		);
+
+		$request = new \WP_REST_Request( 'POST', '/snippen/v1/vipps/webhook' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body(
+			wp_json_encode(
+				array(
+					'reference' => $reference,
+					'name'      => 'epayments.payment.authorized.v1',
+				)
+			)
+		);
+
+		$response = rest_do_request( $request );
+		$this->assertEquals( 200, $response->get_status() );
+		$data = $response->get_data();
+		$this->assertTrue( $data['success'] );
+		$this->assertTrue( $captured );
+
+		$updated = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id ) );
+		$this->assertEquals( 'confirmed', $updated->status );
+		$this->assertEquals( 2, (int) $updated->payment_status_id );
+	}
+
+	/**
+	 * Test that simplified AUTHORIZED event name triggers capture
+	 */
+	public function test_webhook_authorized_enum_name_triggers_capture() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'              => $uuid,
+				'user_id'           => 1,
+				'booking_date'      => '2026-11-05',
+				'customer_name'     => 'Enum Authorized User',
+				'customer_email'    => 'enumauth@example.com',
+				'customer_phone'    => '99887766',
+				'booking_type'      => 'private',
+				'price'             => 400.0,
+				'payment_status_id' => 1,
+				'status'            => 'pending_payment',
+			)
+		);
+		$booking_id = (int) $wpdb->insert_id;
+		$reference  = sprintf( 'snippen-%d-1718000000-222', $booking_id );
+
+		$captured = false;
+		$this->set_http_mock(
+			function ( $preempt, $parsed_args, $url ) use ( $reference, &$captured ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'access_token' => 'mock_token_enum',
+								'expires_in'   => 3600,
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/capture' ) !== false ) {
+					$captured = true;
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => $reference,
+								'state'     => 'CAPTURED',
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/epayment/v1/payments/' . $reference ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => $reference,
+								'state'     => 'AUTHORIZED',
+							)
+						),
+					);
+				}
+				return $preempt;
+			}
+		);
+
+		$request = new \WP_REST_Request( 'POST', '/snippen/v1/vipps/webhook' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body(
+			wp_json_encode(
+				array(
+					'reference' => $reference,
+					'name'      => 'AUTHORIZED',
+				)
+			)
+		);
+
+		$response = rest_do_request( $request );
+		$this->assertEquals( 200, $response->get_status() );
+		$data = $response->get_data();
+		$this->assertTrue( $data['success'] );
+		$this->assertTrue( $captured );
+	}
+
+	/**
+	 * Test that epayments.payment.aborted.v1 and ABORTED marks pending booking as cancelled
+	 */
+	public function test_webhook_aborted_v1_and_enum_cancels_pending_booking() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		// Test aborted.v1
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'              => $uuid,
+				'user_id'           => 1,
+				'booking_date'      => '2026-11-06',
+				'customer_name'     => 'Aborted User',
+				'customer_email'    => 'aborted@example.com',
+				'customer_phone'    => '99887766',
+				'booking_type'      => 'private',
+				'price'             => 500.0,
+				'payment_status_id' => 1,
+				'status'            => 'pending_payment',
+			)
+		);
+		$booking_id = (int) $wpdb->insert_id;
+		$reference  = sprintf( 'snippen-%d-1718000000-333', $booking_id );
+
+		$request = new \WP_REST_Request( 'POST', '/snippen/v1/vipps/webhook' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body(
+			wp_json_encode(
+				array(
+					'reference' => $reference,
+					'name'      => 'epayments.payment.aborted.v1',
+				)
+			)
+		);
+
+		$response = rest_do_request( $request );
+		$this->assertEquals( 200, $response->get_status() );
+
+		$updated = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id ) );
+		$this->assertEquals( 'cancelled', $updated->status );
+
+		// Test ABORTED simple enum
+		$uuid2 = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'              => $uuid2,
+				'user_id'           => 1,
+				'booking_date'      => '2026-11-07',
+				'customer_name'     => 'Aborted Enum User',
+				'customer_email'    => 'aborted2@example.com',
+				'customer_phone'    => '99887766',
+				'booking_type'      => 'private',
+				'price'             => 500.0,
+				'payment_status_id' => 1,
+				'status'            => 'pending_payment',
+			)
+		);
+		$booking_id2 = (int) $wpdb->insert_id;
+		$reference2  = sprintf( 'snippen-%d-1718000000-444', $booking_id2 );
+
+		$request2 = new \WP_REST_Request( 'POST', '/snippen/v1/vipps/webhook' );
+		$request2->set_header( 'Content-Type', 'application/json' );
+		$request2->set_body(
+			wp_json_encode(
+				array(
+					'reference' => $reference2,
+					'name'      => 'ABORTED',
+				)
+			)
+		);
+
+		$response2 = rest_do_request( $request2 );
+		$this->assertEquals( 200, $response2->get_status() );
+
+		$updated2 = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id2 ) );
+		$this->assertEquals( 'cancelled', $updated2->status );
+	}
 }

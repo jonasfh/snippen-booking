@@ -43,6 +43,7 @@
         "demo:sms": "php bin/demo-sms.php",
         "demo:mail": "php bin/demo-mail.php",
         "demo:vipps": "php bin/demo-vipps.php",
+        "vipps:webhook": "php bin/vipps-webhook.php",
         "demo:notifications": "php bin/demo-notifications.php",
         "demo:templates": "php bin/demo-templates.php",
         "demo:payments": "php bin/demo-payments.php",

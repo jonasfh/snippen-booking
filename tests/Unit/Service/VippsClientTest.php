@@ -320,4 +320,82 @@ class VippsClientTest extends TestCase {
 		$this->assertIsArray( $cancel_res );
 		$this->assertEquals( 'TERMINATED', $cancel_res['state'] );
 	}
+
+	/**
+	 * Test list_webhooks, register_webhook, and delete_webhook
+	 */
+	public function test_webhook_operations() {
+		$registered_payload = null;
+
+		$this->set_http_mock(
+			function ( $pre, $args, $url ) use ( &$registered_payload ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode( array( 'access_token' => 'test-token' ) ),
+					);
+				}
+				if ( strpos( $url, '/webhooks/v1/webhooks/webhook-uuid-123' ) !== false && 'DELETE' === ( $args['method'] ?? 'GET' ) ) {
+					$this->assertEquals( 'Bearer test-token', $args['headers']['Authorization'] );
+					return array(
+						'response' => array( 'code' => 204 ),
+						'body'     => '',
+					);
+				}
+				if ( strpos( $url, '/webhooks/v1/webhooks' ) !== false ) {
+					if ( 'POST' === ( $args['method'] ?? 'POST' ) && ! empty( $args['body'] ) ) {
+						$registered_payload = json_decode( $args['body'], true );
+						$this->assertEquals( 'Bearer test-token', $args['headers']['Authorization'] );
+						return array(
+							'response' => array( 'code' => 201 ),
+							'body'     => wp_json_encode(
+								array(
+									'id'     => 'webhook-uuid-123',
+									'url'    => $registered_payload['url'],
+									'secret' => 'whsec_test123',
+								)
+							),
+						);
+					}
+
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'webhooks' => array(
+									array(
+										'id'     => 'webhook-uuid-123',
+										'url'    => 'https://example.com/webhook',
+										'events' => array( 'epayments.payment.authorized.v1' ),
+									),
+								),
+							)
+						),
+					);
+				}
+				return $pre;
+			}
+		);
+
+		$client = new VippsClient();
+
+		// Test list_webhooks
+		$list_res = $client->list_webhooks();
+		$this->assertIsArray( $list_res );
+		$this->assertCount( 1, $list_res['webhooks'] );
+		$this->assertEquals( 'webhook-uuid-123', $list_res['webhooks'][0]['id'] );
+
+		// Test register_webhook
+		$reg_res = $client->register_webhook( 'https://my-tunnel.example.com/wp-json/snippen/v1/vipps/webhook' );
+		$this->assertIsArray( $reg_res );
+		$this->assertEquals( 'webhook-uuid-123', $reg_res['id'] );
+		$this->assertEquals( 'whsec_test123', $reg_res['secret'] );
+		$this->assertContains( 'epayments.payment.authorized.v1', $registered_payload['events'] );
+
+		// Test delete_webhook
+		$del_res = $client->delete_webhook( 'webhook-uuid-123' );
+		$this->assertIsArray( $del_res );
+		$this->assertTrue( $del_res['success'] );
+	}
 }
+
