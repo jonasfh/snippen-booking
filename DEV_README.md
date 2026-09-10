@@ -709,10 +709,10 @@ Vipps MT-servere over internett må kunne levere HTTP POST-forespørsler til web
 Bruk CLI-hjelpeverktøyet `bin/vipps-webhook.php` for å registrere tunnel-adressen mot Vipps Webhooks API:
 
 ```bash
-# Registrer tunnel-adressen som webhook-mottaker:
-composer vipps:webhook:register -- https://<din-tunnel-adresse>/wp-json/snippen/v1/vipps/webhook
-# eller direkte via php:
-# php bin/vipps-webhook.php register https://<din-tunnel-adresse>/wp-json/snippen/v1/vipps/webhook
+# Registrer tunnel-adressen som webhook-mottaker (stien legges automatisk til hvis du bare oppgir domenet):
+composer vipps:webhook:register -- https://<din-tunnel-adresse>
+# eller med full sti:
+# composer vipps:webhook:register -- https://<din-tunnel-adresse>/wp-json/snippen/v1/vipps/webhook
 
 # Kontroller at registreringen er aktiv:
 composer vipps:webhook:list

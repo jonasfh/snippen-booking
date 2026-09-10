@@ -115,6 +115,12 @@ function handle_register( VippsClient $client, $url ) {
 		exit( 1 );
 	}
 
+	$webhook_path = '/wp-json/snippen/v1/vipps/webhook';
+	if ( false === strpos( $url, $webhook_path ) ) {
+		$url = rtrim( $url, '/' ) . $webhook_path;
+		echo "Notice: Webhook endpoint path was missing. Automatically appended '$webhook_path'.\n";
+	}
+
 	if ( 0 !== strpos( $url, 'https://' ) && 0 !== strpos( $url, 'http://localhost' ) ) {
 		echo "Warning: Vipps requires a public HTTPS URL (except for internal testing).\n";
 	}
