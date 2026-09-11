@@ -53,8 +53,8 @@ class VippsWebhookCliTest extends TestCase {
 	 */
 	public function test_cli_prod_blocks_http_url() {
 		$script = escapeshellarg( dirname( __DIR__, 2 ) . '/bin/vipps-webhook.php' );
-		// Execute with VIPPS_ENVIRONMENT=prod
-		$cmd    = "VIPPS_ENVIRONMENT=prod php $script register http://example.com/wp-json/snippen/v1/vipps/webhook 2>&1";
+		// Execute with VIPPS_ENVIRONMENT=prod and credentials so it runs identically in CI and local
+		$cmd    = "VIPPS_ENVIRONMENT=prod VIPPS_CLIENT_ID=dummy-id VIPPS_CLIENT_SECRET=dummy-secret VIPPS_SUBSCRIPTION_KEY=dummy-sub VIPPS_MSN=123456 php $script register http://example.com/wp-json/snippen/v1/vipps/webhook 2>&1";
 		$output = array();
 		$code   = 0;
 		exec( $cmd, $output, $code );

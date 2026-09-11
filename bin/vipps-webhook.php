@@ -41,7 +41,6 @@ switch ( $command ) {
 		break;
 
 	case 'register':
-		ensure_configured( $client );
 		$url = isset( $argv[2] ) ? trim( $argv[2] ) : '';
 		handle_register( $client, $url );
 		break;
@@ -152,6 +151,8 @@ function handle_register( VippsClient $client, $url ) {
 		'epayments.payment.expired.v1',
 		'epayments.payment.terminated.v1',
 	);
+
+	ensure_configured( $client );
 
 	echo sprintf( "Registering webhook at Vipps (%s)...\n", $client->get_environment() );
 	echo "Target URL: $url\n";
