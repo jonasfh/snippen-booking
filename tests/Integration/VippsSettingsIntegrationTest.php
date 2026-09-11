@@ -240,6 +240,83 @@ class VippsSettingsIntegrationTest extends TestCase {
 	}
 
 	/**
+	 * Test that SettingsPage does not expose raw secret values in HTML.
+	 */
+	public function test_settings_page_masks_secrets_in_html() {
+		update_option( 'snippen_vipps_client_secret', 'ultra-secret-test-key-123' );
+		update_option( 'snippen_vipps_subscription_key', 'sub-key-super-secret-456' );
+
+		$page = new SettingsPage();
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringNotContainsString( 'ultra-secret-test-key-123', $output );
+		$this->assertStringNotContainsString( 'sub-key-super-secret-456', $output );
+		$this->assertStringContainsString( 'placeholder="••••••••••••••••"', $output );
+		$this->assertStringContainsString( 'name="snippen_vipps_client_secret" id="snippen_vipps_client_secret" value=""', $output );
+		$this->assertStringContainsString( 'name="snippen_vipps_subscription_key" id="snippen_vipps_subscription_key" value=""', $output );
+	}
+
+	/**
+	 * Test that submitting empty secret fields retains previously stored secrets.
+	 */
+	public function test_settings_page_preserves_existing_secrets_when_blank_submitted() {
+		update_option( 'snippen_vipps_client_secret', 'original-client-secret-123' );
+		update_option( 'snippen_vipps_subscription_key', 'original-subscription-key-456' );
+
+		$_POST['snippen_settings_nonce']         = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_vipps_enabled']          = 'yes';
+		$_POST['snippen_vipps_environment']      = 'test';
+		$_POST['snippen_vipps_client_id']        = 'updated-client-id';
+		$_POST['snippen_vipps_client_secret']    = '';
+		$_POST['snippen_vipps_subscription_key'] = '';
+		$_POST['snippen_vipps_msn']              = '123456';
+
+		$page = new SettingsPage();
+		ob_start();
+		$page->render();
+		ob_get_clean();
+
+		$this->assertEquals( 'updated-client-id', get_option( 'snippen_vipps_client_id' ) );
+		$this->assertEquals( 'original-client-secret-123', get_option( 'snippen_vipps_client_secret' ) );
+		$this->assertEquals( 'original-subscription-key-456', get_option( 'snippen_vipps_subscription_key' ) );
+	}
+
+	/**
+	 * Test that SettingsPage displays security mode indicator and readonly attributes when configured via environment.
+	 */
+	public function test_settings_page_shows_secure_indicator_and_readonly_when_env_defined() {
+		putenv( 'SNIPPEN_VIPPS_CLIENT_SECRET=env-super-secret' );
+		putenv( 'SNIPPEN_VIPPS_SUBSCRIPTION_KEY=env-sub-key' );
+
+		$page = new SettingsPage();
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Konfigurert via miljøvariabler / wp-config.php (sikker modus)', $output );
+		$this->assertStringContainsString( 'placeholder="•••••••••••••••• (Definert i miljø / wp-config.php)"', $output );
+		$this->assertStringContainsString( 'readonly="readonly"', $output );
+
+		// Attempt to overwrite via POST while env is active
+		$_POST['snippen_settings_nonce']         = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_vipps_enabled']          = 'yes';
+		$_POST['snippen_vipps_client_secret']    = 'attempted-post-secret';
+		$_POST['snippen_vipps_subscription_key'] = 'attempted-post-subkey';
+
+		ob_start();
+		$page->render();
+		ob_get_clean();
+
+		$this->assertNotEquals( 'attempted-post-secret', get_option( 'snippen_vipps_client_secret' ) );
+		$this->assertNotEquals( 'attempted-post-subkey', get_option( 'snippen_vipps_subscription_key' ) );
+
+		putenv( 'SNIPPEN_VIPPS_CLIENT_SECRET' );
+		putenv( 'SNIPPEN_VIPPS_SUBSCRIPTION_KEY' );
+	}
+
+	/**
 	 * Helper to catch wp_send_json output
 	 *
 	 * @param callable $func Callback to invoke.

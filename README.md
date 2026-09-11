@@ -122,9 +122,10 @@ Navigate to **Snippen Booking > Innstillinger** and click the **Betaling** tab:
    - `Produksjon`: Points to `https://api.vipps.no` for live real-money payments.
 3. **Merchant Serial Number (`snippen_vipps_msn`)**: 5-6 digit sales unit ID (MSN) from the Vipps portal.
 4. **Client ID (`snippen_vipps_client_id`)**: OAuth 2.0 client ID from Developer Portal.
-5. **Client Secret (`snippen_vipps_client_secret`)**: OAuth 2.0 client secret.
-6. **Subscription Key (`snippen_vipps_subscription_key`)**: API subscription key (`Ocp-Apim-Subscription-Key`).
-7. **Test tilkobling mot Vipps**: Click the test button to initiate an instant OAuth 2.0 token handshake with Vipps. A success banner confirms that the credentials and network connection are valid.
+5. **Client Secret (`snippen_vipps_client_secret`)**: OAuth 2.0 client secret. Lagres og maskeres automatisk (`••••••••`) slik at råverdier aldri eksponeres i HTML-kildekoden.
+6. **Subscription Key (`snippen_vipps_subscription_key`)**: API subscription key (`Ocp-Apim-Subscription-Key`). Maskeres automatisk.
+7. **Sikker modus via miljøvariabler / wp-config.php**: Nøklene kan defineres via `.env` eller PHP-konstanter i `wp-config.php`. Ved aktiv sikker modus skrivebeskyttes feltene mot overskriving i WP Admin. Alle logger maskerer sensitive headers (`Authorization`, `Ocp-Apim-Subscription-Key`) og tokens automatisk.
+8. **Test tilkobling mot Vipps**: Klikk på testknappen for å verifisere API-opplysningene mot Vipps. Status og miljø kan også inspiseres via CLI med `composer vipps:webhook:status`.
 
 #### Payment Flow & Operations
 - **Frontend Checkout Flow & Branding**: When Vipps is enabled and configured, the booking wizard's «Privat arrangement» card renders an official Vipps badge (`.vipps-tag`) communicating the payment method clearly before booking. For private bookings with price > 0, the submit button dynamically updates to «Betal med Vipps kr X,-» featuring the official white Vipps mark and brand styling (`#ff5b24`). Submitting initiates a payment order via `VippsService` and redirects the user directly to the Vipps payment screen.

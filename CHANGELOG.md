@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.41.0] - 2026-09-11
+- (#327) Teknisk sikring av Vipps-hemmeligheter og produksjonsvalidering:
+  - **Sikkerhet & hemmelighetshåndtering i WP Admin (`SettingsPage.php`)**:
+    - Automatisk deteksjon av Vipps API-nøkler definert via miljøvariabler (`.env`) eller PHP-konstanter (`wp-config.php`).
+    - Visning av sikker modus-indikator: *«🔒 Konfigurert via miljøvariabler / wp-config.php (sikker modus)»*.
+    - Skrivebeskyttelse (`readonly`) av sensitive felter (`Client Secret`, `Subscription Key`, etc.) når de styres av miljøet for å forhindre utilsiktet overskriving.
+    - Maskering av passordfelter i HTML-kildekoden: Råverdier forhåndsutfylles aldri i `value=""`, og maskert placeholder `••••••••••••••••` benyttes i stedet.
+    - Bevaring av eksisterende lagrede hemmeligheter i databasen dersom feltet sendes tomt ved lagring.
+  - **Maskering av hemmeligheter og tokens i logger (`VippsClient.php` & `VippsWebhookApi.php`)**:
+    - Implementert `VippsClient::mask_headers()` for trygg maskering av `Authorization: Bearer ***`, `Ocp-Apim-Subscription-Key: ***`, og `client_secret`.
+    - Implementert `VippsClient::sanitize_for_log()` for rensing av sensitive tokens (`Bearer ...`, `"access_token": "..."`), API-nøkler og feilmeldinger fra alle `error_log`-utskrifter.
+    - Sikret webhook-logging i `VippsWebhookApi.php` under `WP_DEBUG` slik at headers og payload automatisk maskeres før loggføring.
+  - **Produksjonsvalidering i CLI (`bin/vipps-webhook.php` & `composer.json`)**:
+    - Ny kommando: `composer vipps:webhook:status` (eller `php bin/vipps-webhook.php status` / `verify`).
+    - Viser aktivt miljø (`test`/`prod`), kilde for API-nøkler (miljø/konstanter vs WordPress-database), status for TLS 1.2+ og HTTPS, samt liste over aktive webhooks hos Vipps.
+    - Streng validering i `register`-kommandoen: Nekter registrering av usikre `http://`-adresser mot Vipps produksjon (`api.vipps.no`).
+    - Forbedret `.env`-laster (`bin/env-loader.php`) til å respektere eksisterende prosess-miljøvariabler.
+  - **Tester & Dokumentasjon**:
+    - Nye enhetstester i `VippsClientTest.php` for maskering, loggsanitering, kildedeteksjon og maskerte getters.
+    - Nye integrasjonstester i `VippsSettingsIntegrationTest.php` for HTML-maskering, bevaring av hemmeligheter ved tom innsending, og sikker modus-oppførsel.
+    - Nye integrasjonstester i `VippsWebhookCliTest.php` for CLI status-visning og avvisning av HTTP mot produksjon.
+
 ## [2.40.0] - 2026-09-09
 - (#323) Støtte for offisielle Vipps ePayment v1 webhooks og CLI-administrasjonsverktøy:
   - **Vipps Webhook API (`VippsWebhookApi.php`)**:

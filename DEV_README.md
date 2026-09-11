@@ -136,6 +136,7 @@ Prosjektet benytter en `.env`-fil i rotmappen for lokal konfigurasjon under utvi
 - **Test User Settings**: `TEST_USER_EMAIL`, `TEST_USER_PHONE`, `TEST_USER_NAME`, `TEST_USER_PASS`. Brukes av `composer demo:me` til å opprette/oppdatere en beboer/testbruker.
 - **SMTP / Email Settings**: `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`. Brukes dersom du ønsker å teste reell utsending av e-post via SMTP.
 - **Vipps MobilePay ePayment Settings**: `VIPPS_ENABLED`, `VIPPS_ENVIRONMENT` (`test` / `prod`), `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY`, `VIPPS_MSN`. Kjøring av `composer demo` / `composer demo:vipps` oppdaterer Vipps-innstillingene i WordPress automatisk fra disse variablene dersom de er definert.
+  - **Sikker modus & hemmelighetshåndtering**: Nøklene kan defineres via `.env` eller som PHP-konstanter i `wp-config.php` (f.eks. `define('SNIPPEN_VIPPS_CLIENT_SECRET', '...')` eller `VIPPS_CLIENT_SECRET`). Når nøkler er definert i miljøet aktiveres *Sikker modus* automatisk i WP Admin: feltene skrivebeskyttes (`readonly`), råverdier forhåndsutfylles aldri i HTML-kildekoden (maskert som `••••••••`), og sensitiv data kan ikke overskrives utilsiktet. Alle logger maskerer automatisk `Authorization: Bearer ***`, `Ocp-Apim-Subscription-Key` og tokens.
 
 
 ### GitHub Integration
@@ -709,6 +710,9 @@ Vipps MT-servere over internett må kunne levere HTTP POST-forespørsler til web
 Bruk CLI-hjelpeverktøyet `bin/vipps-webhook.php` for å registrere tunnel-adressen mot Vipps Webhooks API:
 
 ```bash
+# Valider miljø, nøkler, TLS 1.2+ og hent gjeldende webhook-status:
+composer vipps:webhook:status
+
 # Registrer tunnel-adressen som webhook-mottaker (stien legges automatisk til hvis du bare oppgir domenet):
 composer vipps:webhook:register -- https://<din-tunnel-adresse>
 # eller med full sti:

@@ -397,5 +397,94 @@ class VippsClientTest extends TestCase {
 		$this->assertIsArray( $del_res );
 		$this->assertTrue( $del_res['success'] );
 	}
+
+	/**
+	 * Test header masking for secure logging.
+	 */
+	public function test_mask_headers() {
+		$headers = array(
+			'Authorization'             => 'Bearer super-secret-jwt-token-12345',
+			'authorization'             => 'Bearer another-token-67890',
+			'Ocp-Apim-Subscription-Key' => 'd8a87b649a374b6289b4f4c7e6512bc2',
+			'client_secret'             => 'my-super-secret-client-key-xyz',
+			'Content-Type'              => 'application/json',
+			'X-Custom-Header'           => 'custom-value',
+		);
+
+		$masked = VippsClient::mask_headers( $headers );
+
+		$this->assertEquals( 'Bearer ***', $masked['Authorization'] );
+		$this->assertEquals( 'Bearer ***', $masked['authorization'] );
+		$this->assertEquals( '***bc2', $masked['Ocp-Apim-Subscription-Key'] );
+		$this->assertEquals( '***xyz', $masked['client_secret'] );
+		$this->assertEquals( 'application/json', $masked['Content-Type'] );
+		$this->assertEquals( 'custom-value', $masked['X-Custom-Header'] );
+	}
+
+	/**
+	 * Test log sanitization function.
+	 */
+	public function test_sanitize_for_log() {
+		$raw_log = 'Error with Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 and "access_token": "secret-jwt-999" and "client_secret": "my-secret-abc" and Ocp-Apim-Subscription-Key: sub-key-1234';
+
+		$sanitized = VippsClient::sanitize_for_log( $raw_log );
+
+		$this->assertStringNotContainsString( 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', $sanitized );
+		$this->assertStringNotContainsString( 'secret-jwt-999', $sanitized );
+		$this->assertStringNotContainsString( 'my-secret-abc', $sanitized );
+		$this->assertStringNotContainsString( 'sub-key-1234', $sanitized );
+
+		$this->assertStringContainsString( 'Bearer ***', $sanitized );
+		$this->assertStringContainsString( '"access_token": "***"', $sanitized );
+		$this->assertStringContainsString( '"client_secret": "***"', $sanitized );
+		$this->assertStringContainsString( 'Ocp-Apim-Subscription-Key: ***', $sanitized );
+	}
+
+	/**
+	 * Test env detection and setting source identification.
+	 */
+	public function test_is_defined_in_env_and_get_setting_source() {
+		putenv( 'TEST_SNIPPEN_VIPPS_VAR=dummy_val' );
+
+		$this->assertTrue( VippsClient::is_defined_in_env( 'TEST_SNIPPEN_VIPPS_VAR' ) );
+		$this->assertFalse( VippsClient::is_defined_in_env( 'NON_EXISTENT_VAR_12345' ) );
+
+		$source_env = VippsClient::get_setting_source( 'non_existent_option', 'TEST_SNIPPEN_VIPPS_VAR' );
+		$this->assertEquals( 'env', $source_env );
+
+		update_option( 'test_dummy_opt', 'opt_val' );
+		$source_opt = VippsClient::get_setting_source( 'test_dummy_opt', 'NON_EXISTENT_VAR_12345' );
+		$this->assertEquals( 'option', $source_opt );
+
+		delete_option( 'test_dummy_opt' );
+		$source_none = VippsClient::get_setting_source( 'test_dummy_opt', 'NON_EXISTENT_VAR_12345' );
+		$this->assertEquals( 'not_set', $source_none );
+
+		putenv( 'TEST_SNIPPEN_VIPPS_VAR' );
+	}
+
+	/**
+	 * Test masked getters for client secret and subscription key.
+	 */
+	public function test_get_masked_credentials() {
+		$client = new VippsClient(
+			array(
+				'client_secret'    => 'verysecretstring',
+				'subscription_key' => 'subkeystring123',
+			)
+		);
+
+		$this->assertEquals( '***ring', $client->get_masked_client_secret() );
+		$this->assertEquals( '***g123', $client->get_masked_subscription_key() );
+
+		$empty_client = new VippsClient(
+			array(
+				'client_secret'    => '',
+				'subscription_key' => '',
+			)
+		);
+		$this->assertEquals( '', $empty_client->get_masked_client_secret() );
+		$this->assertEquals( '', $empty_client->get_masked_subscription_key() );
+	}
 }
 
