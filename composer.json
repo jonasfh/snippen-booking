@@ -44,6 +44,8 @@
         "demo:mail": "php bin/demo-mail.php",
         "demo:vipps": "php bin/demo-vipps.php",
         "vipps:webhook": "php bin/vipps-webhook.php",
+        "vipps:webhook:status": "php bin/vipps-webhook.php status",
+        "vipps:webhook:verify": "php bin/vipps-webhook.php verify",
         "vipps:webhook:list": "php bin/vipps-webhook.php list",
         "vipps:webhook:register": "php bin/vipps-webhook.php register",
         "vipps:webhook:delete": "php bin/vipps-webhook.php delete",

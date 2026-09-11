@@ -3,7 +3,7 @@
  * Simple .env loader for demo scripts
  */
 
-function load_env($path) {
+function load_env($path, $override = false) {
     if (!file_exists($path)) {
         return false;
     }
@@ -14,9 +14,17 @@ function load_env($path) {
             continue;
         }
 
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+
         list($name, $value) = explode('=', $line, 2);
         $name = trim($name);
         $value = trim($value);
+
+        if (!$override && false !== getenv($name)) {
+            continue;
+        }
 
         // Remove quotes if present
         if (preg_match('/^"(.*)"$/', $value, $matches)) {

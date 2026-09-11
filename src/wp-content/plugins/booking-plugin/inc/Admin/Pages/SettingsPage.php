@@ -9,6 +9,7 @@ namespace SnippenBooking\Admin\Pages;
 
 use SnippenBooking\Service\Notification\NotificationManager;
 use SnippenBooking\Service\Notification\SmsProviderInterface;
+use SnippenBooking\Service\Vipps\VippsClient;
 
 /**
  * Settings Page
@@ -124,11 +125,27 @@ class SettingsPage {
 
 		// Save Vipps ePayment Settings
 		update_option( 'snippen_vipps_enabled', isset( $_POST['snippen_vipps_enabled'] ) ? 'yes' : 'no' );
-		update_option( 'snippen_vipps_environment', isset( $_POST['snippen_vipps_environment'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_environment'] ) ) : 'test' );
-		update_option( 'snippen_vipps_client_id', isset( $_POST['snippen_vipps_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_client_id'] ) ) : '' );
-		update_option( 'snippen_vipps_client_secret', isset( $_POST['snippen_vipps_client_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_client_secret'] ) ) : '' );
-		update_option( 'snippen_vipps_subscription_key', isset( $_POST['snippen_vipps_subscription_key'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_subscription_key'] ) ) : '' );
-		update_option( 'snippen_vipps_msn', isset( $_POST['snippen_vipps_msn'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_vipps_msn'] ) ) : '' );
+		if ( ! VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_ENVIRONMENT', 'VIPPS_ENVIRONMENT' ) && isset( $_POST['snippen_vipps_environment'] ) ) {
+			update_option( 'snippen_vipps_environment', sanitize_text_field( wp_unslash( $_POST['snippen_vipps_environment'] ) ) );
+		}
+		if ( ! VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_ID', 'VIPPS_CLIENT_ID' ) && isset( $_POST['snippen_vipps_client_id'] ) ) {
+			update_option( 'snippen_vipps_client_id', sanitize_text_field( wp_unslash( $_POST['snippen_vipps_client_id'] ) ) );
+		}
+		if ( ! VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_SECRET', 'VIPPS_CLIENT_SECRET' ) ) {
+			$raw_secret = isset( $_POST['snippen_vipps_client_secret'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['snippen_vipps_client_secret'] ) ) ) : '';
+			if ( '' !== $raw_secret ) {
+				update_option( 'snippen_vipps_client_secret', $raw_secret );
+			}
+		}
+		if ( ! VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_SUBSCRIPTION_KEY', 'VIPPS_SUBSCRIPTION_KEY' ) ) {
+			$raw_sub_key = isset( $_POST['snippen_vipps_subscription_key'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['snippen_vipps_subscription_key'] ) ) ) : '';
+			if ( '' !== $raw_sub_key ) {
+				update_option( 'snippen_vipps_subscription_key', $raw_sub_key );
+			}
+		}
+		if ( ! VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_MSN', 'VIPPS_MSN' ) && isset( $_POST['snippen_vipps_msn'] ) ) {
+			update_option( 'snippen_vipps_msn', sanitize_text_field( wp_unslash( $_POST['snippen_vipps_msn'] ) ) );
+		}
 
 		if ( isset( $_POST['snippen_active_notification_provider'] ) ) {
 			update_option( 'snippen_active_notification_provider', sanitize_text_field( wp_unslash( $_POST['snippen_active_notification_provider'] ) ) );
@@ -387,6 +404,23 @@ class SettingsPage {
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Vipps MobilePay ePayment API (Mobilbetaling)', 'snippen-booking' ) . '</h3>';
 		echo '<p class="description" style="margin-bottom:16px;">' . esc_html__( 'Integrasjon mot Vipps MobilePay moderne ePayment API v1. Når denne er aktivert, kan kunder betale direkte med Vipps. Dersom denne er slått av, benyttes manuell overføring og kvitteringsopplasting som 100 % fallback.', 'snippen-booking' ) . '</p>';
 
+		$is_secret_env    = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_SECRET', 'VIPPS_CLIENT_SECRET' );
+		$is_sub_key_env   = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_SUBSCRIPTION_KEY', 'VIPPS_SUBSCRIPTION_KEY' );
+		$is_client_id_env = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_ID', 'VIPPS_CLIENT_ID' );
+		$is_msn_env       = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_MSN', 'VIPPS_MSN' );
+		$is_env_mode      = $is_secret_env || $is_sub_key_env || $is_client_id_env || $is_msn_env;
+
+		if ( $is_env_mode ) {
+			echo '<div class="notice notice-info inline" style="margin:12px 0 20px 0; padding:10px 14px; background:#f0f9ff; border-left:4px solid #0284c7; border-radius:4px;">';
+			echo '<p style="margin:0; font-weight:600; color:#0369a1;">';
+			echo '🔒 ' . esc_html__( 'Konfigurert via miljøvariabler / wp-config.php (sikker modus)', 'snippen-booking' );
+			echo '</p>';
+			echo '<p class="description" style="margin:4px 0 0 0; color:#075985;">';
+			echo esc_html__( 'Vipps-nøkler og hemmeligheter er konfigurert i miljøet. Sensitive felter er skrivebeskyttet for å forhindre utilsiktet overskriving.', 'snippen-booking' );
+			echo '</p>';
+			echo '</div>';
+		}
+
 		echo '<div class="snippen-form-group" style="margin-bottom:20px; background:#f0fdf4; border:1px solid #bbf7d0; padding:16px; border-radius:8px;">';
 		echo '<label style="font-weight:700; color:#166534; display:flex; align-items:center; gap:8px;">';
 		echo '<input type="checkbox" name="snippen_vipps_enabled" id="snippen_vipps_enabled" value="yes" ' . checked( $vipps_enabled, 'yes', false ) . ' style="margin:0;">';
@@ -404,28 +438,68 @@ class SettingsPage {
 		echo '<p class="description">' . esc_html__( 'Bruk Test / Sandbox for å teste med Vipps MT-testbrukere før publisering i produksjon.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
+		$client_id_attrs = $is_client_id_env ? ' readonly="readonly" style="background-color:#f1f5f9; cursor:not-allowed;"' : '';
 		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
 		echo '<label for="snippen_vipps_client_id" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Client ID', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_vipps_client_id" id="snippen_vipps_client_id" value="' . esc_attr( $vipps_client_id ) . '" class="regular-text" placeholder="f.eks. 3fa85f64-5717-4562-b3fc-2c963f66afa6">';
-		echo '<p class="description">' . esc_html__( 'Klient-ID fra Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		echo '<input type="text" name="snippen_vipps_client_id" id="snippen_vipps_client_id" value="' . esc_attr( $vipps_client_id ) . '" class="regular-text" placeholder="f.eks. 3fa85f64-5717-4562-b3fc-2c963f66afa6"' . $client_id_attrs . '>';
+		if ( $is_client_id_env ) {
+			echo '<p class="description">' . esc_html__( 'Styres av miljøvariabler / wp-config.php (sikker modus).', 'snippen-booking' ) . '</p>';
+		} else {
+			echo '<p class="description">' . esc_html__( 'Klient-ID fra Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		}
 		echo '</div>';
+
+		$secret_placeholder = '';
+		$secret_attrs       = '';
+		$secret_help        = '';
+		if ( $is_secret_env ) {
+			$secret_placeholder = __( '•••••••••••••••• (Definert i miljø / wp-config.php)', 'snippen-booking' );
+			$secret_attrs       = ' readonly="readonly" style="background-color:#f1f5f9; cursor:not-allowed;"';
+			$secret_help        = __( 'Styres av miljøvariabler / wp-config.php (sikker modus). Feltet er skrivebeskyttet.', 'snippen-booking' );
+		} elseif ( ! empty( $vipps_client_secret ) ) {
+			$secret_placeholder = '••••••••••••••••';
+			$secret_help        = __( 'Klienthemmelighet er lagret og maskert. La feltet stå tomt for å beholde eksisterende verdi.', 'snippen-booking' );
+		} else {
+			$secret_placeholder = __( 'Lim inn Client Secret', 'snippen-booking' );
+			$secret_help        = __( 'Klienthemmelighet fra Vipps Developer Portal.', 'snippen-booking' );
+		}
 
 		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
 		echo '<label for="snippen_vipps_client_secret" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Client Secret', 'snippen-booking' ) . '</label>';
-		echo '<input type="password" name="snippen_vipps_client_secret" id="snippen_vipps_client_secret" value="' . esc_attr( $vipps_client_secret ) . '" class="regular-text" autocomplete="new-password">';
-		echo '<p class="description">' . esc_html__( 'Klienthemmelighet fra Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		echo '<input type="password" name="snippen_vipps_client_secret" id="snippen_vipps_client_secret" value="" class="regular-text" placeholder="' . esc_attr( $secret_placeholder ) . '" autocomplete="new-password"' . $secret_attrs . '>';
+		echo '<p class="description">' . esc_html( $secret_help ) . '</p>';
 		echo '</div>';
+
+		$sub_key_placeholder = '';
+		$sub_key_attrs       = '';
+		$sub_key_help        = '';
+		if ( $is_sub_key_env ) {
+			$sub_key_placeholder = __( '•••••••••••••••• (Definert i miljø / wp-config.php)', 'snippen-booking' );
+			$sub_key_attrs       = ' readonly="readonly" style="background-color:#f1f5f9; cursor:not-allowed;"';
+			$sub_key_help        = __( 'Styres av miljøvariabler / wp-config.php (sikker modus). Feltet er skrivebeskyttet.', 'snippen-booking' );
+		} elseif ( ! empty( $vipps_subscription_key ) ) {
+			$sub_key_placeholder = '••••••••••••••••';
+			$sub_key_help        = __( 'Abonnementsnøkkel er lagret og maskert. La feltet stå tomt for å beholde eksisterende verdi.', 'snippen-booking' );
+		} else {
+			$sub_key_placeholder = __( 'Lim inn Subscription Key', 'snippen-booking' );
+			$sub_key_help        = __( 'Abonnementsnøkkel for API-produktet (ePayment) i Vipps Developer Portal.', 'snippen-booking' );
+		}
 
 		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
 		echo '<label for="snippen_vipps_subscription_key" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Subscription Key (Ocp-Apim-Subscription-Key)', 'snippen-booking' ) . '</label>';
-		echo '<input type="password" name="snippen_vipps_subscription_key" id="snippen_vipps_subscription_key" value="' . esc_attr( $vipps_subscription_key ) . '" class="regular-text" autocomplete="new-password">';
-		echo '<p class="description">' . esc_html__( 'Abonnementsnøkkel for API-produktet (ePayment) i Vipps Developer Portal.', 'snippen-booking' ) . '</p>';
+		echo '<input type="password" name="snippen_vipps_subscription_key" id="snippen_vipps_subscription_key" value="" class="regular-text" autocomplete="new-password" placeholder="' . esc_attr( $sub_key_placeholder ) . '"' . $sub_key_attrs . '>';
+		echo '<p class="description">' . esc_html( $sub_key_help ) . '</p>';
 		echo '</div>';
 
+		$msn_attrs = $is_msn_env ? ' readonly="readonly" style="background-color:#f1f5f9; cursor:not-allowed;"' : '';
 		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
 		echo '<label for="snippen_vipps_msn" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Merchant Serial Number (MSN)', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_vipps_msn" id="snippen_vipps_msn" value="' . esc_attr( $vipps_msn ) . '" class="regular-text" placeholder="f.eks. 123456">';
-		echo '<p class="description">' . esc_html__( 'Salgsstedsnummer / bedriftsnummer hos Vipps.', 'snippen-booking' ) . '</p>';
+		echo '<input type="text" name="snippen_vipps_msn" id="snippen_vipps_msn" value="' . esc_attr( $vipps_msn ) . '" class="regular-text" placeholder="f.eks. 123456"' . $msn_attrs . '>';
+		if ( $is_msn_env ) {
+			echo '<p class="description">' . esc_html__( 'Styres av miljøvariabler / wp-config.php (sikker modus).', 'snippen-booking' ) . '</p>';
+		} else {
+			echo '<p class="description">' . esc_html__( 'Salgsstedsnummer / bedriftsnummer hos Vipps.', 'snippen-booking' ) . '</p>';
+		}
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="margin-top:20px;">';

@@ -91,12 +91,14 @@ class VippsWebhookApi {
 		global $wpdb;
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$headers        = $request->get_headers();
+			$masked_headers = \SnippenBooking\Service\Vipps\VippsClient::mask_headers( $headers );
 			error_log(
 				sprintf(
 					'VippsWebhookApi: Webhook received. Method: %s, Headers: %s, Body: %s',
 					$request->get_method(),
-					wp_json_encode( $request->get_headers() ),
-					$request->get_body()
+					wp_json_encode( $masked_headers ),
+					\SnippenBooking\Service\Vipps\VippsClient::sanitize_for_log( $request->get_body() )
 				)
 			);
 		}
@@ -168,7 +170,7 @@ class VippsWebhookApi {
 			// Verify actual payment state directly from Vipps ePayment API
 			$payment_details = $vipps_service->get_booking_payment_status( $reference );
 			if ( is_wp_error( $payment_details ) ) {
-				error_log( 'Vipps webhook verification error: ' . $payment_details->get_error_message() );
+				error_log( 'Vipps webhook verification error: ' . \SnippenBooking\Service\Vipps\VippsClient::sanitize_for_log( $payment_details->get_error_message() ) );
 				return new \WP_REST_Response(
 					array(
 						'success' => false,
@@ -183,7 +185,7 @@ class VippsWebhookApi {
 				// Capture the payment
 				$capture_res = $vipps_service->capture_booking_payment( $reference, $booking->price );
 				if ( is_wp_error( $capture_res ) ) {
-					error_log( 'Vipps webhook capture error: ' . $capture_res->get_error_message() );
+					error_log( 'Vipps webhook capture error: ' . \SnippenBooking\Service\Vipps\VippsClient::sanitize_for_log( $capture_res->get_error_message() ) );
 					return new \WP_REST_Response(
 						array(
 							'success' => false,

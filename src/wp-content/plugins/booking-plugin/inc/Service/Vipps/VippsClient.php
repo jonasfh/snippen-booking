@@ -96,6 +96,126 @@ class VippsClient {
 	}
 
 	/**
+	 * Check if a config key is defined via environment variable or PHP constant.
+	 *
+	 * @param string $constant_key Primary constant/env key.
+	 * @param string $alt_key      Alternative constant/env key.
+	 * @return bool
+	 */
+	public static function is_defined_in_env( $constant_key, $alt_key = '' ) {
+		if ( ! empty( $constant_key ) ) {
+			if ( defined( $constant_key ) ) {
+				return true;
+			}
+			$env = getenv( $constant_key );
+			if ( false !== $env && '' !== $env ) {
+				return true;
+			}
+		}
+		if ( ! empty( $alt_key ) ) {
+			if ( defined( $alt_key ) ) {
+				return true;
+			}
+			$env = getenv( $alt_key );
+			if ( false !== $env && '' !== $env ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Determine the configuration source for a key.
+	 *
+	 * @param string $option_key   WP option key.
+	 * @param string $constant_key Constant / environment variable key.
+	 * @param string $alt_key      Alternative key.
+	 * @return string 'constant', 'env', 'option', or 'not_set'
+	 */
+	public static function get_setting_source( $option_key, $constant_key = '', $alt_key = '' ) {
+		if ( ! empty( $constant_key ) && defined( $constant_key ) ) {
+			return 'constant';
+		}
+		if ( ! empty( $constant_key ) && false !== getenv( $constant_key ) && '' !== getenv( $constant_key ) ) {
+			return 'env';
+		}
+		if ( ! empty( $alt_key ) && defined( $alt_key ) ) {
+			return 'constant';
+		}
+		if ( ! empty( $alt_key ) && false !== getenv( $alt_key ) && '' !== getenv( $alt_key ) ) {
+			return 'env';
+		}
+		$val = get_option( $option_key, null );
+		if ( null !== $val && '' !== $val ) {
+			return 'option';
+		}
+		return 'not_set';
+	}
+
+	/**
+	 * Mask sensitive headers for safe logging.
+	 *
+	 * @param array $headers Associative array of request/response headers.
+	 * @return array
+	 */
+	public static function mask_headers( array $headers ) {
+		$sanitized = array();
+		foreach ( $headers as $key => $value ) {
+			$lower = strtolower( (string) $key );
+			if ( 'authorization' === $lower ) {
+				$val_str = is_array( $value ) ? ( $value[0] ?? '' ) : (string) $value;
+				if ( stripos( $val_str, 'bearer ' ) === 0 ) {
+					$sanitized[ $key ] = 'Bearer ***';
+				} else {
+					$sanitized[ $key ] = '***';
+				}
+			} elseif ( 'ocp-apim-subscription-key' === $lower ) {
+				$val_str           = is_array( $value ) ? ( $value[0] ?? '' ) : (string) $value;
+				$length            = strlen( $val_str );
+				$tail              = $length > 3 ? substr( $val_str, -3 ) : '***';
+				$sanitized[ $key ] = '***' . $tail;
+			} elseif ( 'client_secret' === $lower ) {
+				$val_str           = is_array( $value ) ? ( $value[0] ?? '' ) : (string) $value;
+				$length            = strlen( $val_str );
+				$tail              = $length > 3 ? substr( $val_str, -3 ) : '***';
+				$sanitized[ $key ] = '***' . $tail;
+			} else {
+				$sanitized[ $key ] = $value;
+			}
+		}
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize sensitive tokens, keys, and secrets from log strings.
+	 *
+	 * @param mixed $message Log message or response string.
+	 * @return string Sanitized message.
+	 */
+	public static function sanitize_for_log( $message ) {
+		if ( ! is_string( $message ) ) {
+			return is_scalar( $message ) ? (string) $message : '';
+		}
+
+		// Mask Bearer tokens: Bearer eyJ...
+		$message = preg_replace( '/(Bearer\s+)[A-Za-z0-9\-\._~\+\/]+=*/i', '$1***', $message );
+
+		// Mask JSON keys: "access_token": "..."
+		$message = preg_replace( '/("access_token"\s*:\s*")[^"]+(")/i', '$1***$2', $message );
+
+		// Mask JSON keys: "client_secret": "..."
+		$message = preg_replace( '/("client_secret"\s*:\s*")[^"]+(")/i', '$1***$2', $message );
+
+		// Mask JSON / query keys: "subscription_key" / "Ocp-Apim-Subscription-Key"
+		$message = preg_replace( '/("(?:subscription_key|Ocp-Apim-Subscription-Key)"\s*:\s*")[^"]+(")/i', '$1***$2', $message );
+
+		// Mask header style strings: Ocp-Apim-Subscription-Key: abc123
+		$message = preg_replace( '/(Ocp-Apim-Subscription-Key[\'"]?\s*[:=]\s*[\'"]?)[A-Za-z0-9\-_]+/i', '$1***', $message );
+
+		return $message;
+	}
+
+	/**
 	 * Get base API URL based on environment.
 	 *
 	 * @return string
@@ -123,6 +243,50 @@ class VippsClient {
 	 */
 	public function get_environment() {
 		return $this->environment;
+	}
+
+	/**
+	 * Get Client ID.
+	 *
+	 * @return string
+	 */
+	public function get_client_id() {
+		return (string) $this->client_id;
+	}
+
+	/**
+	 * Get Merchant Serial Number (MSN).
+	 *
+	 * @return string
+	 */
+	public function get_msn() {
+		return (string) $this->msn;
+	}
+
+	/**
+	 * Get masked Client Secret for safe display.
+	 *
+	 * @return string
+	 */
+	public function get_masked_client_secret() {
+		if ( empty( $this->client_secret ) ) {
+			return '';
+		}
+		$len = strlen( $this->client_secret );
+		return $len > 4 ? '***' . substr( $this->client_secret, -4 ) : '****';
+	}
+
+	/**
+	 * Get masked Subscription Key for safe display.
+	 *
+	 * @return string
+	 */
+	public function get_masked_subscription_key() {
+		if ( empty( $this->subscription_key ) ) {
+			return '';
+		}
+		$len = strlen( $this->subscription_key );
+		return $len > 4 ? '***' . substr( $this->subscription_key, -4 ) : '****';
 	}
 
 	/**
@@ -166,7 +330,7 @@ class VippsClient {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			error_log( 'VippsClient Error: Token request failed (WP_Error): ' . $response->get_error_message() );
+			error_log( 'VippsClient Error: Token request failed (WP_Error): ' . self::sanitize_for_log( $response->get_error_message() ) );
 			return null;
 		}
 
@@ -174,13 +338,13 @@ class VippsClient {
 		$response_body = wp_remote_retrieve_body( $response );
 
 		if ( $status_code < 200 || $status_code >= 300 ) {
-			error_log( sprintf( 'VippsClient Error: Token request returned HTTP %d: %s', $status_code, $response_body ) );
+			error_log( sprintf( 'VippsClient Error: Token request returned HTTP %d: %s', $status_code, self::sanitize_for_log( $response_body ) ) );
 			return null;
 		}
 
 		$data = json_decode( $response_body, true );
 		if ( empty( $data ) || empty( $data['access_token'] ) ) {
-			error_log( 'VippsClient Error: Malformed token response: ' . $response_body );
+			error_log( 'VippsClient Error: Malformed token response: ' . self::sanitize_for_log( $response_body ) );
 			return null;
 		}
 
@@ -206,19 +370,19 @@ class VippsClient {
 	 */
 	public static function test_connection( $client_id = null, $client_secret = null, $subscription_key = null, $msn = null, $environment = null ) {
 		$config = array();
-		if ( null !== $client_id ) {
+		if ( null !== $client_id && '' !== $client_id ) {
 			$config['client_id'] = $client_id;
 		}
-		if ( null !== $client_secret ) {
+		if ( null !== $client_secret && '' !== $client_secret ) {
 			$config['client_secret'] = $client_secret;
 		}
-		if ( null !== $subscription_key ) {
+		if ( null !== $subscription_key && '' !== $subscription_key ) {
 			$config['subscription_key'] = $subscription_key;
 		}
-		if ( null !== $msn ) {
+		if ( null !== $msn && '' !== $msn ) {
 			$config['msn'] = $msn;
 		}
-		if ( null !== $environment ) {
+		if ( null !== $environment && '' !== $environment ) {
 			$config['environment'] = $environment;
 		}
 
@@ -570,7 +734,7 @@ class VippsClient {
 	 */
 	private function handle_response( $response, $action ) {
 		if ( is_wp_error( $response ) ) {
-			error_log( "VippsClient Error ($action): " . $response->get_error_message() );
+			error_log( "VippsClient Error ($action): " . self::sanitize_for_log( $response->get_error_message() ) );
 			return $response;
 		}
 
@@ -578,15 +742,15 @@ class VippsClient {
 		$body = wp_remote_retrieve_body( $response );
 
 		if ( $code < 200 || $code >= 300 ) {
-			error_log( "VippsClient Error ($action): Received HTTP $code. Response: $body" );
+			error_log( "VippsClient Error ($action): Received HTTP $code. Response: " . self::sanitize_for_log( $body ) );
 			$err_data = json_decode( $body, true );
 			$message  = ! empty( $err_data['message'] ) ? $err_data['message'] : ( ! empty( $err_data['extraInfo'] ) ? $err_data['extraInfo'] : "HTTP $code" );
 			return new \WP_Error(
 				'vipps_api_error',
-				$message,
+				self::sanitize_for_log( $message ),
 				array(
 					'status' => $code,
-					'body'   => $body,
+					'body'   => self::sanitize_for_log( $body ),
 				)
 			);
 		}
