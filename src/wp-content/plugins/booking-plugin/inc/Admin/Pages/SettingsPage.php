@@ -193,7 +193,7 @@ class SettingsPage {
 		$payment_instructions   = get_option( 'snippen_payment_instructions', '' );
 		$payment_admin_emails   = get_option( 'snippen_payment_admin_emails', '' );
 		$vipps_enabled          = get_option( 'snippen_vipps_enabled', 'no' );
-		$vipps_environment      = get_option( 'snippen_vipps_environment', 'test' );
+		$vipps_environment      = ( new VippsClient() )->get_environment();
 		$vipps_client_id        = get_option( 'snippen_vipps_client_id', '' );
 		$vipps_client_secret    = get_option( 'snippen_vipps_client_secret', '' );
 		$vipps_subscription_key = get_option( 'snippen_vipps_subscription_key', '' );
@@ -404,11 +404,12 @@ class SettingsPage {
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Vipps MobilePay ePayment API (Mobilbetaling)', 'snippen-booking' ) . '</h3>';
 		echo '<p class="description" style="margin-bottom:16px;">' . esc_html__( 'Integrasjon mot Vipps MobilePay moderne ePayment API v1. Når denne er aktivert, kan kunder betale direkte med Vipps. Dersom denne er slått av, benyttes manuell overføring og kvitteringsopplasting som 100 % fallback.', 'snippen-booking' ) . '</p>';
 
-		$is_secret_env    = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_SECRET', 'VIPPS_CLIENT_SECRET' );
-		$is_sub_key_env   = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_SUBSCRIPTION_KEY', 'VIPPS_SUBSCRIPTION_KEY' );
-		$is_client_id_env = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_ID', 'VIPPS_CLIENT_ID' );
-		$is_msn_env       = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_MSN', 'VIPPS_MSN' );
-		$is_env_mode      = $is_secret_env || $is_sub_key_env || $is_client_id_env || $is_msn_env;
+		$is_environment_env = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_ENVIRONMENT', 'VIPPS_ENVIRONMENT' );
+		$is_secret_env      = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_SECRET', 'VIPPS_CLIENT_SECRET' );
+		$is_sub_key_env     = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_SUBSCRIPTION_KEY', 'VIPPS_SUBSCRIPTION_KEY' );
+		$is_client_id_env   = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_CLIENT_ID', 'VIPPS_CLIENT_ID' );
+		$is_msn_env         = VippsClient::is_defined_in_env( 'SNIPPEN_VIPPS_MSN', 'VIPPS_MSN' );
+		$is_env_mode        = $is_environment_env || $is_secret_env || $is_sub_key_env || $is_client_id_env || $is_msn_env;
 
 		if ( $is_env_mode ) {
 			echo '<div class="notice notice-info inline" style="margin:12px 0 20px 0; padding:10px 14px; background:#f0f9ff; border-left:4px solid #0284c7; border-radius:4px;">';
@@ -429,13 +430,25 @@ class SettingsPage {
 		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Kryss av her for å aktivere Vipps som betalingsmetode. Ha denne deaktivert inntil du har verifisert API-tilkoblingen med testknappen under.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
+		$env_disabled = $is_environment_env ? ' disabled="disabled" style="min-width:300px; background-color:#f1f5f9; cursor:not-allowed;"' : ' style="min-width:300px;"';
 		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
 		echo '<label for="snippen_vipps_environment" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Miljø / API-endepunkt', 'snippen-booking' ) . '</label>';
-		echo '<select name="snippen_vipps_environment" id="snippen_vipps_environment" style="min-width:300px;">';
+		echo '<select name="snippen_vipps_environment" id="snippen_vipps_environment"' . $env_disabled . '>';
 		echo '<option value="test" ' . selected( $vipps_environment, 'test', false ) . '>' . esc_html__( 'Test / Sandbox (MT) - https://apitest.vipps.no', 'snippen-booking' ) . '</option>';
 		echo '<option value="prod" ' . selected( $vipps_environment, 'prod', false ) . '>' . esc_html__( 'Produksjon - https://api.vipps.no', 'snippen-booking' ) . '</option>';
 		echo '</select>';
-		echo '<p class="description">' . esc_html__( 'Bruk Test / Sandbox for å teste med Vipps MT-testbrukere før publisering i produksjon.', 'snippen-booking' ) . '</p>';
+		if ( $is_environment_env ) {
+			$source       = VippsClient::get_setting_source( 'snippen_vipps_environment', 'SNIPPEN_VIPPS_ENVIRONMENT', 'VIPPS_ENVIRONMENT' );
+			$source_label = 'constant' === $source ? 'wp-config.php' : 'miljøvariabel (.env)';
+			echo '<input type="hidden" name="snippen_vipps_environment" value="' . esc_attr( $vipps_environment ) . '">';
+			echo '<p class="description">' . sprintf(
+				/* translators: %s: configuration source label */
+				esc_html__( '🔒 Styres av %s (sikker modus). Endre verdien der for å bytte miljø.', 'snippen-booking' ),
+				esc_html( $source_label )
+			) . '</p>';
+		} else {
+			echo '<p class="description">' . esc_html__( 'Bruk Test / Sandbox for å teste med Vipps MT-testbrukere før publisering i produksjon.', 'snippen-booking' ) . '</p>';
+		}
 		echo '</div>';
 
 		$client_id_attrs = $is_client_id_env ? ' readonly="readonly" style="background-color:#f1f5f9; cursor:not-allowed;"' : '';

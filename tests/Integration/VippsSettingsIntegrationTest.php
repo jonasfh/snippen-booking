@@ -317,6 +317,35 @@ class VippsSettingsIntegrationTest extends TestCase {
 	}
 
 	/**
+	 * Test that SettingsPage locks and displays correct environment when VIPPS_ENVIRONMENT is set in env.
+	 */
+	public function test_settings_page_environment_locked_when_env_defined() {
+		putenv( 'SNIPPEN_VIPPS_ENVIRONMENT=prod' );
+
+		$page = new SettingsPage();
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'disabled="disabled"', $output );
+		$this->assertStringContainsString( 'value="prod"', $output );
+		$this->assertStringContainsString( 'Styres av miljøvariabel (.env) (sikker modus)', $output );
+
+		// Attempt to overwrite via POST while env is active
+		$_POST['snippen_settings_nonce']    = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_vipps_enabled']     = 'yes';
+		$_POST['snippen_vipps_environment'] = 'test';
+
+		ob_start();
+		$page->render();
+		ob_get_clean();
+
+		$this->assertNotEquals( 'test', get_option( 'snippen_vipps_environment' ) );
+
+		putenv( 'SNIPPEN_VIPPS_ENVIRONMENT' );
+	}
+
+	/**
 	 * Helper to catch wp_send_json output
 	 *
 	 * @param callable $func Callback to invoke.

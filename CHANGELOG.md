@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.41.1] - 2026-09-12
+- (#334) Fikse Vipps returnUrl, miljøvelger i WP Admin og feilsøkingslogging for bekreftelser:
+  - **Sikret query-parametre i Vipps retur-URL (`VippsService.php`)**:
+    - Rettet `create_booking_payment()` slik at den alltid kaller `self::build_return_url( $booking->uuid, $return_url )`. Dette sikrer at `booking_uuid` og `payment_provider=vipps` alltid inkluderes i retur-URL-en som sendes til Vipps ePayment API, selv når frontend angir en egendefinert `return_url`.
+    - Løst problem der brukere som returnerte til nettstedet etter betaling ikke ble gjenkjent som returnerende Vipps-betalere.
+  - **Korrekt visning og låsing av Vipps-miljø i WP Admin (`SettingsPage.php`)**:
+    - Endret `vipps_environment` til å hente det faktiske, aktive miljøet direkte fra `VippsClient::get_environment()` i stedet for kun databasen.
+    - Lagt til sikkerhetsmodus og `disabled`-visning for miljø-nedtrekksmenyen når `SNIPPEN_VIPPS_ENVIRONMENT` eller `VIPPS_ENVIRONMENT` er definert via miljøvariabler eller `wp-config.php`, med tydelig kildemerking (`wp-config.php` vs `.env`).
+  - **Utvidet diagnostisk logging (`NotificationManager.php` & `BookingShortcode.php`)**:
+    - Lagt til grundig logging i `NotificationManager::send_booking_confirmed_notification()` som sporer om SMS og e-post er aktivert, om mottaker mangler, og status/feil fra utsendelseskall.
+    - Lagt til logging i `BookingShortcode::handle_and_render_vipps_return()` for kontroll av Vipps betalingsstatus, capture-kall og overgang til bekreftet booking.
+  - **Tester**:
+    - Nye integrasjonstester i `VippsCheckoutIntegrationTest.php` som verifiserer at `returnUrl` inneholder `booking_uuid` og `payment_provider=vipps`, samt bevaring av eksisterende query-parametre.
+    - Ny integrasjonstest i `VippsSettingsIntegrationTest.php` for låsing og korrekt visning av miljø i WP Admin når satt via miljøvariabler.
+
 ## [2.41.0] - 2026-09-11
 - (#327) Teknisk sikring av Vipps-hemmeligheter og produksjonsvalidering:
   - **Sikkerhet & hemmelighetshåndtering i WP Admin (`SettingsPage.php`)**:
