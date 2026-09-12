@@ -101,8 +101,9 @@ class VippsCheckoutIntegrationTest extends TestCase {
 		$this->enable_vipps();
 
 		// Mock Vipps HTTP requests for token and create payment
+		$captured_payload = null;
 		$this->set_http_mock(
-			function ( $preempt, $parsed_args, $url ) {
+			function ( $preempt, $parsed_args, $url ) use ( &$captured_payload ) {
 				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
 					return array(
 						'response' => array( 'code' => 200 ),
@@ -115,6 +116,7 @@ class VippsCheckoutIntegrationTest extends TestCase {
 					);
 				}
 				if ( strpos( $url, '/epayment/v1/payments' ) !== false ) {
+					$captured_payload = json_decode( $parsed_args['body'] ?? '', true );
 					return array(
 						'response' => array( 'code' => 200 ),
 						'body'     => wp_json_encode(
@@ -180,6 +182,13 @@ class VippsCheckoutIntegrationTest extends TestCase {
 		$this->assertNotNull( $booking );
 		$this->assertEquals( 'pending_payment', $booking->status );
 		$this->assertStringContainsString( 'Vipps ref: ', $booking->payment_notes );
+
+		// Verify returnUrl in Vipps payload contains booking_uuid and payment_provider=vipps
+		$this->assertNotNull( $captured_payload );
+		$this->assertArrayHasKey( 'returnUrl', $captured_payload );
+		$this->assertStringContainsString( 'booking_uuid=' . $booking->uuid, $captured_payload['returnUrl'] );
+		$this->assertStringContainsString( 'payment_provider=vipps', $captured_payload['returnUrl'] );
+		$this->assertStringStartsWith( 'https://example.com/booking-page/', $captured_payload['returnUrl'] );
 
 		// Notifications should NOT be scheduled or sent while payment is pending
 		$this->assertFalse( wp_next_scheduled( 'snippen_booking_send_notifications', array( (int) $booking->id, $booking->uuid ) ) );
@@ -436,5 +445,56 @@ class VippsCheckoutIntegrationTest extends TestCase {
 		$updated = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id ) );
 		$this->assertEquals( 'confirmed', $updated->status );
 		$this->assertEquals( 2, (int) $updated->payment_status_id );
+	}
+
+	/**
+	 * Test that VippsService::create_booking_payment builds returnUrl with query args even with complex base URLs
+	 */
+	public function test_vipps_service_builds_return_url_preserving_query_parameters() {
+		$this->enable_vipps();
+
+		$captured_payload = null;
+		$this->set_http_mock(
+			function ( $preempt, $parsed_args, $url ) use ( &$captured_payload ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'access_token' => 'mock_token_123',
+								'expires_in'   => 3600,
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/epayment/v1/payments' ) !== false ) {
+					$captured_payload = json_decode( $parsed_args['body'] ?? '', true );
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference'   => 'snippen-test-ref-2',
+								'redirectUrl' => 'https://checkout.vipps.no/checkout-page',
+							)
+						),
+					);
+				}
+				return $preempt;
+			}
+		);
+
+		$service = new VippsService();
+		$booking = (object) array(
+			'id'   => 42,
+			'uuid' => 'test-uuid-42',
+		);
+
+		$res = $service->create_booking_payment( $booking, 500, '99887766', null, 'https://example.com/kalender/?tab=booking&lang=no' );
+		$this->assertFalse( is_wp_error( $res ) );
+		$this->assertNotNull( $captured_payload );
+		$this->assertStringContainsString( 'booking_uuid=test-uuid-42', $captured_payload['returnUrl'] );
+		$this->assertStringContainsString( 'payment_provider=vipps', $captured_payload['returnUrl'] );
+		$this->assertStringContainsString( 'tab=booking', $captured_payload['returnUrl'] );
+		$this->assertStringContainsString( 'lang=no', $captured_payload['returnUrl'] );
 	}
 }

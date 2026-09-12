@@ -120,7 +120,7 @@ class VippsService {
 			),
 			'reference'          => $reference,
 			'userFlow'           => 'WEB_REDIRECT',
-			'returnUrl'          => $return_url ?: self::build_return_url( $booking->uuid ),
+			'returnUrl'          => self::build_return_url( $booking->uuid, $return_url ),
 			'paymentDescription' => $description ?: sprintf(
 				/* translators: %d: Booking ID */
 				__( 'Booking #%d Snippen Samfunnshus', 'snippen-booking' ),

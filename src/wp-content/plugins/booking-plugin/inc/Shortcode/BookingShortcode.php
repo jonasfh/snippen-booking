@@ -375,13 +375,19 @@ class BookingShortcode {
 			$vipps_service = new \SnippenBooking\Service\Vipps\VippsService();
 			$payment_info  = $vipps_service->get_booking_payment_status( $reference );
 
-			if ( ! is_wp_error( $payment_info ) && ! empty( $payment_info['state'] ) ) {
+			if ( is_wp_error( $payment_info ) ) {
+				error_log( sprintf( 'BookingShortcode: Vipps payment status check failed for booking ID %d, reference %s: %s', $booking->id, $reference, $payment_info->get_error_message() ) );
+			} elseif ( ! empty( $payment_info['state'] ) ) {
 				$state = $payment_info['state'];
+				error_log( sprintf( 'BookingShortcode: Vipps payment status for booking ID %d (ref: %s) is %s', $booking->id, $reference, $state ) );
 
 				if ( 'AUTHORIZED' === $state ) {
 					// Capture and confirm
 					$capture = $vipps_service->capture_booking_payment( $reference, $booking->price );
-					if ( ! is_wp_error( $capture ) ) {
+					if ( is_wp_error( $capture ) ) {
+						error_log( sprintf( 'BookingShortcode: Vipps capture failed for booking ID %d, reference %s: %s', $booking->id, $reference, $capture->get_error_message() ) );
+					} else {
+						error_log( sprintf( 'BookingShortcode: Vipps capture succeeded for booking ID %d, reference %s. Confirming booking.', $booking->id, $reference ) );
 						$table = $wpdb->prefix . 'snippen_bookings';
 						$wpdb->update(
 							$table,
@@ -400,6 +406,7 @@ class BookingShortcode {
 						$notification_manager->send_booking_confirmed_notification( (int) $booking->id );
 					}
 				} elseif ( in_array( $state, array( 'TERMINATED', 'CANCELLED', 'EXPIRED' ), true ) ) {
+					error_log( sprintf( 'BookingShortcode: Vipps payment in cancelled state %s for booking ID %d. Cancelling booking.', $state, $booking->id ) );
 					$table = $wpdb->prefix . 'snippen_bookings';
 					$wpdb->update(
 						$table,

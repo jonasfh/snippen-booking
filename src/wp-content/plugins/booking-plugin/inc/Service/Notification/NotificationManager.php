@@ -708,7 +708,11 @@ class NotificationManager {
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_booking_confirmed_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_booking_confirmed_enabled', 'yes' );
 
+		error_log( sprintf( 'NotificationManager: Preparing booking_confirmed notification for booking ID %d, UUID %s', $booking_id, $booking->uuid ) );
+		error_log( sprintf( 'NotificationManager: booking_confirmed settings - SMS enabled: %s, Email enabled: %s', $sms_enabled ? 'yes' : 'no', $email_enabled ? 'yes' : 'no' ) );
+
 		if ( ! $sms_enabled && ! $email_enabled ) {
+			error_log( sprintf( 'NotificationManager: Both SMS and email disabled for booking_confirmed (booking ID %d). Skipping.', $booking_id ) );
 			return false;
 		}
 
@@ -758,7 +762,9 @@ class NotificationManager {
 		if ( $sms_enabled && ! empty( $phone ) ) {
 			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
 			$sms_provider = $this->get_provider( $provider_id );
+			error_log( sprintf( 'NotificationManager: Active booking_confirmed SMS sending starting with provider %s. Configured: %s', $provider_id, $sms_provider && $sms_provider->is_configured() ? 'yes' : 'no' ) );
 			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				error_log( sprintf( 'NotificationManager: Sending booking_confirmed SMS to %s...', $phone ) );
 				$sms_sent = $sms_provider->send_sms( $phone, $rendered_sms['body'] );
 				MessageLoggerService::log_message(
 					$booking_id,
@@ -771,7 +777,15 @@ class NotificationManager {
 					$this->get_sms_initial_status( $sms_sent, $provider_id ),
 					array( 'provider' => $provider_id )
 				);
+				error_log( sprintf( 'NotificationManager: booking_confirmed SMS send call returned %s', $sms_sent ? 'true' : 'false' ) );
+				if ( ! $sms_sent ) {
+					error_log( sprintf( 'NotificationManager: Failed to dispatch booking_confirmed SMS via %s.', $provider_id ) );
+				}
+			} else {
+				error_log( sprintf( 'NotificationManager: SMS provider %s not configured or invalid.', $provider_id ) );
 			}
+		} elseif ( $sms_enabled && empty( $phone ) ) {
+			error_log( sprintf( 'NotificationManager: booking_confirmed SMS skipped - missing phone number for booking ID %d', $booking_id ) );
 		}
 
 		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
@@ -785,7 +799,8 @@ class NotificationManager {
 		if ( $email_enabled && ! empty( $recipient ) ) {
 			$email_provider = $this->get_provider( 'email' );
 			if ( $email_provider instanceof EmailProviderInterface ) {
-				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Din reservasjon er godkjent og bekreftet', 'snippen-booking' );
+				$subject = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Din reservasjon er godkjent og bekreftet', 'snippen-booking' );
+				error_log( sprintf( 'NotificationManager: Sending booking_confirmed email to %s...', $recipient ) );
 				$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
 				MessageLoggerService::log_message(
 					$booking_id,
@@ -797,7 +812,10 @@ class NotificationManager {
 					self::TYPE_BOOKING_CONFIRMED,
 					$email_sent ? 'sent' : 'failed'
 				);
+				error_log( sprintf( 'NotificationManager: booking_confirmed email send call returned %s', $email_sent ? 'true' : 'false' ) );
 			}
+		} elseif ( $email_enabled && empty( $recipient ) ) {
+			error_log( sprintf( 'NotificationManager: booking_confirmed email skipped - missing email recipient for booking ID %d', $booking_id ) );
 		}
 
 		return $sms_sent || $email_sent;
