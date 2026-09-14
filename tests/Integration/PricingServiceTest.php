@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippenBooking\Tests\Unit\Service;
+namespace SnippenBooking\Tests\Integration\Service;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\PricingService;

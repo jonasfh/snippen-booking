@@ -5,7 +5,7 @@
  * @package SnippenBooking\Tests\Unit
  */
 
-namespace SnippenBooking\Tests\Unit;
+namespace SnippenBooking\Tests\Integration;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\Notification\NotificationTemplateService;

@@ -5,7 +5,7 @@
  * @package SnippenBooking\Tests\Unit\Service
  */
 
-namespace SnippenBooking\Tests\Unit\Service;
+namespace SnippenBooking\Tests\Integration\Service;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\Sms\SmsInboxResolverService;
@@ -48,6 +48,14 @@ class SmsInboxResolverServiceTest extends TestCase {
 		update_option( 'snippen_sms_unpaid_booking_past_days', 0 );
 		update_option( 'snippen_sms_conversation_ttl_minutes', 120 );
 		update_option( 'snippen_sms_auto_disambiguate', 'yes' );
+	}
+
+	/**
+	 * Tear down environment
+	 */
+	protected function tearDown(): void {
+		self::$db_seeded = false;
+		parent::tearDown();
 	}
 
 	/**

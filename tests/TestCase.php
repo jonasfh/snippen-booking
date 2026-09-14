@@ -51,7 +51,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                 // If tables are empty, force re-seeding regardless of the static flag
                 if (self::$db_seeded) {
                     $blocks_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_blocks");
-                    if ($blocks_count === 0) {
+                    $rules_count  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_pricing_rules");
+                    $objects_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_objects");
+                    if ($blocks_count === 0 || $rules_count === 0 || $objects_count === 0) {
                         self::$db_seeded = false;
                     }
                 }

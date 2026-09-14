@@ -19,6 +19,11 @@ use SnippenBooking\Service\Notification\Exception\MissingPlaceholderValueExcepti
 class PlaceholderRegistryTest extends TestCase {
 
 	/**
+	 * Does not require database
+	 */
+	protected $requires_db = false;
+
+	/**
 	 * Registry instance
 	 *
 	 * @var PlaceholderRegistry

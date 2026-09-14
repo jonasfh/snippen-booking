@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippenBooking\Tests\Unit;
+namespace SnippenBooking\Tests\Integration;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Admin\SetupWizard;
