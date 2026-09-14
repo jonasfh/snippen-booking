@@ -339,9 +339,22 @@ class Plugin {
 				echo '<div class="detail-item"><strong>' . esc_html__( 'Pris', 'snippen-booking' ) . ':</strong><span class="detail-price">' . esc_html( number_format( $booking->price, 0, ',', ' ' ) ) . ',-</span></div>';
 				echo '<div class="detail-item"><strong>' . esc_html__( 'Betalingsstatus', 'snippen-booking' ) . ':</strong><span class="payment-status-badge" style="font-weight:600; color:' . ( $payment_status->is_settled ? '#15803d' : '#b45309' ) . ';">' . esc_html( $payment_status->name ) . '</span></div>';
 
+				$vipps_ref = '';
+			if ( ! empty( $booking->payment_notes ) ) {
+				if ( preg_match( '/snippen-\d+-\d+-\d+/', $booking->payment_notes, $matches ) ) {
+					$vipps_ref = $matches[0];
+				} elseif ( preg_match( '/(?:Vipps\s*ref[:#]?\s*)([A-Za-z0-9_-]+)/i', $booking->payment_notes, $matches ) ) {
+					$vipps_ref = $matches[1];
+				}
+			}
+			if ( ! empty( $vipps_ref ) ) {
+				echo '<div class="detail-item"><strong>' . esc_html__( 'Vipps-referanse', 'snippen-booking' ) . ':</strong><span><code>' . esc_html( $vipps_ref ) . '</code></span></div>';
+			}
+
 				echo '</div>'; // grid
 
-				// Payment information and receipt upload section
+				// Payment information and receipt upload section - only show if booking is not settled
+			if ( ! $payment_status->is_settled ) {
 				echo '<div class="snippen-payment-section" style="margin-top:24px; padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">';
 				echo '<h3 style="margin-top:0; margin-bottom:12px; font-size:16px;">' . esc_html__( 'Betalingsinformasjon', 'snippen-booking' ) . '</h3>';
 
@@ -349,28 +362,27 @@ class Plugin {
 				$vipps_no  = get_option( 'snippen_payment_vipps_number', '' );
 				$instructs = get_option( 'snippen_payment_instructions', '' );
 
-			if ( $bank_acc || $vipps_no || $instructs ) {
-				echo '<div style="margin-bottom:12px; font-size:14px; line-height:1.5;">';
-				if ( $bank_acc ) {
-					echo '<div><strong>' . esc_html__( 'Bankkontonr', 'snippen-booking' ) . ':</strong> ' . esc_html( $bank_acc ) . '</div>';
+				if ( $bank_acc || $vipps_no || $instructs ) {
+					echo '<div style="margin-bottom:12px; font-size:14px; line-height:1.5;">';
+					if ( $bank_acc ) {
+						echo '<div><strong>' . esc_html__( 'Bankkontonr', 'snippen-booking' ) . ':</strong> ' . esc_html( $bank_acc ) . '</div>';
+					}
+					if ( $vipps_no ) {
+						echo '<div><strong>' . esc_html__( 'Vipps', 'snippen-booking' ) . ':</strong> ' . esc_html( $vipps_no ) . '</div>';
+					}
+					if ( $instructs ) {
+						echo '<div style="margin-top:6px; color:#475569;">' . nl2br( esc_html( $instructs ) ) . '</div>';
+					}
+					echo '</div>';
 				}
-				if ( $vipps_no ) {
-					echo '<div><strong>' . esc_html__( 'Vipps', 'snippen-booking' ) . ':</strong> ' . esc_html( $vipps_no ) . '</div>';
-				}
-				if ( $instructs ) {
-					echo '<div style="margin-top:6px; color:#475569;">' . nl2br( esc_html( $instructs ) ) . '</div>';
-				}
-				echo '</div>';
-			}
 
-			if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
-				$url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
-				if ( $url ) {
-					echo '<div style="margin-bottom:12px;"><strong>' . esc_html__( 'Opplastet kvittering', 'snippen-booking' ) . ':</strong> <a href="' . esc_url( $url ) . '" target="_blank" style="color:#0284c7; text-decoration:underline;">' . esc_html__( 'Vis kvittering', 'snippen-booking' ) . '</a></div>';
+				if ( ! empty( $booking->payment_receipt_attachment_id ) ) {
+					$url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
+					if ( $url ) {
+						echo '<div style="margin-bottom:12px;"><strong>' . esc_html__( 'Opplastet kvittering', 'snippen-booking' ) . ':</strong> <a href="' . esc_url( $url ) . '" target="_blank" style="color:#0284c7; text-decoration:underline;">' . esc_html__( 'Vis kvittering', 'snippen-booking' ) . '</a></div>';
+					}
 				}
-			}
 
-			if ( ! $payment_status->is_settled ) {
 				echo '<form id="snippen-receipt-upload-form" style="margin-top:12px;">';
 				echo '<label style="display:block; font-weight:600; margin-bottom:6px;">' . esc_html__( 'Last opp kvittering / skjermbilde for betaling:', 'snippen-booking' ) . '</label>';
 				echo '<input type="file" name="payment_receipt" id="payment_receipt_file" accept="image/*,.pdf" required style="margin-bottom:8px; max-width:100%; box-sizing:border-box;">';
@@ -412,9 +424,16 @@ class Plugin {
 						});
 					});
 					</script>';
-			}
 
 				echo '</div>'; // payment section
+			} elseif ( ! empty( $booking->payment_receipt_attachment_id ) ) {
+				$url = wp_get_attachment_url( $booking->payment_receipt_attachment_id );
+				if ( $url ) {
+					echo '<div class="snippen-payment-section" style="margin-top:24px; padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">';
+					echo '<div style="margin-bottom:0;"><strong>' . esc_html__( 'Opplastet kvittering', 'snippen-booking' ) . ':</strong> <a href="' . esc_url( $url ) . '" target="_blank" style="color:#0284c7; text-decoration:underline;">' . esc_html__( 'Vis kvittering', 'snippen-booking' ) . '</a></div>';
+					echo '</div>';
+				}
+			}
 
 				echo '</div>'; // details content
 				echo '</div>'; // body

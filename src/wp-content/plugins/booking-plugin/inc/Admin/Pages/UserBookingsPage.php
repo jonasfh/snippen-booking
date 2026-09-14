@@ -352,7 +352,7 @@ class UserBookingsPage {
 				}
 				echo '</div>';
 			} else {
-				if ( $bank_acc || $vipps_no || $instructs ) {
+				if ( ! $payment_status->is_settled && ( $bank_acc || $vipps_no || $instructs ) ) {
 					echo '<div style="font-size:13px; line-height:1.4; margin-bottom:10px; color:#334155;">';
 					if ( $bank_acc ) {
 						echo '<div><strong>' . esc_html__( 'Bankkontonr', 'snippen-booking' ) . ':</strong> ' . esc_html( $bank_acc ) . '</div>';

@@ -448,7 +448,7 @@ class BookingListShortcode {
 							<?php endif; ?>
 						</div>
 					<?php else : ?>
-						<?php if ( $bank_acc || $vipps_no || $payment_instructs ) : ?>
+						<?php if ( ! $payment_status->is_settled && ( $bank_acc || $vipps_no || $payment_instructs ) ) : ?>
 							<div style="margin-top:4px; color:#334155; line-height:1.4;">
 								<?php if ( $bank_acc ) : ?>
 									<div><strong><?php esc_html_e( 'Bankkontonr:', 'snippen-booking' ); ?></strong> <?php echo esc_html( $bank_acc ); ?></div>

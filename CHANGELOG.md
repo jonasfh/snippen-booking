@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.42.1] - 2026-09-14
+- (#338) Skjul betalingsinformasjon dersom reservasjon er betalt:
+  - **Skjul overføringsinformasjon for oppgjorte bookinger (`Plugin.php`, `BookingListShortcode.php`, `UserBookingsPage.php`)**:
+    - Skjult seksjonen for betalingsinformasjon (bankkontonummer, Vipps-nummer og overføringsinstruksjoner) samt opplastingsskjema for kvittering i bookingdetaljer-modalen (`Plugin::render_booking_popup`) når reservasjonen allerede er betalt/oppgjort (`$payment_status->is_settled`).
+    - Gjort slik at eventuell allerede opplastet kvittering fortsatt er tilgjengelig og kan vises selv om bookingen er betalt.
+    - Lagt til visning av Vipps-transaksjonsreferanse i bookingdetaljer-modalen dersom tilgjengelig.
+    - Tilpasset `BookingListShortcode` og `UserBookingsPage` slik at bankkontonummer, Vipps-nummer og betalingsinstruksjoner ikke vises for bookinger som allerede er oppgjort.
+  - **Tester**:
+    - Nye integrasjonstester i `BookingViewTest.php` som verifiserer at betalingsinformasjon og opplastingsskjema kun vises for ubetalte bookinger og skjules for betalte bookinger.
+
 ## [2.42.0] - 2026-09-14
 - (#336) Administratorvarsling, innstillingsavklaring og meldingslogging ved Vipps-betaling:
   - **Administratorvarsling ved Vipps-betaling (`NotificationManager.php`, `VippsWebhookApi.php`, `BookingShortcode.php`)**:
