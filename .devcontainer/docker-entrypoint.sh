@@ -138,6 +138,11 @@ if [ -d "wp-content/plugins/$PLUGIN_SLUG" ]; then
   wp plugin activate "$PLUGIN_SLUG" --allow-root || true
 fi
 
+# Ensure wp-content and uploads are writable by both web server (www-data) and dev/test user (vscode)
+mkdir -p "$WP_DIR/wp-content/uploads"
+chmod 777 "$WP_DIR/wp-content" || true
+chmod -R 777 "$WP_DIR/wp-content/uploads" || true
+
 # 6. Configure Apache VirtualHost (Always configured before any exit)
 echo "Configuring Apache..."
 cat > /etc/apache2/sites-available/000-default.conf <<EOF_APACHE
