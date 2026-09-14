@@ -105,4 +105,9 @@ class PricingRuleRepositoryTest extends TestCase {
 		$this->assertNotNull( $rule_normal );
 		$this->assertEquals( 'Normal', $rule_normal->name );
 	}
+
+	protected function tearDown(): void {
+		self::$db_seeded = false;
+		parent::tearDown();
+	}
 }

@@ -56,4 +56,8 @@
     <arg value="p" />
     <arg value="s" />
     <arg name="colors" />
+
+    <!-- Performance: parallel processing and caching -->
+    <arg name="parallel" value="4" />
+    <arg name="cache" value=".phpcs.cache" />
 </ruleset>

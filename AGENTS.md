@@ -9,6 +9,7 @@ Guide AI agents working in this repository.
 - **Testing & Quality Control**:
   - Always write tests for new functionality and update existing tests when modifying functionality.
   - Run `phpcbf` (or `composer lint:fix`) routinely on modified files to automatically fix coding standards and formatting violations.
+  - **Fast Local Feedback**: During active development, use targeted test runs (`composer test:changed`, `composer test:fast`, or `vendor/bin/phpunit path/to/Test.php`) for near-instant execution (< 1s).
   - Run `composer lint` (or `phpcs`) and `composer test` to verify all changes before completion. Resolving all PHPCS errors and warnings is mandatory.
 - **UI & Visual Regression Testing**:
   - Run visual UI tests (`npm run test:ui:fast`) **only** when actively modifying UI, CSS, templates, or frontend logic. Never run visual suites for purely backend, PHP, API, or database changes.

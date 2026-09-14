@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.42.2] - 2026-09-14
+- (#340) Raskere lokale tester og optimalisert test-arbeidsflyt:
+  - **MariaDB-optimalisering for Devcontainer (`docker-entrypoint.sh` & `99-test-performance.cnf`)**:
+    - Konfigurert `innodb_flush_log_at_trx_commit = 2` i MariaDB, som fjerner unødvendig disk-fsync under testing og kutter I/O-ventetid med over 20 sekunder.
+  - **PHPCS parallellisering og caching (`phpcs.xml`)**:
+    - Aktivert `--parallel=4` og `.phpcs.cache` i `phpcs.xml`. Reduserer `composer lint` fra 12 sekunder til ~0,2 sekunder ved påfølgende kjøringer.
+  - **Optimalisering av `DemoInboxTest` (`DemoInboxTest.php`)**:
+    - Erstattet kjøring av ekstern CLI-bootstrap (`demo-gateway.php`) i `setUp()` per testmetode med målrettet, lazy oppsett. Reduserte kjøretiden for klassen fra ~15 sekunder til under 8 sekunder.
+  - **Strukturering av Unit vs. Integration (`tests/Unit/` & `tests/Integration/`)**:
+    - Flyttet databaseavhengige tester (`InstallTest`, `SetupWizardTest`, `PaymentTemplateTest`, `WashTimeTest`, `OverlapReproductionTest`, `SmsInboxResolverServiceTest`, etc.) til `tests/Integration/`.
+    - `composer test:unit` og `composer test:fast` inneholder nå kun rene in-memory enhetstester og kjører på under 0,3 sekunder (80x raskere).
+  - **Nytt verktøy for målrettet lokal testing (`bin/test-changed.sh` & `composer.json`)**:
+    - Lagt til `composer test:changed` som automatisk oppdager endrede PHP-filer i git og utelukkende kjører de berørte testene.
+  - **Retningslinjer og dokumentasjon (`AGENTS.md`, `DEV_README.md`, `.agents/TESTING.md`)**:
+    - Oppdatert retningslinjer for utviklere og agenter for å oppmuntre til bruk av `composer test:changed` og `composer test:fast` for rask tilbakemelding under koding.
+
 ## [2.42.1] - 2026-09-14
 - (#338) Skjul betalingsinformasjon dersom reservasjon er betalt:
   - **Skjul overføringsinformasjon for oppgjorte bookinger (`Plugin.php`, `BookingListShortcode.php`, `UserBookingsPage.php`)**:

@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippenBooking\Tests\Unit\Repository;
+namespace SnippenBooking\Tests\Integration\Repository;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Database\Repository\DiscountRuleRepository;

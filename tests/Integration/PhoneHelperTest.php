@@ -1,5 +1,5 @@
 <?php
-namespace SnippenBooking\Tests\Unit\Helper;
+namespace SnippenBooking\Tests\Integration\Helper;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Helper\PhoneHelper;

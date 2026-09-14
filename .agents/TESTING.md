@@ -8,11 +8,14 @@ Use `composer` in the devcontainer terminal to run linting and tests:
 # Run all tests (Unit + Integration - run in CI/CD)
 composer test
 
-# Run fast unit tests
+# Run fast unit tests (in-memory, < 1s)
 composer test:unit
 composer test:fast
 
-# Run integration tests
+# Run tests relevant only to changed files in git
+composer test:changed
+
+# Run integration tests (database, services, migrations)
 composer test:integration
 
 # Run JavaScript tests (Jest)
@@ -24,7 +27,7 @@ npm run test:ui:fast
 # Update visual reference snapshots (when UI changes are intentional)
 npm run test:ui:update
 
-# Code style check (PHPCS)
+# Code style check (PHPCS - cached & parallelized)
 composer lint
 # or: phpcs / npm run lint
 
@@ -37,11 +40,12 @@ composer lint:fix
 - **Create tests**: Create unit or integration tests for all new functionality.
 - **Update tests**: Update existing tests when modifying functionality.
 - **Code formatting**: Routinely run `phpcbf` (or `composer lint:fix`) on code changes before checking code quality or committing.
+- **Local fast feedback**: During active coding, use `composer test:changed` or `composer test:fast` for immediate verification without waiting for the full integration suite.
 - **UI testing policy**: Run `npm run test:ui:fast` **only** when actively developing or modifying UI, CSS, templates, or frontend logic. Never run visual regression suites for purely backend, PHP, or database tasks.
 - **Linting check**: Always run `composer lint` and resolve all PHPCS errors and warnings before completing a task.
 
 ## Writing Tests
-- Locate tests in `tests/Unit/` or `tests/Integration/`.
+- Locate tests in `tests/Unit/` (pure in-memory unit tests, `$requires_db = false`) or `tests/Integration/` (database, API, or WordPress integration).
 - Extend `SnippenBooking\Tests\TestCase`.
 - Class name matches file name: `ClassNameTest.php` for `ClassName`.
 - Method names start with `test`: `testMethodName()`.

@@ -26,26 +26,43 @@ class DemoInboxTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		// Ensure completely clean state before running demo-gateway
+		// Ensure messages table is empty before each test
 		global $wpdb;
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_messages" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks" );
 		$wpdb->query( 'COMMIT' );
+	}
 
-		// Run demo-gateway to ensure base settings, user test.guest and bookings exist
-		$gw_output = array();
-		$gw_code   = 0;
-		exec( 'php ' . escapeshellarg( __DIR__ . '/../../bin/demo-gateway.php' ), $gw_output, $gw_code );
-		$this->assertSame( 0, $gw_code, 'demo-gateway.php should succeed' );
-
-		// Flush caches after external script execution
+	/**
+	 * Ensure demo-gateway data and test.guest exist with 1 clean booking.
+	 */
+	private function ensure_gateway_seeded(): void {
 		global $wpdb;
-		$wpdb->query( 'COMMIT' );
-		wp_cache_flush();
-		wp_load_alloptions( true );
+		$user = get_user_by( 'login', 'test.guest' );
+		$booking_count = 0;
+		if ( $user ) {
+			$booking_count = (int) $wpdb->get_var(
+				$wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}snippen_bookings WHERE user_id = %d", $user->ID )
+			);
+		}
+
+		// Only re-seed if test.guest or the single base booking is missing or polluted
+		if ( ! $user || $booking_count !== 1 ) {
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_messages" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects" );
+			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks" );
+			$wpdb->query( 'COMMIT' );
+
+			$gw_output = array();
+			$gw_code   = 0;
+			exec( 'php ' . escapeshellarg( __DIR__ . '/../../bin/demo-gateway.php' ), $gw_output, $gw_code );
+			$this->assertSame( 0, $gw_code, 'demo-gateway.php should succeed' );
+
+			$wpdb->query( 'COMMIT' );
+			wp_cache_flush();
+			wp_load_alloptions( true );
+		}
 	}
 
 	/**
@@ -54,10 +71,16 @@ class DemoInboxTest extends TestCase {
 	protected function tearDown(): void {
 		global $wpdb;
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_messages" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects" );
-		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks" );
+		// Clean up any dynamically created test user
+		$resident = get_user_by( 'login', 'resident.nobooking' );
+		if ( $resident ) {
+			if ( ! function_exists( 'wp_delete_user' ) && defined( 'ABSPATH' ) && file_exists( ABSPATH . 'wp-admin/includes/user.php' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/user.php';
+			}
+			if ( function_exists( 'wp_delete_user' ) ) {
+				wp_delete_user( $resident->ID );
+			}
+		}
 		$wpdb->query( 'COMMIT' );
 		parent::tearDown();
 	}
@@ -118,6 +141,7 @@ class DemoInboxTest extends TestCase {
 	 * Test incoming SMS for existing resident with active booking resolves and logs message.
 	 */
 	public function test_incoming_sms_single_active_booking_resolves_and_logs() {
+		$this->ensure_gateway_seeded();
 		list( $code, , $output_str ) = $this->run_inbox_cli(
 			array( '99887766', 'Hei, jeg har et spørsmål om vask av lokalet.' )
 		);
@@ -149,6 +173,7 @@ class DemoInboxTest extends TestCase {
 	 * Test --raw flag outputs valid JSON.
 	 */
 	public function test_raw_flag_returns_valid_json() {
+		$this->ensure_gateway_seeded();
 		list( $code, , $output_str ) = $this->run_inbox_cli(
 			array( '+4799887766', 'Test melding for rå output', '--raw' )
 		);
@@ -165,6 +190,7 @@ class DemoInboxTest extends TestCase {
 	 * Test token override with invalid token results in 401 error.
 	 */
 	public function test_token_override_invalid_token_returns_error() {
+		$this->ensure_gateway_seeded();
 		list( $code, , $output_str ) = $this->run_inbox_cli(
 			array( '99887766', 'Uautorisert test', '--token=ugyldig-hemmelig-token' )
 		);
@@ -178,6 +204,7 @@ class DemoInboxTest extends TestCase {
 	 * Test unknown sender is routed to quarantine.
 	 */
 	public function test_unknown_sender_routed_to_quarantine() {
+		$this->ensure_gateway_seeded();
 		list( $code, , $output_str ) = $this->run_inbox_cli(
 			array( '91112233', 'Ukjent avsender henvendelse' )
 		);
@@ -192,6 +219,7 @@ class DemoInboxTest extends TestCase {
 	 * Test registered user with no active bookings is categorized as general_inquiry.
 	 */
 	public function test_registered_user_no_active_booking_routed_to_general_inquiry() {
+		$this->ensure_gateway_seeded();
 		// Create a resident user without bookings
 		$user_id = wp_create_user( 'resident.nobooking', 'password123', 'resident.nobooking@example.no' );
 		update_user_meta( $user_id, 'snippen_phone', '+4791999999' );
@@ -213,6 +241,7 @@ class DemoInboxTest extends TestCase {
 	 * Test multiple active bookings triggers disambiguation prompt and numeric choice resolves.
 	 */
 	public function test_multiple_active_bookings_disambiguation_and_numeric_choice() {
+		$this->ensure_gateway_seeded();
 		global $wpdb;
 
 		// Clear previous messages for this user/phone to ensure clean session state
@@ -271,6 +300,7 @@ class DemoInboxTest extends TestCase {
 	 * 6. User sends follow-up SMS -> active session reinstated on chosen booking
 	 */
 	public function test_active_session_interrupted_when_new_booking_created() {
+		$this->ensure_gateway_seeded();
 		global $wpdb;
 
 		// Clear previous messages for clean test run

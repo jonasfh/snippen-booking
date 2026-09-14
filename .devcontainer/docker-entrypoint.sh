@@ -27,6 +27,13 @@ fi
 
 # 1. Database Initialization
 if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ]; then
+  if [ -d "/etc/mysql/mariadb.conf.d" ]; then
+    cat << 'EOF' > /etc/mysql/mariadb.conf.d/99-test-performance.cnf
+[mysqld]
+innodb_flush_log_at_trx_commit = 2
+EOF
+  fi
+
   echo "Starting MariaDB..."
   service mariadb start
 
@@ -34,6 +41,8 @@ if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ]; then
     echo "Waiting for MariaDB..."
     sleep 1
   done
+
+  mysql -u root -e "SET GLOBAL innodb_flush_log_at_trx_commit = 2;" || true
 
   mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;" || true
   mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" || true
