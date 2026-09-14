@@ -31,6 +31,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
         
         // Prevent translations from loading during tests to keep original Norwegian strings for assertions
         add_filter( 'override_load_textdomain', '__return_true' );
+        add_filter( 'gettext_snippen-booking', array( $this, 'preserve_original_norwegian_strings' ), 999, 2 );
         unload_textdomain('snippen-booking');
         
         if (function_exists('wp_cache_flush')) {
@@ -131,7 +132,15 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
          }
          remove_filter( 'pre_wp_mail', array( $this, 'global_prevent_wp_mail' ), 5 );
          remove_filter( 'pre_http_request', array( $this, 'global_mock_http_requests' ), 5 );
+         remove_filter( 'gettext_snippen-booking', array( $this, 'preserve_original_norwegian_strings' ), 999 );
          parent::tearDown();
+     }
+
+     /**
+      * Preserve original Norwegian untranslated string during tests.
+      */
+     public function preserve_original_norwegian_strings( $translation, $text ) {
+         return $text;
      }
 
      /**
