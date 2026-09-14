@@ -200,25 +200,111 @@ class BookingViewTest extends TestCase {
 	}
 
 	/**
+	 * Test that payment transfer details and upload form are displayed for unpaid booking
+	 */
+	public function test_payment_info_displayed_when_booking_unpaid() {
+		update_option( 'snippen_payment_bank_account', '1234.56.78901' );
+		update_option( 'snippen_payment_vipps_number', '#12345' );
+		update_option( 'snippen_payment_instructions', 'Vennligst overfør leiebeløpet innen 3 dager.' );
+
+		$uuid = wp_generate_uuid4();
+		$this->create_test_booking_with_uuid( 1, $uuid, 'pending', 'Unpaid Booking', 1 );
+
+		$_GET['booking_uuid'] = $uuid;
+
+		ob_start();
+		Plugin::render_booking_popup();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Betalingsinformasjon', $output );
+		$this->assertStringContainsString( '1234.56.78901', $output );
+		$this->assertStringContainsString( '#12345', $output );
+		$this->assertStringContainsString( 'Vennligst overfør leiebeløpet innen 3 dager.', $output );
+		$this->assertStringContainsString( 'id="snippen-receipt-upload-form"', $output );
+	}
+
+	/**
+	 * Test that payment transfer details and upload form are HIDDEN when booking is paid (settled)
+	 */
+	public function test_payment_info_hidden_when_booking_paid() {
+		update_option( 'snippen_payment_bank_account', '1234.56.78901' );
+		update_option( 'snippen_payment_vipps_number', '#12345' );
+		update_option( 'snippen_payment_instructions', 'Vennligst overfør leiebeløpet innen 3 dager.' );
+
+		$uuid = wp_generate_uuid4();
+		// payment_status_id = 2 is PAID (is_settled = 1)
+		$this->create_test_booking_with_uuid( 1, $uuid, 'confirmed', 'Paid Booking', 2, [
+			'payment_notes' => 'Vipps ref: snippen-99-123456789-001',
+		] );
+
+		$_GET['booking_uuid'] = $uuid;
+
+		ob_start();
+		Plugin::render_booking_popup();
+		$output = ob_get_clean();
+
+		// Should show booking details and Vipps reference
+		$this->assertStringContainsString( 'Bookingdetaljer', $output );
+		$this->assertStringContainsString( 'Vipps-referanse', $output );
+		$this->assertStringContainsString( 'snippen-99-123456789-001', $output );
+
+		// Should NOT show manual payment transfer info or upload form
+		$this->assertStringNotContainsString( 'Betalingsinformasjon', $output );
+		$this->assertStringNotContainsString( '1234.56.78901', $output );
+		$this->assertStringNotContainsString( '#12345', $output );
+		$this->assertStringNotContainsString( 'Vennligst overfør leiebeløpet', $output );
+		$this->assertStringNotContainsString( 'id="snippen-receipt-upload-form"', $output );
+	}
+
+	/**
+	 * Test that uploaded receipt link is displayed even if booking is paid (settled)
+	 */
+	public function test_uploaded_receipt_link_displayed_when_booking_paid() {
+		$uuid = wp_generate_uuid4();
+		$attachment_id = wp_insert_attachment( [
+			'post_title'     => 'Kvittering Test',
+			'post_mime_type' => 'image/png',
+			'guid'           => 'http://example.com/wp-content/uploads/kvittering.png',
+		] );
+
+		$this->create_test_booking_with_uuid( 1, $uuid, 'confirmed', 'Paid with Receipt', 2, [
+			'payment_receipt_attachment_id' => $attachment_id,
+		] );
+
+		$_GET['booking_uuid'] = $uuid;
+
+		ob_start();
+		Plugin::render_booking_popup();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Opplastet kvittering', $output );
+		$this->assertStringContainsString( 'Vis kvittering', $output );
+		$this->assertStringNotContainsString( 'Betalingsinformasjon', $output );
+		$this->assertStringNotContainsString( 'id="snippen-receipt-upload-form"', $output );
+	}
+
+	/**
 	 * Helper to create a test booking with a UUID
 	 */
-	private function create_test_booking_with_uuid( $user_id, $uuid, $status = 'pending', $desc = 'Test Booking' ) {
+	private function create_test_booking_with_uuid( $user_id, $uuid, $status = 'pending', $desc = 'Test Booking', $payment_status_id = 1, $extra = [] ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'snippen_bookings';
-		$wpdb->insert( $table, [
-			'uuid' => $uuid,
-			'user_id' => $user_id,
-			'slot_id' => 1,
-			'booking_date' => date('Y-m-d'),
-			'status' => $status,
-			'customer_name' => 'John Doe',
-			'customer_email' => 'john@doe.com',
-			'customer_phone' => '12345678',
-			'description' => $desc,
-			'price' => 250.00,
-			'created_at' => current_time('mysql'),
-			'modified_at' => current_time('mysql')
-		] );
+		$data  = array_merge( [
+			'uuid'              => $uuid,
+			'user_id'           => $user_id,
+			'slot_id'           => 1,
+			'booking_date'      => date( 'Y-m-d' ),
+			'status'            => $status,
+			'payment_status_id' => $payment_status_id,
+			'customer_name'     => 'John Doe',
+			'customer_email'    => 'john@doe.com',
+			'customer_phone'    => '12345678',
+			'description'       => $desc,
+			'price'             => 250.00,
+			'created_at'        => current_time( 'mysql' ),
+			'modified_at'       => current_time( 'mysql' ),
+		], $extra );
+		$wpdb->insert( $table, $data );
 		return $wpdb->insert_id;
 	}
 }
