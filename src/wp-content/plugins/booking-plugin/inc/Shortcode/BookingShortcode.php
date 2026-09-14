@@ -403,6 +403,7 @@ class BookingShortcode {
 						$booking->payment_status_id = 2;
 
 						$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+						$notification_manager->send_admin_booking_notification( (int) $booking->id, $booking->uuid );
 						$notification_manager->send_booking_confirmed_notification( (int) $booking->id );
 					}
 				} elseif ( in_array( $state, array( 'TERMINATED', 'CANCELLED', 'EXPIRED' ), true ) ) {

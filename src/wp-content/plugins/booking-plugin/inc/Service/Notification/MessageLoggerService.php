@@ -100,6 +100,38 @@ class MessageLoggerService {
 	}
 
 	/**
+	 * Check if a message of a specific event type has already been logged for a booking.
+	 *
+	 * @param int         $booking_id Booking ID.
+	 * @param string      $event_type Event type (e.g. 'admin_booking', 'booking_confirmed').
+	 * @param string|null $channel    Optional channel filter ('email', 'sms').
+	 * @param string|null $status     Optional status filter ('sent', 'failed', etc.).
+	 * @return bool True if a matching message exists.
+	 */
+	public static function has_message( int $booking_id, string $event_type, ?string $channel = null, ?string $status = null ): bool {
+		global $wpdb;
+
+		$table  = $wpdb->prefix . 'snippen_messages';
+		$sql    = "SELECT COUNT(*) FROM {$table} WHERE booking_id = %d AND event_type = %s";
+		$params = array( $booking_id, $event_type );
+
+		if ( null !== $channel ) {
+			$sql     .= ' AND channel = %s';
+			$params[] = $channel;
+		}
+
+		if ( null !== $status ) {
+			$sql     .= ' AND status = %s';
+			$params[] = $status;
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$count = (int) $wpdb->get_var( $wpdb->prepare( $sql, $params ) );
+
+		return $count > 0;
+	}
+
+	/**
 	 * Get pending outbound messages waiting to be dispatched.
 	 *
 	 * @param int $limit Max number of messages to fetch.

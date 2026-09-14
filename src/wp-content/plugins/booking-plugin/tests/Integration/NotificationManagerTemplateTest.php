@@ -31,6 +31,19 @@ class NotificationManagerTemplateTest extends TestCase {
 		parent::setUp();
 		self::$sent_mails = array();
 		add_filter( 'pre_wp_mail', array( $this, 'catch_mail' ), 10, 2 );
+
+		if ( ! function_exists( 'wp_delete_user' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/user.php';
+		}
+
+		add_filter(
+			'wp_die_ajax_handler',
+			function() {
+				return function( $message ) {
+					throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
+				};
+			}
+		);
 	}
 
 	/**
@@ -63,9 +76,11 @@ class NotificationManagerTemplateTest extends TestCase {
 		$template_service->save_template( 'user_activation', 'email', 'Custom Confirmation', $custom_template );
 
 		// Create test user
-		$user_id = wp_create_user( 'testuser_' . time(), 'password123', 'test@example.com' );
+		$username = 'testuser_' . time();
+		$user_id  = wp_create_user( $username, 'password123', 'test@example.com' );
 		update_user_meta( $user_id, 'snippen_phone', '+4790000000' );
 
+		update_option( 'snippen_email_user_activation_enabled', 'yes' );
 		update_option( 'snippen_route_user_activation', 'email' );
 
 		// Send confirmation
@@ -78,7 +93,7 @@ class NotificationManagerTemplateTest extends TestCase {
 
 		$this->assertEquals( 'Custom Confirmation', $mail['subject'] );
 		$this->assertStringContainsString( 'Custom code:', $mail['message'] );
-		$this->assertStringContainsString( 'testuser_' . substr( $user_id, -4 ), $mail['message'] );
+		$this->assertStringContainsString( $username, $mail['message'] );
 
 		// Cleanup
 		wp_delete_user( $user_id );
@@ -95,6 +110,7 @@ class NotificationManagerTemplateTest extends TestCase {
 
 		$template_service->save_template( 'booking_confirmation', 'email', 'Thanks for Booking!', $custom_template );
 
+		update_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
 		update_option( 'snippen_route_booking_confirmation', 'email' );
 
 		// Create test booking object
@@ -171,6 +187,7 @@ class NotificationManagerTemplateTest extends TestCase {
 		$user_id = wp_create_user( 'testuser_' . time(), 'password123', 'test2@example.com' );
 		update_user_meta( $user_id, 'snippen_phone', '+4791111111' );
 
+		update_option( 'snippen_email_user_activation_enabled', 'yes' );
 		update_option( 'snippen_route_user_activation', 'email' );
 
 		$service = new AccountConfirmationService();
@@ -246,6 +263,7 @@ class NotificationManagerTemplateTest extends TestCase {
 			)
 		);
 
+		update_option( 'snippen_email_admin_booking_enabled', 'yes' );
 		update_option( 'snippen_route_admin_booking', 'email' );
 
 		$manager = new NotificationManager();
@@ -272,6 +290,12 @@ class NotificationManagerTemplateTest extends TestCase {
 	public function test_get_notification_preview_templates_and_placeholders() {
 		global $wpdb;
 
+		// Authenticate as admin
+		$user_id = wp_create_user( 'testadmin_' . time(), 'password123', 'adminpreview@example.com' );
+		$user    = get_user_by( 'id', $user_id );
+		$user->add_cap( 'manage_snippen_bookings' );
+		wp_set_current_user( $user_id );
+
 		// Create test booking
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
@@ -290,20 +314,15 @@ class NotificationManagerTemplateTest extends TestCase {
 		);
 		$booking_id = $wpdb->insert_id;
 
-		$_POST['nonce']   = wp_create_nonce( 'snippen_admin_nonce' );
-		$_POST['id']      = $booking_id;
-		$_POST['channel'] = 'email_customer';
-
-		// Authenticate as admin
-		$user_id = wp_create_user( 'testadmin_' . time(), 'password123', 'adminpreview@example.com' );
-		$user    = get_user_by( 'id', $user_id );
-		$user->add_cap( 'manage_snippen_bookings' );
-		wp_set_current_user( $user_id );
+		$_POST['nonce']    = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce'] = $_POST['nonce'];
+		$_POST['id']       = $booking_id;
+		$_POST['channel']  = 'email_customer';
 
 		ob_start();
 		try {
 			\SnippenBooking\Api\BookingActionsApi::get_notification_preview();
-		} catch ( \WPAjaxDieContinueException $e ) {
+		} catch ( \Throwable $e ) {
 			// Expected AJAX completion
 		}
 		$response_json = ob_get_clean();
@@ -321,6 +340,11 @@ class NotificationManagerTemplateTest extends TestCase {
 	 */
 	public function test_dispatch_notification_manually_replaces_placeholders() {
 		global $wpdb;
+
+		$user_id = wp_create_user( 'testadmin2_' . time(), 'password123', 'admindispatch@example.com' );
+		$user    = get_user_by( 'id', $user_id );
+		$user->add_cap( 'manage_snippen_bookings' );
+		wp_set_current_user( $user_id );
 
 		// Create test booking
 		$wpdb->insert(
@@ -340,21 +364,17 @@ class NotificationManagerTemplateTest extends TestCase {
 		);
 		$booking_id = $wpdb->insert_id;
 
-		$_POST['nonce']   = wp_create_nonce( 'snippen_admin_nonce' );
-		$_POST['id']      = $booking_id;
-		$_POST['channel'] = 'email_customer';
-		$_POST['subject'] = 'Hei {{user_name}}';
-		$_POST['message'] = 'Din booking er bekreftet for {{booking_date}}. Totalpris: {{booking_price}} kr.';
-
-		$user_id = wp_create_user( 'testadmin2_' . time(), 'password123', 'admindispatch@example.com' );
-		$user    = get_user_by( 'id', $user_id );
-		$user->add_cap( 'manage_snippen_bookings' );
-		wp_set_current_user( $user_id );
+		$_POST['nonce']    = wp_create_nonce( 'snippen_admin_nonce' );
+		$_REQUEST['nonce'] = $_POST['nonce'];
+		$_POST['id']       = $booking_id;
+		$_POST['channel']  = 'email_customer';
+		$_POST['subject']  = 'Hei {{user_name}}';
+		$_POST['message']  = 'Din booking er bekreftet for {{booking_date}}. Totalpris: {{booking_price}} kr.';
 
 		ob_start();
 		try {
 			\SnippenBooking\Api\BookingActionsApi::dispatch_notification_manually();
-		} catch ( \WPAjaxDieContinueException $e ) {
+		} catch ( \Throwable $e ) {
 			// Expected AJAX completion
 		}
 		$response_json = ob_get_clean();
@@ -374,5 +394,85 @@ class NotificationManagerTemplateTest extends TestCase {
 		$this->assertEquals( 'Hei Bob Builder', $sent_mail['subject'] );
 		$this->assertStringContainsString( 'Din booking er bekreftet for 2026-09-10.', $sent_mail['message'] );
 		$this->assertStringContainsString( 'Totalpris: 450 kr.', $sent_mail['message'] );
+	}
+
+	/**
+	 * Test send_admin_booking_notification dispatches admin email and is idempotent
+	 */
+	public function test_send_admin_booking_notification_dispatches_email_and_is_idempotent() {
+		global $wpdb;
+
+		update_option( 'snippen_email_admin_booking_enabled', 'yes' );
+		update_option( 'snippen_sms_admin_booking_enabled', 'no' );
+
+		// Create admin user
+		$admin_id = wp_create_user( 'admin_notif_test_' . time(), 'pass123', 'admin_notif@example.com' );
+		$user     = get_user_by( 'id', $admin_id );
+		$user->add_cap( 'manage_snippen_bookings' );
+
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'           => $uuid,
+				'booking_date'   => '2026-11-20',
+				'user_id'        => 1,
+				'customer_name'  => 'Admin Target User',
+				'customer_email' => 'target@example.com',
+				'customer_phone' => '+4791111111',
+				'price'          => 1200,
+				'status'         => 'confirmed',
+				'created_at'     => current_time( 'mysql' ),
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		self::$sent_mails = array();
+
+		$manager = new NotificationManager();
+		$result  = $manager->send_admin_booking_notification( $booking_id, $uuid );
+		$this->assertTrue( $result );
+
+		// Verify admin received email
+		$admin_mail = null;
+		foreach ( self::$sent_mails as $mail ) {
+			if ( 'admin_notif@example.com' === $mail['to'] ) {
+				$admin_mail = $mail;
+				break;
+			}
+		}
+		$this->assertNotNull( $admin_mail );
+		$this->assertTrue( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, NotificationManager::TYPE_ADMIN_BOOKING ) );
+
+		// Clear sent mails and call again - idempotency check
+		self::$sent_mails = array();
+		$second_call      = $manager->send_admin_booking_notification( $booking_id, $uuid );
+		$this->assertTrue( $second_call );
+		$this->assertEmpty( self::$sent_mails, 'Should not send duplicate email on second call' );
+	}
+
+	/**
+	 * Test MessageLoggerService::has_message helper
+	 */
+	public function test_message_logger_service_has_message_filters() {
+		$booking_id = 9999;
+		$this->assertFalse( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, 'test_event' ) );
+
+		\SnippenBooking\Service\Notification\MessageLoggerService::log_message(
+			$booking_id,
+			1,
+			'sms',
+			'+4790000000',
+			null,
+			'Test body',
+			'test_event',
+			'sent'
+		);
+
+		$this->assertTrue( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, 'test_event' ) );
+		$this->assertTrue( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, 'test_event', 'sms' ) );
+		$this->assertFalse( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, 'test_event', 'email' ) );
+		$this->assertTrue( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, 'test_event', 'sms', 'sent' ) );
+		$this->assertFalse( \SnippenBooking\Service\Notification\MessageLoggerService::has_message( $booking_id, 'test_event', 'sms', 'failed' ) );
 	}
 }

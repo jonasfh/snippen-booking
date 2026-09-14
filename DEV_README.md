@@ -619,6 +619,13 @@ The plugin integrates with Vipps MobilePay modern ePayment API v1 for direct dig
    - Handler: `Plugin::handle_cleanup_unpaid_vipps_bookings()` -> `VippsService::cleanup_expired_pending_bookings(30)`.
    - Action: Any booking with `status = 'pending_payment'` created more than 30 minutes ago is cancelled, cancelling the payment in Vipps and freeing the calendar slot for other tenants.
 
+### Varsling og Idempotens ved Vipps-betaling (#336)
+- **To-trinns varsling ved Vipps-capture**:
+  - **Administrator-varsel (`admin_booking`)**: Sendes via e-post/SMS til administratorer med en gang betalingen er bekreftet/fanget via enten webhook eller retur-URL.
+  - **Bruker-varsel (`booking_confirmed`)**: Sendes via SMS/e-post til brukeren (`snippen_sms_booking_confirmed_enabled` / `snippen_email_booking_confirmed_enabled`).
+- **Idempotensbeskyttelse**: Utsendelsene beskyttes mot duplikater vha. `MessageLoggerService::has_message()`. Dersom webhooken allerede har logget varselet når brukeren returnerer til siden (eller omvendt), avbrytes duplikate utsendelser umiddelbart.
+- **Migrering 2.42.0**: Kjører automatisk ved oppgradering og aktiverer `snippen_sms_booking_confirmed_enabled = 'yes'` dersom eksisterende `snippen_sms_booking_confirmation_enabled` allerede var aktivert.
+
 ### Vipps Configuration & Environment Setup
 Developers and site administrators configure Vipps credentials under **Snippen Booking > Innstillinger > Betaling**:
 - **Merchant Serial Number (`snippen_vipps_msn`)**: 5-6 digit identifier for the sales unit in Vipps MobilePay.

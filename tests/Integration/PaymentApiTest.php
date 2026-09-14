@@ -59,6 +59,7 @@ class PaymentApiTest extends TestCase {
 		wp_set_current_user( $admin_id );
 
 		update_option( 'snippen_email_payment_received_enabled', 'yes' );
+		update_option( 'snippen_email_booking_confirmed_enabled', 'yes' );
 
 		$_POST['nonce']             = wp_create_nonce( 'snippen_admin_nonce' );
 		$_REQUEST['nonce']          = $_POST['nonce'];
