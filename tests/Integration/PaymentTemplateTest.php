@@ -23,6 +23,11 @@ class PaymentTemplateTest extends TestCase {
 		delete_option( 'snippen_template_booking_confirmation_sms' );
 	}
 
+	public function tearDown(): void {
+		self::$db_seeded = false;
+		parent::tearDown();
+	}
+
 	/**
 	 * Test that booking_confirmation default template and placeholders render correctly.
 	 */
