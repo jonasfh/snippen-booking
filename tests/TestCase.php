@@ -53,7 +53,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                     $blocks_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_blocks");
                     $rules_count  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_pricing_rules");
                     $objects_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_booking_objects");
-                    if ($blocks_count === 0 || $rules_count === 0 || $objects_count === 0) {
+                    $templates_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}snippen_notification_templates");
+                    if ($blocks_count === 0 || $rules_count === 0 || $objects_count === 0 || $templates_count === 0) {
                         self::$db_seeded = false;
                     }
                 }
@@ -78,6 +79,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
                     
                     \SnippenBooking\Admin\SetupWizard::create_starter_setup();
+                    \SnippenBooking\Database\MigrationManager::run();
                     self::$db_seeded = true;
                 }
             } else {
