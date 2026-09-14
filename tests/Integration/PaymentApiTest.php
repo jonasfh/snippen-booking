@@ -228,7 +228,7 @@ class PaymentApiTest extends TestCase {
 		remove_filter( 'snippen_upload_payment_receipt_action', $filter_action );
 		remove_filter( 'snippen_upload_payment_receipt_overrides', $filter_overrides );
 
-		$this->assertTrue( $response['success'] );
+		$this->assertTrue( $response['success'], isset( $response['data']['message'] ) ? $response['data']['message'] : 'Upload failed' );
 		$this->assertArrayHasKey( 'attachment_url', $response['data'] );
 		$this->assertStringContainsString( '/userdata/booking_uuid_' . $uuid . '/', $response['data']['attachment_url'] );
 
@@ -245,6 +245,9 @@ class PaymentApiTest extends TestCase {
 		// Clean up
 		if ( file_exists( $temp_file ) ) {
 			wp_delete_file( $temp_file );
+		}
+		if ( ! empty( $response['data']['attachment_id'] ) ) {
+			wp_delete_attachment( $response['data']['attachment_id'], true );
 		}
 	}
 
