@@ -545,4 +545,114 @@ class VippsWebhookIntegrationTest extends TestCase {
 		$updated2 = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $booking_id2 ) );
 		$this->assertEquals( 'cancelled', $updated2->status );
 	}
+
+	/**
+	 * Test that authorized payment webhook dispatches admin alert and booking confirmed notification
+	 */
+	public function test_webhook_payment_authorized_dispatches_admin_and_customer_notifications() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		update_option( 'snippen_email_admin_booking_enabled', 'yes' );
+		update_option( 'snippen_sms_booking_confirmed_enabled', 'yes' );
+
+		// Create admin user
+		$admin_id = wp_create_user( 'admin_wh_' . time(), 'pass123', 'admin_wh@example.com' );
+		$admin    = get_user_by( 'id', $admin_id );
+		$admin->add_cap( 'manage_snippen_bookings' );
+
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'              => $uuid,
+				'user_id'           => 1,
+				'booking_date'      => '2026-11-05',
+				'customer_name'     => 'Webhook Notification User',
+				'customer_email'    => 'wh_user@example.com',
+				'customer_phone'    => '99887766',
+				'booking_type'      => 'private',
+				'price'             => 700.0,
+				'payment_status_id' => 1,
+				'status'            => 'pending_payment',
+			)
+		);
+		$booking_id = (int) $wpdb->insert_id;
+		$reference  = sprintf( 'snippen-%d-1718000000-789', $booking_id );
+
+		$wpdb->update(
+			$table,
+			array( 'payment_notes' => 'Vipps ref: ' . $reference ),
+			array( 'id' => $booking_id )
+		);
+
+		$this->set_http_mock(
+			function ( $preempt, $parsed_args, $url ) use ( $reference ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'access_token' => 'mock_token_wh',
+								'expires_in'   => 3600,
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/capture' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => $reference,
+								'state'     => 'CAPTURED',
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/epayment/v1/payments/' . $reference ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => $reference,
+								'state'     => 'AUTHORIZED',
+							)
+						),
+					);
+				}
+				return $preempt;
+			}
+		);
+
+		$request = new \WP_REST_Request( 'POST', '/snippen/v1/vipps/webhook' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body(
+			wp_json_encode(
+				array(
+					'reference' => $reference,
+					'name'      => 'epayments.payment.authorized.v1',
+				)
+			)
+		);
+
+		$response = rest_do_request( $request );
+		$this->assertEquals( 200, $response->get_status() );
+
+		// Check admin message logged
+		$this->assertTrue(
+			\SnippenBooking\Service\Notification\MessageLoggerService::has_message(
+				$booking_id,
+				\SnippenBooking\Service\Notification\NotificationManager::TYPE_ADMIN_BOOKING
+			)
+		);
+
+		// Check booking confirmed message logged
+		$this->assertTrue(
+			\SnippenBooking\Service\Notification\MessageLoggerService::has_message(
+				$booking_id,
+				\SnippenBooking\Service\Notification\NotificationManager::TYPE_BOOKING_CONFIRMED
+			)
+		);
+	}
 }

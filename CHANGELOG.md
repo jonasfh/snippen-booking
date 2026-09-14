@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.42.0] - 2026-09-14
+- (#336) Administratorvarsling, innstillingsavklaring og meldingslogging ved Vipps-betaling:
+  - **Administratorvarsling ved Vipps-betaling (`NotificationManager.php`, `VippsWebhookApi.php`, `BookingShortcode.php`)**:
+    - Implementert `NotificationManager::send_admin_booking_notification( $booking_id, $uuid )` for dedikert utsendelse av administratormeldinger (`admin_booking`) på e-post og SMS.
+    - Sørget for at administratorer automatisk varsles når en Vipps-betaling fanges og bekreftes (både via Vipps webhook og via retursiden).
+  - **Idempotensbeskyttelse (`MessageLoggerService.php` & `NotificationManager.php`)**:
+    - Lagt til `MessageLoggerService::has_message( $booking_id, $event_type, $channel, $status )`.
+    - Sikret at verken administratorer eller kunder mottar duplikate varsler dersom både webhook og retursiden kjører samtidig.
+  - **Avklaring av innstillinger og migrasjon (`SettingsPage.php` & `Migration_2_42_0.php`)**:
+    - Tydeliggjort etiketter under e-post- og SMS-innstillinger slik at det fremgår klart hvilke som gjelder manuelle/gratis bookingforespørsler kontra godkjente/betalte bookinger (Vipps).
+    - Lagt til `Migration_2_42_0` som sikrer at `snippen_sms_booking_confirmed_enabled` aktiveres automatisk dersom `snippen_sms_booking_confirmation_enabled` allerede er aktiv.
+  - **Tester**:
+    - Tester for `send_admin_booking_notification()`, `has_message()` og varslingsutsendelse ved Vipps webhook og checkout returside.
+
 ## [2.41.1] - 2026-09-12
 - (#334) Fikse Vipps returnUrl, miljøvelger i WP Admin og feilsøkingslogging for bekreftelser:
   - **Sikret query-parametre i Vipps retur-URL (`VippsService.php`)**:

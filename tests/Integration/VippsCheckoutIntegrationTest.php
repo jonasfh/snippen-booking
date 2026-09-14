@@ -497,4 +497,101 @@ class VippsCheckoutIntegrationTest extends TestCase {
 		$this->assertStringContainsString( 'tab=booking', $captured_payload['returnUrl'] );
 		$this->assertStringContainsString( 'lang=no', $captured_payload['returnUrl'] );
 	}
+
+	/**
+	 * Test that Vipps return handler dispatches admin and customer notifications
+	 */
+	public function test_vipps_return_handler_dispatches_admin_and_customer_notifications() {
+		$this->enable_vipps();
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		update_option( 'snippen_email_admin_booking_enabled', 'yes' );
+		update_option( 'snippen_sms_booking_confirmed_enabled', 'yes' );
+
+		// Create admin user
+		$admin_id = wp_create_user( 'admin_ret_' . time(), 'pass123', 'admin_ret@example.com' );
+		$admin    = get_user_by( 'id', $admin_id );
+		$admin->add_cap( 'manage_snippen_bookings' );
+
+		$uuid = wp_generate_uuid4();
+		$wpdb->insert(
+			$table,
+			array(
+				'uuid'              => $uuid,
+				'user_id'           => 1,
+				'booking_date'      => '2026-11-15',
+				'customer_name'     => 'Return User',
+				'customer_email'    => 'return_user@example.com',
+				'customer_phone'    => '99887766',
+				'booking_type'      => 'private',
+				'price'             => 850.0,
+				'payment_status_id' => 1,
+				'status'            => 'pending_payment',
+				'payment_notes'     => 'Vipps ref: snippen-105-1718000000-111',
+			)
+		);
+		$booking_id = (int) $wpdb->insert_id;
+
+		$this->set_http_mock(
+			function ( $preempt, $parsed_args, $url ) {
+				if ( strpos( $url, '/accesstoken/get' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'access_token' => 'mock_token_123',
+								'expires_in'   => 3600,
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/capture' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => 'snippen-105-1718000000-111',
+								'state'     => 'CAPTURED',
+							)
+						),
+					);
+				}
+				if ( strpos( $url, '/epayment/v1/payments/snippen-105-1718000000-111' ) !== false ) {
+					return array(
+						'response' => array( 'code' => 200 ),
+						'body'     => wp_json_encode(
+							array(
+								'reference' => 'snippen-105-1718000000-111',
+								'state'     => 'AUTHORIZED',
+							)
+						),
+					);
+				}
+				return $preempt;
+			}
+		);
+
+		$_GET['booking_uuid']     = $uuid;
+		$_GET['payment_provider'] = 'vipps';
+
+		$html = BookingShortcode::handle_and_render_vipps_return();
+		$this->assertStringContainsString( 'Betaling fullført og reservasjon bekreftet', $html );
+
+		// Check admin message logged
+		$this->assertTrue(
+			\SnippenBooking\Service\Notification\MessageLoggerService::has_message(
+				$booking_id,
+				\SnippenBooking\Service\Notification\NotificationManager::TYPE_ADMIN_BOOKING
+			)
+		);
+
+		// Check booking confirmed message logged
+		$this->assertTrue(
+			\SnippenBooking\Service\Notification\MessageLoggerService::has_message(
+				$booking_id,
+				\SnippenBooking\Service\Notification\NotificationManager::TYPE_BOOKING_CONFIRMED
+			)
+		);
+	}
 }

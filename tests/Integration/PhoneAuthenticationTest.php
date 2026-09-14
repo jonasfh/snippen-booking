@@ -25,6 +25,7 @@ class PhoneAuthenticationTest extends TestCase {
 		}
 		
 		update_user_meta( $this->user_id, 'snippen_phone', '+4790011223' );
+		update_option( 'snippen_email_password_reset_enabled', 'yes' );
 	}
 
 	public function test_authenticate_by_phone_success() {

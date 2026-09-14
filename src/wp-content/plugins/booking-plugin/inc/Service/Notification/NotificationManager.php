@@ -181,65 +181,52 @@ class NotificationManager {
 	}
 
 	/**
-	 * Send booking request notifications (to admins and the customer).
+	 * Send admin notification alerts (email/SMS) for a booking.
 	 *
 	 * @param int    $booking_id Booking ID.
 	 * @param string $uuid       Booking UUID.
-	 * @return bool True if customer notification succeeds, false otherwise.
+	 * @return bool True if admin notifications were processed or skipped due to settings/idempotency, false on error.
 	 */
-	public function send_booking_notifications( int $booking_id, string $uuid ): bool {
-		error_log( sprintf( 'NotificationManager: Preparing notifications for booking ID %d, UUID %s', $booking_id, $uuid ) );
+	public function send_admin_booking_notification( int $booking_id, string $uuid ): bool {
 		global $wpdb;
+
+		if ( MessageLoggerService::has_message( $booking_id, self::TYPE_ADMIN_BOOKING ) ) {
+			error_log( sprintf( 'NotificationManager: Admin booking alert already sent for booking ID %d. Skipping.', $booking_id ) );
+			return true;
+		}
 
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
 		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 
-		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_bookings WHERE id = %d", $booking_id ) );
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d", $booking_id ) );
 		if ( ! $booking ) {
-			error_log( sprintf( 'NotificationManager Error: Booking ID %d not found.', $booking_id ) );
+			error_log( sprintf( 'NotificationManager Error: Booking ID %d not found for admin alert.', $booking_id ) );
 			return false;
 		}
 
+		$email_admin       = 'yes' === get_option( 'snippen_email_admin_booking_enabled', 'yes' );
+		$sms_admin_enabled = 'yes' === get_option( 'snippen_sms_admin_booking_enabled', 'no' );
+
+		if ( ! $email_admin && ! $sms_admin_enabled ) {
+			return true;
+		}
+
 		// Fetch associated locales/objects
-		$objs         = $wpdb->get_col(
+		$objs                 = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT o.name 
-				 FROM $table_junction bo 
-				 JOIN $table_objects o ON bo.booking_object_id = o.id 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
 				 WHERE bo.booking_id = %d",
 				$booking_id
 			)
 		);
-		$object_names = implode( ' og ', $objs );
-		error_log( sprintf( 'NotificationManager: Booking objects: %s', $object_names ) );
-
-		$sms_enabled       = 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
-		$email_enabled     = 'yes' === get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
-		$email_admin       = 'yes' === get_option( 'snippen_email_admin_booking_enabled', 'yes' );
-		$sms_admin_enabled = 'yes' === get_option( 'snippen_sms_admin_booking_enabled', 'no' );
-
-		$email_provider   = $this->get_provider( 'email' );
-		$template_service = new NotificationTemplateService();
-
-		// Fetch booking time string from snapshot or slot
-		$booking_time = '';
-		if ( ! empty( $booking->booking_snapshot ) ) {
-			$snapshot = json_decode( $booking->booking_snapshot, true );
-			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
-				$booking_time = $snapshot['time_range_formatted'];
-			}
-		}
-		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
-			$table_slots = $wpdb->prefix . 'snippen_time_slots';
-			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_slots WHERE id = %d", $booking->slot_id ) );
-			if ( $slot ) {
-				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
-			}
-		}
-
+		$object_names         = implode( ' og ', $objs );
+		$booking_time         = $this->get_booking_time( $booking );
 		$sms_link             = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
 		$admin_context        = $this->build_booking_context( $booking, $object_names, $booking_time, $sms_link );
+		$template_service     = new NotificationTemplateService();
 		$rendered_admin_email = $template_service->render_template( 'admin_booking', 'email', $admin_context );
 		$rendered_admin_sms   = $template_service->render_template( 'admin_booking', 'sms', $admin_context );
 
@@ -249,6 +236,8 @@ class NotificationManager {
 				'capability' => Capabilities::MANAGE_BOOKINGS,
 			)
 		);
+
+		$email_provider = $this->get_provider( 'email' );
 
 		// 1. Send admin notification email alerts
 		if ( $email_admin && $email_provider instanceof EmailProviderInterface && ! empty( $admin_users ) ) {
@@ -331,10 +320,54 @@ class NotificationManager {
 			}
 		}
 
+		return true;
+	}
+
+	/**
+	 * Send booking request notifications (to admins and the customer).
+	 *
+	 * @param int    $booking_id Booking ID.
+	 * @param string $uuid       Booking UUID.
+	 * @return bool True if customer notification succeeds, false otherwise.
+	 */
+	public function send_booking_notifications( int $booking_id, string $uuid ): bool {
+		error_log( sprintf( 'NotificationManager: Preparing notifications for booking ID %d, UUID %s', $booking_id, $uuid ) );
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_bookings WHERE id = %d", $booking_id ) );
+		if ( ! $booking ) {
+			error_log( sprintf( 'NotificationManager Error: Booking ID %d not found.', $booking_id ) );
+			return false;
+		}
+
+		// Fetch associated locales/objects
+		$objs         = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM $table_junction bo 
+				 JOIN $table_objects o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		$object_names = implode( ' og ', $objs );
+		error_log( sprintf( 'NotificationManager: Booking objects: %s', $object_names ) );
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_booking_confirmation_enabled', 'yes' );
+
+		// 1. Send admin notification alerts
+		$this->send_admin_booking_notification( $booking_id, $uuid );
+
 		// 2. Send customer confirmation using booking_confirmation NotificationTemplateService
-		$sms_link   = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
-		$sms_sent   = false;
-		$email_sent = false;
+		$booking_time = $this->get_booking_time( $booking );
+		$sms_link     = add_query_arg( 'booking_uuid', $uuid, home_url( '/' ) );
+		$sms_sent     = false;
+		$email_sent   = false;
 
 		$template_service = new NotificationTemplateService();
 		$context          = $this->build_booking_context( $booking, $object_names, $booking_time, $sms_link );
@@ -372,6 +405,7 @@ class NotificationManager {
 
 		// Customer Email Fallback/Direct
 		if ( $email_enabled || ( $sms_enabled && ! $sms_sent ) ) {
+			$email_provider = $this->get_provider( 'email' );
 			if ( $email_provider instanceof EmailProviderInterface ) {
 				$subject      = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' );
 				$mail_message = $rendered_email['body'];
@@ -705,6 +739,11 @@ class NotificationManager {
 			return false;
 		}
 
+		if ( MessageLoggerService::has_message( $booking_id, self::TYPE_BOOKING_CONFIRMED ) ) {
+			error_log( sprintf( 'NotificationManager: booking_confirmed notification already sent for booking ID %d. Skipping.', $booking_id ) );
+			return true;
+		}
+
 		$sms_enabled   = 'yes' === get_option( 'snippen_sms_booking_confirmed_enabled', 'no' );
 		$email_enabled = 'yes' === get_option( 'snippen_email_booking_confirmed_enabled', 'yes' );
 
@@ -980,6 +1019,33 @@ class NotificationManager {
 			'payment_method'       => $payment_method_label,
 			'booking'              => $booking,
 		);
+	}
+
+	/**
+	 * Get formatted booking time string.
+	 *
+	 * @param object $booking Booking DB object.
+	 * @return string Formatted time range or empty string.
+	 */
+	private function get_booking_time( $booking ): string {
+		global $wpdb;
+
+		$booking_time = '';
+		if ( ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['time_range_formatted'] ) ) {
+				$booking_time = $snapshot['time_range_formatted'];
+			}
+		}
+		if ( empty( $booking_time ) && ! empty( $booking->slot_id ) ) {
+			$table_slots = $wpdb->prefix . 'snippen_time_slots';
+			$slot        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_slots} WHERE id = %d", $booking->slot_id ) );
+			if ( $slot ) {
+				$booking_time = sprintf( '%s - %s', date_i18n( 'H:i', strtotime( $slot->start_time ) ), date_i18n( 'H:i', strtotime( $slot->end_time ) ) );
+			}
+		}
+
+		return $booking_time;
 	}
 
 	/**

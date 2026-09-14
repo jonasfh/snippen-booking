@@ -27,6 +27,24 @@ class SettingsPageTest extends TestCase {
 		delete_option( 'snippen_smtp_from_email' );
 		delete_option( 'snippen_smtp_from_name' );
 		delete_option( 'snippen_notification_dispatch_method' );
+		delete_option( 'snippen_email_booking_confirmation_enabled' );
+		delete_option( 'snippen_email_admin_booking_enabled' );
+		delete_option( 'snippen_email_user_activation_enabled' );
+		delete_option( 'snippen_email_password_reset_enabled' );
+		delete_option( 'snippen_email_payment_reminder_enabled' );
+		delete_option( 'snippen_email_payment_receipt_uploaded_enabled' );
+		delete_option( 'snippen_email_booking_confirmed_enabled' );
+		delete_option( 'snippen_email_payment_received_enabled' );
+		delete_option( 'snippen_email_booking_rejected_enabled' );
+		delete_option( 'snippen_sms_booking_confirmation_enabled' );
+		delete_option( 'snippen_sms_admin_booking_enabled' );
+		delete_option( 'snippen_sms_user_activation_enabled' );
+		delete_option( 'snippen_sms_password_reset_enabled' );
+		delete_option( 'snippen_sms_payment_reminder_enabled' );
+		delete_option( 'snippen_sms_payment_receipt_uploaded_enabled' );
+		delete_option( 'snippen_sms_booking_confirmed_enabled' );
+		delete_option( 'snippen_sms_payment_received_enabled' );
+		delete_option( 'snippen_sms_booking_rejected_enabled' );
 		parent::tearDown();
 	}
 

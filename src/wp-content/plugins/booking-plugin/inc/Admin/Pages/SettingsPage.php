@@ -246,7 +246,7 @@ class SettingsPage {
 		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Aktiver varslingstyper for E-post:', 'snippen-booking' ) . '</h4>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_booking_confirmation_enabled" value="yes" ' . checked( $email_booking, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bookingbekreftelse til kunde på e-post', 'snippen-booking' );
+		echo esc_html__( 'Send bookingbekreftelse til kunde på e-post (manuell/gratis bookingforespørsel)', 'snippen-booking' );
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_admin_booking_enabled" value="yes" ' . checked( $email_admin, 'yes', false ) . ' style="margin:0;">';
@@ -270,7 +270,7 @@ class SettingsPage {
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_booking_confirmed_enabled" value="yes" ' . checked( $email_booking_confirmed, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bekreftelse på godkjent booking til kunde på e-post', 'snippen-booking' );
+		echo esc_html__( 'Send bekreftelse på godkjent/betalt booking til kunde på e-post (Vipps eller godkjent av admin)', 'snippen-booking' );
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_payment_received_enabled" value="yes" ' . checked( $email_payment_received, 'yes', false ) . ' style="margin:0;">';
@@ -306,7 +306,7 @@ class SettingsPage {
 		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Aktiver varslingstyper for SMS:', 'snippen-booking' ) . '</h4>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_booking_confirmation_enabled" value="yes" ' . checked( $sms_booking, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bookingbekreftelse til kunde på SMS', 'snippen-booking' );
+		echo esc_html__( 'Send bookingbekreftelse til kunde på SMS (manuell/gratis bookingforespørsel)', 'snippen-booking' );
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_admin_booking_enabled" value="yes" ' . checked( $sms_admin, 'yes', false ) . ' style="margin:0;">';
@@ -330,7 +330,7 @@ class SettingsPage {
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_booking_confirmed_enabled" value="yes" ' . checked( $sms_booking_confirmed, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bekreftelse på godkjent booking til kunde på SMS', 'snippen-booking' );
+		echo esc_html__( 'Send bekreftelse på godkjent/betalt booking til kunde på SMS (Vipps eller godkjent av admin)', 'snippen-booking' );
 		echo '</label>';
 		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_sms_payment_received_enabled" value="yes" ' . checked( $sms_payment_received, 'yes', false ) . ' style="margin:0;">';

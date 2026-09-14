@@ -219,8 +219,9 @@ class VippsWebhookApi {
 				array( 'id' => $booking->id )
 			);
 
-			// Send confirmation notifications to resident
+			// Send notifications (admin alert and resident confirmation)
 			$notification_manager = self::$notification_manager ?: new NotificationManager();
+			$notification_manager->send_admin_booking_notification( (int) $booking->id, $booking->uuid );
 			$notification_manager->send_booking_confirmed_notification( (int) $booking->id );
 
 			return new \WP_REST_Response(
