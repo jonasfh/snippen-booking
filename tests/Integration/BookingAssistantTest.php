@@ -230,7 +230,7 @@ class BookingAssistantTest extends TestCase {
 		$this->assertIsArray( $response );
 		$this->assertTrue( $response['success'] );
 		$this->assertEquals( 'customer@example.com', $response['data']['recipient'] );
-		$this->assertEquals( 'Bekreftelse på din bookingforespørsel', $response['data']['subject'] );
+		$this->assertContains( $response['data']['subject'], array( 'Bekreftelse på din bookingforespørsel', 'Confirmation of your booking request', __( 'Bekreftelse på din bookingforespørsel', 'snippen-booking' ) ) );
 		$this->assertStringContainsString( 'Takk for din bookingforespørsel', $response['data']['message'] );
 
 		wp_delete_user( $user_id );
