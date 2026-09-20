@@ -30,6 +30,12 @@
         }
     },
     "scripts": {
+        "start": "bash /entrypoint.sh start",
+        "stop": "bash /entrypoint.sh stop",
+        "server:start": "bash /entrypoint.sh start",
+        "server:stop": "bash /entrypoint.sh stop",
+        "server:status": "bash /entrypoint.sh status",
+        "tunnel": "php bin/tunnel.php",
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
         "test:fast": "phpunit --testsuite=Unit",

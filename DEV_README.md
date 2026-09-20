@@ -6,16 +6,17 @@ Booking modul for snippen grendehus
 Kjør følgende i container-terminalen for å komme i gang:
 
 ```bash
-# 1. Start/sikre at bakgrunnstjenester (MariaDB, Apache, WP) kjører:
-/entrypoint.sh &
+# 1. Start bakgrunnstjenester (MariaDB og Apache i bakgrunnen):
+composer start
+# (eller: /entrypoint.sh start)
 
-# Merk: Dersom MariaDB eller Apache ikke kommer igang på første forsøk (f.eks. pga. eksisterende PID-filer),
-# kan du stoppe prosessen (Ctrl+C) og kjøre /entrypoint.sh & én gang til.
-
-# 2. Sett opp demodata og miljø:
+# 2. Sett opp demodata og miljø (konfigurerer også Snippen SMS Service / KeySMS fra .env):
 composer demo
 
-# 3. Test/Trigg automatiske betalingspurringer manuelt:
+# 3. Valgfritt: Åpne offentlig tunnel for testing av webhooks og SMS (kjører i forgrunnen):
+composer tunnel
+
+# 4. Test/Trigg automatiske betalingspurringer manuelt:
 composer demo:reminders
 ```
 
@@ -92,17 +93,15 @@ npm run test:ui:update
 #### Booking Demo Page
 Upon plugin activation, a "Booking Demo" page is automatically created in WordPress. This page contains the `[snippen_booking]` shortcode and can be used for immediate manual testing of the booking form and calendar.
 
-#### Commands & Entrypoint (`/entrypoint.sh`)
-Skriptet `/entrypoint.sh` håndterer oppstart og klargjøring av tjenestene (MariaDB, WordPress-installasjon, symlinking av plugin, samt Apache i forgrunnen).
+#### Commands & Entrypoint (`/entrypoint.sh` / `composer start`)
+Skriptet `/entrypoint.sh` håndterer oppstart og klargjøring av tjenestene (MariaDB, WordPress-installasjon, symlinking av plugin, opprettelse av tabeller og Apache).
 
-- **Start bakgrunnstjenester**: `/entrypoint.sh &` eller `bash /entrypoint.sh`
+- **Start bakgrunnstjenester**: `composer start` eller `/entrypoint.sh start` (starter MariaDB og Apache i bakgrunnen uten å okkupere terminalen)
+- **Sjekk tjenestestatus**: `composer server:status` eller `/entrypoint.sh status`
+- **Stopp tjenester**: `composer stop` eller `/entrypoint.sh stop`
 - **Reset environment**: `bash /entrypoint.sh reset` (sletter `wp-config.php` og databasen)
-- **Setup environment**: `bash /entrypoint.sh setup` (laster ned WP, oppretter konfigurasjon, installerer og aktiverer pluginet uten å starte Apache i forgrunnen)
-
-##### Instabilitet ved oppstart / Kjent oppføring
-Dersom `/entrypoint.sh` stopper uventet eller tjenestene ikke kommer helt i gang på første forsøk:
-1. Dette skyldes som regel at MariaDB-tjenesten trenger en ekstra restart eller at et tidligere Apache/MariaDB PID-flagg lå igjen.
-2. Løsning: Kjøre `/entrypoint.sh` / `/entrypoint.sh setup` én ekstra gang i terminalen før du kjører `composer demo`.
+- **Setup environment**: `bash /entrypoint.sh setup` (laster ned WP, oppretter konfigurasjon, installerer og aktiverer pluginet uten å starte Apache)
+- **Start Apache i forgrunnen**: `/entrypoint.sh` (standard i Docker-containere for å holde containeren i live)
 
 #### Demo Data
 The plugin includes tools to populate the environment with demo data for development and testing.
@@ -127,7 +126,7 @@ composer demo:env        # Update KeySMS, SMTP, and Vipps settings from local .e
 ```
 
 #### Environment Configuration (`.env` & `.env.example`)
-Prosjektet benytter en `.env`-fil i rotmappen for lokal konfigurasjon under utvikling (f.eks. for KeySMS integration, test-bruker, SMTP-innstillinger og Vipps MobilePay). 
+Prosjektet benytter en `.env`-fil i rotmappen for lokal konfigurasjon under utvikling (f.eks. for KeySMS integration, test-bruker, SMTP-innstillinger og Vipps MobilePay).
 
 - **`.env.example`**: Malfil som ligger i versjonskontroll. Denne viser alle støttede miljøvariabler og eksempelveidier.
 - **`.env`**: Din lokale konfigurasjonsfil. Hvis `.env` ikke eksisterer når du kjører setup/demo-skript (som `composer demo`), vil `.env` automatisk bli kopiert fra `.env.example`.
@@ -702,13 +701,11 @@ Vipps MT-servere over internett må kunne levere HTTP POST-forespørsler til web
   3. Høyreklikk på **Port Visibility** og endre fra *Private* til **Public**.
   4. Kopier adressen under *Forwarded Address* (f.eks. `https://<codespace-id>-8080.app.github.dev`).
 - **I lokalt Docker-miljø (utenfor Codespaces)**:
-  - Bruk Cloudflare Tunnel eller ngrok:
+  - Bruk den innebygde tunnel-kommandoen som filtrerer støy og fremhever endepunktene:
     ```bash
-    # Cloudflare Tunnel (krever ingen konto):
-    cloudflared tunnel --url http://localhost:8080
-    # eller ngrok:
-    ngrok http 8080
+    composer tunnel
     ```
+    (eller kjør manuelt: `cloudflared tunnel --url http://localhost:8080` / `ngrok http 8080`)
   - Noter den tildelte offentlige `https://...`-adressen.
 
 ---
@@ -802,4 +799,3 @@ All modal and overlay dialogs across the plugin (direct-link booking UUID popup,
   1. The close button (`&times;`) in the header.
   2. Clicking on the semi-transparent overlay backdrop.
   3. Pressing the keyboard `Escape` key.
-

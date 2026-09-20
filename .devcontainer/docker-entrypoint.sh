@@ -71,22 +71,44 @@ if [ ! -f wp-config.php ]; then
     --allow-root
 fi
 
-# Inject dynamic WP_HOME and WP_SITEURL to allow access from multiple hostnames (localhost vs container name)
-if ! grep -q "WP_HOME" wp-config.php; then
-  cat <<'WPCONF' >> wp-config.php
+# Inject reverse proxy HTTPS support and dynamic WP_HOME / WP_SITEURL before wp-settings.php
+if ! grep -q "HTTP_X_FORWARDED_PROTO" wp-config.php; then
+  python3 -c '
+path = "wp-config.php"
+with open(path, "r") as f:
+    content = f.read()
 
-// Dynamic WP_HOME and WP_SITEURL for multi-host container support (Issue #265)
-if ( ! defined( 'WP_HOME' ) ) {
-    $scheme = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https://' : 'http://';
-    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
-    define( 'WP_HOME', $scheme . $host );
+proxy_code = """
+// Support reverse proxy HTTPS (Cloudflare Tunnel, ngrok, Codespaces)
+if ( isset( $_SERVER[\x27HTTP_X_FORWARDED_PROTO\x27] ) && 0 === strpos( $_SERVER[\x27HTTP_X_FORWARDED_PROTO\x27], \x27https\x27 ) ) {
+    $_SERVER[\x27HTTPS\x27] = \x27on\x27;
 }
-if ( ! defined( 'WP_SITEURL' ) ) {
-    $scheme = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https://' : 'http://';
-    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
-    define( 'WP_SITEURL', $scheme . $host );
+if ( ! empty( $_SERVER[\x27HTTP_X_FORWARDED_HOST\x27] ) ) {
+    $_SERVER[\x27HTTP_HOST\x27] = $_SERVER[\x27HTTP_X_FORWARDED_HOST\x27];
 }
-WPCONF
+
+// Dynamic WP_HOME and WP_SITEURL for multi-host container and tunnel support (Issue #265)
+if ( ! defined( \x27WP_HOME\x27 ) ) {
+    $scheme = ( isset( $_SERVER[\x27HTTPS\x27] ) && $_SERVER[\x27HTTPS\x27] === \x27on\x27 ) ? \x27https://\x27 : \x27http://\x27;
+    $host   = $_SERVER[\x27HTTP_HOST\x27] ?? \x27localhost:8080\x27;
+    define( \x27WP_HOME\x27, $scheme . $host );
+}
+if ( ! defined( \x27WP_SITEURL\x27 ) ) {
+    $scheme = ( isset( $_SERVER[\x27HTTPS\x27] ) && $_SERVER[\x27HTTPS\x27] === \x27on\x27 ) ? \x27https://\x27 : \x27http://\x27;
+    $host   = $_SERVER[\x27HTTP_HOST\x27] ?? \x27localhost:8080\x27;
+    define( \x27WP_SITEURL\x27, $scheme . $host );
+}
+"""
+
+target = "/* That\x27s all, stop editing! Happy publishing. */"
+if target in content:
+    content = content.replace(target, proxy_code + "\n" + target)
+elif "require_once ABSPATH . \x27wp-settings.php\x27;" in content:
+    content = content.replace("require_once ABSPATH . \x27wp-settings.php\x27;", proxy_code + "\nrequire_once ABSPATH . \x27wp-settings.php\x27;")
+
+with open(path, "w") as f:
+    f.write(content)
+'
 fi
 
 # 4. Install WordPress Core
@@ -136,6 +158,7 @@ fi
 
 if [ -d "wp-content/plugins/$PLUGIN_SLUG" ]; then
   wp plugin activate "$PLUGIN_SLUG" --allow-root || true
+  wp eval 'if ( class_exists( "\SnippenBooking\Database\Install" ) ) { \SnippenBooking\Database\Install::activate(); } if ( class_exists( "\SnippenBooking\Database\MigrationManager" ) ) { \SnippenBooking\Database\MigrationManager::run(); }' --allow-root || true
 fi
 
 # Ensure wp-content and uploads are writable by both web server (www-data) and dev/test user (vscode)
@@ -184,6 +207,28 @@ fi
 # 8. Arguments Handling
 if [ $# -gt 0 ] && [ "$1" == "setup" ]; then
   echo "Setup complete. Exiting."
+  exit 0
+fi
+
+if [ $# -gt 0 ] && ( [ "$1" == "start" ] || [ "$1" == "background" ] || [ "$1" == "bg" ] ); then
+  echo "Ensuring MariaDB and Apache are running in the background..."
+  service mariadb start
+  service apache2 start
+  echo "Services started. WordPress is running on http://localhost:${PORT}"
+  exit 0
+fi
+
+if [ $# -gt 0 ] && [ "$1" == "stop" ]; then
+  echo "Stopping services..."
+  service apache2 stop || true
+  service mariadb stop || true
+  echo "Services stopped."
+  exit 0
+fi
+
+if [ $# -gt 0 ] && [ "$1" == "status" ]; then
+  service mariadb status || true
+  service apache2 status || true
   exit 0
 fi
 

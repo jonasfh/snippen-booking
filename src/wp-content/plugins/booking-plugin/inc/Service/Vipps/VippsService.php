@@ -67,7 +67,9 @@ class VippsService {
 	 * @return string Unique reference string.
 	 */
 	public static function generate_reference( $booking_id ) {
-		return sprintf( 'snippen-%d-%d-%d', (int) $booking_id, time(), wp_rand( 100, 999 ) );
+		static $seq = 0;
+		++$seq;
+		return sprintf( 'snippen-%d-%d-%d-%03d', (int) $booking_id, time(), wp_rand( 100, 999 ), $seq % 1000 );
 	}
 
 	/**
