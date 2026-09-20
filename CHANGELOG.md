@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.42.3] - 2026-09-20
+- (#343) Forenklet bakgrunnskjøring, Cloudflare Tunnel CLI og Snippen SMS Service miljøkonfigurasjon:
+  - **Styring av bakgrunnstjenester (`docker-entrypoint.sh` & `composer.json`)**:
+    - Utvidet `.devcontainer/docker-entrypoint.sh` med støtte for `start`, `stop`, `status` og `bg` slik at Apache og MariaDB kan startes i bakgrunnen uten å okkupere terminalen.
+    - Lagt til `composer start`, `composer stop`, `composer server:start`, `composer server:stop` og `composer server:status` i `composer.json`.
+  - **Revers-proxy & Cloudflare Tunnel HTTPS-støtte (`docker-entrypoint.sh`)**:
+    - Flyttet dynamisk oppsett av `WP_HOME` og `WP_SITEURL` før `wp-settings.php` i `wp-config.php`.
+    - Lagt til automatisk gjenkjenning av `HTTP_X_FORWARDED_PROTO` (HTTPS) og `HTTP_X_FORWARDED_HOST` for å eliminere Mixed Content-feil og redirect-løkker ved bruk av Cloudflare Tunnel, ngrok og port forwarding.
+  - **Støtte for `snippen-sms-service` i `.env.example` og `composer demo` (`bin/demo-sms.php`)**:
+    - Oppdatert `.env.example` med `SMS_PROVIDER`, `SNIPPEN_SMS_API_TOKEN` og `SNIPPEN_SMS_SENDER`.
+    - Oppdatert `bin/demo-sms.php` slik at `composer demo` automatisk setter opp både KeySMS og Snippen SMS Service og aktiverer valgt leverandør.
+  - **CLI-verktøy for Cloudflare Tunnel (`bin/tunnel.php` & `composer tunnel`)**:
+    - Implementert `composer tunnel` (`bin/tunnel.php`) som kjører Cloudflare Tunnel i forgrunnen, filtrerer ut overflødig loggstøy og viser offentlig tunneladresse, WordPress-adresser og SMS-endepunkter i et oversiktlig sammendrag.
+    - Lagt til automatisk helsesjekk som starter webserveren dersom den ikke kjører, samt ryddig prosesshåndtering ved avslutning (Ctrl+C).
+
 ## [2.42.2] - 2026-09-14
 - (#340) Raskere lokale tester og optimalisert test-arbeidsflyt:
   - **MariaDB-optimalisering for Devcontainer (`docker-entrypoint.sh` & `99-test-performance.cnf`)**:
