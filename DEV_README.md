@@ -508,9 +508,12 @@ The plugin integrates with the `snippen-sms-service` daemon via REST API endpoin
 #### Admin SMS Innboks & Karantene
 
 Administrators can navigate to **Snippen Booking → SMS Innboks** (`admin.php?page=snippen-booking-sms-inbox`) to:
-- Monitor all inbound SMS traffic and matched resolution rules.
-- Filter messages by status (Quarantine, Pending selection, General inquiries, Resolved bookings).
-- Manually assign unassociated or quarantined messages to a booking with a single click.
+- **Monitor and filter**: Inspect inbound SMS messages with status tabs (Quarantine, Pending selection, General inquiries, Connected bookings), connection filters (linked vs. unlinked), and date range filters (today, last 7 days, last 30 days).
+- **Search and sort**: Full search supporting phone numbers (with/without country code, spaced), message text, customer/user names, and booking IDs (`#123`), with column sorting on timestamp, sender, status, and booking.
+- **Delete messages**: Delete individual messages with confirmation, or bulk-delete multiple selected messages at once.
+- **Inspect details and threads**: Open the SMS detail modal to inspect full message content, user profile links, technical metadata (`modem_message_id`, `gateway_id`), and complete chronological conversation threads.
+- **Direct reply**: Send replies directly to the sender from the detail modal with live character counting, dispatched through the active SMS provider and logged to the message history.
+- **Manual assignment**: Manually assign unassociated or quarantined messages to an active booking.
 
 ### SMS Gateway & E2E Test Provisioning (`composer demo:gateway`)
 
