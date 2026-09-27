@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.43.0] - 2026-09-27
+- (#346) Forbedret SMS-administrasjon i SMS Innboks & Karantene (søk, sletting, sortering, filtrering, detaljvisning og direkte svar):
+  - **Fikse og forbedre søk (`MessageLoggerService.php` & `SmsInboxPage.php`)**:
+    - Utvidet søkemotoren til å håndtere norske telefonnumre (både med og uten `+47`, formateringer med mellomrom, og delvise sifre).
+    - Lagt til søk på full meldingstekst, booking-ID (`#123` eller `123`), brukernavn/visningsnavn og kundenavn fra reservasjoner.
+    - Sikret at søkestreng og aktive filtre bevares ved sortering og paginering.
+  - **Sortering og utvidet filtrering (`MessageLoggerService.php` & `SmsInboxPage.php`)**:
+    - Lagt til klikkbare, sorterbare kolonneoverskrifter (stigende/fallende) med visuelle piler for tidspunkt (`created_at`), avsender (`recipient`), status og tilknyttet booking.
+    - Implementert hurtigfaner for statuser (Alle, Karantene / Ukjent, Venter på valg, Uten booking, Koblet til reservasjon) med oppdaterte tellere.
+    - Lagt til filter for koblingstilstand (Alle, Kun koblet til booking, Kun ukoblede) og datoperiode (I dag, Siste 7 dager, Siste 30 dager).
+  - **Sletting av meldinger (`MessageLoggerService.php` & `SmsInboxPage.php`)**:
+    - Lagt til metoder `delete_message()` og `delete_messages()` i `MessageLoggerService`.
+    - Implementert enkeltvis sletting med bekreftelsesdialog og massehandlinger (bulk delete) via avkrysningsbokser med nonce- og tilgangskontroll (`manage_options`).
+  - **Detaljvisning og samtalelogg (`MessageLoggerService.php` & `SmsInboxPage.php`)**:
+    - Implementert detaljmodal for SMS som viser full meldingstekst, formaterte tidsstempler, avsenderinformasjon, koblet WP-bruker og tekniske metadata (`matched_rule`, `modem_message_id`, gateway metadata).
+    - Lagt til `MessageLoggerService::get_conversation_thread()` som henter og viser full kronologisk samtalelogg mellom Snippen og telefonnummeret / bookingen i en responsiv chat-tråd.
+  - **Mulighet til å svare direkte fra detaljvisning (`SmsInboxPage.php` & `NotificationManager.php`)**:
+    - Lagt til metoden `get_active_sms_provider()` i `NotificationManager`.
+    - Implementert svarskjema i detaljvisningen med sanntids tegnteller (160 tegn / delmeldinger) og utsending via aktiv SMS-leverandør (Snippen SMS Gateway eller KeySMS).
+    - Automatisk logging av utgående administratorsvar i `wp_snippen_messages` (`admin_sms_reply`) og oppdatering av samtaleloggen.
+  - **Tester og kvalitetssikring (`tests/Integration/SmsInboxPageTest.php` & `MessageLoggerServiceTest.php`)**:
+    - Skrevet omfattende integrasjonstester for rendering, filtrering, søk, detaljmodal, sletting, massehandlinger og direkte SMS-svar.
+    - Null feil og advarsler i PHPCS (`composer lint`).
+
 ## [2.42.3] - 2026-09-20
 - (#343) Forenklet bakgrunnskjøring, Cloudflare Tunnel CLI og Snippen SMS Service miljøkonfigurasjon:
   - **Styring av bakgrunnstjenester (`docker-entrypoint.sh` & `composer.json`)**:

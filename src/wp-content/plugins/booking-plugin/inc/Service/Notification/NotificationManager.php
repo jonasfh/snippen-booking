@@ -90,6 +90,21 @@ class NotificationManager {
 	}
 
 	/**
+	 * Get the currently active SMS provider.
+	 *
+	 * @return SmsProviderInterface|null Active SMS provider or null if not found.
+	 */
+	public function get_active_sms_provider(): ?SmsProviderInterface {
+		$provider_id = get_option( 'snippen_sms_provider', '' );
+		if ( empty( $provider_id ) ) {
+			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
+		}
+		$provider = $this->get_provider( $provider_id );
+
+		return ( $provider instanceof SmsProviderInterface ) ? $provider : null;
+	}
+
+	/**
 	 * Determine initial logged status for an SMS dispatch attempt.
 	 *
 	 * @param bool   $success     Whether the provider accepted/sent the SMS.
