@@ -14,6 +14,7 @@ class BookingActionsApi {
 	 */
 	public static function register() {
 		add_action( 'wp_ajax_snippen_update_booking_status', array( __CLASS__, 'update_status' ) );
+		add_action( 'wp_ajax_snippen_update_booking', array( __CLASS__, 'update_booking' ) );
 		add_action( 'wp_ajax_snippen_dispatch_notification_manually', array( __CLASS__, 'dispatch_notification_manually' ) );
 		add_action( 'wp_ajax_snippen_get_notification_preview', array( __CLASS__, 'get_notification_preview' ) );
 		add_action( 'wp_ajax_snippen_update_door_code', array( __CLASS__, 'update_door_code' ) );
@@ -149,6 +150,122 @@ class BookingActionsApi {
 		} else {
 			wp_send_json_error( array( 'message' => __( 'Kunne ikke oppdatere dørkode.', 'snippen-booking' ) ) );
 		}
+	}
+
+	/**
+	 * Update a booking from the admin overview.
+	 */
+	public static function update_booking() {
+		check_ajax_referer( 'snippen_admin_nonce', 'nonce' );
+
+		if ( ! Capabilities::can_manage_bookings() ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
+		}
+
+		$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		if ( ! $id ) {
+			wp_send_json_error( array( 'message' => __( 'Ugyldig forespørsel.', 'snippen-booking' ) ) );
+		}
+
+		$repo = new \SnippenBooking\Database\Repository\BookingRepository();
+		$booking = $repo->find( $id );
+		if ( ! $booking ) {
+			wp_send_json_error( array( 'message' => __( 'Booking ble ikke funnet.', 'snippen-booking' ) ) );
+		}
+
+		$update_data = array();
+		$object_ids  = null;
+		$block_ids   = null;
+
+		if ( isset( $_POST['booking_date'] ) ) {
+			$booking_date = sanitize_text_field( wp_unslash( $_POST['booking_date'] ) );
+			if ( $booking_date ) {
+				$update_data['booking_date'] = $booking_date;
+			}
+		}
+
+		if ( isset( $_POST['start_time'] ) ) {
+			$start_time = sanitize_text_field( wp_unslash( $_POST['start_time'] ) );
+			if ( $start_time ) {
+				$update_data['start_time'] = $start_time;
+			}
+		}
+
+		if ( isset( $_POST['end_time'] ) ) {
+			$end_time = sanitize_text_field( wp_unslash( $_POST['end_time'] ) );
+			if ( $end_time ) {
+				$update_data['end_time'] = $end_time;
+			}
+		}
+
+		if ( isset( $_POST['customer_name'] ) ) {
+			$customer_name = sanitize_text_field( wp_unslash( $_POST['customer_name'] ) );
+			if ( $customer_name !== '' ) {
+				$update_data['customer_name'] = $customer_name;
+			}
+		}
+
+		if ( isset( $_POST['customer_email'] ) ) {
+			$customer_email = sanitize_email( wp_unslash( $_POST['customer_email'] ) );
+			if ( $customer_email !== '' ) {
+				$update_data['customer_email'] = $customer_email;
+			}
+		}
+
+		if ( isset( $_POST['customer_phone'] ) ) {
+			$customer_phone = sanitize_text_field( wp_unslash( $_POST['customer_phone'] ) );
+			if ( $customer_phone !== '' ) {
+				$update_data['customer_phone'] = $customer_phone;
+			}
+		}
+
+		if ( isset( $_POST['description'] ) ) {
+			$description = sanitize_textarea_field( wp_unslash( $_POST['description'] ) );
+			$update_data['description'] = $description;
+		}
+
+		if ( isset( $_POST['booking_type'] ) ) {
+			$booking_type = sanitize_text_field( wp_unslash( $_POST['booking_type'] ) );
+			if ( in_array( $booking_type, array( 'private', 'open', 'cleaning' ), true ) ) {
+				$update_data['booking_type'] = $booking_type;
+			}
+		}
+
+		if ( isset( $_POST['slot_id'] ) ) {
+			$slot_id = intval( $_POST['slot_id'] );
+			if ( $slot_id > 0 ) {
+				$update_data['slot_id'] = $slot_id;
+			}
+		}
+
+		if ( isset( $_POST['booking_object_ids'] ) ) {
+			$raw_object_ids = $_POST['booking_object_ids'];
+			if ( ! is_array( $raw_object_ids ) ) {
+				$decoded = json_decode( stripslashes( $raw_object_ids ), true );
+				$raw_object_ids = is_array( $decoded ) ? $decoded : explode( ',', (string) $raw_object_ids );
+			}
+			$object_ids = array_values( array_unique( array_filter( array_map( 'intval', (array) $raw_object_ids ) ) ) );
+		}
+
+		if ( isset( $_POST['booking_block_ids'] ) ) {
+			$raw_block_ids = $_POST['booking_block_ids'];
+			if ( ! is_array( $raw_block_ids ) ) {
+				$decoded = json_decode( stripslashes( $raw_block_ids ), true );
+				$raw_block_ids = is_array( $decoded ) ? $decoded : explode( ',', (string) $raw_block_ids );
+			}
+			$block_ids = array_values( array_unique( array_filter( array_map( 'intval', (array) $raw_block_ids ) ) ) );
+		}
+
+		if ( empty( $update_data ) && null === $object_ids && null === $block_ids ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen felt å oppdatere.', 'snippen-booking' ) ) );
+		}
+
+		$updated = $repo->update( $id, $update_data, $object_ids, $block_ids );
+		if ( $updated ) {
+			wp_send_json_success( array( 'message' => __( 'Booking oppdatert.', 'snippen-booking' ) ) );
+		}
+
+		wp_send_json_error( array( 'message' => __( 'Kunne ikke oppdatere booking.', 'snippen-booking' ) ) );
 	}
 
 	/**

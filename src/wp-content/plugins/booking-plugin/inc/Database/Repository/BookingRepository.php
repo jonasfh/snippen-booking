@@ -150,8 +150,8 @@ class BookingRepository {
 		}
 
 		$blocks    = array();
-		$min_start = null;
-		$max_end   = null;
+		$min_start = isset( $data['start_time'] ) && '' !== $data['start_time'] ? $data['start_time'] : null;
+		$max_end   = isset( $data['end_time'] ) && '' !== $data['end_time'] ? $data['end_time'] : null;
 		if ( ! empty( $block_ids ) ) {
 			$placeholders = implode( ',', array_fill( 0, count( $block_ids ), '%d' ) );
 			$rows         = $wpdb->get_results(
@@ -290,9 +290,17 @@ class BookingRepository {
 		$block_ids  = array_values( array_unique( array_map( 'intval', $block_ids ) ) );
 
 		$booking_data = array_merge( (array) $booking, $data );
-		unset( $booking_data['snapshot'], $booking_data['booking_block_ids'], $booking_data['booking_object_ids'] );
-		$booking_data['modified_at']      = current_time( 'mysql' );
-		$booking_data['booking_snapshot'] = wp_json_encode( $this->build_snapshot( $booking_data, $object_ids, $block_ids ) );
+		$snapshot_data = $booking_data;
+		unset( $booking_data['snapshot'], $booking_data['booking_block_ids'], $booking_data['booking_object_ids'], $booking_data['start_time'], $booking_data['end_time'] );
+		$booking_data['modified_at'] = current_time( 'mysql' );
+
+		if ( isset( $data['start_time'] ) ) {
+			$snapshot_data['start_time'] = $data['start_time'];
+		}
+		if ( isset( $data['end_time'] ) ) {
+			$snapshot_data['end_time'] = $data['end_time'];
+		}
+		$booking_data['booking_snapshot'] = wp_json_encode( $this->build_snapshot( $snapshot_data, $object_ids, $block_ids ) );
 
 		$updated = $wpdb->update(
 			$wpdb->prefix . 'snippen_bookings',

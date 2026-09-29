@@ -292,6 +292,51 @@ class BookingActionsTest extends TestCase {
     }
 
     /**
+     * Test that an admin can edit an existing booking from the overview.
+     */
+    public function test_admin_can_edit_existing_booking() {
+        $user_id = wp_insert_user([
+            'user_login' => 'admin_test_edit',
+            'user_pass' => 'password',
+            'role' => 'administrator'
+        ]);
+        $user = get_user_by('id', $user_id);
+        $user->add_cap('manage_snippen_bookings');
+        wp_set_current_user($user_id);
+
+        $booking_id = $this->create_test_booking($user_id);
+
+        $_POST['id'] = $booking_id;
+        $_POST['booking_date'] = '2030-02-15';
+        $_POST['start_time'] = '09:00';
+        $_POST['end_time'] = '12:00';
+        $_POST['customer_name'] = 'Oppdatert Kunde';
+        $_POST['customer_email'] = 'updated@example.com';
+        $_POST['customer_phone'] = '99887766';
+        $_POST['description'] = 'Oppdatert beskrivelse';
+        $_POST['nonce'] = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
+
+        ob_start();
+        try {
+            BookingActionsApi::update_booking();
+        } catch (\Throwable $e) {}
+        ob_get_clean();
+
+        global $wpdb;
+        $booking = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id));
+        $snapshot = json_decode($booking->booking_snapshot, true);
+
+        $this->assertEquals('2030-02-15', $booking->booking_date);
+        $this->assertEquals('Oppdatert Kunde', $booking->customer_name);
+        $this->assertEquals('updated@example.com', $booking->customer_email);
+        $this->assertEquals('99887766', $booking->customer_phone);
+        $this->assertNotEmpty($booking->booking_snapshot);
+        $this->assertEquals('09:00', $snapshot['start_time']);
+        $this->assertEquals('12:00', $snapshot['end_time']);
+    }
+
+    /**
      * Test that a non-admin cannot update door code
      */
     public function test_user_cannot_update_door_code() {

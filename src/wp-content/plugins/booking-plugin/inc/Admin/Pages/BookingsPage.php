@@ -346,7 +346,7 @@ class BookingsPage {
 			$display_time = $booking->slot_name;
 		}
 
-		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '">';
+		echo '<tr class="snippen-booking-row" id="booking-' . esc_attr( $booking->id ) . '" data-booking-date="' . esc_attr( $booking->booking_date ) . '" data-start-time="' . esc_attr( $booking->start_time ?? '' ) . '" data-end-time="' . esc_attr( $booking->end_time ?? '' ) . '" data-customer-name="' . esc_attr( $booking->customer_name ) . '" data-customer-email="' . esc_attr( $booking->customer_email ) . '" data-customer-phone="' . esc_attr( $booking->customer_phone ) . '" data-description="' . esc_attr( $booking->description ?? '' ) . '">';
 
 		// Mobile single-cell summary (Visible on mobile <= 768px, hidden on desktop)
 		echo '<td class="snippen-booking-mobile-summary" colspan="8">';
@@ -419,6 +419,7 @@ class BookingsPage {
 			echo '<div class="booking-details-actions-wrap">';
 			echo '<strong>' . esc_html__( 'Handlinger:', 'snippen-booking' ) . '</strong>';
 			echo '<div class="booking-details-action-buttons">';
+			echo '<button type="button" class="snippen-btn-action edit-booking with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Rediger booking', 'snippen-booking' ) . '"><span class="dashicons dashicons-edit"></span> <span>' . esc_html__( 'Rediger', 'snippen-booking' ) . '</span></button>';
 			if ( $booking->status === 'pending' ) {
 				echo '<button type="button" class="snippen-btn-action approve with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Godkjenn', 'snippen-booking' ) . '"><span class="dashicons dashicons-yes"></span> <span>' . esc_html__( 'Godkjenn booking', 'snippen-booking' ) . '</span></button>';
 			}
@@ -624,6 +625,55 @@ class BookingsPage {
 				<div class="snippen-modal-footer">
 					<button type="button" class="button snippen-modal-cancel"><?php esc_html_e( 'Avbryt', 'snippen-booking' ); ?></button>
 					<button type="button" class="button button-primary snippen-modal-submit"></button>
+				</div>
+			</div>
+		</div>
+
+		<div id="snippen-edit-booking-modal" class="snippen-modal-backdrop" style="display:none;">
+			<div class="snippen-modal-content" style="max-width: 620px;">
+				<div class="snippen-modal-header">
+					<h2 class="snippen-modal-title"><?php esc_html_e( 'Rediger booking', 'snippen-booking' ); ?></h2>
+					<button type="button" class="snippen-modal-close" aria-label="<?php esc_attr_e( 'Lukk', 'snippen-booking' ); ?>">&times;</button>
+				</div>
+				<div class="snippen-modal-body">
+					<input type="hidden" class="snippen-edit-booking-id">
+					<div class="snippen-form-group" style="margin-bottom:12px;">
+						<label><?php esc_html_e( 'Dato:', 'snippen-booking' ); ?></label>
+						<input type="date" class="snippen-edit-booking-date" style="width:100%;">
+					</div>
+					<div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px;">
+						<div class="snippen-form-group">
+							<label><?php esc_html_e( 'Starttid:', 'snippen-booking' ); ?></label>
+							<input type="time" class="snippen-edit-booking-start" style="width:100%;">
+						</div>
+						<div class="snippen-form-group">
+							<label><?php esc_html_e( 'Sluttid:', 'snippen-booking' ); ?></label>
+							<input type="time" class="snippen-edit-booking-end" style="width:100%;">
+						</div>
+					</div>
+					<div class="snippen-form-group" style="margin-top:12px;">
+						<label><?php esc_html_e( 'Kunde:', 'snippen-booking' ); ?></label>
+						<input type="text" class="snippen-edit-booking-customer-name" style="width:100%;">
+					</div>
+					<div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px; margin-top:12px;">
+						<div class="snippen-form-group">
+							<label><?php esc_html_e( 'E-post:', 'snippen-booking' ); ?></label>
+							<input type="email" class="snippen-edit-booking-email" style="width:100%;">
+						</div>
+						<div class="snippen-form-group">
+							<label><?php esc_html_e( 'Telefon:', 'snippen-booking' ); ?></label>
+							<input type="text" class="snippen-edit-booking-phone" style="width:100%;">
+						</div>
+					</div>
+					<div class="snippen-form-group" style="margin-top:12px;">
+						<label><?php esc_html_e( 'Beskrivelse / notater:', 'snippen-booking' ); ?></label>
+						<textarea class="snippen-edit-booking-description" rows="4" style="width:100%;"></textarea>
+					</div>
+					<div class="snippen-modal-feedback" style="margin-top:10px; font-size:12px; font-weight:600;"></div>
+				</div>
+				<div class="snippen-modal-footer">
+					<button type="button" class="button snippen-modal-cancel"><?php esc_html_e( 'Avbryt', 'snippen-booking' ); ?></button>
+					<button type="button" class="button button-primary snippen-btn-save-booking-edit"><?php esc_html_e( 'Lagre booking', 'snippen-booking' ); ?></button>
 				</div>
 			</div>
 		</div>

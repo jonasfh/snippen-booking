@@ -49,6 +49,80 @@
             $(this).find('.toggle-details').first().trigger('click');
         });
 
+        // Edit booking from admin overview
+        $('.bookings-table').on('click', '.snippen-btn-action.edit-booking', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const id = $btn.data('id');
+            const $row = $('#booking-' + id);
+            const $modal = $('#snippen-edit-booking-modal');
+
+            $modal.find('.snippen-edit-booking-id').val(id);
+            $modal.find('.snippen-edit-booking-date').val($row.data('bookingDate') || '');
+            $modal.find('.snippen-edit-booking-start').val($row.data('startTime') || '');
+            $modal.find('.snippen-edit-booking-end').val($row.data('endTime') || '');
+            $modal.find('.snippen-edit-booking-customer-name').val($row.data('customerName') || '');
+            $modal.find('.snippen-edit-booking-email').val($row.data('customerEmail') || '');
+            $modal.find('.snippen-edit-booking-phone').val($row.data('customerPhone') || '');
+            $modal.find('.snippen-edit-booking-description').val($row.data('description') || '');
+            $modal.find('.snippen-modal-feedback').text('').css('color', 'inherit');
+
+            $modal.fadeIn(200);
+            $('body').addClass('snippen-modal-open');
+        });
+
+        $('#snippen-edit-booking-modal').on('click', '.snippen-modal-close, .snippen-modal-cancel', function(e) {
+            e.preventDefault();
+            $('#snippen-edit-booking-modal').fadeOut(200);
+            $('body').removeClass('snippen-modal-open');
+        });
+
+        $('#snippen-edit-booking-modal').on('click', function(e) {
+            if ($(e.target).is('#snippen-edit-booking-modal')) {
+                $('#snippen-edit-booking-modal').fadeOut(200);
+                $('body').removeClass('snippen-modal-open');
+            }
+        });
+
+        $('#snippen-edit-booking-modal').on('click', '.snippen-btn-save-booking-edit', function(e) {
+            e.preventDefault();
+            const $modal = $('#snippen-edit-booking-modal');
+            const id = $modal.find('.snippen-edit-booking-id').val();
+            const $feedback = $modal.find('.snippen-modal-feedback');
+            const $saveBtn = $(this);
+
+            $saveBtn.prop('disabled', true).css('opacity', '0.5');
+            $feedback.text('Lagrer...').css('color', '#6b7280');
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_update_booking',
+                nonce: snippenAdmin.nonce,
+                id: id,
+                booking_date: $modal.find('.snippen-edit-booking-date').val(),
+                start_time: $modal.find('.snippen-edit-booking-start').val(),
+                end_time: $modal.find('.snippen-edit-booking-end').val(),
+                customer_name: $modal.find('.snippen-edit-booking-customer-name').val(),
+                customer_email: $modal.find('.snippen-edit-booking-email').val(),
+                customer_phone: $modal.find('.snippen-edit-booking-phone').val(),
+                description: $modal.find('.snippen-edit-booking-description').val()
+            }, function(response) {
+                if (response.success) {
+                    $feedback.text(response.data.message || 'Lagret').css('color', '#15803d');
+                    setTimeout(function() {
+                        $modal.fadeOut(200);
+                        $('body').removeClass('snippen-modal-open');
+                        window.location.reload();
+                    }, 600);
+                } else {
+                    $feedback.text(response.data.message || 'Kunne ikke oppdatere booking.').css('color', '#b91c1c');
+                }
+            }).fail(function() {
+                $feedback.text('En ukjent feil oppstod.').css('color', '#b91c1c');
+            }).always(function() {
+                $saveBtn.prop('disabled', false).css('opacity', '1');
+            });
+        });
+
         // AJAX Status Update
         $('.bookings-table').on('click', '.snippen-btn-action.approve, .snippen-btn-action.cancel', function(e) {
             e.preventDefault();
