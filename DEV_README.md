@@ -272,6 +272,16 @@ erDiagram
         DATETIME created_at
         DATETIME modified_at
     }
+    booking_snapshots {
+        BIGINT id PK
+        BIGINT booking_id FK
+        INT revision
+        LONGTEXT snapshot
+        TEXT changes_summary
+        BIGINT modified_by
+        DATETIME created_at
+        DATETIME modified_at
+    }
 
     time_slots ||--o{ bookings : references
     time_slots ||--o{ prices : references
@@ -280,7 +290,40 @@ erDiagram
     prices ||--|{ price_objects : belongs_to
     booking_objects ||--|{ price_objects : belongs_to
     bookings ||--o{ messages : references
+    bookings ||--o{ booking_snapshots : references
 ```
+
+## Booking Edit & Snapshot History System
+
+As of version 2.44.0 (#211), administrators can edit existing bookings directly from the WordPress Admin dashboard with complete revision history tracking.
+
+### Architecture & Data Flow
+
+- **Database Table (`wp_snippen_booking_snapshots`)**:
+  - `id`: Auto-incrementing primary key.
+  - `booking_id`: Foreign key reference to `wp_snippen_bookings.id`.
+  - `revision`: Sequential revision number starting at 1 for initial creation.
+  - `snapshot`: Complete JSON dump of the booking record and its related junction tables (`booking_blocks` and `booking_objects`) at the time of creation or edit.
+  - `changes_summary`: Human-readable description of modifications made in this revision.
+  - `modified_by`: WordPress user ID of the administrator making the change (or 0 for system/customer).
+  - `created_at` & `modified_at`: Timestamps following universal database standards.
+
+- **Conflict Detection (`AvailabilityService`)**:
+  - `AvailabilityService::areBlocksAvailable()` and related methods accept an optional `$excludeBookingId` parameter.
+  - When editing a booking, the booking's own existing time slots/blocks are excluded from overlap checks, preventing false collision rejections while ensuring collisions with other bookings are strictly caught.
+
+- **AJAX API Endpoints (`BookingEditApi`)**:
+  - `snippen_get_booking_edit_data`: Fetches the current booking details, active objects, blocks, and available time slots for the edit modal form.
+  - `snippen_edit_booking`: Validates input, performs conflict checks, calls `BookingRepository::update()`, and stores the revision snapshot.
+  - `snippen_get_booking_history`: Returns all historical revisions and diff details for display in the modal history tab and expandable list rows.
+  - Restricted to users with `manage_options` or `manage_snippen_bookings` capabilities. Non-authorized requests return HTTP 403.
+
+- **Admin UI (`BookingsPage`)**:
+  - Dedicated «Rediger» action button in both list rows and the expanded booking detail card.
+  - Modal with two tabs:
+    - **Rediger opplysninger**: Form for date, blocks, venues, customer contact info, price, payment status, and required change summary.
+    - **Snapshot-historikk**: Chronological timeline of all historical snapshots for the booking.
+  - Collapsible **Endringshistorikk** card in the admin bookings detail view showing revision history at a glance.
 
 ## Pluggable Notification System
 

@@ -38,6 +38,14 @@ The booking system supports three distinct booking types with tailored pricing a
   - **Rejection**: Administrator clicks «Avslå» (`cancelled`) and is prompted to enter an explanatory rejection reason (`rejection_reason`). Status updates to `cancelled` and the resident receives an immediate rejection notice (`booking_rejected`) via email (and SMS if enabled) containing the explanation and a link. In «Mine bookinger» (`[snippen_booking_list]`), the resident sees a clear rejection notice with the board's reason and guidance that the event can alternatively be booked as a private rental.
 - **Utvask (`cleaning`)**: For evening bookings where the time block is marked with **Støtter utvask** (`supports_cleaning = 1`), residents can optionally request free cleaning time next morning up to a configurable end time (default 11:00 AM / kl. 11, configured under **Snippen Booking > Innstillinger > Generelt** as `snippen_cleaning_end_time`). If the venue is available the following morning up to that time, a checkbox appears in the booking wizard: *"Utvask til neste dag kl <n>"*. Checking this automatically creates a linked cleaning reservation at no extra charge.
 
+### Editing Bookings & Revision History (Redigere bookinger og endringshistorikk)
+Administrators can edit existing reservations directly in **Snippen Booking > Bookinger**:
+- **Edit Modal**: Click «Rediger» in the list row or in the expanded booking card to open the editing dialog.
+- **Editable Properties**: Booking date, time blocks, venue objects, customer name, email, phone number, total price, and payment status (`UNPAID`, `PAID`, `EXEMPT`).
+- **Conflict Checking**: Real-time availability checks ensure that modified bookings never clash with other reservations, while gracefully excluding the booking being edited from false collision errors.
+- **Snapshot Tracking**: Every modification increments the booking's revision number and logs an immutable JSON snapshot in `wp_snippen_booking_snapshots` with timestamps, modifying administrator, and reason/summary of changes.
+- **Revision Timeline**: The full history of revisions can be reviewed either inside the modal's «Snapshot-historikk» tab or expanded directly within the booking details view.
+
 ### Custom Instructions (Egendefinert melding)
 Booking blocks and time slots can be configured in the WordPress Admin dashboard under **Snippen Booking > Bookingblokker** with the **Egendefinert melding / instruksjoner** text field.
 When configured for a time slot, users booking that slot are informed directly in the booking wizard and summary confirmation box. Bookings with custom instructions are also flagged with an **Info** badge in the admin bookings overview.

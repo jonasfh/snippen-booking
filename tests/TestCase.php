@@ -78,9 +78,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rules");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rule_booking_objects");
                     $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_snapshots");
+                    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_notification_templates");
                     
                     \SnippenBooking\Admin\SetupWizard::create_starter_setup();
                     \SnippenBooking\Database\MigrationManager::run();
+                    (new \SnippenBooking\Database\Repository\NotificationTemplateRepository())->seed_defaults();
                     self::$db_seeded = true;
                 }
             } else {
@@ -101,6 +104,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rules");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_discount_rule_booking_objects");
                 $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_bookings_booking_objects");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_booking_snapshots");
+                $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}snippen_notification_templates");
                 
                 self::$db_seeded = false;
             }

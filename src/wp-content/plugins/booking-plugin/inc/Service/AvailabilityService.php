@@ -28,24 +28,26 @@ class AvailabilityService {
 	/**
 	 * Check if a single block is available for a given date and object.
 	 *
-	 * @param int    $objectId
-	 * @param string $date YYYY-MM-DD
-	 * @param int    $blockId
+	 * @param int      $objectId
+	 * @param string   $date YYYY-MM-DD
+	 * @param int      $blockId
+	 * @param int|null $excludeBookingId Optional booking ID to exclude from conflict check
 	 * @return bool
 	 */
-	public function isBlockAvailable( $objectId, $date, $blockId ) {
-		return $this->areBlocksAvailable( $objectId, $date, array( $blockId ) );
+	public function isBlockAvailable( $objectId, $date, $blockId, $excludeBookingId = null ) {
+		return $this->areBlocksAvailable( $objectId, $date, array( $blockId ), $excludeBookingId );
 	}
 
 	/**
 	 * Check if a set of blocks are available for a given date and object.
 	 *
-	 * @param int    $objectId
-	 * @param string $date YYYY-MM-DD
-	 * @param array  $blockIds
+	 * @param int      $objectId
+	 * @param string   $date YYYY-MM-DD
+	 * @param array    $blockIds
+	 * @param int|null $excludeBookingId Optional booking ID to exclude from conflict check
 	 * @return bool
 	 */
-	public function areBlocksAvailable( $objectId, $date, array $blockIds ) {
+	public function areBlocksAvailable( $objectId, $date, array $blockIds, $excludeBookingId = null ) {
 		if ( empty( $blockIds ) ) {
 			return true;
 		}
@@ -71,6 +73,10 @@ class AvailabilityService {
 			$proposed_end->modify( '-1 second' );
 
 			foreach ( $existing_bookings as $booking ) {
+				if ( $excludeBookingId && (int) $booking->id === (int) $excludeBookingId ) {
+					continue;
+				}
+
 				// Use snapshot start/end time if available to prevent double bookings when block definitions change
 				if ( ! empty( $booking->snapshot['start_time'] ) && ! empty( $booking->snapshot['end_time'] ) ) {
 					$booked_start = new \DateTime( $date . ' ' . $booking->snapshot['start_time'] );
@@ -110,12 +116,13 @@ class AvailabilityService {
 	/**
 	 * Get a list of unavailable block IDs for a date range.
 	 *
-	 * @param int    $objectId
-	 * @param string $startDate YYYY-MM-DD
-	 * @param string $endDate YYYY-MM-DD
+	 * @param int      $objectId
+	 * @param string   $startDate YYYY-MM-DD
+	 * @param string   $endDate YYYY-MM-DD
+	 * @param int|null $excludeBookingId Optional booking ID to exclude from conflict check
 	 * @return array Array of block IDs indexed by date string
 	 */
-	public function getUnavailableBlocks( $objectId, $startDate, $endDate ) {
+	public function getUnavailableBlocks( $objectId, $startDate, $endDate, $excludeBookingId = null ) {
 		$all_blocks = $this->block_repository->find_all();
 		$bookings   = $this->booking_repository->find_by_object_and_date_range( $objectId, $startDate, $endDate );
 
@@ -147,6 +154,9 @@ class AvailabilityService {
 
 				$has_overlap = false;
 				foreach ( $day_bookings as $booking ) {
+					if ( $excludeBookingId && (int) $booking->id === (int) $excludeBookingId ) {
+						continue;
+					}
 					$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
 					foreach ( $booked_blocks as $booked ) {
 						$booked_start = new \DateTime( $date_str . ' ' . $booked->start_time );
@@ -200,8 +210,14 @@ class AvailabilityService {
 
 	/**
 	 * Backward compatibility wrapper for old slot-based checks
+	 *
+	 * @param int      $objectId
+	 * @param string   $date
+	 * @param int      $slotId
+	 * @param int|null $excludeBookingId Optional booking ID to exclude
+	 * @return bool
 	 */
-	public function isSlotAvailable( $objectId, $date, $slotId ) {
+	public function isSlotAvailable( $objectId, $date, $slotId, $excludeBookingId = null ) {
 		global $wpdb;
 		$table_slots = $wpdb->prefix . 'snippen_time_slots';
 		$slot        = $wpdb->get_row(
@@ -226,6 +242,9 @@ class AvailabilityService {
 		$existing_bookings = $this->booking_repository->find_by_object_and_date_range( $objectId, $date, $date );
 
 		foreach ( $existing_bookings as $booking ) {
+			if ( $excludeBookingId && (int) $booking->id === (int) $excludeBookingId ) {
+				continue;
+			}
 			$booked_blocks = $this->block_repository->find_by_ids( $booking->booking_block_ids );
 			foreach ( $booked_blocks as $booked ) {
 				$booked_start = new \DateTime( $date . ' ' . $booked->start_time );

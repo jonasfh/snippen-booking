@@ -30,6 +30,7 @@ class BookingsPage {
 		$this->render_filters( $status_filter, $payment_status_filter, $object_filter, $search, $show_all, $door_code_filter, $booking_type_filter );
 		$this->render_list( $status_filter, $payment_status_filter, $object_filter, $search, $orderby, $order, $show_all, $door_code_filter, $booking_type_filter );
 		$this->render_dispatch_modal();
+		$this->render_edit_modal();
 
 		echo '</div>';
 	}
@@ -385,6 +386,7 @@ class BookingsPage {
 		if ( $booking->status !== 'cancelled' ) {
 			echo '<button class="snippen-btn-action cancel" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span></button>';
 		}
+		echo '<button type="button" class="snippen-btn-action edit snippen-btn-edit-booking" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Rediger booking', 'snippen-booking' ) . '"><span class="dashicons dashicons-edit"></span></button>';
 		echo '</div></td>';
 		echo '<td data-label="' . esc_attr__( 'Dato / Tid', 'snippen-booking' ) . '"><strong>' . esc_html( $booking_date ) . '</strong>' . ( ! empty( $display_time ) ? '<br><small>' . esc_html( $display_time ) . '</small>' : '' ) . ( ! empty( $custom_inst_tags ) ? '<br><span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 6px; margin-top:2px; display:inline-block;" title="' . esc_attr( implode( ' | ', $custom_inst_tags ) ) . '">' . esc_html__( 'Info', 'snippen-booking' ) . '</span>' : '' ) . '</td>';
 		echo '<td data-label="' . esc_attr__( 'Kunde', 'snippen-booking' ) . '"><strong>' . esc_html( $booking->customer_name ) . '</strong><br><small>' . esc_html( $booking->customer_email ) . '</small></td>';
@@ -415,18 +417,17 @@ class BookingsPage {
 		echo '<div class="details-content">';
 
 		// Action buttons inside details row (prominent and colored)
-		if ( $booking->status === 'pending' || $booking->status !== 'cancelled' ) {
-			echo '<div class="booking-details-actions-wrap">';
-			echo '<strong>' . esc_html__( 'Handlinger:', 'snippen-booking' ) . '</strong>';
-			echo '<div class="booking-details-action-buttons">';
-			if ( $booking->status === 'pending' ) {
-				echo '<button type="button" class="snippen-btn-action approve with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Godkjenn', 'snippen-booking' ) . '"><span class="dashicons dashicons-yes"></span> <span>' . esc_html__( 'Godkjenn booking', 'snippen-booking' ) . '</span></button>';
-			}
-			if ( $booking->status !== 'cancelled' ) {
-				echo '<button type="button" class="snippen-btn-action cancel with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span> <span>' . esc_html__( 'Avbryt booking', 'snippen-booking' ) . '</span></button>';
-			}
-			echo '</div></div>';
+		echo '<div class="booking-details-actions-wrap">';
+		echo '<strong>' . esc_html__( 'Handlinger:', 'snippen-booking' ) . '</strong>';
+		echo '<div class="booking-details-action-buttons">';
+		echo '<button type="button" class="snippen-btn-action edit with-label snippen-btn-edit-booking" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Rediger booking', 'snippen-booking' ) . '"><span class="dashicons dashicons-edit"></span> <span>' . esc_html__( 'Rediger booking', 'snippen-booking' ) . '</span></button>';
+		if ( $booking->status === 'pending' ) {
+			echo '<button type="button" class="snippen-btn-action approve with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Godkjenn', 'snippen-booking' ) . '"><span class="dashicons dashicons-yes"></span> <span>' . esc_html__( 'Godkjenn booking', 'snippen-booking' ) . '</span></button>';
 		}
+		if ( $booking->status !== 'cancelled' ) {
+			echo '<button type="button" class="snippen-btn-action cancel with-label" data-id="' . esc_attr( $booking->id ) . '" title="' . esc_attr__( 'Avbryt', 'snippen-booking' ) . '"><span class="dashicons dashicons-no"></span> <span>' . esc_html__( 'Avbryt booking', 'snippen-booking' ) . '</span></button>';
+		}
+		echo '</div></div>';
 		echo '<div><strong>' . esc_html__( 'Kontaktinfo:', 'snippen-booking' ) . '</strong><br>' . esc_html( $booking->customer_phone ?: '-' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Type arrangement:', 'snippen-booking' ) . '</strong><br>' . $this->render_type_badge( $booking->booking_type ?? 'private' ) . '</div>';
 		echo '<div><strong>' . esc_html__( 'Lokale(r):', 'snippen-booking' ) . '</strong><br>' . esc_html( implode( ', ', $objs ) ) . '</div>';
@@ -484,6 +485,65 @@ class BookingsPage {
 		echo '<button class="button snippen-btn-dispatch" data-channel="email_admin" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'Varsel til admin', 'snippen-booking' ) . '</button>';
 		echo '<div class="assistant-feedback" style="margin-top:6px; font-size:11px; font-weight:600; min-height:15px;"></div>';
 		echo '</div>';
+
+		// Revision / Snapshot history block for this booking
+		$booking_repo = new \SnippenBooking\Database\Repository\BookingRepository();
+		$snapshots    = $booking_repo->get_snapshots( (int) $booking->id );
+		$snap_count   = count( $snapshots );
+
+		echo '<div class="booking-revisions-history' . ( $snap_count > 1 ? ' has-multiple-revisions' : '' ) . '" data-booking-id="' . esc_attr( $booking->id ) . '">';
+		echo '<div class="rev-history-header" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0;">';
+		echo '<div class="rev-history-header-title"><strong style="font-size:13px; color:#1e293b;"><span class="dashicons dashicons-backup" style="vertical-align:middle; font-size:16px; width:16px; height:16px; line-height:16px; margin-right:4px;"></span> ' . esc_html__( 'Endringshistorikk:', 'snippen-booking' ) . ' (<span class="rev-count">' . $snap_count . '</span> ' . ( 1 === $snap_count ? esc_html__( 'versjon', 'snippen-booking' ) : esc_html__( 'versjoner', 'snippen-booking' ) ) . ')</strong></div>';
+		echo '<div style="display:flex; gap:6px;">';
+		echo '<button type="button" class="button button-small toggle-rev-history" aria-expanded="false">';
+		echo '<span class="toggle-text">' . esc_html__( 'Vis historikk', 'snippen-booking' ) . '</span> ';
+		echo '<span class="dashicons dashicons-arrow-down-alt2" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span>';
+		echo '</button>';
+		echo '<button type="button" class="button button-small snippen-btn-edit-booking" data-id="' . esc_attr( $booking->id ) . '" data-tab="history" title="' . esc_attr__( 'Åpne detaljert historikk i dialog', 'snippen-booking' ) . '">';
+		echo '<span class="dashicons dashicons-external" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span> ' . esc_html__( 'Detaljer', 'snippen-booking' );
+		echo '</button>';
+		echo '</div>';
+		echo '</div>'; // .rev-history-header
+
+		echo '<div class="rev-history-body" style="display:none; margin-top:8px;">';
+		if ( empty( $snapshots ) ) {
+			echo '<p style="margin:0; font-size:12px; color:#64748b;">' . esc_html__( 'Ingen endringshistorikk registrert ennå.', 'snippen-booking' ) . '</p>';
+		} else {
+			echo '<div class="rev-list-container">';
+			foreach ( $snapshots as $snap ) {
+				$snap_date = date_i18n( get_option( 'date_format' ) . ' H:i', strtotime( $snap->created_at ) );
+				$dec       = $snap->decoded_snapshot;
+				$time_str  = ! empty( $dec['time_range_formatted'] ) ? $dec['time_range_formatted'] : '';
+				$price_str = isset( $dec['price'] ) ? number_format( (float) $dec['price'], 0, ',', ' ' ) . ',-' : '';
+
+				echo '<div class="rev-item" style="border-left:3px solid #0284c7; background:#fff; border-radius:4px; padding:8px 12px; margin-bottom:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05); font-size:12px;">';
+				echo '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
+				echo '<div><strong style="color:#0f172a;">' . sprintf( esc_html__( 'Revisjon #%d', 'snippen-booking' ), (int) $snap->revision ) . '</strong>';
+				if ( 1 === (int) $snap->revision ) {
+					echo ' <span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:1px 5px; margin-left:4px;">' . esc_html__( 'Opprinnelig', 'snippen-booking' ) . '</span>';
+				}
+				echo ' <span style="color:#64748b; margin-left:4px;">&bull; ' . sprintf( esc_html__( 'Endret av %s', 'snippen-booking' ), '<strong>' . esc_html( $snap->modifier_name ) . '</strong>' ) . '</span></div>';
+				echo '<span style="color:#64748b; font-size:11px;">' . esc_html( $snap_date ) . '</span>';
+				echo '</div>';
+				if ( ! empty( $snap->changes_summary ) ) {
+					echo '<div style="color:#334155; margin-bottom:4px;"><em>' . esc_html( $snap->changes_summary ) . '</em></div>';
+				}
+				if ( ! empty( $time_str ) || ! empty( $price_str ) ) {
+					echo '<div style="color:#64748b; font-size:11px;">';
+					if ( ! empty( $time_str ) ) {
+						echo esc_html__( 'Tid:', 'snippen-booking' ) . ' ' . esc_html( $time_str ) . ' ';
+					}
+					if ( ! empty( $price_str ) ) {
+						echo '&bull; ' . esc_html__( 'Pris:', 'snippen-booking' ) . ' ' . esc_html( $price_str );
+					}
+					echo '</div>';
+				}
+				echo '</div>'; // .rev-item
+			}
+			echo '</div>'; // .rev-list-container
+		}
+		echo '</div>'; // .rev-history-body
+		echo '</div>'; // .booking-revisions-history
 
 		// Communication / Messages history block for this booking
 		$messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking( (int) $booking->id );
@@ -695,5 +755,154 @@ class BookingsPage {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Render edit booking modal markup
+	 */
+	private function render_edit_modal() {
+		?>
+		<div id="snippen-edit-booking-modal" class="snippen-modal-backdrop" style="display:none;">
+			<div class="snippen-modal-content snippen-modal-large" style="max-width:760px;">
+				<div class="snippen-modal-header" style="flex-wrap:wrap; gap:10px;">
+					<div style="display:flex; align-items:center; gap:8px;">
+						<span class="dashicons dashicons-edit" style="color:#0284c7; font-size:22px; width:22px; height:22px;"></span>
+						<h2 class="snippen-modal-title" id="snippen-edit-booking-title"><?php esc_html_e( 'Rediger booking', 'snippen-booking' ); ?></h2>
+					</div>
+					<button type="button" class="snippen-modal-close" aria-label="<?php esc_attr_e( 'Lukk', 'snippen-booking' ); ?>">&times;</button>
+					<div class="snippen-modal-tabs" style="width:100%; display:flex; gap:8px; border-bottom:1px solid #e2e8f0; margin-top:8px; padding-bottom:2px;">
+						<button type="button" class="snippen-modal-tab active" data-tab="edit-form">
+							<span class="dashicons dashicons-edit" style="font-size:16px; width:16px; height:16px; line-height:16px; vertical-align:middle;"></span> <?php esc_html_e( 'Rediger opplysninger', 'snippen-booking' ); ?>
+						</button>
+						<button type="button" class="snippen-modal-tab" data-tab="history">
+							<span class="dashicons dashicons-backup" style="font-size:16px; width:16px; height:16px; line-height:16px; vertical-align:middle;"></span> <?php esc_html_e( 'Snapshot-historikk', 'snippen-booking' ); ?> (<span class="snippen-tab-history-count">0</span>)
+						</button>
+					</div>
+				</div>
+				<div class="snippen-modal-body">
+					<div id="snippen-edit-loading" style="text-align:center; padding:30px 10px; color:#64748b;">
+						<span class="spinner is-active" style="float:none; margin:0 6px 0 0; vertical-align:middle;"></span> <?php esc_html_e( 'Henter bookingopplysninger...', 'snippen-booking' ); ?>
+					</div>
+					<form id="snippen-edit-booking-form" style="display:none;">
+						<input type="hidden" name="booking_id" id="edit_booking_id" value="">
+
+						<div class="snippen-tab-panel active" id="tab-panel-edit-form">
+							<div class="snippen-edit-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+
+								<div class="snippen-form-group">
+									<label for="edit_booking_date"><?php esc_html_e( 'Dato:', 'snippen-booking' ); ?> *</label>
+									<input type="date" name="booking_date" id="edit_booking_date" required style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_booking_type"><?php esc_html_e( 'Type arrangement:', 'snippen-booking' ); ?></label>
+									<select name="booking_type" id="edit_booking_type" style="width:100%;">
+										<option value="private"><?php esc_html_e( 'Privat', 'snippen-booking' ); ?></option>
+										<option value="open"><?php esc_html_e( 'Åpen for sameiet', 'snippen-booking' ); ?></option>
+										<option value="cleaning"><?php esc_html_e( 'Utvask', 'snippen-booking' ); ?></option>
+									</select>
+								</div>
+
+								<div class="snippen-form-group" style="grid-column: 1 / -1;">
+									<label><?php esc_html_e( 'Lokale(r):', 'snippen-booking' ); ?> *</label>
+									<div id="edit_objects_container" style="display:flex; flex-wrap:wrap; gap:12px; padding:10px 14px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px;">
+										<!-- Checkboxes populated via JS -->
+									</div>
+								</div>
+
+								<div class="snippen-form-group" style="grid-column: 1 / -1;">
+									<label><?php esc_html_e( 'Tidsblokk(er):', 'snippen-booking' ); ?> *</label>
+									<div id="edit_blocks_container" style="display:flex; flex-wrap:wrap; gap:12px; padding:10px 14px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px;">
+										<!-- Checkboxes populated via JS -->
+									</div>
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_customer_name"><?php esc_html_e( 'Kundenavn:', 'snippen-booking' ); ?> *</label>
+									<input type="text" name="customer_name" id="edit_customer_name" required style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_customer_email"><?php esc_html_e( 'Kunde e-post:', 'snippen-booking' ); ?> *</label>
+									<input type="email" name="customer_email" id="edit_customer_email" required style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_customer_phone"><?php esc_html_e( 'Kunde telefon:', 'snippen-booking' ); ?></label>
+									<input type="text" name="customer_phone" id="edit_customer_phone" style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_door_code"><?php esc_html_e( 'Dørkode:', 'snippen-booking' ); ?></label>
+									<input type="text" name="door_code" id="edit_door_code" placeholder="<?php esc_attr_e( 'F.eks. 1234', 'snippen-booking' ); ?>" style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_price"><?php esc_html_e( 'Pris (kr):', 'snippen-booking' ); ?></label>
+									<input type="number" step="0.01" name="price" id="edit_price" style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_discount_amount"><?php esc_html_e( 'Rabatt (kr):', 'snippen-booking' ); ?></label>
+									<input type="number" step="0.01" name="discount_amount" id="edit_discount_amount" style="width:100%;">
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_status"><?php esc_html_e( 'Booking-status:', 'snippen-booking' ); ?></label>
+									<select name="status" id="edit_status" style="width:100%;">
+										<option value="pending"><?php esc_html_e( 'Venter på godkjenning', 'snippen-booking' ); ?></option>
+										<option value="pending_payment"><?php esc_html_e( 'Venter på betaling', 'snippen-booking' ); ?></option>
+										<option value="confirmed"><?php esc_html_e( 'Bekreftet', 'snippen-booking' ); ?></option>
+										<option value="cancelled"><?php esc_html_e( 'Avbrutt', 'snippen-booking' ); ?></option>
+									</select>
+								</div>
+
+								<div class="snippen-form-group">
+									<label for="edit_payment_status_id"><?php esc_html_e( 'Betalingsstatus:', 'snippen-booking' ); ?></label>
+									<select name="payment_status_id" id="edit_payment_status_id" style="width:100%;">
+										<!-- Populated via JS -->
+									</select>
+								</div>
+
+								<div class="snippen-form-group" style="grid-column: 1 / -1;">
+									<label for="edit_description"><?php esc_html_e( 'Beskrivelse / Kundens formål:', 'snippen-booking' ); ?></label>
+									<textarea name="description" id="edit_description" rows="2" style="width:100%;"></textarea>
+								</div>
+
+								<div class="snippen-form-group" style="grid-column: 1 / -1;">
+									<label for="edit_payment_notes"><?php esc_html_e( 'Betalingsnotat (f.eks. Vipps-ref / transaksjon):', 'snippen-booking' ); ?></label>
+									<textarea name="payment_notes" id="edit_payment_notes" rows="2" style="width:100%;"></textarea>
+								</div>
+
+								<div class="snippen-form-group" style="grid-column: 1 / -1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:12px;">
+									<label for="edit_changes_summary" style="color:#0369a1; font-weight:700;">
+										<span class="dashicons dashicons-info" style="vertical-align:middle; font-size:16px;"></span>
+										<?php esc_html_e( 'Begrunnelse / endringsnotat (loggføres i snapshot-historikk):', 'snippen-booking' ); ?>
+									</label>
+									<textarea name="changes_summary" id="edit_changes_summary" rows="2" placeholder="<?php esc_attr_e( 'F.eks.: Endret dato etter avtale med leietaker, eller lagt til ekstrarom.', 'snippen-booking' ); ?>" style="width:100%; margin-top:4px;"></textarea>
+								</div>
+
+							</div>
+						</div>
+
+						<div class="snippen-tab-panel" id="tab-panel-history" style="display:none;">
+							<div id="edit_snapshots_timeline">
+								<!-- Populated via JS -->
+							</div>
+						</div>
+
+						<div class="snippen-edit-feedback" style="margin-top:12px; font-size:13px; font-weight:600;"></div>
+					</form>
+				</div>
+				<div class="snippen-modal-footer">
+					<button type="button" class="button snippen-modal-cancel"><?php esc_html_e( 'Lukk', 'snippen-booking' ); ?></button>
+					<button type="submit" form="snippen-edit-booking-form" class="button button-primary snippen-btn-save-edit" style="display:none;">
+						<span class="dashicons dashicons-saved" style="vertical-align:middle; margin-right:4px;"></span>
+						<?php esc_html_e( 'Lagre endringer', 'snippen-booking' ); ?>
+					</button>
+				</div>
+			</div>
+		</div>
+		<?php
 	}
 }
