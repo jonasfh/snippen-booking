@@ -49,6 +49,7 @@ class Plugin {
 		\SnippenBooking\Api\ToggleStatusApi::register();
 		AdminLoader::register();
 		\SnippenBooking\Api\BookingActionsApi::register();
+		\SnippenBooking\Api\BookingEditApi::register();
 		\SnippenBooking\Api\UserApi::register();
 		\SnippenBooking\Api\UploadPaymentReceiptApi::register();
 		\SnippenBooking\Api\UpdatePaymentStatusApi::register();

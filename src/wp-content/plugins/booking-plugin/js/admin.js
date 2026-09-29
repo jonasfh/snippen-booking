@@ -722,6 +722,254 @@
                 $checkbox.prop('disabled', false);
             });
         });
+
+        // Close Edit Booking Modal
+        $('#snippen-edit-booking-modal').on('click', '.snippen-modal-close, .snippen-modal-cancel', function(e) {
+            e.preventDefault();
+            $('#snippen-edit-booking-modal').hide();
+            $('body').removeClass('snippen-modal-open');
+        });
+        $('#snippen-edit-booking-modal').on('click', function(e) {
+            if (e.target === this) {
+                $(this).hide();
+                $('body').removeClass('snippen-modal-open');
+            }
+        });
+
+        // Open Edit Booking Modal
+        $(document).on('click', '.snippen-btn-edit-booking', function(e) {
+            e.preventDefault();
+            const bookingId = $(this).data('id');
+            const targetTab = $(this).data('tab') || 'edit-form';
+            const $modal = $('#snippen-edit-booking-modal');
+
+            if (!$modal.length || !bookingId) return;
+
+            // Reset UI
+            $('#snippen-edit-booking-title').text('Rediger booking #' + bookingId);
+            $('#snippen-edit-loading').show();
+            $('#snippen-edit-booking-form').hide();
+            $('.snippen-btn-save-edit').hide();
+            $('.snippen-edit-feedback').text('').removeClass('success error');
+            $('body').addClass('snippen-modal-open');
+            $modal.show();
+
+            // Set active tab
+            $modal.find('.snippen-modal-tab').removeClass('active');
+            $modal.find('.snippen-modal-tab[data-tab="' + targetTab + '"]').addClass('active');
+            $modal.find('.snippen-tab-panel').removeClass('active').hide();
+            $modal.find('#tab-panel-' + targetTab).addClass('active').show();
+
+            // Fetch booking data
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_get_booking_edit_data',
+                nonce: snippenAdmin.nonce,
+                id: bookingId
+            }, function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    const booking = data.booking;
+                    $('#edit_booking_id').val(booking.id);
+                    $('#edit_booking_date').val(booking.booking_date);
+                    $('#edit_booking_type').val(booking.booking_type || 'private');
+                    $('#edit_customer_name').val(booking.customer_name);
+                    $('#edit_customer_email').val(booking.customer_email);
+                    $('#edit_customer_phone').val(booking.customer_phone || '');
+                    $('#edit_door_code').val(booking.door_code || '');
+                    $('#edit_price').val(booking.price || '0');
+                    $('#edit_discount_amount').val(booking.discount_amount || '0');
+                    $('#edit_status').val(booking.status || 'pending');
+                    $('#edit_description').val(booking.description || '');
+                    $('#edit_payment_notes').val(booking.payment_notes || '');
+                    $('#edit_changes_summary').val('');
+
+                    // Populate payment status select
+                    const $paySelect = $('#edit_payment_status_id').empty();
+                    (data.payment_statuses || []).forEach(function(ps) {
+                        const isSelected = parseInt(booking.payment_status_id, 10) === parseInt(ps.id, 10);
+                        $paySelect.append($('<option>', {
+                            value: ps.id,
+                            text: ps.name,
+                            selected: isSelected
+                        }));
+                    });
+
+                    // Populate objects checkboxes
+                    const $objContainer = $('#edit_objects_container').empty();
+                    const selectedObjIds = (data.selected_object_ids || []).map(Number);
+                    (data.objects || []).forEach(function(obj) {
+                        const isChecked = selectedObjIds.includes(parseInt(obj.id, 10));
+                        const $label = $('<label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:normal; margin:0;">');
+                        $label.append($('<input>', {
+                            type: 'checkbox',
+                            name: 'object_ids[]',
+                            value: obj.id,
+                            checked: isChecked
+                        }));
+                        $label.append($('<span>').text(obj.name));
+                        $objContainer.append($label);
+                    });
+
+                    // Populate blocks checkboxes
+                    const $blockContainer = $('#edit_blocks_container').empty();
+                    const selectedBlockIds = (data.selected_block_ids || []).map(Number);
+                    (data.blocks || []).forEach(function(blk) {
+                        const isChecked = selectedBlockIds.includes(parseInt(blk.id, 10));
+                        const timeRange = (blk.start_time || '').substr(0, 5) + ' - ' + (blk.end_time || '').substr(0, 5);
+                        const $label = $('<label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:normal; margin:0;">');
+                        $label.append($('<input>', {
+                            type: 'checkbox',
+                            name: 'block_ids[]',
+                            value: blk.id,
+                            checked: isChecked
+                        }));
+                        $label.append($('<span>').text(blk.name + ' (' + timeRange + ')'));
+                        $blockContainer.append($label);
+                    });
+
+                    // Populate Snapshots timeline
+                    const snapshots = data.snapshots || [];
+                    $('.snippen-tab-history-count').text(snapshots.length);
+                    const $timeline = $('#edit_snapshots_timeline').empty();
+
+                    if (!snapshots.length) {
+                        $timeline.html('<p style="color:#64748b; font-size:13px; text-align:center; padding:20px;">Ingen snapshot-historikk tilgjengelig.</p>');
+                    } else {
+                        snapshots.slice().reverse().forEach(function(s, idx) {
+                            const isLatest = idx === 0;
+                            const dec = s.decoded_snapshot || {};
+                            const $card = $('<div class="snippen-revision-card' + (isLatest ? ' current-rev' : '') + '">');
+
+                            let headerHtml = '<div class="snippen-revision-header">';
+                            headerHtml += '<div><strong style="font-size:14px; color:#0f172a;">Revisjon #' + s.revision + '</strong>';
+                            if (isLatest) {
+                                headerHtml += ' <span class="snippen-badge" style="background:#0284c7; color:#fff; font-size:10px; padding:1px 6px; margin-left:6px;">Aktiv revisjon</span>';
+                            }
+                            if (parseInt(s.revision, 10) === 1) {
+                                headerHtml += ' <span class="snippen-badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:1px 6px; margin-left:6px;">Opprinnelig</span>';
+                            }
+                            headerHtml += '</div>';
+                            headerHtml += '<span style="font-size:12px; color:#64748b;">' + s.created_at + '</span>';
+                            headerHtml += '</div>';
+
+                            let bodyHtml = '<div style="font-size:13px; color:#334155; margin-bottom:6px;">';
+                            bodyHtml += '<strong>Endret av:</strong> ' + $('<div>').text(s.modifier_name).html() + '<br>';
+                            if (s.changes_summary) {
+                                bodyHtml += '<strong>Begrunnelse:</strong> <em>' + $('<div>').text(s.changes_summary).html() + '</em><br>';
+                            }
+                            bodyHtml += '</div>';
+
+                            // Snapshot data details
+                            let detailsHtml = '<div class="snippen-revision-details" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; font-size:12px; color:#475569; margin-top:6px;">';
+                            if (dec.time_range_formatted) {
+                                detailsHtml += '<div><strong>Tidsrom:</strong> ' + dec.time_range_formatted + '</div>';
+                            }
+                            if (dec.objects && dec.objects.length) {
+                                detailsHtml += '<div><strong>Lokaler:</strong> ' + dec.objects.map(function(o){ return o.name; }).join(', ') + '</div>';
+                            }
+                            if (dec.blocks && dec.blocks.length) {
+                                detailsHtml += '<div><strong>Blokker:</strong> ' + dec.blocks.map(function(b){ return b.name; }).join(', ') + '</div>';
+                            }
+                            if (dec.price !== undefined) {
+                                detailsHtml += '<div><strong>Pris:</strong> ' + dec.price + ' kr' + (dec.discount_amount ? ' (Rabatt: ' + dec.discount_amount + ' kr)' : '') + '</div>';
+                            }
+                            detailsHtml += '</div>';
+
+                            $card.html(headerHtml + bodyHtml + detailsHtml);
+                            $timeline.append($card);
+                        });
+                    }
+
+                    $('#snippen-edit-loading').hide();
+                    $('#snippen-edit-booking-form').show();
+                    $('.snippen-btn-save-edit').show();
+                } else {
+                    $('#snippen-edit-loading').html('<span style="color:#dc2626;">' + (response.data.message || 'Kunne ikke hente booking.') + '</span>');
+                }
+            }).fail(function() {
+                $('#snippen-edit-loading').html('<span style="color:#dc2626;">Tilkoblingsfeil ved henting av booking.</span>');
+            });
+        });
+
+        // Tab navigation in Edit modal
+        $(document).on('click', '.snippen-modal-tab', function() {
+            const target = $(this).data('tab');
+            const $modal = $(this).closest('.snippen-modal-content');
+            $modal.find('.snippen-modal-tab').removeClass('active');
+            $(this).addClass('active');
+            $modal.find('.snippen-tab-panel').removeClass('active').hide();
+            $modal.find('#tab-panel-' + target).addClass('active').show();
+        });
+
+        // Submit Edit Booking Form
+        $('#snippen-edit-booking-form').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $('.snippen-btn-save-edit');
+            const $feedback = $('.snippen-edit-feedback');
+
+            // Validate at least one object
+            if (!$form.find('input[name="object_ids[]"]:checked').length) {
+                $feedback.text('Du må velge minst ett lokale.').css('color', '#dc2626');
+                return;
+            }
+
+            // Validate at least one block
+            if (!$form.find('input[name="block_ids[]"]:checked').length) {
+                $feedback.text('Du må velge minst én tidsblokk.').css('color', '#dc2626');
+                return;
+            }
+
+            $btn.prop('disabled', true);
+            $feedback.text('Lagrer endringer og oppretter ny snapshot-revisjon...').css('color', '#0284c7');
+
+            const formData = $form.serializeArray();
+            const postData = {
+                action: 'snippen_edit_booking',
+                nonce: snippenAdmin.nonce,
+                object_ids: [],
+                block_ids: []
+            };
+
+            formData.forEach(function(item) {
+                if (item.name === 'object_ids[]') {
+                    postData.object_ids.push(item.value);
+                } else if (item.name === 'block_ids[]') {
+                    postData.block_ids.push(item.value);
+                } else {
+                    postData[item.name] = item.value;
+                }
+            });
+
+            $.post(snippenAdmin.ajaxUrl, postData, function(response) {
+                if (response.success) {
+                    $feedback.text(response.data.message || 'Endringene ble lagret!').css('color', '#16a34a');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    $feedback.text(response.data.message || 'Feil ved lagring av endringer.').css('color', '#dc2626');
+                    $btn.prop('disabled', false);
+                }
+            }).fail(function() {
+                $feedback.text('Tilkoblingsfeil ved lagring av endringer.').css('color', '#dc2626');
+                $btn.prop('disabled', false);
+            });
+        });
+
+        // Toggle Revision History in Table Details Row
+        $(document).on('click', '.toggle-rev-history', function() {
+            const $btn = $(this);
+            const $historyContainer = $btn.closest('.booking-revisions-history');
+            const $body = $historyContainer.find('.rev-history-body');
+
+            $body.slideToggle(180, function() {
+                const nowVisible = $body.is(':visible');
+                $btn.attr('aria-expanded', nowVisible);
+                $btn.find('.toggle-text').text(nowVisible ? 'Skjul historikk' : 'Vis historikk');
+                $btn.find('.dashicons').toggleClass('dashicons-arrow-up-alt2', nowVisible).toggleClass('dashicons-arrow-down-alt2', !nowVisible);
+            });
+        });
     });
 
 })(jQuery);

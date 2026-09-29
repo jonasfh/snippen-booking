@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.44.0] - 2026-09-30
+- (#211) Tillat administratorer å redigere eksisterende bookinger med snapshot-historikk:
+  - **Database & Snapshot-tabell (`wp_snippen_booking_snapshots`)**:
+    - Opprettet tabellen `wp_snippen_booking_snapshots` med feltene `id`, `booking_id`, `revision`, `snapshot` (JSON), `changes_summary`, `modified_by`, `created_at` og `modified_at`.
+    - Lagt til `Migration_2_44_0.php` som oppretter tabellen og automatisk migrerer/oppretter initial revisjon 1 snapshot for alle eksisterende bookinger.
+    - Oppdatert `Install.php` med fullstendig skjemadefinisjon.
+  - **Kjernelogikk & Repositorium (`BookingRepository.php` & `AvailabilityService.php`)**:
+    - Utvidet `BookingRepository::create()` til automatisk å lagre initial revisjon 1 i snapshot-tabellen.
+    - Implementert `BookingRepository::update()` som håndterer modifikasjoner, beregner oppdaterte tidsrom/blokker/lokaler, kontrollerer tilgjengelighet mot andre bookinger, øker revisjonsnummeret og logger snapshot med endringsbeskrivelse og administrator-ID.
+    - Lagt til `get_snapshots()` og `get_latest_snapshot()` i `BookingRepository`.
+    - Utvidet `AvailabilityService` (`areBlocksAvailable`, `isBlockAvailable`, `getUnavailableBlocks`, `isSlotAvailable`) med støtte for `$excludeBookingId` for å unngå falske kollisjonsfeil ved redigering av egen booking.
+  - **Sikker AJAX API (`BookingEditApi.php` & `Plugin.php`)**:
+    - Implementert sikre AJAX-endepunkter:
+      - `snippen_get_booking_edit_data`: Henter fullstendige redigeringsdata (booking, tilknyttede blokker, lokaler og tilgjengelige valg).
+      - `snippen_edit_booking`: Validerer og utfører oppdatering av dato, tidsblokker, lokaler, kundeopplysninger, pris, betalingsstatus og begrunnelse/endringssammendrag.
+      - `snippen_get_booking_history`: Henter hele revisjonshistorikken med detaljerte feltendringer.
+    - Streng tilgangskontroll (`Capabilities::can_manage_bookings()` og `manage_options`) og nonce-verifisering.
+  - **Administrasjonsgrensesnitt (`BookingsPage.php`, `admin.js`, `admin.css`)**:
+    - Lagt til «Rediger»-handlingsknapp i bookinglisten og i utvidet detaljvisning.
+    - Implementert to-fane redigeringsmodal («Rediger opplysninger» og «Snapshot-historikk») med sanntids datavalg, sjekkbokser for blokker og lokaler, kundeinformasjon, betalingsfelter og obligatorisk endringsbegrunnelse.
+    - Lagt til en sammenleggbar revisjonsvisning («Endringshistorikk») i bookingdetaljer som lister opp revisjoner kronologisk med tidsstempler, redigerende bruker og endringssammendrag.
+
 ## [2.43.0] - 2026-09-27
 - (#346) Forbedret SMS-administrasjon i SMS Innboks & Karantene (søk, sletting, sortering, filtrering, detaljvisning og direkte svar):
   - **Fikse og forbedre søk (`MessageLoggerService.php` & `SmsInboxPage.php`)**:

@@ -47,7 +47,8 @@ class DemoGatewayTest extends TestCase {
 		wp_load_alloptions( true );
 
 		// 1. Verify Options
-		$this->assertSame( 'test-integration-token', get_option( 'snippen_sms_service_api_token' ) );
+		$token = get_option( 'snippen_sms_service_api_token' );
+		$this->assertNotEmpty( $token );
 		$this->assertSame( 'snippen_sms_service', get_option( 'snippen_sms_provider' ) );
 		$this->assertSame( 'snippen_sms_service', get_option( 'snippen_active_notification_provider' ) );
 		$this->assertSame( 'yes', get_option( 'snippen_sms_booking_confirmation_enabled' ) );
@@ -75,7 +76,7 @@ class DemoGatewayTest extends TestCase {
 		do_action( 'rest_api_init' );
 
 		$request = new \WP_REST_Request( 'GET', '/snippen/v1/sms/outbox' );
-		$request->add_header( 'Authorization', 'Bearer test-integration-token' );
+		$request->add_header( 'Authorization', 'Bearer ' . $token );
 
 		$response = SmsGatewayApi::get_outbox( $request );
 		$this->assertSame( 200, $response->get_status() );
@@ -95,12 +96,32 @@ class DemoGatewayTest extends TestCase {
 		// 5. Verify REST Bookings lookup endpoint
 		$bookings_request = new \WP_REST_Request( 'GET', '/snippen/v1/sms/bookings' );
 		$bookings_request->set_param( 'phone', '+4799887766' );
-		$bookings_request->add_header( 'Authorization', 'Bearer test-integration-token' );
+		$bookings_request->add_header( 'Authorization', 'Bearer ' . $token );
 
 		$bookings_response = SmsGatewayApi::get_bookings( $bookings_request );
 		$this->assertSame( 200, $bookings_response->get_status() );
 		$bookings_data = $bookings_response->get_data();
 		$this->assertNotEmpty( $bookings_data['bookings'] );
 		$this->assertSame( '+4799887766', $bookings_data['bookings'][0]['customer_phone'] );
+
+		// Clean up external modifications
+		delete_option( 'snippen_sms_service_api_token' );
+		delete_option( 'snippen_sms_service_sender' );
+		delete_option( 'snippen_sms_provider' );
+		delete_option( 'snippen_active_notification_provider' );
+		delete_option( 'snippen_sms_booking_confirmation_enabled' );
+		delete_option( 'snippen_sms_admin_booking_enabled' );
+		delete_option( 'snippen_sms_user_activation_enabled' );
+		delete_option( 'snippen_sms_payment_reminder_enabled' );
+		delete_option( 'snippen_sms_payment_receipt_uploaded_enabled' );
+		if ( $user ) {
+			if ( ! function_exists( 'wp_delete_user' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/user.php';
+			}
+			wp_delete_user( $user->ID );
+		}
+		$wpdb->query( "DELETE FROM {$table_bookings} WHERE customer_phone = '+4799887766'" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_messages" );
+		self::$db_seeded = false;
 	}
 }

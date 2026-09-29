@@ -315,6 +315,18 @@
     color: #ffffff;
 }
 
+.snippen-btn-action.edit {
+    background: #f0f9ff;
+    border-color: #7dd3fc;
+    color: #0284c7;
+}
+
+.snippen-btn-action.edit:hover {
+    background: #0284c7;
+    border-color: #0369a1;
+    color: #ffffff;
+}
+
 .snippen-btn-action.with-label {
     width: auto;
     height: 34px;
@@ -1235,5 +1247,99 @@ body.snippen-modal-open {
     .snippen-modal-footer {
         padding: 12px 16px;
     }
+}
+
+/* Modal Tabs */
+.snippen-modal-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.snippen-modal-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.snippen-modal-tab:hover {
+    color: #0f172a;
+}
+
+.snippen-modal-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+/* Modal Tab Panels */
+.snippen-tab-panel {
+    display: none;
+}
+
+.snippen-tab-panel.active {
+    display: block;
+}
+
+/* Revision History in Table Details & Modal */
+.booking-revisions-history {
+    margin-top: 14px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.rev-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rev-item {
+    transition: background 0.15s ease;
+}
+
+.rev-item:hover {
+    background: #f1f5f9 !important;
+}
+
+.snippen-revision-card {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.snippen-revision-card.current-rev {
+    border-color: #38bdf8;
+    background: #f0f9ff;
+}
+
+.snippen-revision-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.snippen-revision-details-toggle {
+    background: none;
+    border: none;
+    color: #0284c7;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 0;
+    text-decoration: underline;
 }
 
