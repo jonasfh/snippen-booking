@@ -232,6 +232,22 @@ class Install {
         ) $charset_collate;";
 		dbDelta( $sql_bookings );
 
+		// Booking revision snapshot history table
+		$table_booking_snapshots = $wpdb->prefix . 'snippen_booking_snapshots';
+		$sql_booking_snapshots   = "CREATE TABLE $table_booking_snapshots (
+            id BIGINT NOT NULL AUTO_INCREMENT,
+            booking_id BIGINT NOT NULL,
+            revision INT NOT NULL DEFAULT 1,
+            snapshot LONGTEXT NOT NULL,
+            changes_summary TEXT NULL,
+            modified_by_user_id BIGINT UNSIGNED NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY booking_id (booking_id),
+            KEY modified_by_user_id (modified_by_user_id)
+        ) $charset_collate;";
+		dbDelta( $sql_booking_snapshots );
+
 		// Booking booking blocks junction table
 		$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
 		$sql_booking_blocks   = "CREATE TABLE $table_booking_blocks (

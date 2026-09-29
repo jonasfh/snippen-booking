@@ -158,7 +158,7 @@ class Plugin {
 	public static function map_menu_capabilities( $allcaps, $caps, $args, $user ) {
 		// Virtual capability to see the top level menu and the manual
 		if ( isset( $caps[0] ) && in_array( $caps[0], array( 'view_snippen_booking_menu', 'view_snippen_booking_manual' ), true ) ) {
-			if ( ! empty( $allcaps['manage_options'] ) || ! empty( $allcaps[ Capabilities::MANAGE_BOOKINGS ] ) ) {
+			if ( ! empty( $allcaps[ Capabilities::MANAGE_BOOKINGS ] ) ) {
 				$allcaps[ $caps[0] ] = true;
 			}
 		}
@@ -240,9 +240,9 @@ class Plugin {
 
 		$booking = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT b.*, s.name as slot_name, s.start_time, s.end_time 
-				 FROM $table_bookings b 
-				 LEFT JOIN $table_slots s ON b.slot_id = s.id 
+				"SELECT b.*, s.name as slot_name, s.start_time, s.end_time
+				 FROM $table_bookings b
+				 LEFT JOIN $table_slots s ON b.slot_id = s.id
 				 WHERE b.uuid = %s AND b.deleted_at IS NULL",
 				$uuid
 			)
@@ -268,9 +268,9 @@ class Plugin {
 				// Get associated objects/locales
 				$objs         = $wpdb->get_col(
 					$wpdb->prepare(
-						"SELECT o.name 
-						 FROM $table_junction bo 
-						 JOIN $table_objects o ON bo.booking_object_id = o.id 
+						"SELECT o.name
+						 FROM $table_junction bo
+						 JOIN $table_objects o ON bo.booking_object_id = o.id
 						 WHERE bo.booking_id = %d",
 						$booking->id
 					)

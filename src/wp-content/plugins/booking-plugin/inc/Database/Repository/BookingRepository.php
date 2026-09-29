@@ -66,11 +66,11 @@ class BookingRepository {
 
 		$bookings = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT b.* 
+				"SELECT b.*
 				 FROM $table_bookings b
 				 JOIN $table_junction j ON b.id = j.booking_id
-				 WHERE j.booking_object_id = %d 
-				   AND b.booking_date BETWEEN %s AND %s 
+				 WHERE j.booking_object_id = %d
+				   AND b.booking_date BETWEEN %s AND %s
 				   AND b.deleted_at IS NULL
 				   AND b.status != 'cancelled'",
 				(int) $object_id,
@@ -256,6 +256,153 @@ class BookingRepository {
 			);
 		}
 
+		$this->record_snapshot_history( $booking_id, $data['booking_snapshot'], ! empty( $data['user_id'] ) ? (int) $data['user_id'] : get_current_user_id(), 1 );
+
 		return $booking_id;
+	}
+
+	/**
+	 * Update a booking and record a new revision snapshot.
+	 *
+	 * @param int   $id
+	 * @param array $data
+	 * @param array|null $object_ids
+	 * @param array|null $block_ids
+	 * @param int|null $modified_by_user_id
+	 * @return bool
+	 */
+	public function update( $id, array $data, array $object_ids = null, array $block_ids = null, $modified_by_user_id = null ) {
+		global $wpdb;
+
+		$booking = $this->find( (int) $id );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		if ( null === $object_ids ) {
+			$object_ids = $booking->booking_object_ids;
+		}
+		if ( null === $block_ids ) {
+			$block_ids = $booking->booking_block_ids;
+		}
+
+		$object_ids = array_values( array_unique( array_map( 'intval', $object_ids ) ) );
+		$block_ids  = array_values( array_unique( array_map( 'intval', $block_ids ) ) );
+
+		$booking_data = array_merge( (array) $booking, $data );
+		unset( $booking_data['snapshot'], $booking_data['booking_block_ids'], $booking_data['booking_object_ids'] );
+		$booking_data['modified_at']      = current_time( 'mysql' );
+		$booking_data['booking_snapshot'] = wp_json_encode( $this->build_snapshot( $booking_data, $object_ids, $block_ids ) );
+
+		$updated = $wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			$booking_data,
+			array( 'id' => (int) $id )
+		);
+		if ( false === $updated ) {
+			return false;
+		}
+
+		$table_booking_objects          = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_bookings_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_booking_blocks           = $wpdb->prefix . 'snippen_booking_booking_blocks';
+
+		$wpdb->delete( $table_booking_objects, array( 'booking_id' => (int) $id ) );
+		$wpdb->delete( $table_bookings_booking_objects, array( 'booking_id' => (int) $id ) );
+		$wpdb->delete( $table_booking_blocks, array( 'booking_id' => (int) $id ) );
+
+		foreach ( $object_ids as $obj_id ) {
+			$wpdb->insert(
+				$table_booking_objects,
+				array(
+					'booking_id'        => (int) $id,
+					'booking_object_id' => (int) $obj_id,
+				)
+			);
+			$wpdb->insert(
+				$table_bookings_booking_objects,
+				array(
+					'booking_id'        => (int) $id,
+					'booking_object_id' => (int) $obj_id,
+				)
+			);
+		}
+
+		foreach ( $block_ids as $block_id ) {
+			$wpdb->insert(
+				$table_booking_blocks,
+				array(
+					'booking_id'       => (int) $id,
+					'booking_block_id' => (int) $block_id,
+				)
+			);
+		}
+
+		$modifier_id = null !== $modified_by_user_id ? (int) $modified_by_user_id : get_current_user_id();
+		if ( ! $modifier_id ) {
+			$modifier_id = (int) $booking->user_id;
+		}
+
+		$history_snapshot = $booking_data['booking_snapshot'];
+		if ( is_string( $history_snapshot ) ) {
+			$history_snapshot = json_decode( $history_snapshot, true );
+		}
+		if ( ! is_array( $history_snapshot ) ) {
+			$history_snapshot = $this->build_snapshot( $booking_data, $object_ids, $block_ids );
+		}
+
+		$revision = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COALESCE(MAX(revision), 0) FROM {$wpdb->prefix}snippen_booking_snapshots WHERE booking_id = %d",
+				(int) $id
+			)
+		);
+		$this->record_snapshot_history( (int) $id, wp_json_encode( $history_snapshot ), $modifier_id, $revision + 1 );
+
+		return true;
+	}
+
+	/**
+	 * Record a booking snapshot revision.
+	 *
+	 * @param int    $booking_id
+	 * @param string $snapshot
+	 * @param int    $modified_by_user_id
+	 * @param int    $revision
+	 * @return void
+	 */
+	private function record_snapshot_history( $booking_id, $snapshot, $modified_by_user_id, $revision ) {
+		global $wpdb;
+		$table_history = $wpdb->prefix . 'snippen_booking_snapshots';
+
+		if ( $wpdb->get_var( "SHOW TABLES LIKE '$table_history'" ) !== $table_history ) {
+			$wpdb->query(
+				"CREATE TABLE $table_history (
+					id BIGINT NOT NULL AUTO_INCREMENT,
+					booking_id BIGINT NOT NULL,
+					revision INT NOT NULL DEFAULT 1,
+					snapshot LONGTEXT NOT NULL,
+					changes_summary TEXT NULL,
+					modified_by_user_id BIGINT UNSIGNED NOT NULL,
+					created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+					PRIMARY KEY (id),
+					KEY booking_id (booking_id),
+					KEY modified_by_user_id (modified_by_user_id)
+				)"
+			);
+		}
+
+		$wpdb->insert(
+			$table_history,
+			array(
+				'booking_id'          => (int) $booking_id,
+				'revision'            => (int) $revision,
+				'snapshot'            => (string) $snapshot,
+				'changes_summary'     => 'Updated booking',
+				'modified_by_user_id' => (int) $modified_by_user_id,
+				'created_at'          => current_time( 'mysql' ),
+			),
+			array( '%d', '%d', '%s', '%s', '%d', '%s' )
+		);
 	}
 }
