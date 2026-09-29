@@ -4,6 +4,7 @@ namespace SnippenBooking\Tests\Unit\Repository;
 
 use SnippenBooking\Database\Repository\BookingRepository;
 use SnippenBooking\Helper\Capabilities;
+use SnippenBooking\Plugin;
 use SnippenBooking\Tests\TestCase;
 
 class BookingRepositoryTest extends TestCase {
@@ -39,6 +40,14 @@ class BookingRepositoryTest extends TestCase {
 
 		$this->assertTrue( Capabilities::can_manage_bookings() );
 		wp_set_current_user( 0 );
+	}
+
+	public function test_manage_options_users_get_manual_access_without_booking_admin_capability() {
+		$allcaps = array( 'manage_options' => true );
+		$result  = Plugin::map_menu_capabilities( $allcaps, array( 'view_snippen_booking_manual' ), array(), null );
+
+		$this->assertArrayHasKey( 'view_snippen_booking_manual', $result );
+		$this->assertTrue( $result['view_snippen_booking_manual'] );
 	}
 
 	public function test_update_records_snapshot_history_and_updates_active_snapshot() {

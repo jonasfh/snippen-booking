@@ -158,7 +158,7 @@ class Plugin {
 	public static function map_menu_capabilities( $allcaps, $caps, $args, $user ) {
 		// Virtual capability to see the top level menu and the manual
 		if ( isset( $caps[0] ) && in_array( $caps[0], array( 'view_snippen_booking_menu', 'view_snippen_booking_manual' ), true ) ) {
-			if ( ! empty( $allcaps[ Capabilities::MANAGE_BOOKINGS ] ) ) {
+			if ( ! empty( $allcaps['manage_options'] ) || ! empty( $allcaps[ Capabilities::MANAGE_BOOKINGS ] ) ) {
 				$allcaps[ $caps[0] ] = true;
 			}
 		}
