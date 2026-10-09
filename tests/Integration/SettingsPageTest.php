@@ -84,28 +84,28 @@ class SettingsPageTest extends TestCase {
 	 */
 	public function test_settings_page_saves_smtp_options() {
 		// Create a mock POST request
-		$_POST['snippen_settings_nonce'] = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_settings_nonce']                     = wp_create_nonce( 'snippen_save_settings' );
 		$_POST['snippen_email_booking_confirmation_enabled'] = 'yes';
-		$_POST['snippen_email_admin_booking_enabled'] = 'yes';
-		$_POST['snippen_email_user_activation_enabled'] = 'yes';
-		$_POST['snippen_email_password_reset_enabled'] = 'yes';
-		$_POST['snippen_sms_booking_confirmation_enabled'] = 'yes';
-		$_POST['snippen_sms_admin_booking_enabled'] = 'yes';
-		$_POST['snippen_sms_user_activation_enabled'] = 'yes';
-		$_POST['snippen_sms_password_reset_enabled'] = 'yes';
-		$_POST['snippen_email_booking_confirmed_enabled'] = 'yes';
-		$_POST['snippen_email_payment_received_enabled'] = 'yes';
-		$_POST['snippen_sms_booking_confirmed_enabled'] = 'yes';
-		$_POST['snippen_sms_payment_received_enabled'] = 'yes';
-		$_POST['snippen_smtp_enabled'] = 'yes';
-		$_POST['snippen_smtp_host'] = 'smtp.example.com';
-		$_POST['snippen_smtp_port'] = '465';
-		$_POST['snippen_smtp_user'] = 'testuser';
-		$_POST['snippen_smtp_pass'] = 'securepass123';
-		$_POST['snippen_smtp_encryption'] = 'ssl';
-		$_POST['snippen_smtp_from_email'] = 'testfrom@example.com';
-		$_POST['snippen_smtp_from_name'] = 'Test Sender';
-		$_POST['snippen_notification_dispatch_method'] = 'sync';
+		$_POST['snippen_email_admin_booking_enabled']        = 'yes';
+		$_POST['snippen_email_user_activation_enabled']      = 'yes';
+		$_POST['snippen_email_password_reset_enabled']       = 'yes';
+		$_POST['snippen_sms_booking_confirmation_enabled']   = 'yes';
+		$_POST['snippen_sms_admin_booking_enabled']          = 'yes';
+		$_POST['snippen_sms_user_activation_enabled']        = 'yes';
+		$_POST['snippen_sms_password_reset_enabled']         = 'yes';
+		$_POST['snippen_email_booking_confirmed_enabled']    = 'yes';
+		$_POST['snippen_email_payment_received_enabled']     = 'yes';
+		$_POST['snippen_sms_booking_confirmed_enabled']      = 'yes';
+		$_POST['snippen_sms_payment_received_enabled']       = 'yes';
+		$_POST['snippen_smtp_enabled']                       = 'yes';
+		$_POST['snippen_smtp_host']                          = 'smtp.example.com';
+		$_POST['snippen_smtp_port']                          = '465';
+		$_POST['snippen_smtp_user']                          = 'testuser';
+		$_POST['snippen_smtp_pass']                          = 'securepass123';
+		$_POST['snippen_smtp_encryption']                    = 'ssl';
+		$_POST['snippen_smtp_from_email']                    = 'testfrom@example.com';
+		$_POST['snippen_smtp_from_name']                     = 'Test Sender';
+		$_POST['snippen_notification_dispatch_method']       = 'sync';
 
 		$page = new SettingsPage();
 
@@ -151,12 +151,12 @@ class SettingsPageTest extends TestCase {
 		update_option( 'snippen_smtp_encryption', 'tls' );
 
 		// Create a mock phpmailer object
-		$phpmailer = new \stdClass();
-		$phpmailer->Host = '';
-		$phpmailer->SMTPAuth = false;
-		$phpmailer->Port = 0;
-		$phpmailer->Username = '';
-		$phpmailer->Password = '';
+		$phpmailer             = new \stdClass();
+		$phpmailer->Host       = '';
+		$phpmailer->SMTPAuth   = false;
+		$phpmailer->Port       = 0;
+		$phpmailer->Username   = '';
+		$phpmailer->Password   = '';
 		$phpmailer->SMTPSecure = '';
 
 		// We need to define method isSMTP for configure_smtp
@@ -168,11 +168,11 @@ class SettingsPageTest extends TestCase {
 			->method( 'isSMTP' );
 
 		// Bind properties
-		$mock_phpmailer->Host = '';
-		$mock_phpmailer->SMTPAuth = false;
-		$mock_phpmailer->Port = 0;
-		$mock_phpmailer->Username = '';
-		$mock_phpmailer->Password = '';
+		$mock_phpmailer->Host       = '';
+		$mock_phpmailer->SMTPAuth   = false;
+		$mock_phpmailer->Port       = 0;
+		$mock_phpmailer->Username   = '';
+		$mock_phpmailer->Password   = '';
 		$mock_phpmailer->SMTPSecure = '';
 
 		Plugin::configure_smtp( $mock_phpmailer );
@@ -221,10 +221,10 @@ class SettingsPageTest extends TestCase {
 	 * Test saving the enable door code option.
 	 */
 	public function test_settings_page_saves_door_code_toggle() {
-		$_POST['snippen_settings_nonce'] = wp_create_nonce( 'snippen_save_settings' );
-		$_POST['snippen_enable_door_code'] = 'yes';
+		$_POST['snippen_settings_nonce']         = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_enable_door_code']       = 'yes';
 		$_POST['snippen_door_code_hours_before'] = '12';
-		$_POST['snippen_door_code_hours_after'] = '4';
+		$_POST['snippen_door_code_hours_after']  = '4';
 
 		$page = new SettingsPage();
 
@@ -243,5 +243,58 @@ class SettingsPageTest extends TestCase {
 		delete_option( 'snippen_door_code_hours_before' );
 		delete_option( 'snippen_door_code_hours_after' );
 	}
-}
 
+	/**
+	 * Test that the settings page renders Yale Doorman settings.
+	 */
+	public function test_settings_page_renders_doorman_settings() {
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'name="snippen_enable_doorman_api"', $output );
+		$this->assertStringContainsString( 'name="snippen_doorman_api_token"', $output );
+		$this->assertStringContainsString( 'name="snippen_doorman_expose_hours_before"', $output );
+		$this->assertStringContainsString( 'name="snippen_doorman_buffer_minutes_before"', $output );
+		$this->assertStringContainsString( 'name="snippen_doorman_grace_minutes_after"', $output );
+		$this->assertStringContainsString( 'name="snippen_doorman_booking_statuses"', $output );
+	}
+
+	/**
+	 * Test saving Yale Doorman settings.
+	 */
+	public function test_settings_page_saves_doorman_settings() {
+		$_POST['snippen_settings_nonce']                = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_enable_doorman_api']            = 'yes';
+		$_POST['snippen_doorman_api_token']             = 'secret-token-123';
+		$_POST['snippen_doorman_expose_hours_before']   = '72';
+		$_POST['snippen_doorman_buffer_minutes_before'] = '45';
+		$_POST['snippen_doorman_grace_minutes_after']   = '90';
+		$_POST['snippen_doorman_booking_statuses']      = 'confirmed,paid';
+
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		ob_get_clean();
+
+		$_POST = array();
+
+		$this->assertSame( 'yes', get_option( 'snippen_enable_doorman_api' ) );
+		$this->assertSame( 'secret-token-123', get_option( 'snippen_doorman_api_token' ) );
+		$this->assertSame( 72, get_option( 'snippen_doorman_expose_hours_before' ) );
+		$this->assertSame( 45, get_option( 'snippen_doorman_buffer_minutes_before' ) );
+		$this->assertSame( 90, get_option( 'snippen_doorman_grace_minutes_after' ) );
+		$this->assertSame( 'confirmed,paid', get_option( 'snippen_doorman_booking_statuses' ) );
+
+		// Clean up
+		delete_option( 'snippen_enable_doorman_api' );
+		delete_option( 'snippen_doorman_api_token' );
+		delete_option( 'snippen_doorman_expose_hours_before' );
+		delete_option( 'snippen_doorman_buffer_minutes_before' );
+		delete_option( 'snippen_doorman_grace_minutes_after' );
+		delete_option( 'snippen_doorman_booking_statuses' );
+	}
+}

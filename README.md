@@ -110,6 +110,7 @@ You can customize templates for both Email and SMS notifications under **Snippen
   - `{{bank_account}}`: Co-op bank account number for manual wire transfers.
   - `{{vipps_number}}`: Co-op Vipps number / instructions.
   - `{{payment_instructions}}`: Payment terms and instructions text.
+  - `{{door_code}}`: Access door code for the booked venue.
 
 Default templates are provided out of the box, and you can easily edit or revert them at any time.
 
@@ -145,8 +146,8 @@ Navigate to **Snippen Booking > Innstillinger** and click the **Betaling** tab:
 All SMS and Email messages sent to users and administrators (including automatic booking confirmations, account activation codes, admin alert notifications, and manual messages sent via the Booking Assistant) are automatically logged in the database with recipient details, timestamps, delivery channel, and `user_id`/`booking_id` associations.
 Administrators can inspect full communication logs directly for any booking by expanding the details row in the **Snippen Booking > Booking Oversikt** admin table.
 
-### Door Codes
-Booking objects (venues) can be configured with a door code in the WordPress Admin dashboard under **Snippen Booking > Lokaler**.
+### Door Codes & Yale Doorman Access Control
+Booking objects (venues) can be configured with a static door code in the WordPress Admin dashboard under **Snippen Booking > Lokaler**, or synchronized dynamically with smart locks.
 
 #### Configurable Active Time-Window
 To ensure security, the door code is not displayed immediately upon booking. Instead, it is only visible within a configurable active time window.
@@ -163,6 +164,13 @@ Outside of the configured active time window, the system securely hides the door
 `<Koden er ikke tilgjengelig før nærmere booking start>` (Code is not available until closer to the booking start).
 
 For bookings containing **multiple rooms**, the system automatically sanitizes, combines, and deduplicates the door codes (displaying only a single code if the venues share the same entrance door code).
+
+#### Yale Doorman Smart Lock Integration (Adgangskontroll)
+The plugin provides a dedicated, lightweight REST API under `/wp-json/snippen/v1/door/*` for integration with **Snippen Doorman Service** (`snippen-doorman-service`) to manage Yale Doorman smart locks:
+- **Automated PIN Management**: Generates and syncs temporary 4–6 digit user PIN codes to the physical lock.
+- **Adjacent Bookings Consolidation**: Automatically groups multiple consecutive reservations (e.g. Saturday party + Sunday morning cleaning) into a single access window sharing the same PIN code.
+- **Zero Disruption**: Controlled by the master toggle `snippen_enable_doorman_api` (default: disabled) under **Snippen Booking > Innstillinger > Adgangskontroll (Yale Doorman)**. When disabled, endpoints return HTTP 404 with zero performance or behavioral impact.
+- See `DEV_README.md` for full technical API documentation and specifications.
 
 ## Uninstalling
 

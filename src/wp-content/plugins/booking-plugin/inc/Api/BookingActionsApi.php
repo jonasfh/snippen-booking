@@ -508,6 +508,7 @@ class BookingActionsApi {
 			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
 			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
 			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
+			'door_code'            => ! empty( $booking->door_code ) ? (string) $booking->door_code : '',
 		);
 	}
 

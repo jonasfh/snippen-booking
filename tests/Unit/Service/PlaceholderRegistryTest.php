@@ -39,12 +39,12 @@ class PlaceholderRegistryTest extends TestCase {
 	}
 
 	/**
-	 * Test that all 17 standard placeholders are registered
+	 * Test that all standard placeholders are registered
 	 */
-	public function test_all_17_standard_placeholders_registered() {
+	public function test_all_18_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 17, $placeholders );
+		$this->assertCount( 18, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -60,6 +60,7 @@ class PlaceholderRegistryTest extends TestCase {
 			'bank_account',
 			'vipps_number',
 			'payment_instructions',
+			'door_code',
 			'reset_link',
 			'booking_type',
 			'rejection_reason',
@@ -92,7 +93,7 @@ class PlaceholderRegistryTest extends TestCase {
 	 * Test extracting placeholders from template string
 	 */
 	public function test_extract_placeholders() {
-		$text = 'Hello {{user_name}}, date is {{booking_date}} and total is {{booking_price}}';
+		$text      = 'Hello {{user_name}}, date is {{booking_date}} and total is {{booking_price}}';
 		$extracted = $this->registry->extract_placeholders( $text );
 
 		$this->assertEquals( array( 'user_name', 'booking_date', 'booking_price' ), $extracted );
@@ -258,5 +259,16 @@ class PlaceholderRegistryTest extends TestCase {
 			'booking_type'  => 'private',
 		);
 		$this->assertEquals( 'Bankoverføring', $this->registry->resolve( 'payment_method', 'booking_confirmation', array( 'booking' => $booking_bank ) ) );
+	}
+
+	/**
+	 * Test resolving door_code placeholder
+	 */
+	public function test_resolve_door_code() {
+		$context = array( 'door_code' => '482910' );
+		$this->assertEquals( '482910', $this->registry->resolve( 'door_code', 'booking_confirmation', $context ) );
+
+		$booking = (object) array( 'door_code' => '592814' );
+		$this->assertEquals( '592814', $this->registry->resolve( 'door_code', 'booking_confirmed', array( 'booking' => $booking ) ) );
 	}
 }

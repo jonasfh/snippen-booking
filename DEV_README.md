@@ -829,10 +829,114 @@ The system supports three booking types (`booking_type` in `wp_snippen_bookings`
 ### Notification Templates & Placeholders
 - **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, and `password-reset`.
 - **System Placeholders**: Managed by `PlaceholderRegistry`:
+  - `{{door_code}}`: Dynamic or static door PIN code for entering the venue (displayed or passed to SMS/email templates).
   - `{{booking_type}}`: Resolves to «Privat arrangement», «Åpent arrangement» or «Utvask».
   - `{{rejection_reason}}`: Board's reason for rejecting a booking request.
   - `{{payment_method}}`: Resolves to «Vipps», «Bankoverføring» or «Fritatt».
   - Plus standard placeholders: `{{user_name}}`, `{{user_email}}`, `{{user_phone}}`, `{{booking_objects}}`, `{{booking_date}}`, `{{booking_time}}`, `{{booking_url}}`, `{{booking_price}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{payment_instructions}}`, and `{{reset_link}}`.
+
+## Yale Doorman Access Control REST API
+
+The plugin integrates with the `snippen-doorman-service` daemon via lightweight REST API endpoints under `/wp-json/snippen/v1/door`.
+
+### Architecture & Synchronization Flow
+
+```text
+┌─────────────────────────────────┐
+│         snippen-booking         │
+│  - DoorLockApi REST Controller  │
+│  - Feature toggle & auth        │
+│  - Adjacent bookings aggregator │
+└───────────────┬─────────────────┘
+                │ HTTP REST (Bearer / X-API-Key)
+                ▼
+┌─────────────────────────────────┐
+│     snippen-doorman-service     │
+│  - Periodic polling (e.g. 5m)   │
+│  - Slot manager (10 PIN slots)  │
+│  - Random PIN generator         │
+│  - Syncs PIN back via PATCH     │
+└───────────────┬─────────────────┘
+                │ Bluetooth LE / Gateway
+                ▼
+┌─────────────────────────────────┐
+│      Yale Doorman V2N / L3      │
+│  - Physical door lock           │
+└─────────────────────────────────┘
+```
+
+### Feature Toggle & Security
+
+- **Master Toggle (`snippen_enable_doorman_api`)**:
+  - Disabled by default (`no`). When disabled, `/wp-json/snippen/v1/door/*` routes return HTTP 404 (`rest_no_route`), ensuring zero overhead or disruption for standard installs.
+  - Enabled via WordPress Admin (**Snippen Booking > Innstillinger > Adgangskontroll (Yale Doorman)**) or WP-CLI.
+- **Authentication**:
+  - Configured via option `snippen_doorman_api_token` or environment/constant `SNIPPEN_DOORMAN_API_TOKEN`.
+  - Timing-safe comparison (`hash_equals`) supporting either `Authorization: Bearer <token>` or `X-API-Key: <token>`.
+- **Zero PII / GDPR Compliance**:
+  - Responses contain strictly operational access details (`id`, `booking_ids`, `start_time`, `end_time`, `door_code`). No customer names, phone numbers, or emails are exposed.
+
+### Contiguous & Adjacent Reservations (Sammenhengende reservasjoner)
+
+Yale Doorman smart locks have a limited capacity of user code slots (typically 10 slots). When a tenant books multiple slots or days in sequence (e.g. party Saturday evening and cleaning Sunday morning, or multiple consecutive days):
+1. **Consecutive Days Grouping**: Any bookings belonging to the same tenant on the same date or consecutive calendar days are automatically aggregated into a single contiguous access window.
+2. **Independent of Interleaving**: If another tenant has a reservation in between, the first tenant's consecutive access remains grouped as a single period.
+3. **Unified PIN Code**: All bookings in the chain share a single access code and Doorman slot.
+4. **Calculated Window**:
+   - `start_time`: Start of the earliest reservation minus buffer (`snippen_doorman_buffer_minutes_before`, default 30 min).
+   - `end_time`: End of the latest reservation plus grace period (`snippen_doorman_grace_minutes_after`, default 120 min).
+5. **Exposure Horizon**: Included in the polling list when `now >= first_start - expose_hours` (`snippen_doorman_expose_hours_before`, default 168 hours / 7 days). Kept in list until `now > last_end + grace_minutes`.
+
+### Endpoints
+
+#### 1. `GET /wp-json/snippen/v1/door/bookings`
+Returns all qualifying, active, and approaching access windows in UTC ISO 8601.
+
+**Request:**
+```bash
+curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings" \
+  -H "Authorization: Bearer secret-token"
+```
+
+**Response (HTTP 200):**
+```json
+{
+  "bookings": [
+    {
+      "id": 105,
+      "booking_ids": [105, 106],
+      "start_time": "2026-10-24T17:30:00Z",
+      "end_time": "2026-10-25T13:00:00Z",
+      "door_code": "482910"
+    }
+  ]
+}
+```
+
+#### 2. `PATCH /wp-json/snippen/v1/door/bookings/{id}/code`
+Updates the door code for a booking and automatically propagates the code to all linked adjacent reservations in the chain.
+
+**Validation Rules:**
+- Only 4 to 6 digit numeric strings are accepted (`/^[0-9]{4,6}$/`).
+- `null` or clearing codes via PATCH is rejected with HTTP 400 (`door_code_cannot_be_null`). Code revocation is handled within the Doorman service when a booking naturally disappears from the GET list.
+
+**Request:**
+```bash
+curl -s -X PATCH "https://snippen.example.com/wp-json/snippen/v1/door/bookings/105/code" \
+  -H "Authorization: Bearer secret-token" \
+  -H "Content-Type: application/json" \
+  -d '{"door_code": "482910"}'
+```
+
+**Response (HTTP 200):**
+```json
+{
+  "success": true,
+  "id": 105
+}
+```
+
+
 
 ## Modal & Overlay Architecture
 

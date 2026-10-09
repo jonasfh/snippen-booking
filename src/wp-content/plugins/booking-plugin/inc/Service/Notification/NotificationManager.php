@@ -1032,6 +1032,7 @@ class NotificationManager {
 			'booking_type'         => $booking_type_label,
 			'rejection_reason'     => $reason,
 			'payment_method'       => $payment_method_label,
+			'door_code'            => ! empty( $booking->door_code ) ? (string) $booking->door_code : '',
 			'booking'              => $booking,
 		);
 	}

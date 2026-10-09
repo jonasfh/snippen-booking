@@ -194,6 +194,18 @@ class PlaceholderRegistry {
 
 		$this->register_placeholder(
 			array(
+				'name'         => 'door_code',
+				'label'        => __( 'Door code / PIN', 'snippen-booking' ),
+				'description'  => __( 'Access door code or PIN for the booking.', 'snippen-booking' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'admin_booking', 'payment_reminder', 'payment_received' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'door_code', 'booking.door_code' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
 				'name'         => 'reset_link',
 				'label'        => __( 'Password reset URL', 'snippen-booking' ),
 				'description'  => __( 'Password reset link URL.', 'snippen-booking' ),
