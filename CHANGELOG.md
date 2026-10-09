@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.45.1] - 2026-10-09
+- (#353) Minimalistisk REST API: Fjernet feltet `booking_ids` fra responsen i `GET /wp-json/snippen/v1/door/bookings` slik at eksterne tjenester som `snippen-doorman-service` utelukkende forholder seg til ren adgangsperiode-ID (`id`).
+
 ## [2.45.0] - 2026-10-09
 - (#351) Minimalistisk REST API for Yale Doorman adgangskontroll (`/wp-json/snippen/v1/door`):
   - **REST API Endepunkter (`DoorLockApi.php`)**:
