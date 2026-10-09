@@ -54,6 +54,7 @@ class Plugin {
 		\SnippenBooking\Api\UploadPaymentReceiptApi::register();
 		\SnippenBooking\Api\UpdatePaymentStatusApi::register();
 		\SnippenBooking\Api\SmsGatewayApi::register();
+		\SnippenBooking\Api\DoorLockApi::register();
 		\SnippenBooking\Service\PhoneAuthenticationService::register();
 		\SnippenBooking\Shortcode\AccountConfirmationShortcode::register();
 		\SnippenBooking\Shortcode\BookingListShortcode::register();

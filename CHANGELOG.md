@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.45.0] - 2026-10-09
+- (#351) Minimalistisk REST API for Yale Doorman adgangskontroll (`/wp-json/snippen/v1/door`):
+  - **REST API Endepunkter (`DoorLockApi.php`)**:
+    - Implementert `GET /wp-json/snippen/v1/door/bookings`: Polles av Snippen Doorman Service for å hente den komplette listen over aktive adgangsperioder.
+    - Beregner `start_time` og `end_time` med konfigurerbar buffer før start (standard: 30 min) og grace-periode etter slutt (standard: 120 min), formatert i ISO 8601 UTC (`YYYY-MM-DDTHH:MM:SSZ`).
+    - Privacy by Design / GDPR: Ingen personopplysninger eksponeres (kun `id`, `booking_ids`, `start_time`, `end_time` og `door_code`).
+    - Støtte for sammenhengende reservasjoner for samme leietaker (f.eks. helg/fest + utvask neste dag) slått sammen til én helhetlig adgangsperiode for låsen.
+    - Implementert `PATCH /wp-json/snippen/v1/door/bookings/{id}/code`: Tar imot generert 4–6-sifret numerisk PIN-kode og oppdaterer bookingen samt alle dens tilknyttede reservasjoner.
+  - **Sikkerhet & Autentisering**:
+    - Felles token-autentisering via `Authorization: Bearer <token>` eller `X-API-Key: <token>` med timing-safe `hash_equals`. Støtter konstant `SNIPPEN_DOORMAN_API_TOKEN` i `wp-config.php` med fallback til WordPress-opsjon.
+    - Feature-toggle: Styre av/på via `snippen_enable_doorman_api` slik at eksisterende installasjoner forblir 100% upåvirket inntil funksjonen aktiveres.
+  - **Database & Skjema (`Migration_2_45_0.php` & `Install.php`)**:
+    - Lagt til `door_code_updated_at DATETIME NULL` i `wp_snippen_bookings`.
+    - Sikret i `DoorCodeService.php` at dynamisk tildelte koder ikke overskrives eller nullstilles av statiske lokalkoder.
+  - **Varslinger & Malvariabler (`PlaceholderRegistry.php` & `NotificationManager.php`)**:
+    - Registrert `door_code` som standard plassholder for SMS- og e-postvarsler (`{{door_code}}`).
+  - **Administrasjonsgrensesnitt (`SettingsPage.php`)**:
+    - Lagt til innstillinger for Doorman API (aktivering, API-token, eksponeringshorisont, tidsbuffer før start, grace-periode etter slutt og kvalifiserende statuser).
+
 ## [2.44.0] - 2026-09-30
 - (#211) Tillat administratorer å redigere eksisterende bookinger med snapshot-historikk:
   - **Database & Snapshot-tabell (`wp_snippen_booking_snapshots`)**:

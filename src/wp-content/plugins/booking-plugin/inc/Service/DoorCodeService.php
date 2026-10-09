@@ -13,7 +13,7 @@ class DoorCodeService {
 	 * @return bool
 	 */
 	public static function is_enabled() {
-		return 'yes' === get_option( 'snippen_enable_door_code', 'no' );
+		return 'yes' === get_option( 'snippen_enable_door_code', 'no' ) || 'yes' === get_option( 'snippen_enable_doorman_api', 'no' );
 	}
 
 	/**
@@ -45,9 +45,6 @@ class DoorCodeService {
 			return false;
 		}
 
-		$hours_before = self::get_hours_before();
-		$hours_after  = self::get_hours_after();
-
 		$now   = new \DateTime( current_time( 'mysql' ) );
 		$start = new \DateTime( $booking->booking_date . ' ' . $booking->start_time );
 		$end   = new \DateTime( $booking->booking_date . ' ' . $booking->end_time );
@@ -55,6 +52,22 @@ class DoorCodeService {
 		if ( $end < $start ) {
 			$end->modify( '+1 day' );
 		}
+
+		if ( 'yes' === get_option( 'snippen_enable_doorman_api', 'no' ) && 'yes' !== get_option( 'snippen_enable_door_code', 'no' ) ) {
+			$buf_min   = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
+			$grace_min = intval( get_option( 'snippen_doorman_grace_minutes_after', 120 ) );
+
+			$start_window = clone $start;
+			$start_window->modify( "-{$buf_min} minutes" );
+
+			$end_window = clone $end;
+			$end_window->modify( "+{$grace_min} minutes" );
+
+			return ( $now >= $start_window && $now <= $end_window );
+		}
+
+		$hours_before = self::get_hours_before();
+		$hours_after  = self::get_hours_after();
 
 		$start_window = clone $start;
 		$start_window->modify( "-{$hours_before} hours" );
@@ -73,7 +86,7 @@ class DoorCodeService {
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 
 		if ( ! self::is_enabled() ) {
-			$wpdb->query( "UPDATE $table_bookings SET door_code = NULL WHERE door_code IS NOT NULL" );
+			$wpdb->query( "UPDATE $table_bookings SET door_code = NULL WHERE door_code IS NOT NULL AND (door_code_updated_at IS NULL OR door_code_updated_at = '')" );
 			return;
 		}
 
@@ -107,7 +120,7 @@ class DoorCodeService {
 		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 
 		if ( ! self::is_enabled() ) {
-			if ( ! empty( $booking->door_code ) ) {
+			if ( ! empty( $booking->door_code ) && empty( $booking->door_code_updated_at ) ) {
 				$wpdb->update(
 					$table_bookings,
 					array( 'door_code' => null ),
@@ -116,6 +129,20 @@ class DoorCodeService {
 				$booking->door_code = null;
 			}
 			return;
+		}
+
+		// If the booking has a dynamic door code set via Doorman API, do not overwrite or clear it
+		if ( ! empty( $booking->door_code_updated_at ) ) {
+			return;
+		}
+		if ( ! isset( $booking->door_code_updated_at ) && ! empty( $booking->id ) ) {
+			$col_val = $wpdb->get_var(
+				$wpdb->prepare( "SELECT door_code_updated_at FROM $table_bookings WHERE id = %d", $booking->id )
+			);
+			if ( ! empty( $col_val ) ) {
+				$booking->door_code_updated_at = $col_val;
+				return;
+			}
 		}
 
 		// Hydrate start_time and end_time if they are not already set

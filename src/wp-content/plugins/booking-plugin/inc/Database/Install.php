@@ -218,6 +218,7 @@ class Install {
             payment_notes TEXT NULL,
             payment_updated_at DATETIME NULL,
             door_code VARCHAR(255) NULL,
+            door_code_updated_at DATETIME NULL,
             booking_type VARCHAR(20) DEFAULT 'private',
             rejection_reason TEXT NULL,
             booking_snapshot LONGTEXT NULL,
