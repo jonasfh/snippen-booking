@@ -253,11 +253,10 @@ class DoorLockApi {
 			// Must be within expose horizon and not expired beyond grace period
 			if ( $now_ts >= $expose_limit && $now_ts <= $calc_end ) {
 				$response_bookings[] = array(
-					'id'          => $group['primary_id'],
-					'booking_ids' => $group['booking_ids'],
-					'start_time'  => gmdate( 'Y-m-d\TH:i:s\Z', $calc_start ),
-					'end_time'    => gmdate( 'Y-m-d\TH:i:s\Z', $calc_end ),
-					'door_code'   => ! empty( $group['door_code'] ) ? (string) $group['door_code'] : null,
+					'id'         => $group['primary_id'],
+					'start_time' => gmdate( 'Y-m-d\TH:i:s\Z', $calc_start ),
+					'end_time'   => gmdate( 'Y-m-d\TH:i:s\Z', $calc_end ),
+					'door_code'  => ! empty( $group['door_code'] ) ? (string) $group['door_code'] : null,
 				);
 			}
 		}

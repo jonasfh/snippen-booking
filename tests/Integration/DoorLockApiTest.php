@@ -234,7 +234,7 @@ class DoorLockApiTest extends TestCase {
 
 		$item = $data['bookings'][0];
 		$this->assertSame( $id, $item['id'] );
-		$this->assertSame( array( $id ), $item['booking_ids'] );
+		$this->assertArrayNotHasKey( 'booking_ids', $item );
 		$this->assertNull( $item['door_code'] );
 
 		// 12:00 minus 30 min buffer = 11:30:00Z
@@ -353,7 +353,7 @@ class DoorLockApiTest extends TestCase {
 		$item = $data['bookings'][0];
 
 		$this->assertSame( $id1, $item['id'] );
-		$this->assertSame( array( $id1, $id2 ), $item['booking_ids'] );
+		$this->assertArrayNotHasKey( 'booking_ids', $item );
 
 		// Start: Day 1 at 18:00 minus 30 min buffer = Day 1 17:30:00Z
 		$this->assertSame( $day1 . 'T17:30:00Z', $item['start_time'] );
@@ -414,9 +414,9 @@ class DoorLockApiTest extends TestCase {
 		$tenant_a_group = null;
 		$tenant_b_group = null;
 		foreach ( $data['bookings'] as $grp ) {
-			if ( in_array( $id_a1, $grp['booking_ids'], true ) ) {
+			if ( $grp['id'] === $id_a1 ) {
 				$tenant_a_group = $grp;
-			} elseif ( in_array( $id_b1, $grp['booking_ids'], true ) ) {
+			} elseif ( $grp['id'] === $id_b1 ) {
 				$tenant_b_group = $grp;
 			}
 		}
@@ -426,13 +426,13 @@ class DoorLockApiTest extends TestCase {
 
 		// Tenant A: chained across day 1 and day 2
 		$this->assertSame( $id_a1, $tenant_a_group['id'] );
-		$this->assertSame( array( $id_a1, $id_a2 ), $tenant_a_group['booking_ids'] );
+		$this->assertArrayNotHasKey( 'booking_ids', $tenant_a_group );
 		$this->assertSame( $day1 . 'T07:30:00Z', $tenant_a_group['start_time'] );
 		$this->assertSame( $day2 . 'T22:00:00Z', $tenant_a_group['end_time'] );
 
 		// Tenant B: single booking
 		$this->assertSame( $id_b1, $tenant_b_group['id'] );
-		$this->assertSame( array( $id_b1 ), $tenant_b_group['booking_ids'] );
+		$this->assertArrayNotHasKey( 'booking_ids', $tenant_b_group );
 
 		// Test PATCHing Tenant A's second booking propagates to both Tenant A bookings, but not Tenant B
 		$patch_req = $this->create_auth_request( 'PATCH', '/snippen/v1/door/bookings/' . $id_a2 . '/code' );
@@ -637,7 +637,7 @@ class DoorLockApiTest extends TestCase {
 		$chain = $data['bookings'][0];
 
 		$this->assertSame( $id1, $chain['id'] );
-		$this->assertSame( array( $id1, $id2, $id3 ), $chain['booking_ids'] );
+		$this->assertArrayNotHasKey( 'booking_ids', $chain );
 		// Start from day1 minus 30 min = 17:30
 		$this->assertSame( $day1 . 'T17:30:00Z', $chain['start_time'] );
 		// End from day3 plus 120 min = 14:00
