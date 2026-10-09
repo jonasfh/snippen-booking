@@ -149,8 +149,8 @@ class SmsInboxResolverServiceTest extends TestCase {
 	 * Test Regel 1: Pågående samtale innenfor TTL
 	 */
 	public function test_rule_1_active_session() {
-		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
-		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-10' ) );
+		$b1_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+1 day' ) ) ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+2 days' ) ) ) );
 
 		// Previous message tied to b2_id 10 minutes ago
 		MessageLoggerService::log_message(
@@ -181,7 +181,7 @@ class SmsInboxResolverServiceTest extends TestCase {
 		global $wpdb;
 
 		// 1. Create booking 1
-		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
+		$b1_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+1 day' ) ) ) );
 
 		// 2. Simulate conversation on booking 1 (set created_at 10 minutes ago)
 		$past_time = gmdate( 'Y-m-d H:i:s', time() - 600 );
@@ -203,7 +203,7 @@ class SmsInboxResolverServiceTest extends TestCase {
 		);
 
 		// 3. User creates a NEW booking 2 (created now, after past_time)
-		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+2 days' ) ) ) );
 
 		// 4. User sends new incoming SMS
 		$res = SmsInboxResolverService::resolve_message(
@@ -225,8 +225,8 @@ class SmsInboxResolverServiceTest extends TestCase {
 		global $wpdb;
 
 		// 1. Create two bookings in the past
-		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
-		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
+		$b1_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+1 day' ) ) ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+2 days' ) ) ) );
 
 		$past_time = gmdate( 'Y-m-d H:i:s', time() - 600 );
 		$wpdb->update(
@@ -292,8 +292,8 @@ class SmsInboxResolverServiceTest extends TestCase {
 	 * Test that replying to a prompt reinstates active session for subsequent messages
 	 */
 	public function test_active_session_reinstated_after_selection_reply() {
-		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
-		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-15' ) );
+		$b1_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+1 day' ) ) ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => date( 'Y-m-d', strtotime( '+2 days' ) ) ) );
 
 		// 1. Trigger disambiguation prompt
 		$prompt_res = SmsInboxResolverService::resolve_message( '+4799887766', 'Trenger hjelp' );
@@ -316,8 +316,10 @@ class SmsInboxResolverServiceTest extends TestCase {
 	 * Test Regel 2: Svar på flervalgsforespørsel
 	 */
 	public function test_rule_2_disambiguation_selection() {
-		$b1_id = $this->create_booking( array( 'booking_date' => '2026-10-01' ) );
-		$b2_id = $this->create_booking( array( 'booking_date' => '2026-10-10' ) );
+		$day1  = date( 'Y-m-d', strtotime( '+1 day' ) );
+		$day2  = date( 'Y-m-d', strtotime( '+2 days' ) );
+		$b1_id = $this->create_booking( array( 'booking_date' => $day1 ) );
+		$b2_id = $this->create_booking( array( 'booking_date' => $day2 ) );
 
 		// Simulate original incoming message in pending_selection
 		$pending_msg_id = MessageLoggerService::log_message(
@@ -370,7 +372,7 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$this->assertSame( '+4799887766', $outbox[0]->recipient );
 		$this->assertSame( (string) $b2_id, (string) $outbox[0]->booking_id );
 		$this->assertStringContainsString( 'Henvendelsen og kommende meldinger knyttes til reservasjon', $outbox[0]->message );
-		$this->assertStringContainsString( '10.10.2026', $outbox[0]->message );
+		$this->assertStringContainsString( date_i18n( 'd.m.Y', strtotime( $day2 ) ), $outbox[0]->message );
 	}
 
 	/**
