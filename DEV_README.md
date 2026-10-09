@@ -874,7 +874,7 @@ The plugin integrates with the `snippen-doorman-service` daemon via lightweight 
   - Configured via option `snippen_doorman_api_token` or environment/constant `SNIPPEN_DOORMAN_API_TOKEN`.
   - Timing-safe comparison (`hash_equals`) supporting either `Authorization: Bearer <token>` or `X-API-Key: <token>`.
 - **Zero PII / GDPR Compliance**:
-  - Responses contain strictly operational access details (`id`, `booking_ids`, `start_time`, `end_time`, `door_code`). No customer names, phone numbers, or emails are exposed.
+  - Responses contain strictly operational access details (`id`, `start_time`, `end_time`, `door_code`). No customer names, phone numbers, or emails are exposed.
 
 ### Contiguous & Adjacent Reservations (Sammenhengende reservasjoner)
 
@@ -904,7 +904,6 @@ curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings" \
   "bookings": [
     {
       "id": 105,
-      "booking_ids": [105, 106],
       "start_time": "2026-10-24T17:30:00Z",
       "end_time": "2026-10-25T13:00:00Z",
       "door_code": "482910"

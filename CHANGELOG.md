@@ -5,7 +5,8 @@
   - **REST API Endepunkter (`DoorLockApi.php`)**:
     - Implementert `GET /wp-json/snippen/v1/door/bookings`: Polles av Snippen Doorman Service for å hente den komplette listen over aktive adgangsperioder.
     - Beregner `start_time` og `end_time` med konfigurerbar buffer før start (standard: 30 min) og grace-periode etter slutt (standard: 120 min), formatert i ISO 8601 UTC (`YYYY-MM-DDTHH:MM:SSZ`).
-    - Privacy by Design / GDPR: Ingen personopplysninger eksponeres (kun `id`, `booking_ids`, `start_time`, `end_time` og `door_code`).
+    - Privacy by Design / GDPR: Ingen personopplysninger eksponeres (kun `id`, `start_time`, `end_time` og `door_code`).
+    - (#353) Minimalistisk kontrakt: Fjernet unødvendig `booking_ids` fra responsen slik at eksterne tjenester kun forholder seg til ren adgangsperiode-ID.
     - Støtte for sammenhengende reservasjoner for samme leietaker (f.eks. helg/fest + utvask neste dag) slått sammen til én helhetlig adgangsperiode for låsen.
     - Implementert `PATCH /wp-json/snippen/v1/door/bookings/{id}/code`: Tar imot generert 4–6-sifret numerisk PIN-kode og oppdaterer bookingen samt alle dens tilknyttede reservasjoner.
   - **Sikkerhet & Autentisering**:
