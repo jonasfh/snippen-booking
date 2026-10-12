@@ -50,13 +50,34 @@ EOF
   mysql -u root -e "FLUSH PRIVILEGES;" || true
 fi
 
-# 2. Download WordPress Core
-echo "Downloading WordPress..."
+# 2. Provision WordPress Core
+echo "Provisioning WordPress core..."
 if [ ! -f wp-load.php ]; then
-  wp core download \
-    --version=7.0 \
-    --locale=en_US \
-    --allow-root
+  if [ -d "/usr/src/wordpress" ] && [ -f "/usr/src/wordpress/wp-load.php" ]; then
+    echo "Copying pre-cached WordPress core from /usr/src/wordpress..."
+    cp -a /usr/src/wordpress/. "$WP_DIR/"
+  else
+    echo "Pre-cached WordPress not found. Downloading WordPress with retry..."
+    MAX_RETRIES=5
+    RETRY_DELAY=3
+    download_success=false
+    for i in $(seq 1 $MAX_RETRIES); do
+      echo "Attempt $i of $MAX_RETRIES: Downloading WordPress..."
+      if wp core download \
+        --version=7.0 \
+        --locale=en_US \
+        --allow-root; then
+        download_success=true
+        break
+      fi
+      echo "Download attempt $i failed. Retrying in ${RETRY_DELAY}s..."
+      sleep "$RETRY_DELAY"
+    done
+    if [ "$download_success" = false ]; then
+      echo "Error: Failed to download WordPress core after $MAX_RETRIES attempts." >&2
+      exit 1
+    fi
+  fi
 fi
 
 # 3. Create wp-config.php

@@ -626,6 +626,9 @@ The container entrypoint (`.devcontainer/docker-entrypoint.sh` / `Dockerfile`) s
 | `INIT_GATEWAY` | Run `composer demo:gateway` automatically on container start | `false` |
 | `INIT_DEMO` / `AUTO_DEMO` | Run full `composer demo` automatically on container start | `false` |
 | `MYSQL_HOST` / `MYSQL_USER` / `MYSQL_PWD` | Database connection details | `localhost` / `wpuser` / `wppass` |
+| `SNIPPEN_DOORMAN_API_TOKEN` | Yale Doorman API Token | `test-integration-token` |
+
+WordPress core is pre-downloaded during Docker image build into `/usr/src/wordpress` for sub-second startup. If the pre-cached core is not present, `.devcontainer/docker-entrypoint.sh` automatically falls back to downloading WordPress with a retry mechanism (up to 5 attempts) to remain resilient against transient DNS or network delays.
 
 ## Vipps MobilePay Integration Architecture
 

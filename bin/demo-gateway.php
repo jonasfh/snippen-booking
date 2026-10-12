@@ -42,10 +42,17 @@ update_option( 'snippen_sms_user_activation_enabled', 'yes' );
 update_option( 'snippen_sms_payment_reminder_enabled', 'yes' );
 update_option( 'snippen_sms_payment_receipt_uploaded_enabled', 'yes' );
 
-echo "Configured SMS Gateway settings:\n";
-echo " - Active Provider: snippen_sms_service\n";
-echo " - API Token: $api_token\n";
-echo " - Sender: $sender_name\n";
+// 1b. Configure Doorman API settings
+$doorman_token = getenv( 'SNIPPEN_DOORMAN_API_TOKEN' ) ?: $api_token;
+update_option( 'snippen_enable_doorman_api', 'yes' );
+update_option( 'snippen_doorman_api_token', $doorman_token );
+
+echo "Configured SMS Gateway & Doorman settings:\n";
+echo " - Active SMS Provider: snippen_sms_service\n";
+echo " - SMS API Token: $api_token\n";
+echo " - SMS Sender: $sender_name\n";
+echo " - Doorman API Enabled: yes\n";
+echo " - Doorman API Token: $doorman_token\n";
 
 // 2. Ensure starter booking objects and time slots exist
 global $wpdb;
