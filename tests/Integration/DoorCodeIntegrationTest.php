@@ -21,6 +21,8 @@ class DoorCodeIntegrationTest extends TestCase {
 		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_bookings_booking_objects" );
 
 		// Reset settings options
+		update_option( 'snippen_enable_door_code', 'yes' );
+		delete_option( 'snippen_enable_doorman_api' );
 		delete_option( 'snippen_door_code_hours_before' );
 		delete_option( 'snippen_door_code_hours_after' );
 	}
@@ -266,6 +268,7 @@ class DoorCodeIntegrationTest extends TestCase {
 
 		// Disable door code system
 		update_option( 'snippen_enable_door_code', 'no' );
+		update_option( 'snippen_enable_doorman_api', 'no' );
 
 		// 1. Check popup details
 		$uuid = wp_generate_uuid4();
