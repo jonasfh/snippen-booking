@@ -57,6 +57,10 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
+# Pre-download WordPress core into cache directory (/usr/src/wordpress)
+RUN mkdir -p /usr/src/wordpress \
+    && wp core download --path=/usr/src/wordpress --version=7.0 --locale=en_US --allow-root
+
 # Install PHP_CodeSniffer and PHPCBF
 RUN curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar \
     && chmod +x phpcs.phar \

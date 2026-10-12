@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.45.2] - 2026-10-12
+- (#359) Raskere og mer robust container-oppstart i Docker:
+  - Forhåndslastet WordPress 7.0 under image-bygging i `Dockerfile` til `/usr/src/wordpress` for umiddelbar oppstart uten ekstern nettverksnedlasting.
+  - Lagt til automatisk kopiering fra cache og en robust retry-mekanisme (5 forsøk) med fallback i `.devcontainer/docker-entrypoint.sh` for å hindre at containeren krasjer ved forbigående DNS/nettverksforsinkelser.
+  - Støtte for automatisk oppsett av Doorman API-innstillinger i `demo:gateway` via `SNIPPEN_DOORMAN_API_TOKEN`.
+
 ## [2.45.1] - 2026-10-09
 - (#353) Minimalistisk REST API: Fjernet feltet `booking_ids` fra responsen i `GET /wp-json/snippen/v1/door/bookings` slik at eksterne tjenester som `snippen-doorman-service` utelukkende forholder seg til ren adgangsperiode-ID (`id`).
 
