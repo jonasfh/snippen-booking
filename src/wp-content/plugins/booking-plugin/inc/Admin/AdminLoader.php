@@ -152,6 +152,15 @@ class AdminLoader {
 			array( self::class, 'render_sms_inbox_page' )
 		);
 
+		add_submenu_page(
+			'snippen-booking',
+			__( 'Dørkoder', 'snippen-booking' ),
+			__( 'Dørkoder', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-door-codes',
+			array( self::class, 'render_door_codes_page' )
+		);
+
 		$templates_hook = add_submenu_page(
 			'snippen-booking',
 			__( 'Varslingsmaler', 'snippen-booking' ),
@@ -393,6 +402,18 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'Varslingsmaler', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render Door Codes Page
+	 */
+	public static function render_door_codes_page() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\DoorCodesPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\DoorCodesPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'Dørkoder', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 

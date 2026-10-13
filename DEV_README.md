@@ -938,11 +938,22 @@ curl -s -X PATCH "https://snippen.example.com/wp-json/snippen/v1/door/bookings/1
 }
 ```
 
+### Admin Door Codes Interface & Notification System
 
+In addition to automated assignment via Doorman service polling, administrators can manage door codes directly from the WordPress admin interface (**Snippen Booking > Dørkoder**):
+
+- **Upcoming Bookings Table**: Displays upcoming reservations within selectable horizons (7, 14, 30, 60 days) with filters for missing or assigned door codes.
+- **Contiguous Reservation Grouping**: Chains of adjacent reservations for the same tenant are automatically grouped into single rows displaying tenant details, agreed booking duration, and Doorman access window with buffer and grace periods.
+- **Manual Assignment & Bulk Save**: Administrators can assign codes inline per row or enter multiple codes and click **Lagre alle endrede koder**.
+- **Customer Notifications**: When a code is saved with the **Varsle** checkbox checked (or via REST API / AJAX), SMS and email notifications are dispatched using the `door_code_updated` template.
+- **Placeholders**:
+  - `{{door_code}}`: The 4–6 digit numeric PIN.
+  - `{{door_code_valid_from}}`: Start of the access window (e.g. `24.10.2026 kl. 17:30`).
+  - `{{door_code_valid_to}}`: End of the access window (e.g. `25.10.2026 kl. 13:00`).
+  - `{{door_code_validity_period}}`: Formatted access period (e.g. `24.10.2026 kl. 17:30 – 13:00` or `24.10.2026 kl. 17:30 – 25.10.2026 kl. 13:00`).
+- **User Display**: Legacy static door codes on booking objects are removed. In user-facing views (My Bookings shortcode and modal popup), the door code is displayed (`🔓 <code>`) whenever assigned, or indicated as `Tildeles før leiestart` when pending assignment.
 
 ## Modal & Overlay Architecture
-
-All modal and overlay dialogs across the plugin (direct-link booking UUID popup, calendar booking info modal, rental terms iframe modal, and admin notification dispatch dialog) adhere to standard mobile-friendly and responsive rules:
 
 - **Viewport containment**: Overlays use `height: 100dvh` (with fallback `100%`) and modals use `max-height: calc(100dvh - 32px)` (`calc(100dvh - 16px)` on mobile) so modals never exceed the screen dimensions or get clipped under dynamic mobile toolbars/address bars (e.g. iOS Safari and Android Chrome).
 - **Fixed Header & Independent Scrolling**: Modals are structured with a fixed header (`flex-shrink: 0`) and scrollable body (`overflow-y: auto`, `overscroll-behavior: contain`), ensuring the modal title and close button remain permanently pinned and accessible at the top while content scrolls.

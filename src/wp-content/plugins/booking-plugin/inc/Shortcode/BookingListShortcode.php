@@ -310,21 +310,10 @@ class BookingListShortcode {
 			$time_range = ! empty( $booking->slot_name ) ? $booking->slot_name : '';
 		}
 
-		// Synchronize/get door code.
+		// Door code display: visible whenever door code is assigned to the booking
 		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
-		$door_code_active  = false;
-		$door_code_display = '';
-
-		if ( $door_code_enabled ) {
-			\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
-			$door_code_active = \SnippenBooking\Service\DoorCodeService::is_in_window( $booking );
-
-			if ( $door_code_active ) {
-				$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
-			} else {
-				$door_code_display = esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' );
-			}
-		}
+		$door_code_active  = ! empty( $booking->door_code );
+		$door_code_display = $door_code_active ? esc_html( $booking->door_code ) : esc_html__( 'Tildeles før leiestart', 'snippen-booking' );
 
 		$status_class = 'snippen-status-' . $booking->status;
 		$status_label = '';

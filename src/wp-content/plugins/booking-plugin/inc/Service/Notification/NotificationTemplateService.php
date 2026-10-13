@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -195,6 +195,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Reservasjonsforespørsel avslått - {{booking_objects}}', 'snippen-booking' ),
 					'body'    => __( "Hallo {{user_name}},\n\nDin reservasjonsforespørsel for {{booking_objects}} den {{booking_date}} {{booking_time}} har dessverre blitt avslått av styret.\n\nBegrunnelse:\n{{rejection_reason}}\n\nDu kan se detaljer om din reservasjon her:\n{{booking_url}}\n\nTa gjerne kontakt med styret ved spørsmål.\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				),
+			),
+			'door-code-updated'        => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( 'Hei {{user_name}}! Din dørkode for {{booking_objects}} er {{door_code}}. Koden er gyldig fra {{door_code_valid_from}} til {{door_code_valid_to}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Dørkode for din booking - {{booking_objects}}', 'snippen-booking' ),
+					'body'    => __( "Hei {{user_name}},\n\nHer er din dørkode for leie av {{booking_objects}}:\n\nDørkode: {{door_code}}\n\nKoden er aktiv og gyldig i følgende tidsrom:\nFra: {{door_code_valid_from}}\nTil:  {{door_code_valid_to}}\n(Dette inkluderer adgang før start for forberedelser og etter slutt for rydding/låsing).\n\nAvtalt leietid: {{booking_date}} {{booking_time}}\n\nDu kan også se oppdatert bookinginformasjon på din side:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
 				),
 			),
 		);

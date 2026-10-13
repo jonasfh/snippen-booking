@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.46.0] - 2026-10-13
+- (#361) Dørkode: Admin-grensesnitt for manuell tildeling, varsling (SMS/e-post) og sanering av statisk kode:
+  - **Admin-grensesnitt for dørkoder (`DoorCodesPage.php`, `AdminLoader.php`)**:
+    - Ny administrativ side under Snippen Booking -> "Dørkoder" (`snippen-booking-door-codes`).
+    - Viser oppkommende reservasjoner filtrert på tidshorisont (7, 14, 30, 60 dager) og status (alle, mangler kode, har tildelt kode).
+    - Automatisk gruppering av sammenhengende reservasjoner for samme leietaker til felles kjede.
+    - Viser leietakers navn/kontaktinfo, avtalt leietid og beregnet gyldig adgangsvindu tilsvarende Doorman-modellen (inkludert buffer før start og grace-periode etter slutt).
+    - Individuell lagring og masselagring (bulk) av dørkoder via AJAX med umiddelbar status og varslingsindikator.
+    - Valgfri avkryssing ("Varsle") for automatisk varsling til leietaker ved oppdatering av dørkode.
+  - **Varslingsmaler & Plassholdere (`PlaceholderRegistry.php`, `NotificationTemplateService.php`, `NotificationManager.php`)**:
+    - Ny hendelsestype `door_code_updated` for SMS og e-post.
+    - Nye malplassholdere:
+      - `{{door_code_valid_from}}` (f.eks. `14.10.2026 kl. 09:30`)
+      - `{{door_code_valid_to}}` (f.eks. `14.10.2026 kl. 16:00`)
+      - `{{door_code_validity_period}}` (f.eks. `14.10.2026 kl. 09:30 – 16:00`)
+    - Standard norske maler for e-post og SMS med informasjon om adgangsperiode og PIN-kode.
+    - Innstillingstoggles for aktivering av varsling lagt til i `SettingsPage.php`.
+  - **Sanering av statisk dørkode & forenklet visning (`DoorCodeService.php`, `BookingObjectsPage.php`, `Plugin.php`, `BookingListShortcode.php`, `UserBookingsPage.php`)**:
+    - Fjernet statisk dørkodefelt og tabellkolonne fra lokale-administrasjon (`BookingObjectsPage.php`).
+    - Fjernet utdaterte time-begrensninger ("vis kode x timer før / y timer etter") fra innstillingssiden.
+    - Forenklet innsyn for leietakere: Dørkoden vises for brukeren så snart den er tildelt på reservasjonen (`🔓 <code>`), eller vises som `Tildeles før leiestart` når den ikke er tildelt.
+    - Ny sentral tjenestemetode `DoorCodeService::apply_door_code()` for konsistent tildeling, kjedeoppdatering og varsling på tvers av admin og Doorman API.
+
 ## [2.45.2] - 2026-10-12
 - (#359) Raskere og mer robust container-oppstart i Docker:
   - Forhåndslastet WordPress 7.0 under image-bygging i `Dockerfile` til `/usr/src/wordpress` for umiddelbar oppstart uten ekstern nettverksnedlasting.

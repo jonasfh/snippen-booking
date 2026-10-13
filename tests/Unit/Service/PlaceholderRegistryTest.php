@@ -41,10 +41,10 @@ class PlaceholderRegistryTest extends TestCase {
 	/**
 	 * Test that all standard placeholders are registered
 	 */
-	public function test_all_18_standard_placeholders_registered() {
+	public function test_all_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 18, $placeholders );
+		$this->assertCount( 21, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -61,6 +61,9 @@ class PlaceholderRegistryTest extends TestCase {
 			'vipps_number',
 			'payment_instructions',
 			'door_code',
+			'door_code_valid_from',
+			'door_code_valid_to',
+			'door_code_validity_period',
 			'reset_link',
 			'booking_type',
 			'rejection_reason',
@@ -270,5 +273,32 @@ class PlaceholderRegistryTest extends TestCase {
 
 		$booking = (object) array( 'door_code' => '592814' );
 		$this->assertEquals( '592814', $this->registry->resolve( 'door_code', 'booking_confirmed', array( 'booking' => $booking ) ) );
+	}
+
+	/**
+	 * Test resolving door code validity placeholders and door_code_updated context
+	 */
+	public function test_resolve_door_code_validity_placeholders() {
+		$context = array(
+			'user_name'                 => 'Test Leietaker',
+			'door_code'                 => '123456',
+			'door_code_valid_from'      => '14.10.2026 kl. 09:30',
+			'door_code_valid_to'        => '14.10.2026 kl. 20:00',
+			'door_code_validity_period' => '14.10.2026 kl. 09:30 – 20:00',
+		);
+
+		$this->assertEquals( '123456', $this->registry->resolve( 'door_code', 'door_code_updated', $context ) );
+		$this->assertEquals( '14.10.2026 kl. 09:30', $this->registry->resolve( 'door_code_valid_from', 'door_code_updated', $context ) );
+		$this->assertEquals( '14.10.2026 kl. 20:00', $this->registry->resolve( 'door_code_valid_to', 'door_code_updated', $context ) );
+		$this->assertEquals( '14.10.2026 kl. 09:30 – 20:00', $this->registry->resolve( 'door_code_validity_period', 'door_code_updated', $context ) );
+
+		$allowed = $this->registry->get_placeholders_for_context( 'door_code_updated' );
+		$this->assertArrayHasKey( 'door_code', $allowed );
+		$this->assertArrayHasKey( 'door_code_valid_from', $allowed );
+		$this->assertArrayHasKey( 'door_code_valid_to', $allowed );
+		$this->assertArrayHasKey( 'door_code_validity_period', $allowed );
+		$this->assertArrayHasKey( 'user_name', $allowed );
+		$this->assertArrayHasKey( 'booking_objects', $allowed );
+		$this->assertArrayHasKey( 'booking_url', $allowed );
 	}
 }

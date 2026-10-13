@@ -94,6 +94,7 @@ You can customize templates for both Email and SMS notifications under **Snippen
   - `payment-received`: Confirmation sent to resident when payment is registered as PAID.
   - `payment-reminder`: Automated reminder sent to resident before unpaid bookings.
   - `payment-receipt-uploaded`: Alert sent to admin when resident uploads a payment receipt.
+  - `door-code-updated`: Notification sent to resident when door access code is assigned or changed.
   - `password-reset`: Password reset link.
 - **Dynamic Placeholders**:
   - `{{user_name}}`: Resident/customer full name or display name.
@@ -111,8 +112,18 @@ You can customize templates for both Email and SMS notifications under **Snippen
   - `{{vipps_number}}`: Co-op Vipps number / instructions.
   - `{{payment_instructions}}`: Payment terms and instructions text.
   - `{{door_code}}`: Access door code for the booked venue.
+  - `{{door_code_valid_from}}`: Start of access validity window (e.g. «24.10.2026 kl. 17:30»).
+  - `{{door_code_valid_to}}`: End of access validity window (e.g. «25.10.2026 kl. 13:00»).
+  - `{{door_code_validity_period}}`: Total validity time span (e.g. «24.10.2026 kl. 17:30 – 13:00»).
 
 Default templates are provided out of the box, and you can easily edit or revert them at any time.
+
+### Adgangskontroll og Dørkoder (Access Control & Door Codes)
+Administrators manage door PIN codes under **Snippen Booking > Dørkoder**:
+- **Oversikt og Kjede-gruppering**: Viser oppkommende reservasjoner filtrert etter tidshorisont og status. Sammenhengende reservasjoner for samme leietaker grupperes automatisk sammen til felles kjede.
+- **Gyldig Adgangsvindu**: Beregner start og slutt i henhold til Doorman-modellen (inkludert buffer før start og grace-periode etter leieslutt).
+- **Tildeling & Varsling**: Mulighet for å sette dørkode enkeltvis eller masselagre (bulk), med valgfri automatisk SMS- og e-postvarsling (`door_code_updated`).
+- **Visning for leietaker**: Gamle statiske koder på lokalene er fjernet. Dørkoden vises umiddelbart for brukeren i «Mine bookinger» og detaljvisning dersom den er tildelt reservasjonen (`🔓 <code>`), eller vises som `Tildeles før leiestart`.
 
 ### Automated Payment Reminders (Betalingspurring)
 Automated payment reminders are sent to customers with unpaid bookings via WP-Cron (scheduled daily).

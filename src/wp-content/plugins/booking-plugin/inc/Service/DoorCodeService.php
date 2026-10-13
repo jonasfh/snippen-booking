@@ -17,23 +17,24 @@ class DoorCodeService {
 	}
 
 	/**
-	 * Get configured x hours before booking start
+	 * Get configured x hours before booking start (legacy setting)
 	 */
 	public static function get_hours_before() {
 		return intval( get_option( 'snippen_door_code_hours_before', 24 ) );
 	}
 
 	/**
-	 * Get configured y hours after booking end
+	 * Get configured y hours after booking end (legacy setting)
 	 */
 	public static function get_hours_after() {
 		return intval( get_option( 'snippen_door_code_hours_after', 2 ) );
 	}
 
 	/**
-	 * Check if a booking is currently in the active door code window
+	 * Check if a booking is currently in the active door code window.
+	 * Door code is viewable by user whenever door codes are enabled and code is assigned.
 	 *
-	 * @param object $booking Booking database row with start_time and end_time
+	 * @param object $booking Booking database row
 	 * @return bool
 	 */
 	public static function is_in_window( $booking ) {
@@ -41,221 +42,207 @@ class DoorCodeService {
 			return false;
 		}
 
-		if ( ! isset( $booking->booking_date ) || ! isset( $booking->start_time ) || ! isset( $booking->end_time ) ) {
-			return false;
+		if ( ! empty( $booking->door_code ) ) {
+			return true;
 		}
 
-		$now   = new \DateTime( current_time( 'mysql' ) );
-		$start = new \DateTime( $booking->booking_date . ' ' . $booking->start_time );
-		$end   = new \DateTime( $booking->booking_date . ' ' . $booking->end_time );
-
-		if ( $end < $start ) {
-			$end->modify( '+1 day' );
-		}
-
-		if ( 'yes' === get_option( 'snippen_enable_doorman_api', 'no' ) && 'yes' !== get_option( 'snippen_enable_door_code', 'no' ) ) {
-			$buf_min   = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
-			$grace_min = intval( get_option( 'snippen_doorman_grace_minutes_after', 120 ) );
-
-			$start_window = clone $start;
-			$start_window->modify( "-{$buf_min} minutes" );
-
-			$end_window = clone $end;
-			$end_window->modify( "+{$grace_min} minutes" );
-
-			return ( $now >= $start_window && $now <= $end_window );
-		}
-
-		$hours_before = self::get_hours_before();
-		$hours_after  = self::get_hours_after();
-
-		$start_window = clone $start;
-		$start_window->modify( "-{$hours_before} hours" );
-
-		$end_window = clone $end;
-		$end_window->modify( "+{$hours_after} hours" );
-
-		return ( $now >= $start_window && $now <= $end_window );
+		return false;
 	}
 
 	/**
-	 * Update door code for all active approaching bookings
+	 * Compute access window for a booking or chain of bookings according to Doorman model.
+	 *
+	 * @param int|object $booking_or_id
+	 * @return array
 	 */
-	public static function update_approaching_bookings_door_codes() {
+	public static function get_access_window( $booking_or_id ) {
 		global $wpdb;
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 
-		if ( ! self::is_enabled() ) {
-			$wpdb->query( "UPDATE $table_bookings SET door_code = NULL WHERE door_code IS NOT NULL AND (door_code_updated_at IS NULL OR door_code_updated_at = '')" );
-			return;
+		if ( is_numeric( $booking_or_id ) ) {
+			$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", (int) $booking_or_id ) );
+		} else {
+			$booking = $booking_or_id;
 		}
 
-		$table_blocks         = $wpdb->prefix . 'snippen_booking_blocks';
-		$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
+		if ( ! $booking ) {
+			return array(
+				'calc_start'      => 0,
+				'calc_end'        => 0,
+				'valid_from'      => '',
+				'valid_to'        => '',
+				'validity_period' => '',
+				'booking_ids'     => array(),
+			);
+		}
 
-		// Fetch all pending or confirmed bookings that are active
-		$bookings = $wpdb->get_results(
-			"SELECT b.*, MIN(s.start_time) as start_time, MAX(s.end_time) as end_time 
-			 FROM $table_bookings b
-			 JOIN $table_booking_blocks bb ON b.id = bb.booking_id
-			 JOIN $table_blocks s ON bb.booking_block_id = s.id
-			 WHERE b.deleted_at IS NULL AND b.status IN ('pending', 'confirmed')
-			 GROUP BY b.id"
+		$booking_ids = \SnippenBooking\Api\DoorLockApi::find_adjacent_booking_ids( (int) $booking->id );
+		if ( empty( $booking_ids ) ) {
+			$booking_ids = array( (int) $booking->id );
+		}
+
+		$table_bb     = $wpdb->prefix . 'snippen_booking_booking_blocks';
+		$table_blocks = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_slots  = $wpdb->prefix . 'snippen_time_slots';
+
+		$id_placeholders = implode( ',', array_fill( 0, count( $booking_ids ), '%d' ) );
+		$rows            = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT b.id, b.booking_date, b.booking_snapshot,
+				        COALESCE(MIN(s.start_time), ts.start_time, '00:00:00') as block_start,
+				        COALESCE(MAX(s.end_time), ts.end_time, '23:59:59') as block_end
+				 FROM {$table_bookings} b
+				 LEFT JOIN {$table_bb} bb ON b.id = bb.booking_id
+				 LEFT JOIN {$table_blocks} s ON bb.booking_block_id = s.id
+				 LEFT JOIN {$table_slots} ts ON b.slot_id = ts.id
+				 WHERE b.id IN ({$id_placeholders}) AND b.deleted_at IS NULL
+				 GROUP BY b.id",
+				...$booking_ids
+			)
 		);
 
-		foreach ( $bookings as $booking ) {
-			self::sync_booking_door_code( $booking );
+		$min_start = null;
+		$max_end   = null;
+
+		foreach ( $rows as $r ) {
+			$start_time = $r->block_start ?: '00:00:00';
+			$end_time   = $r->block_end ?: '23:59:59';
+
+			if ( ! empty( $r->booking_snapshot ) ) {
+				$snap = json_decode( $r->booking_snapshot, true );
+				if ( is_array( $snap ) ) {
+					if ( ! empty( $snap['start_time'] ) ) {
+						$start_time = $snap['start_time'];
+					}
+					if ( ! empty( $snap['end_time'] ) ) {
+						$end_time = $snap['end_time'];
+					}
+				}
+			}
+
+			$start_ts = strtotime( $r->booking_date . ' ' . $start_time );
+			$end_ts   = ( $end_time < $start_time )
+				? strtotime( date( 'Y-m-d', strtotime( $r->booking_date . ' +1 day' ) ) . ' ' . $end_time )
+				: strtotime( $r->booking_date . ' ' . $end_time );
+
+			if ( null === $min_start || $start_ts < $min_start ) {
+				$min_start = $start_ts;
+			}
+			if ( null === $max_end || $end_ts > $max_end ) {
+				$max_end = $end_ts;
+			}
 		}
+
+		if ( null === $min_start ) {
+			$min_start = time();
+			$max_end   = time() + 7200;
+		}
+
+		$buffer_minutes = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
+		$grace_minutes  = intval( get_option( 'snippen_doorman_grace_minutes_after', 120 ) );
+
+		$calc_start = $min_start - ( $buffer_minutes * 60 );
+		$calc_end   = $max_end + ( $grace_minutes * 60 );
+
+		$valid_from = date_i18n( 'd.m.Y \k\l. H:i', $calc_start );
+		$valid_to   = date_i18n( 'd.m.Y \k\l. H:i', $calc_end );
+
+		if ( date_i18n( 'Y-m-d', $calc_start ) === date_i18n( 'Y-m-d', $calc_end ) ) {
+			$validity_period = sprintf( '%s – %s', $valid_from, date_i18n( 'H:i', $calc_end ) );
+		} else {
+			$validity_period = sprintf( '%s – %s', $valid_from, $valid_to );
+		}
+
+		return array(
+			'calc_start'      => $calc_start,
+			'calc_end'        => $calc_end,
+			'valid_from'      => $valid_from,
+			'valid_to'        => $valid_to,
+			'validity_period' => $validity_period,
+			'booking_ids'     => $booking_ids,
+		);
 	}
 
 	/**
-	 * Sync a single booking's door code based on its window and object(s) door code
+	 * Apply a door code to a booking and all adjacent bookings in its chain.
+	 *
+	 * @param int    $booking_id
+	 * @param string $door_code
+	 * @param bool   $dispatch_notification
+	 * @return true|\WP_Error
+	 */
+	public static function apply_door_code( int $booking_id, string $door_code, bool $dispatch_notification = true ) {
+		global $wpdb;
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+
+		$booking = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return new \WP_Error( 'rest_booking_not_found', __( 'Booking ble ikke funnet.', 'snippen-booking' ), array( 'status' => 404 ) );
+		}
+
+		$clean_code = trim( (string) $door_code );
+		if ( '' !== $clean_code && ! preg_match( '/^[0-9]{4,6}$/', $clean_code ) ) {
+			return new \WP_Error( 'rest_invalid_param', __( 'Ugyldig dørkode. Koden må bestå av 4–6 numeriske sifre.', 'snippen-booking' ), array( 'status' => 400 ) );
+		}
+
+		$old_code    = (string) $booking->door_code;
+		$booking_ids = \SnippenBooking\Api\DoorLockApi::find_adjacent_booking_ids( $booking_id );
+		if ( empty( $booking_ids ) ) {
+			$booking_ids = array( $booking_id );
+		}
+
+		$now_mysql      = current_time( 'mysql' );
+		$has_updated_at = ! empty(
+			$wpdb->get_results(
+				"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table_bookings}' AND COLUMN_NAME = 'door_code_updated_at'"
+			)
+		);
+
+		foreach ( $booking_ids as $b_id ) {
+			$data = array(
+				'door_code'   => '' !== $clean_code ? $clean_code : null,
+				'modified_at' => $now_mysql,
+			);
+			if ( $has_updated_at ) {
+				$data['door_code_updated_at'] = '' !== $clean_code ? $now_mysql : null;
+			}
+
+			$wpdb->update(
+				$table_bookings,
+				$data,
+				array( 'id' => (int) $b_id )
+			);
+		}
+
+		$is_changed = ( $clean_code !== $old_code );
+		if ( $dispatch_notification && $is_changed && '' !== $clean_code && 'confirmed' === $booking->status ) {
+			$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+			$notification_manager->send_door_code_updated_notification( $booking_id, $clean_code, $old_code );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Legacy/cron compatibility: obsolete static automatic cleanup removed.
+	 */
+	public static function update_approaching_bookings_door_codes() {
+	}
+
+	/**
+	 * Legacy sync method: preserve assigned codes.
 	 *
 	 * @param object $booking Booking object
 	 */
 	public static function sync_booking_door_code( $booking ) {
-		global $wpdb;
-		$table_bookings = $wpdb->prefix . 'snippen_bookings';
-		$table_junction = $wpdb->prefix . 'snippen_booking_booking_objects';
-		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
-
-		if ( ! self::is_enabled() ) {
-			if ( ! empty( $booking->door_code ) && empty( $booking->door_code_updated_at ) ) {
-				$wpdb->update(
-					$table_bookings,
-					array( 'door_code' => null ),
-					array( 'id' => $booking->id )
-				);
-				$booking->door_code = null;
-			}
-			return;
-		}
-
-		// If the booking has a dynamic door code set via Doorman API, do not overwrite or clear it
-		if ( ! empty( $booking->door_code_updated_at ) ) {
-			return;
-		}
-		if ( ! isset( $booking->door_code_updated_at ) && ! empty( $booking->id ) ) {
-			$col_val = $wpdb->get_var(
-				$wpdb->prepare( "SELECT door_code_updated_at FROM $table_bookings WHERE id = %d", $booking->id )
-			);
-			if ( ! empty( $col_val ) ) {
-				$booking->door_code_updated_at = $col_val;
-				return;
-			}
-		}
-
-		// Hydrate start_time and end_time if they are not already set
-		if ( ! isset( $booking->start_time ) || ! isset( $booking->end_time ) ) {
-			$table_blocks         = $wpdb->prefix . 'snippen_booking_blocks';
-			$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
-			$table_slots          = $wpdb->prefix . 'snippen_time_slots';
-			$times                = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT COALESCE(MIN(s.start_time), ts.start_time) as start_time, 
-					        COALESCE(MAX(s.end_time), ts.end_time) as end_time 
-					 FROM $table_bookings b
-					 LEFT JOIN $table_booking_blocks bb ON b.id = bb.booking_id
-					 LEFT JOIN $table_blocks s ON bb.booking_block_id = s.id
-					 LEFT JOIN $table_slots ts ON b.slot_id = ts.id
-					 WHERE b.id = %d
-					 GROUP BY b.id",
-					$booking->id
-				)
-			);
-			if ( $times ) {
-				$booking->start_time = $times->start_time;
-				$booking->end_time   = $times->end_time;
-			}
-		}
-
-		if ( self::is_in_window( $booking ) && in_array( $booking->status, array( 'pending', 'confirmed' ), true ) ) {
-			// Find door codes from associated booking objects (support both new and legacy tables)
-			$door_codes = $wpdb->get_col(
-				$wpdb->prepare(
-					"SELECT o.door_code 
-					 FROM (
-					 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_booking_booking_objects
-					 	UNION
-					 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_bookings_booking_objects
-					 ) bo 
-					 JOIN $table_objects o ON bo.booking_object_id = o.id 
-					 WHERE bo.booking_id = %d AND o.deleted_at IS NULL AND o.door_code IS NOT NULL AND o.door_code != ''",
-					$booking->id
-				)
-			);
-
-			$unique_door_codes = array_unique( array_filter( array_map( 'trim', $door_codes ) ) );
-			$active_door_code  = ! empty( $unique_door_codes ) ? implode( ', ', $unique_door_codes ) : '';
-
-			// If the booking's door code in the database doesn't match the active door code, update it!
-			if ( $booking->door_code !== $active_door_code ) {
-				$wpdb->update(
-					$table_bookings,
-					array( 'door_code' => $active_door_code ),
-					array( 'id' => $booking->id )
-				);
-				$booking->door_code = $active_door_code; // Update in-memory reference too
-			}
-		} else {
-			// If not in window or cancelled, it should be empty in the database
-			if ( ! empty( $booking->door_code ) ) {
-				$wpdb->update(
-					$table_bookings,
-					array( 'door_code' => null ),
-					array( 'id' => $booking->id )
-				);
-				$booking->door_code = null;
-			}
-		}
 	}
 
 	/**
-	 * When a booking object's door code is updated, update all relevant bookings immediately
+	 * Deprecated object door code propagation.
 	 *
 	 * @param int    $booking_object_id
 	 * @param string $new_door_code
 	 */
 	public static function handle_object_door_code_change( $booking_object_id, $new_door_code ) {
-		if ( ! self::is_enabled() ) {
-			return;
-		}
-
-		global $wpdb;
-		$table_bookings       = $wpdb->prefix . 'snippen_bookings';
-		$table_blocks         = $wpdb->prefix . 'snippen_booking_blocks';
-		$table_booking_blocks = $wpdb->prefix . 'snippen_booking_booking_blocks';
-		$table_slots          = $wpdb->prefix . 'snippen_time_slots';
-
-		// Find all upcoming bookings (where booking_date >= today) associated with this booking object
-		$today    = current_time( 'Y-m-d' );
-		$bookings = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT b.*, 
-				        COALESCE(MIN(s.start_time), ts.start_time) as start_time, 
-				        COALESCE(MAX(s.end_time), ts.end_time) as end_time 
-				 FROM $table_bookings b
-				 JOIN (
-				 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_booking_booking_objects
-				 	UNION
-				 	SELECT booking_id, booking_object_id FROM {$wpdb->prefix}snippen_bookings_booking_objects
-				 ) bo ON b.id = bo.booking_id
-				 LEFT JOIN $table_booking_blocks bb ON b.id = bb.booking_id
-				 LEFT JOIN $table_blocks s ON bb.booking_block_id = s.id
-				 LEFT JOIN $table_slots ts ON b.slot_id = ts.id
-				 WHERE bo.booking_object_id = %d 
-				   AND b.booking_date >= %s 
-				   AND b.deleted_at IS NULL 
-				   AND b.status IN ('pending', 'confirmed')
-				 GROUP BY b.id",
-				$booking_object_id,
-				$today
-			)
-		);
-
-		foreach ( $bookings as $booking ) {
-			// Sync this booking
-			self::sync_booking_door_code( $booking );
-		}
 	}
 }

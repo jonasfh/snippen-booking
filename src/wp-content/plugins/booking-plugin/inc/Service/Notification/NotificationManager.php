@@ -60,6 +60,11 @@ class NotificationManager {
 	const TYPE_BOOKING_REJECTED = 'booking_rejected';
 
 	/**
+	 * Notification type: Door code updated
+	 */
+	const TYPE_DOOR_CODE_UPDATED = 'door_code_updated';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -1197,5 +1202,149 @@ class NotificationManager {
 		}
 
 		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Send notification to customer when door code is updated.
+	 *
+	 * @param int    $booking_id
+	 * @param string $door_code
+	 * @param string $old_code
+	 * @return bool
+	 */
+	public function send_door_code_updated_notification( int $booking_id, string $door_code, string $old_code = '' ): bool {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$booking        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_door_code_updated_enabled', 'yes' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_door_code_updated_enabled', 'yes' );
+
+		if ( ! $sms_enabled && ! $email_enabled ) {
+			return false;
+		}
+
+		$object_names = $this->get_booking_object_names( $booking_id, $booking );
+		$booking_time = $this->get_booking_time( $booking );
+		$booking_url  = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+
+		$window                               = \SnippenBooking\Service\DoorCodeService::get_access_window( $booking );
+		$context                              = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
+		$context['door_code']                 = $door_code;
+		$context['door_code_valid_from']      = $window['valid_from'];
+		$context['door_code_valid_to']        = $window['valid_to'];
+		$context['door_code_validity_period'] = $window['validity_period'];
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( 'door_code_updated', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'door_code_updated', 'email', $context );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		$phone = ! empty( $booking->customer_phone ) ? $booking->customer_phone : '';
+		if ( empty( $phone ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$phone = get_user_meta( $user->ID, 'phone', true ) ?: ( get_user_meta( $user->ID, 'billing_phone', true ) ?: '' );
+			}
+		}
+
+		if ( $sms_enabled && ! empty( $phone ) && ! empty( $rendered_sms['body'] ) ) {
+			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$provider    = $this->get_provider( $provider_id );
+
+			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
+				$sms_sent       = $provider->send_sms( $phone, $rendered_sms['body'] );
+				$initial_status = $sms_sent ? ( 'snippen_sms_service' === $provider_id ? 'queued' : 'sent' ) : 'failed';
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_DOOR_CODE_UPDATED,
+					$initial_status,
+					array( 'provider' => $provider_id )
+				);
+			}
+		}
+
+		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
+		if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$recipient = $user->user_email;
+			}
+		}
+
+		if ( $email_enabled && ! empty( $recipient ) && ! empty( $rendered_email['body'] ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : sprintf( __( 'Dørkode for din booking - %s', 'snippen-booking' ), $object_names );
+				$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$recipient,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_DOOR_CODE_UPDATED,
+					$email_sent ? 'sent' : 'failed'
+				);
+			}
+		}
+
+		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Helper to get object names for a booking.
+	 *
+	 * @param int         $booking_id
+	 * @param object|null $booking
+	 * @return string
+	 */
+	private function get_booking_object_names( int $booking_id, $booking = null ): string {
+		global $wpdb;
+		$table_junction = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$objs = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT o.name 
+				 FROM {$table_junction} bo 
+				 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+				 WHERE bo.booking_id = %d",
+				$booking_id
+			)
+		);
+		if ( empty( $objs ) ) {
+			$table_booking_objects = $wpdb->prefix . 'snippen_booking_booking_objects';
+			$objs                  = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT o.name 
+					 FROM {$table_booking_objects} bo 
+					 JOIN {$table_objects} o ON bo.booking_object_id = o.id 
+					 WHERE bo.booking_id = %d",
+					$booking_id
+				)
+			);
+		}
+		if ( empty( $objs ) && ! empty( $booking->booking_snapshot ) ) {
+			$snapshot = json_decode( $booking->booking_snapshot, true );
+			if ( is_array( $snapshot ) && ! empty( $snapshot['objects'] ) ) {
+				$objs = array_column( $snapshot['objects'], 'name' );
+			}
+		}
+
+		return ! empty( $objs ) ? implode( ' og ', $objs ) : '';
 	}
 }
