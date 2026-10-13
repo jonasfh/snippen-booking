@@ -262,14 +262,9 @@ class UserBookingsPage {
 		// Details Row
 		$door_code_enabled = \SnippenBooking\Service\DoorCodeService::is_enabled();
 		if ( $door_code_enabled ) {
-			\SnippenBooking\Service\DoorCodeService::sync_booking_door_code( $booking );
-
-			$door_code_display = '';
-			if ( \SnippenBooking\Service\DoorCodeService::is_in_window( $booking ) ) {
-				$door_code_display = ! empty( $booking->door_code ) ? esc_html( $booking->door_code ) : esc_html__( 'Ikke satt', 'snippen-booking' );
-			} else {
-				$door_code_display = '<span style="color:#64748b; font-style:italic;">' . esc_html__( '<Koden er ikke tilgjengelig før nærmere booking start>', 'snippen-booking' ) . '</span>';
-			}
+			$door_code_display = ! empty( $booking->door_code )
+				? esc_html( $booking->door_code )
+				: '<span style="color:#64748b; font-style:italic;">' . esc_html__( 'Tildeles før leiestart', 'snippen-booking' ) . '</span>';
 		}
 
 		$cols = $door_code_enabled ? 4 : 3;

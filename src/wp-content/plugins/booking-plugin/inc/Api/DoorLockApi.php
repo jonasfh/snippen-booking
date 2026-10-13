@@ -458,13 +458,11 @@ class DoorLockApi {
 	 * @return \WP_REST_Response|\WP_Error Response object.
 	 */
 	public static function update_door_code( \WP_REST_Request $request ) {
-		global $wpdb;
-
 		$id        = (int) $request->get_param( 'id' );
 		$door_code = $request->get_param( 'door_code' );
 
-		// Strictly validate door_code: must be a 4-6 numeric digit string. Null or empty is rejected.
-		if ( ! is_string( $door_code ) || ! preg_match( '/^[0-9]{4,6}$/', $door_code ) ) {
+		// Validate door_code: must be a 4-6 numeric digit string, or empty string to clear code.
+		if ( ! is_string( $door_code ) || ( '' !== $door_code && ! preg_match( '/^[0-9]{4,6}$/', $door_code ) ) ) {
 			return new \WP_Error(
 				'rest_invalid_param',
 				__( 'Ugyldig dørkode. Koden må bestå av 4–6 numeriske sifre.', 'snippen-booking' ),
@@ -472,53 +470,9 @@ class DoorLockApi {
 			);
 		}
 
-		$table_bookings = $wpdb->prefix . 'snippen_bookings';
-
-		// Verify booking exists
-		$booking = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT id FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL",
-				$id
-			)
-		);
-
-		if ( ! $booking ) {
-			return new \WP_Error(
-				'rest_booking_not_found',
-				__( 'Booking ble ikke funnet.', 'snippen-booking' ),
-				array( 'status' => 404 )
-			);
-		}
-
-		// Find all adjacent booking IDs in this booking's chain
-		$booking_ids = self::find_adjacent_booking_ids( $id );
-		if ( empty( $booking_ids ) ) {
-			$booking_ids = array( $id );
-		}
-
-		$now_mysql = current_time( 'mysql' );
-
-		// Check if door_code_updated_at column exists in database
-		$has_updated_at = ! empty(
-			$wpdb->get_results(
-				"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table_bookings}' AND COLUMN_NAME = 'door_code_updated_at'"
-			)
-		);
-
-		foreach ( $booking_ids as $b_id ) {
-			$data = array(
-				'door_code'   => $door_code,
-				'modified_at' => $now_mysql,
-			);
-			if ( $has_updated_at ) {
-				$data['door_code_updated_at'] = $now_mysql;
-			}
-
-			$wpdb->update(
-				$table_bookings,
-				$data,
-				array( 'id' => (int) $b_id )
-			);
+		$result = \SnippenBooking\Service\DoorCodeService::apply_door_code( $id, $door_code, true );
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
 
 		return rest_ensure_response(

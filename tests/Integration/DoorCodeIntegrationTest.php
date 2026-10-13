@@ -17,8 +17,8 @@ class DoorCodeIntegrationTest extends TestCase {
 
 		global $wpdb;
 		// Clear test data
-		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_bookings" );
-		$wpdb->query( "DELETE FROM " . $wpdb->prefix . "snippen_bookings_booking_objects" );
+		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'snippen_bookings' );
+		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'snippen_bookings_booking_objects' );
 
 		// Reset settings options
 		update_option( 'snippen_enable_door_code', 'yes' );
@@ -43,21 +43,14 @@ class DoorCodeIntegrationTest extends TestCase {
 	}
 
 	/**
-	 * Test that updating the booking object's door code propagates to upcoming bookings in window
+	 * Test that applying a door code updates the booking and stores updated_at timestamp
 	 */
-	public function test_updating_object_door_code_propagates() {
+	public function test_apply_door_code_updates_booking() {
 		global $wpdb;
-
-		// Set active door code on the object
-		$wpdb->update(
-			$wpdb->prefix . 'snippen_booking_objects',
-			array( 'door_code' => '4321' ),
-			array( 'id' => $this->objectId )
-		);
 
 		$mysql_now = current_time( 'mysql' );
 
-		// Create booking in the window (starts in 1 hour)
+		// Create booking without door code
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
 			array(
@@ -80,19 +73,13 @@ class DoorCodeIntegrationTest extends TestCase {
 			)
 		);
 
-		// 1. First set active door code to '8888' in the DB (like the edit controller does)
-		$wpdb->update(
-			$wpdb->prefix . 'snippen_booking_objects',
-			array( 'door_code' => '8888' ),
-			array( 'id' => $this->objectId )
-		);
-
-		// 2. Trigger active door code propagation on the booking object
-		\SnippenBooking\Service\DoorCodeService::handle_object_door_code_change( $this->objectId, '8888' );
+		// Apply door code via DoorCodeService
+		$result = \SnippenBooking\Service\DoorCodeService::apply_door_code( $booking_id, '8888', false );
+		$this->assertTrue( $result, 'apply_door_code should return true on success' );
 
 		// Retrieve database value and verify it was updated
 		$db_door_code = $wpdb->get_var( $wpdb->prepare( "SELECT door_code FROM {$wpdb->prefix}snippen_bookings WHERE id = %d", $booking_id ) );
-		$this->assertEquals( '8888', $db_door_code, 'Door code should propagate to booking when updated' );
+		$this->assertEquals( '8888', $db_door_code, 'Door code should be saved to booking' );
 	}
 
 	/**
@@ -101,17 +88,10 @@ class DoorCodeIntegrationTest extends TestCase {
 	public function test_front_end_popup_renders_door_code_correctly() {
 		global $wpdb;
 
-		$uuid = wp_generate_uuid4();
+		$uuid      = wp_generate_uuid4();
 		$mysql_now = current_time( 'mysql' );
 
-		// Set active door code on the object
-		$wpdb->update(
-			$wpdb->prefix . 'snippen_booking_objects',
-			array( 'door_code' => '5555' ),
-			array( 'id' => $this->objectId )
-		);
-
-		// Create active booking
+		// Create active booking with door code
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
 			array(
@@ -122,7 +102,7 @@ class DoorCodeIntegrationTest extends TestCase {
 				'customer_name'  => 'John Doe',
 				'customer_email' => 'john@doe.com',
 				'status'         => 'confirmed',
-				'door_code'      => null,
+				'door_code'      => '5555',
 			)
 		);
 		$booking_id = $wpdb->insert_id;
@@ -140,19 +120,21 @@ class DoorCodeIntegrationTest extends TestCase {
 		if ( $user ) {
 			$admin_id = $user->ID;
 		} else {
-			$admin_id = wp_insert_user( array(
-				'user_login' => 'admin_door_code_test',
-				'user_pass'  => 'password',
-				'role'       => 'administrator',
-			) );
+			$admin_id = wp_insert_user(
+				array(
+					'user_login' => 'admin_door_code_test',
+					'user_pass'  => 'password',
+					'role'       => 'administrator',
+				)
+			);
 		}
 		$user_obj = get_userdata( $admin_id );
-		$user_obj->add_cap('manage_snippen_bookings');
+		$user_obj->add_cap( 'manage_snippen_bookings' );
 		wp_set_current_user( $admin_id );
 
 		$_GET['booking_uuid'] = $uuid;
 
-		// 1. Render in window -> should display '5555'
+		// 1. Render with code -> should display '5555'
 		ob_start();
 		Plugin::render_booking_popup();
 		$output = ob_get_clean();
@@ -160,13 +142,11 @@ class DoorCodeIntegrationTest extends TestCase {
 		$this->assertStringContainsString( 'Dørkode', $output );
 		$this->assertStringContainsString( '5555', $output );
 
-		// 2. Render out of window -> should display the placeholder
-		// Change booking date to 3 days from now
+		// 2. Render without code -> should display placeholder 'Tildeles før leiestart'
 		$wpdb->update(
 			$wpdb->prefix . 'snippen_bookings',
 			array(
-				'booking_date' => date( 'Y-m-d', strtotime( $mysql_now . ' + 3 days' ) ),
-				'door_code'    => null,
+				'door_code' => null,
 			),
 			array( 'id' => $booking_id )
 		);
@@ -176,7 +156,7 @@ class DoorCodeIntegrationTest extends TestCase {
 		$output_out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Dørkode', $output_out );
-		$this->assertStringContainsString( '&lt;Koden er ikke tilgjengelig før nærmere booking start&gt;', $output_out );
+		$this->assertStringContainsString( 'Tildeles før leiestart', $output_out );
 	}
 
 	/**
@@ -187,14 +167,7 @@ class DoorCodeIntegrationTest extends TestCase {
 
 		$mysql_now = current_time( 'mysql' );
 
-		// Set active door code on the object
-		$wpdb->update(
-			$wpdb->prefix . 'snippen_booking_objects',
-			array( 'door_code' => '7777' ),
-			array( 'id' => $this->objectId )
-		);
-
-		// Create booking in window
+		// Create booking with door code
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
 			array(
@@ -204,7 +177,7 @@ class DoorCodeIntegrationTest extends TestCase {
 				'customer_name'  => 'Jane Doe',
 				'customer_email' => 'jane@doe.com',
 				'status'         => 'confirmed',
-				'door_code'      => null,
+				'door_code'      => '7777',
 			)
 		);
 		$booking_id = $wpdb->insert_id;
@@ -228,17 +201,12 @@ class DoorCodeIntegrationTest extends TestCase {
 			)
 		);
 
-		// Fake/force times to be in window
-		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 1 hours' ) );
-		$booking->start_time   = date( 'H:i:s', strtotime( $mysql_now . ' + 1 hours' ) );
-		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' + 4 hours' ) );
-
 		$user_bookings_page = new UserBookingsPage();
-		$reflection = new \ReflectionClass( UserBookingsPage::class );
-		$method = $reflection->getMethod( 'render_booking_row' );
+		$reflection         = new \ReflectionClass( UserBookingsPage::class );
+		$method             = $reflection->getMethod( 'render_booking_row' );
 		$method->setAccessible( true );
 
-		// 1. Render in window -> should display '7777'
+		// 1. Render with code -> should display '7777'
 		ob_start();
 		$method->invoke( $user_bookings_page, $booking );
 		$output = ob_get_clean();
@@ -246,18 +214,15 @@ class DoorCodeIntegrationTest extends TestCase {
 		$this->assertStringContainsString( 'Dørkode:', $output );
 		$this->assertStringContainsString( '7777', $output );
 
-		// 2. Render out of window -> should display the placeholder
-		$booking->booking_date = date( 'Y-m-d', strtotime( $mysql_now . ' + 5 days' ) );
-		$booking->start_time   = date( 'H:i:s', strtotime( $mysql_now . ' + 5 days' ) );
-		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' + 5 days' ) );
-		$booking->door_code    = null;
+		// 2. Render without code -> should display the placeholder 'Tildeles før leiestart'
+		$booking->door_code = null;
 
 		ob_start();
 		$method->invoke( $user_bookings_page, $booking );
 		$output_out = ob_get_clean();
 
 		$this->assertStringContainsString( 'Dørkode:', $output_out );
-		$this->assertStringContainsString( '&lt;Koden er ikke tilgjengelig før nærmere booking start&gt;', $output_out );
+		$this->assertStringContainsString( 'Tildeles før leiestart', $output_out );
 	}
 
 	/**
@@ -271,7 +236,7 @@ class DoorCodeIntegrationTest extends TestCase {
 		update_option( 'snippen_enable_doorman_api', 'no' );
 
 		// 1. Check popup details
-		$uuid = wp_generate_uuid4();
+		$uuid      = wp_generate_uuid4();
 		$mysql_now = current_time( 'mysql' );
 		$wpdb->insert(
 			$wpdb->prefix . 'snippen_bookings',
@@ -296,11 +261,13 @@ class DoorCodeIntegrationTest extends TestCase {
 		);
 
 		// Fake logged in user as admin
-		$admin_id = wp_insert_user( array(
-			'user_login' => 'admin_door_code_disabled_test',
-			'user_pass'  => 'password',
-			'role'       => 'administrator',
-		) );
+		$admin_id = wp_insert_user(
+			array(
+				'user_login' => 'admin_door_code_disabled_test',
+				'user_pass'  => 'password',
+				'role'       => 'administrator',
+			)
+		);
 		wp_set_current_user( $admin_id );
 		$_GET['booking_uuid'] = $uuid;
 
@@ -311,7 +278,7 @@ class DoorCodeIntegrationTest extends TestCase {
 		$this->assertStringNotContainsString( 'Dørkode', $popup_output );
 
 		// 2. Check user bookings row details
-		$booking = $wpdb->get_row(
+		$booking               = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT b.*, s.name as slot_name, s.start_time, s.end_time 
 				 FROM {$wpdb->prefix}snippen_bookings b
@@ -325,8 +292,8 @@ class DoorCodeIntegrationTest extends TestCase {
 		$booking->end_time     = date( 'H:i:s', strtotime( $mysql_now . ' + 4 hours' ) );
 
 		$user_bookings_page = new UserBookingsPage();
-		$reflection = new \ReflectionClass( UserBookingsPage::class );
-		$method = $reflection->getMethod( 'render_booking_row' );
+		$reflection         = new \ReflectionClass( UserBookingsPage::class );
+		$method             = $reflection->getMethod( 'render_booking_row' );
 		$method->setAccessible( true );
 
 		ob_start();
@@ -337,4 +304,3 @@ class DoorCodeIntegrationTest extends TestCase {
 		$this->assertStringNotContainsString( '9999', $row_output );
 	}
 }
-
