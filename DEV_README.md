@@ -907,12 +907,50 @@ Yale Doorman smart locks have a limited capacity of user code slots (typically 1
 
 ### Endpoints
 
-#### 1. `GET /wp-json/snippen/v1/door/bookings`
-Returns all qualifying, active, and approaching access windows in UTC ISO 8601.
+#### 1. `GET /wp-json/snippen/v1/door/locks`
+Lists all active door locks registered in the system along with their associated booking venues (`handles_objects`).
 
 **Request:**
 ```bash
-curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings" \
+curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/locks" \
+  -H "Authorization: Bearer secret-token"
+```
+
+**Response (HTTP 200):**
+```json
+{
+  "locks": [
+    {
+      "id": 1,
+      "name": "Hovedinngang",
+      "handles_objects": [
+        { "id": 1, "name": "Peisestuen" },
+        { "id": 2, "name": "Festsalen" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Badstuedør",
+      "handles_objects": [
+        { "id": 3, "name": "Badstue" }
+      ]
+    }
+  ]
+}
+```
+
+#### 2. `GET /wp-json/snippen/v1/door/bookings`
+Returns all qualifying, active, and approaching access windows in UTC ISO 8601.
+
+- **Query Parameter `lock_id` (optional/required)**:
+  - `GET /wp-json/snippen/v1/door/bookings?lock_id=1`
+  - If `lock_id` is specified, returns only reservations associated with that specific door lock. Returns HTTP 404 (`lock_not_found`) if the lock ID does not exist.
+  - If multiple locks exist and `lock_id` is omitted, returns HTTP 400 (`missing_lock_id`).
+  - If only a single lock exists in the system and `lock_id` is omitted, the API defaults automatically to that lock for seamless backward compatibility.
+
+**Request:**
+```bash
+curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings?lock_id=1" \
   -H "Authorization: Bearer secret-token"
 ```
 
@@ -930,7 +968,7 @@ curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings" \
 }
 ```
 
-#### 2. `PATCH /wp-json/snippen/v1/door/bookings/{id}/code`
+#### 3. `PATCH /wp-json/snippen/v1/door/bookings/{id}/code`
 Updates the door code for a booking and automatically propagates the code to all linked adjacent reservations in the chain.
 
 **Validation Rules:**

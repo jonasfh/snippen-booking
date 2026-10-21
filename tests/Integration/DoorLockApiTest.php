@@ -643,4 +643,173 @@ class DoorLockApiTest extends TestCase {
 		// End from day3 plus 120 min = 14:00
 		$this->assertSame( $day3 . 'T14:00:00Z', $chain['end_time'] );
 	}
+
+	/**
+	 * Helper to create a venue / booking object
+	 *
+	 * @param string   $name Name of venue.
+	 * @param int|null $lock_id Associated lock ID.
+	 * @return int Venue ID.
+	 */
+	private function create_venue( string $name, ?int $lock_id = null ): int {
+		global $wpdb;
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_objects',
+			array(
+				'name'         => $name,
+				'door_lock_id' => $lock_id,
+				'created_at'   => current_time( 'mysql' ),
+				'modified_at'  => current_time( 'mysql' ),
+			)
+		);
+		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Helper to link a booking to a venue
+	 *
+	 * @param int $booking_id Booking ID.
+	 * @param int $venue_id Venue ID.
+	 */
+	private function link_booking_venue( int $booking_id, int $venue_id ) {
+		global $wpdb;
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_booking_objects',
+			array(
+				'booking_id'        => $booking_id,
+				'booking_object_id' => $venue_id,
+			)
+		);
+	}
+
+	/**
+	 * Test GET /door/locks returns all active locks with handles_objects
+	 */
+	public function test_get_locks_endpoint() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects" );
+
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock1_id  = $lock_repo->create( array( 'name' => 'Hovedinngang' ) );
+		$lock2_id  = $lock_repo->create( array( 'name' => 'Badstuedør' ) );
+
+		$venue1 = $this->create_venue( 'Peisestuen', $lock1_id );
+		$venue2 = $this->create_venue( 'Festsalen', $lock1_id );
+		$venue3 = $this->create_venue( 'Badstue', $lock2_id );
+
+		$request  = $this->create_auth_request( 'GET', '/snippen/v1/door/locks' );
+		$response = rest_do_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+
+		$this->assertArrayHasKey( 'locks', $data );
+		$this->assertCount( 2, $data['locks'] );
+
+		// Check Lock 1
+		$this->assertSame( $lock1_id, $data['locks'][0]['id'] );
+		$this->assertSame( 'Hovedinngang', $data['locks'][0]['name'] );
+		$this->assertCount( 2, $data['locks'][0]['handles_objects'] );
+		$handles1_names = array_column( $data['locks'][0]['handles_objects'], 'name' );
+		$this->assertContains( 'Peisestuen', $handles1_names );
+		$this->assertContains( 'Festsalen', $handles1_names );
+
+		// Check Lock 2
+		$this->assertSame( $lock2_id, $data['locks'][1]['id'] );
+		$this->assertSame( 'Badstuedør', $data['locks'][1]['name'] );
+		$this->assertCount( 1, $data['locks'][1]['handles_objects'] );
+		$this->assertSame( 'Badstue', $data['locks'][1]['handles_objects'][0]['name'] );
+	}
+
+	/**
+	 * Test GET /door/bookings with multiple locks requires lock_id (returns 400)
+	 */
+	public function test_get_bookings_multiple_locks_missing_lock_id_returns_400() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
+
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock_repo->create( array( 'name' => 'Hovedinngang' ) );
+		$lock_repo->create( array( 'name' => 'Badstuedør' ) );
+
+		$request  = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$response = rest_do_request( $request );
+
+		$this->assertSame( 400, $response->get_status() );
+		$this->assertSame( 'missing_lock_id', $response->as_error()->get_error_code() );
+	}
+
+	/**
+	 * Test GET /door/bookings with non-existent lock_id returns 404
+	 */
+	public function test_get_bookings_invalid_lock_id_returns_404() {
+		$request = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$request->set_param( 'lock_id', 9999 );
+		$response = rest_do_request( $request );
+
+		$this->assertSame( 404, $response->get_status() );
+		$this->assertSame( 'lock_not_found', $response->as_error()->get_error_code() );
+	}
+
+	/**
+	 * Test GET /door/bookings?lock_id=X correctly filters bookings by associated lock
+	 */
+	public function test_get_bookings_filtered_by_lock_id() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_objects" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects" );
+
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock1_id  = $lock_repo->create( array( 'name' => 'Hovedinngang' ) );
+		$lock2_id  = $lock_repo->create( array( 'name' => 'Badstuedør' ) );
+
+		$venue_main  = $this->create_venue( 'Hovedsal', $lock1_id );
+		$venue_sauna = $this->create_venue( 'Badstue', $lock2_id );
+
+		$date = date( 'Y-m-d', strtotime( '+1 day' ) );
+
+		// Booking 1 for main hall (Lock 1)
+		$booking1_id = $this->create_booking(
+			array(
+				'user_id'      => 101,
+				'booking_date' => $date,
+				'start_time'   => '10:00:00',
+				'end_time'     => '14:00:00',
+			)
+		);
+		$this->link_booking_venue( $booking1_id, $venue_main );
+
+		// Booking 2 for sauna (Lock 2)
+		$booking2_id = $this->create_booking(
+			array(
+				'user_id'      => 102,
+				'booking_date' => $date,
+				'start_time'   => '15:00:00',
+				'end_time'     => '18:00:00',
+			)
+		);
+		$this->link_booking_venue( $booking2_id, $venue_sauna );
+
+		// Request for Lock 1 -> should only contain booking1
+		$req1 = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$req1->set_param( 'lock_id', $lock1_id );
+		$res1  = rest_do_request( $req1 );
+		$data1 = $res1->get_data();
+
+		$this->assertSame( 200, $res1->get_status() );
+		$this->assertCount( 1, $data1['bookings'] );
+		$this->assertSame( $booking1_id, $data1['bookings'][0]['id'] );
+
+		// Request for Lock 2 -> should only contain booking2
+		$req2 = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$req2->set_param( 'lock_id', $lock2_id );
+		$res2  = rest_do_request( $req2 );
+		$data2 = $res2->get_data();
+
+		$this->assertSame( 200, $res2->get_status() );
+		$this->assertCount( 1, $data2['bookings'] );
+		$this->assertSame( $booking2_id, $data2['bookings'][0]['id'] );
+	}
 }

@@ -185,6 +185,7 @@ For bookings containing **multiple rooms**, the system automatically sanitizes, 
 The plugin provides a dedicated, lightweight REST API under `/wp-json/snippen/v1/door/*` for integration with **Snippen Doorman Service** (`snippen-doorman-service`) to manage Yale Doorman smart locks:
 - **Automated PIN Management**: Generates and syncs temporary 4–6 digit user PIN codes to the physical lock.
 - **Adjacent Bookings Consolidation**: Automatically groups multiple consecutive reservations (e.g. Saturday party + Sunday morning cleaning) into a single access window sharing the same PIN code.
+- **Multi-Lock & Venue Mapping**: Supports multiple physical smart locks (`wp_snippen_door_locks`) and granular mapping of each venue/room to specific locks (`GET /wp-json/snippen/v1/door/locks` and `GET /wp-json/snippen/v1/door/bookings?lock_id=...`).
 - **Zero Disruption**: Controlled by the master toggle `snippen_enable_doorman_api` (default: disabled) under **Snippen Booking > Innstillinger > Adgangskontroll (Yale Doorman)**. When disabled, endpoints return HTTP 404 with zero performance or behavioral impact.
 - See `DEV_README.md` for full technical API documentation and specifications.
 
