@@ -41,7 +41,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_name',
 				'label'        => __( 'User / Customer name', 'snippen-booking' ),
 				'description'  => __( 'Full name or display name of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'user_activation', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'user_activation', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_name', 'user.name', 'user.display_name' ) );
 				},
@@ -53,7 +53,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_email',
 				'label'        => __( 'Customer email', 'snippen-booking' ),
 				'description'  => __( 'Email address of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_email', 'user.email', 'user.user_email' ) );
 				},
@@ -65,7 +65,7 @@ class PlaceholderRegistry {
 				'name'         => 'user_phone',
 				'label'        => __( 'Customer phone number', 'snippen-booking' ),
 				'description'  => __( 'Phone number of the user or customer.', 'snippen-booking' ),
-				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'admin_booking', 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'user_phone', 'user.phone', 'user.user_phone' ) );
 				},
@@ -89,7 +89,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_objects',
 				'label'        => __( 'Booked venue names', 'snippen-booking' ),
 				'description'  => __( 'Names of booked venues or resources.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_objects', 'booking.objects', 'booking.object_names' ) );
 				},
@@ -101,7 +101,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_date',
 				'label'        => __( 'Booking date', 'snippen-booking' ),
 				'description'  => __( 'Date for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_date', 'booking.date' ) );
 				},
@@ -113,7 +113,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_time',
 				'label'        => __( 'Booking time / time slot', 'snippen-booking' ),
 				'description'  => __( 'Time slot or range for the booking.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_time', 'booking.time' ) );
 				},
@@ -137,7 +137,7 @@ class PlaceholderRegistry {
 				'name'         => 'booking_url',
 				'label'        => __( 'Booking details URL', 'snippen-booking' ),
 				'description'  => __( 'URL to view booking details.', 'snippen-booking' ),
-				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
 				'resolver'     => function ( array $context ) {
 					return $this->resolve_path( $context, array( 'booking_url', 'booking.url' ) );
 				},
@@ -325,6 +325,66 @@ class PlaceholderRegistry {
 				},
 			)
 		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'incoming_message',
+				'label'        => __( 'Incoming SMS message content', 'snippen-booking' ),
+				'description'  => __( 'The text content of the received SMS message.', 'snippen-booking' ),
+				'connected_to' => array( 'inbound_sms_received' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'incoming_message', 'message_body', 'message.body', 'message.text' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'message_body',
+				'label'        => __( 'Incoming SMS message body (alias)', 'snippen-booking' ),
+				'description'  => __( 'Alias for incoming_message.', 'snippen-booking' ),
+				'connected_to' => array( 'inbound_sms_received' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'message_body', 'incoming_message', 'message.body', 'message.text' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'sender_phone',
+				'label'        => __( 'Sender phone number', 'snippen-booking' ),
+				'description'  => __( 'Phone number of the SMS sender.', 'snippen-booking' ),
+				'connected_to' => array( 'inbound_sms_received' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'sender_phone', 'message.sender_phone', 'message.sender' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'inbox_url',
+				'label'        => __( 'SMS Inbox URL', 'snippen-booking' ),
+				'description'  => __( 'Direct admin URL to view the message in SMS Inbox.', 'snippen-booking' ),
+				'connected_to' => array( 'inbound_sms_received' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'inbox_url', 'message.inbox_url' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'booking_id',
+				'label'        => __( 'Booking ID', 'snippen-booking' ),
+				'description'  => __( 'ID number of the booking.', 'snippen-booking' ),
+				'connected_to' => array( 'booking_confirmation', 'booking_confirmed', 'booking_rejected', 'admin_booking', 'payment_reminder', 'payment_receipt_uploaded', 'payment_received', 'door_code_updated', 'inbound_sms_received' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'booking_id', 'booking.id' ) );
+				},
+			)
+		);
 	}
 
 	/**
@@ -420,6 +480,11 @@ class PlaceholderRegistry {
 
 			'door_code_updated'        => 'door-code-updated',
 			'door-code-updated'        => 'door-code-updated',
+
+			'inbound_sms_received'     => 'inbound-sms-received',
+			'inbound-sms-received'     => 'inbound-sms-received',
+			'inbound_sms'              => 'inbound-sms-received',
+			'inbound-sms'              => 'inbound-sms-received',
 		);
 
 		return $map[ $context ] ?? $context;

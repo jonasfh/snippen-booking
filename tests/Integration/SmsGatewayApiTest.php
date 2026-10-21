@@ -272,10 +272,14 @@ class SmsGatewayApiTest extends TestCase {
 		$this->assertSame( $booking_id, $data['results'][0]['booking_id'] );
 		$this->assertSame( 'single_active_booking', $data['results'][0]['rule'] );
 
-		// Check database record
+		// Check database record (both the inbound SMS and the relayed admin notification, ordered DESC)
 		$messages = MessageLoggerService::get_messages_for_booking( $booking_id );
-		$this->assertCount( 1, $messages );
-		$inbound = $messages[0];
+		$this->assertCount( 2, $messages );
+		$relay = $messages[0];
+		$this->assertSame( 'email', $relay->channel );
+		$this->assertSame( 'inbound_sms_received', $relay->event_type );
+
+		$inbound = $messages[1];
 		$this->assertSame( 'sms', $inbound->channel );
 		$this->assertSame( '+4799887766', $inbound->recipient );
 		$this->assertSame( 'Hei, jeg har et spørsmål om nøkkelen.', $inbound->message );

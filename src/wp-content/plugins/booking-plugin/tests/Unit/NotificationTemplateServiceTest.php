@@ -30,6 +30,9 @@ class NotificationTemplateServiceTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 		$this->service = new NotificationTemplateService();
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_notification_templates';
+		$wpdb->query( "TRUNCATE TABLE {$table}" );
 		delete_option( 'snippen_template_user_activation_sms' );
 		delete_option( 'snippen_template_user_activation_email' );
 		delete_option( 'snippen_template_booking_confirmation_email' );
@@ -138,7 +141,29 @@ class NotificationTemplateServiceTest extends TestCase {
 		$this->assertArrayNotHasKey( 'reset_link', $placeholders );
 
 		$all_placeholders = $this->service->get_all_placeholders();
-		$this->assertCount( 14, $all_placeholders );
+		$this->assertCount( 26, $all_placeholders );
+	}
+
+	/**
+	 * Test default template and placeholders for inbound-sms-received
+	 */
+	public function test_inbound_sms_received_default_template_and_placeholders() {
+		$sms_tpl = $this->service->get_template( 'inbound_sms_received', 'sms' );
+		$this->assertTrue( $sms_tpl['is_default'] );
+		$this->assertStringContainsString( '{{incoming_message}}', $sms_tpl['body'] );
+		$this->assertStringContainsString( '{{sender_phone}}', $sms_tpl['body'] );
+
+		$email_tpl = $this->service->get_template( 'inbound-sms-received', 'email' );
+		$this->assertTrue( $email_tpl['is_default'] );
+		$this->assertNotEmpty( $email_tpl['subject'] );
+		$this->assertStringContainsString( '{{sender_phone}}', $email_tpl['subject'] );
+		$this->assertStringContainsString( '{{incoming_message}}', $email_tpl['body'] );
+
+		$placeholders = $this->service->get_available_placeholders( 'inbound_sms_received' );
+		$this->assertArrayHasKey( 'incoming_message', $placeholders );
+		$this->assertArrayHasKey( 'sender_phone', $placeholders );
+		$this->assertArrayHasKey( 'inbox_url', $placeholders );
+		$this->assertArrayHasKey( 'booking_objects', $placeholders );
 	}
 
 	/**

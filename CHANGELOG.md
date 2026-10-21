@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.47.0] - 2026-10-21
+- (#348) Relay innkommende SMS til booking-administrator med metadata:
+  - **Varslingsmaler & Plassholdere (`PlaceholderRegistry.php`, `NotificationTemplateService.php`, `NotificationTemplateInstall.php`, `NotificationTemplateRepository.php`, `NotificationTemplatesPage.php`)**:
+    - Ny hendelsestype `inbound-sms-received` (alias `inbound_sms_received`) for SMS og e-post.
+    - Nye malplassholdere:
+      - `{{incoming_message}}` / `{{message_body}}`: Innholdet i mottatt SMS-melding.
+      - `{{sender_phone}}`: Avsenderens telefonnummer.
+      - `{{inbox_url}}`: Direkte lenke til visning av meldingen i SMS-innboksen i wp-admin.
+      - `{{booking_id}}`: Tilknyttet booking-ID.
+    - Støtte for eksisterende placeholders (`{{user_name}}`, `{{user_phone}}`, `{{booking_objects}}`, `{{booking_date}}`, etc.) når melding er tilknyttet en reservasjon eller registrert bruker.
+    - Standard norske maler for både e-post og SMS.
+  - **Innstillinger for kanalstyring (`SettingsPage.php`)**:
+    - Nye konfigurasjonsvalg for aktivering av varsler til administratorer:
+      - `snippen_email_inbound_sms_enabled` (E-post, standard: ja).
+      - `snippen_sms_inbound_sms_enabled` (SMS, standard: nei).
+  - **Varslingslogikk, regelfiltrering og loop-beskyttelse (`NotificationManager.php`, `SmsInboxResolverService.php`)**:
+    - Ny utsendelsesmetode `send_inbound_sms_notification(...)` som henter administratorer med `Capabilities::MANAGE_BOOKINGS`.
+    - Varsling trigges for reelle meldinger (`single_active_booking`, `multiple_active_bookings`, `registered_user_no_booking`, `unknown_sender` og `active_session`).
+    - Støyreduksjon: Siffer-svar på flervalgsdialoger (`disambiguation_selection`) og STOPP-meldinger (`opt_out`) videresendes ikke.
+    - Loop-beskyttelse: Forhindrer sending av SMS-relé tilbake til samme administrator som sendte meldingen, og ignorerer meldinger fra modemets eget nummer.
+    - Alle utsendelser logges i `wp_snippen_messages` med `event_type = 'inbound_sms_received'`.
+  - **Tester & Kvalitetssikring**:
+    - Omfattende integrasjonstest `InboundSmsNotificationTest.php` som dekker e-post, SMS, deaktivering, loop-beskyttelse og booking-metadata.
+    - Oppdaterte enhetstester i `NotificationTemplateServiceTest.php` og `PlaceholderRegistryTest.php`.
+
 ## [2.46.0] - 2026-10-13
 - (#361) Dørkode: Admin-grensesnitt for manuell tildeling, varsling (SMS/e-post) og sanering av statisk kode:
   - **Admin-grensesnitt for dørkoder (`DoorCodesPage.php`, `AdminLoader.php`)**:

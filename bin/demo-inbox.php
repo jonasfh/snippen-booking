@@ -98,6 +98,10 @@ if ( null === $phone_arg || null === $message_arg || '' === trim( $phone_arg ) |
 	exit( 1 );
 }
 
+if ( $raw ) {
+	ini_set( 'error_log', '/dev/null' );
+}
+
 // 2. Normalize phone number
 if ( class_exists( '\SnippenBooking\Helper\PhoneHelper' ) ) {
 	$normalized_phone = \SnippenBooking\Helper\PhoneHelper::normalize_phone( $phone_arg );
