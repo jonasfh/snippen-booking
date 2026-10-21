@@ -32,6 +32,8 @@ class SmsGatewayApiTest extends TestCase {
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_messages" );
 		update_option( 'snippen_sms_service_api_token', 'test-secret-token-123' );
 		update_option( 'snippen_sms_service_sender', 'Snippen' );
+		update_option( 'snippen_email_inbound_sms_enabled', 'no' );
+		update_option( 'snippen_sms_inbound_sms_enabled', 'no' );
 		SmsGatewayApi::register();
 		do_action( 'rest_api_init' );
 	}
@@ -272,14 +274,10 @@ class SmsGatewayApiTest extends TestCase {
 		$this->assertSame( $booking_id, $data['results'][0]['booking_id'] );
 		$this->assertSame( 'single_active_booking', $data['results'][0]['rule'] );
 
-		// Check database record (both the inbound SMS and the relayed admin notification, ordered DESC)
+		// Check database record
 		$messages = MessageLoggerService::get_messages_for_booking( $booking_id );
-		$this->assertCount( 2, $messages );
-		$relay = $messages[0];
-		$this->assertSame( 'email', $relay->channel );
-		$this->assertSame( 'inbound_sms_received', $relay->event_type );
-
-		$inbound = $messages[1];
+		$this->assertCount( 1, $messages );
+		$inbound = $messages[0];
 		$this->assertSame( 'sms', $inbound->channel );
 		$this->assertSame( '+4799887766', $inbound->recipient );
 		$this->assertSame( 'Hei, jeg har et spørsmål om nøkkelen.', $inbound->message );
