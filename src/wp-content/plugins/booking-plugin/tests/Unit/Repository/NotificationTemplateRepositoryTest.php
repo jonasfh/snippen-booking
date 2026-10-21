@@ -39,12 +39,12 @@ class NotificationTemplateRepositoryTest extends TestCase {
 	public function test_seed_defaults_is_idempotent() {
 		$this->repository->seed_defaults();
 		$templates = $this->repository->get_all();
-		$this->assertCount( 8, $templates );
+		$this->assertCount( 22, $templates );
 
 		// Seed again, should not create duplicates
 		$this->repository->seed_defaults();
 		$templates_again = $this->repository->get_all();
-		$this->assertCount( 8, $templates_again );
+		$this->assertCount( 22, $templates_again );
 	}
 
 	/**

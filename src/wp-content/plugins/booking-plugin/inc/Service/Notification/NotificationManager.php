@@ -8,6 +8,7 @@
 namespace SnippenBooking\Service\Notification;
 
 use SnippenBooking\Helper\Capabilities;
+use SnippenBooking\Helper\PhoneHelper;
 
 /**
  * Class NotificationManager
@@ -63,6 +64,11 @@ class NotificationManager {
 	 * Notification type: Door code updated
 	 */
 	const TYPE_DOOR_CODE_UPDATED = 'door_code_updated';
+
+	/**
+	 * Notification type: Inbound SMS received alert
+	 */
+	const TYPE_INBOUND_SMS_RECEIVED = 'inbound_sms_received';
 
 	/**
 	 * Get all registered notification providers.
@@ -1303,6 +1309,207 @@ class NotificationManager {
 		}
 
 		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Send relay notification to administrators when an inbound SMS is received.
+	 *
+	 * @param int      $logged_id    Logged message ID in logger table.
+	 * @param string   $sender_phone Sender phone number.
+	 * @param string   $body         SMS text content.
+	 * @param int|null $booking_id   Associated booking ID if resolved.
+	 * @param int|null $user_id      Associated user ID if resolved.
+	 * @param string   $rule         Matched inbox resolver rule.
+	 * @return bool True if at least one notification sent successfully.
+	 */
+	public function send_inbound_sms_notification(
+		int $logged_id,
+		string $sender_phone,
+		string $body,
+		?int $booking_id = null,
+		?int $user_id = null,
+		string $rule = ''
+	): bool {
+		$email_enabled = 'yes' === get_option( 'snippen_email_inbound_sms_enabled', 'yes' );
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_inbound_sms_enabled', 'no' );
+
+		if ( ! $email_enabled && ! $sms_enabled ) {
+			return false;
+		}
+
+		$norm_sender = PhoneHelper::normalize_phone( $sender_phone ) ?: $sender_phone;
+
+		// Loop protection: Do not relay if sender is the gateway's own number.
+		$gateway_sender = get_option( 'snippen_sms_service_sender' );
+		if ( ! empty( $gateway_sender ) ) {
+			$norm_gw = PhoneHelper::normalize_phone( $gateway_sender ) ?: $gateway_sender;
+			if ( $norm_gw === $norm_sender ) {
+				error_log( 'NotificationManager: Inbound SMS sender matches gateway sender number. Skipping relay notification to prevent loop.' );
+				return false;
+			}
+		}
+
+		$inbox_url = admin_url( 'admin.php?page=snippen-booking-sms-inbox&view_message=' . $logged_id );
+
+		// Base context
+		$context = array(
+			'incoming_message' => $body,
+			'message_body'     => $body,
+			'sender_phone'     => $sender_phone,
+			'inbox_url'        => $inbox_url,
+			'booking_id'       => $booking_id ? (string) $booking_id : '',
+			'booking_objects'  => __( 'Ingen tilknyttet booking', 'snippen-booking' ),
+			'booking_date'     => '',
+			'booking_time'     => '',
+			'booking_url'      => '',
+			'user_name'        => __( 'Ukjent avsender', 'snippen-booking' ),
+			'user_email'       => '',
+			'user_phone'       => $sender_phone,
+		);
+
+		// If booking is attached, enrich context
+		if ( $booking_id ) {
+			global $wpdb;
+			$table_bookings = $wpdb->prefix . 'snippen_bookings';
+			$booking        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+
+			if ( $booking ) {
+				$object_names = $this->get_booking_object_names( $booking_id, $booking );
+				$booking_time = $this->get_booking_time( $booking );
+				$booking_url  = ! empty( $booking->uuid ) ? add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) ) : '';
+				$b_context    = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
+
+				$context                     = array_merge( $context, $b_context );
+				$context['incoming_message'] = $body;
+				$context['message_body']     = $body;
+				$context['sender_phone']     = $sender_phone;
+				$context['inbox_url']        = $inbox_url;
+				$context['booking_id']       = (string) $booking_id;
+
+				if ( empty( $user_id ) && ! empty( $booking->user_id ) ) {
+					$user_id = (int) $booking->user_id;
+				}
+			}
+		}
+
+		// If user is attached (and not fully populated by booking), enrich context
+		if ( $user_id && ( empty( $context['user_email'] ) || empty( $context['user_name'] ) || __( 'Ukjent avsender', 'snippen-booking' ) === $context['user_name'] ) ) {
+			$user = get_userdata( $user_id );
+			if ( $user ) {
+				$context['user_name']  = ! empty( $user->display_name ) ? $user->display_name : $user->user_login;
+				$context['user_email'] = $user->user_email;
+				$u_phone               = get_user_meta( $user_id, 'snippen_phone', true );
+				if ( ! empty( $u_phone ) ) {
+					$context['user_phone'] = $u_phone;
+				}
+			}
+		}
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( 'inbound_sms_received', 'sms', $context );
+		$rendered_email   = $template_service->render_template( 'inbound_sms_received', 'email', $context );
+
+		$admin_users = get_users(
+			array(
+				'capability' => Capabilities::MANAGE_BOOKINGS,
+			)
+		);
+
+		if ( empty( $admin_users ) ) {
+			return false;
+		}
+
+		$email_sent = false;
+		$sms_sent   = false;
+
+		// 1. Email notification
+		if ( $email_enabled ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject = ! empty( $rendered_email['subject'] )
+					? $rendered_email['subject']
+					: sprintf( __( 'Ny SMS mottatt fra %s', 'snippen-booking' ), $sender_phone );
+				$message = $rendered_email['body'];
+
+				foreach ( $admin_users as $admin ) {
+					if ( empty( $admin->user_email ) ) {
+						continue;
+					}
+					try {
+						$sent = $email_provider->send_email( $admin->user_email, $subject, $message );
+						MessageLoggerService::log_message(
+							$booking_id,
+							$user_id,
+							'email',
+							$admin->user_email,
+							$subject,
+							$message,
+							self::TYPE_INBOUND_SMS_RECEIVED,
+							$sent ? 'sent' : 'failed',
+							array(
+								'inbound_message_id' => $logged_id,
+								'rule'               => $rule,
+							)
+						);
+						if ( $sent ) {
+							$email_sent = true;
+						}
+					} catch ( \Throwable $t ) {
+						error_log( 'NotificationManager Exception during inbound SMS admin email send: ' . $t->getMessage() );
+					}
+				}
+			}
+		}
+
+		// 2. SMS notification (with loop protection)
+		if ( $sms_enabled ) {
+			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
+			$sms_provider = $this->get_provider( $provider_id );
+
+			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
+				$sms_message = $rendered_sms['body'];
+
+				foreach ( $admin_users as $admin ) {
+					$admin_phone = get_user_meta( $admin->ID, 'snippen_phone', true );
+					if ( empty( $admin_phone ) ) {
+						continue;
+					}
+
+					// Loop protection: Do not relay SMS back to the admin who sent it!
+					$norm_admin_phone = PhoneHelper::normalize_phone( $admin_phone ) ?: $admin_phone;
+					if ( $norm_admin_phone === $norm_sender ) {
+						error_log( sprintf( 'NotificationManager: Skipping SMS relay to %s (matches sender phone %s to prevent loop).', $admin_phone, $sender_phone ) );
+						continue;
+					}
+
+					try {
+						$sms_res = $sms_provider->send_sms( $admin_phone, $sms_message );
+						MessageLoggerService::log_message(
+							$booking_id,
+							$user_id,
+							'sms',
+							$admin_phone,
+							null,
+							$sms_message,
+							self::TYPE_INBOUND_SMS_RECEIVED,
+							$this->get_sms_initial_status( $sms_res, $provider_id ),
+							array(
+								'provider'           => $provider_id,
+								'inbound_message_id' => $logged_id,
+								'rule'               => $rule,
+							)
+						);
+						if ( $sms_res ) {
+							$sms_sent = true;
+						}
+					} catch ( \Throwable $t ) {
+						error_log( 'NotificationManager Exception during inbound SMS admin SMS send: ' . $t->getMessage() );
+					}
+				}
+			}
+		}
+
+		return $email_sent || $sms_sent;
 	}
 
 	/**

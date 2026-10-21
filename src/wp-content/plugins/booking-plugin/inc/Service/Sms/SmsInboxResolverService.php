@@ -11,6 +11,7 @@
 namespace SnippenBooking\Service\Sms;
 
 use SnippenBooking\Service\Notification\MessageLoggerService;
+use SnippenBooking\Service\Notification\NotificationManager;
 use SnippenBooking\Helper\PhoneHelper;
 
 /**
@@ -373,6 +374,32 @@ class SmsInboxResolverService {
 		$ttl_seconds    = max( 60, $ttl_minutes * 60 );
 		$current_ts     = time();
 
+		// Sjekk om meldingen er en opt-out (STOP/STOPP/AVSLUTT)
+		if ( in_array( mb_strtolower( trim( $body ) ), array( 'stopp', 'stop', 'avslutt' ), true ) ) {
+			$metadata['matched_rule'] = 'opt_out';
+			$logged_id                = MessageLoggerService::log_message(
+				null,
+				$found_user_id,
+				'sms',
+				$sender_phone,
+				null,
+				$body,
+				self::EVENT_INBOUND_SMS,
+				self::STATUS_RECEIVED,
+				$metadata
+			);
+
+			return array(
+				'logged_id'         => $logged_id,
+				'status'            => self::STATUS_RECEIVED,
+				'booking_id'        => null,
+				'user_id'           => $found_user_id,
+				'rule'              => 'opt_out',
+				'prompt_sent'       => false,
+				'confirmation_sent' => false,
+			);
+		}
+
 		// Retrieve active bookings for phone numbers
 		$active_bookings = self::get_active_bookings_for_phones( $search_phones );
 		$booking_count   = count( $active_bookings );
@@ -444,6 +471,8 @@ class SmsInboxResolverService {
 						self::STATUS_RECEIVED,
 						$metadata
 					);
+
+					self::relay_to_admin( (int) $logged_id, $sender_phone, $body, $booking_id, $user_id, 'active_session' );
 
 					return array(
 						'logged_id'         => $logged_id,
@@ -580,6 +609,8 @@ class SmsInboxResolverService {
 				$metadata
 			);
 
+			self::relay_to_admin( (int) $logged_id, $sender_phone, $body, $booking_id, $user_id, 'single_active_booking' );
+
 			return array(
 				'logged_id'         => $logged_id,
 				'status'            => self::STATUS_RECEIVED,
@@ -638,6 +669,8 @@ class SmsInboxResolverService {
 				$prompt_sent = true;
 			}
 
+			self::relay_to_admin( (int) $logged_id, $sender_phone, $body, null, $found_user_id, 'multiple_active_bookings' );
+
 			return array(
 				'logged_id'         => $logged_id,
 				'status'            => self::STATUS_PENDING_SELECTION,
@@ -667,6 +700,8 @@ class SmsInboxResolverService {
 				$metadata
 			);
 
+			self::relay_to_admin( (int) $logged_id, $sender_phone, $body, null, $found_user_id, 'registered_user_no_booking' );
+
 			return array(
 				'logged_id'         => $logged_id,
 				'status'            => self::STATUS_GENERAL_INQUIRY,
@@ -694,6 +729,8 @@ class SmsInboxResolverService {
 			$metadata
 		);
 
+		self::relay_to_admin( (int) $logged_id, $sender_phone, $body, null, null, 'unknown_sender' );
+
 		return array(
 			'logged_id'         => $logged_id,
 			'status'            => self::STATUS_QUARANTINE,
@@ -703,5 +740,33 @@ class SmsInboxResolverService {
 			'prompt_sent'       => false,
 			'confirmation_sent' => false,
 		);
+	}
+
+	/**
+	 * Relay inbound SMS notification to booking administrators.
+	 *
+	 * @param int      $logged_id    Logged message ID.
+	 * @param string   $sender_phone Sender phone number.
+	 * @param string   $body         Message body.
+	 * @param int|null $booking_id   Matched booking ID if any.
+	 * @param int|null $user_id      Matched user ID if any.
+	 * @param string   $rule         Matched resolution rule.
+	 * @return void
+	 */
+	private static function relay_to_admin( int $logged_id, string $sender_phone, string $body, ?int $booking_id = null, ?int $user_id = null, string $rule = '' ) {
+		try {
+			do_action( 'snippen_inbound_sms_received', $logged_id, $sender_phone, $body, $booking_id, $user_id, $rule );
+			$notifier = new NotificationManager();
+			$notifier->send_inbound_sms_notification(
+				$logged_id,
+				$sender_phone,
+				$body,
+				$booking_id,
+				$user_id,
+				$rule
+			);
+		} catch ( \Throwable $t ) {
+			error_log( 'SmsInboxResolverService Error dispatching admin notification: ' . $t->getMessage() );
+		}
 	}
 }

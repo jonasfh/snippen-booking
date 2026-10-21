@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -205,6 +205,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Dørkode for din booking - {{booking_objects}}', 'snippen-booking' ),
 					'body'    => __( "Hei {{user_name}},\n\nHer er din dørkode for leie av {{booking_objects}}:\n\nDørkode: {{door_code}}\n\nKoden er aktiv og gyldig i følgende tidsrom:\nFra: {{door_code_valid_from}}\nTil:  {{door_code_valid_to}}\n(Dette inkluderer adgang før start for forberedelser og etter slutt for rydding/låsing).\n\nAvtalt leietid: {{booking_date}} {{booking_time}}\n\nDu kan også se oppdatert bookinginformasjon på din side:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				),
+			),
+			'inbound-sms-received'     => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( '[Snippen] Ny SMS fra {{sender_phone}}: "{{incoming_message}}". Se innboks: {{inbox_url}}', 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Ny SMS mottatt fra {{sender_phone}}', 'snippen-booking' ),
+					'body'    => __( "Hei!\n\nDet er mottatt en ny innkommende SMS på Snippen SMS-tjeneste.\n\nAvsender: {{sender_phone}}\nKunde: {{user_name}}\nTilknyttet booking: {{booking_objects}} ({{booking_date}})\n\nMeldingstekst:\n--------------------------------------------------\n{{incoming_message}}\n--------------------------------------------------\n\nDu kan behandle og svare på henvendelsen i SMS-innboksen:\n{{inbox_url}}", 'snippen-booking' ),
 				),
 			),
 		);

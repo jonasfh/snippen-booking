@@ -95,6 +95,7 @@ You can customize templates for both Email and SMS notifications under **Snippen
   - `payment-reminder`: Automated reminder sent to resident before unpaid bookings.
   - `payment-receipt-uploaded`: Alert sent to admin when resident uploads a payment receipt.
   - `door-code-updated`: Notification sent to resident when door access code is assigned or changed.
+  - `inbound-sms-received`: Relay of incoming SMS message to booking administrators.
   - `password-reset`: Password reset link.
 - **Dynamic Placeholders**:
   - `{{user_name}}`: Resident/customer full name or display name.
@@ -115,6 +116,10 @@ You can customize templates for both Email and SMS notifications under **Snippen
   - `{{door_code_valid_from}}`: Start of access validity window (e.g. «24.10.2026 kl. 17:30»).
   - `{{door_code_valid_to}}`: End of access validity window (e.g. «25.10.2026 kl. 13:00»).
   - `{{door_code_validity_period}}`: Total validity time span (e.g. «24.10.2026 kl. 17:30 – 13:00»).
+  - `{{incoming_message}}` / `{{message_body}}`: Full text of incoming SMS message received.
+  - `{{sender_phone}}`: Sender telephone number.
+  - `{{inbox_url}}`: Direct admin link to view and reply in SMS Inbox.
+  - `{{booking_id}}`: Matched booking ID (if associated).
 
 Default templates are provided out of the box, and you can easily edit or revert them at any time.
 

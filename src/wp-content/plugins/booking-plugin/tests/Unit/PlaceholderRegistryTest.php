@@ -34,12 +34,12 @@ class PlaceholderRegistryTest extends TestCase {
 	}
 
 	/**
-	 * Test that all 14 standard placeholders are registered
+	 * Test that all standard placeholders are registered
 	 */
 	public function test_all_14_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 14, $placeholders );
+		$this->assertCount( 26, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -56,6 +56,18 @@ class PlaceholderRegistryTest extends TestCase {
 			'vipps_number',
 			'payment_instructions',
 			'reset_link',
+			'door_code',
+			'door_code_valid_from',
+			'door_code_valid_to',
+			'door_code_validity_period',
+			'booking_type',
+			'rejection_reason',
+			'payment_method',
+			'incoming_message',
+			'message_body',
+			'sender_phone',
+			'inbox_url',
+			'booking_id',
 		);
 
 		foreach ( $expected_keys as $key ) {
@@ -187,4 +199,28 @@ class PlaceholderRegistryTest extends TestCase {
 		$this->assertCount( 1, $errors );
 		$this->assertStringContainsString( 'ikke tillatt', $errors[0] );
 	}
+
+	/**
+	 * Test validating and resolving inbound SMS template placeholders
+	 */
+	public function test_inbound_sms_placeholders() {
+		$template = 'Ny SMS fra {{sender_phone}}: "{{incoming_message}}". Booking: {{booking_objects}} ({{booking_date}}). Se innboks: {{inbox_url}}';
+		$this->assertEmpty( $this->registry->validate_template( $template, 'inbound-sms-received' ) );
+		$this->assertEmpty( $this->registry->validate_template( $template, 'inbound_sms_received' ) );
+
+		$context = array(
+			'sender_phone'     => '+4799887766',
+			'incoming_message' => 'Hei, vi trenger ekstra nøkkel.',
+			'inbox_url'        => 'https://example.com/wp-admin/admin.php?page=snippen-booking-sms-inbox&view_message=42',
+			'booking_objects'  => 'Peisestuen',
+			'booking_date'     => '24.10.2026',
+		);
+
+		$rendered = $this->registry->render_template( $template, 'inbound-sms-received', $context );
+		$this->assertStringContainsString( '+4799887766', $rendered );
+		$this->assertStringContainsString( 'Hei, vi trenger ekstra nøkkel.', $rendered );
+		$this->assertStringContainsString( 'Peisestuen', $rendered );
+		$this->assertStringContainsString( 'view_message=42', $rendered );
+	}
 }
+

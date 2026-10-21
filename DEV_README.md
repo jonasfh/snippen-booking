@@ -830,13 +830,28 @@ The system supports three booking types (`booking_type` in `wp_snippen_bookings`
 3. **`cleaning` (Utvask)**: Complimentary next-day cleaning time slot linked to evening events where `supports_cleaning = 1`.
 
 ### Notification Templates & Placeholders
-- **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, and `password-reset`.
+- **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, `password-reset`, `door-code-updated`, and `inbound-sms-received`.
 - **System Placeholders**: Managed by `PlaceholderRegistry`:
   - `{{door_code}}`: Dynamic or static door PIN code for entering the venue (displayed or passed to SMS/email templates).
   - `{{booking_type}}`: Resolves to «Privat arrangement», «Åpent arrangement» or «Utvask».
   - `{{rejection_reason}}`: Board's reason for rejecting a booking request.
   - `{{payment_method}}`: Resolves to «Vipps», «Bankoverføring» or «Fritatt».
+  - `{{incoming_message}}` / `{{message_body}}`: Full raw text of the incoming SMS message received.
+  - `{{sender_phone}}`: Sender's phone number formatted with country prefix.
+  - `{{inbox_url}}`: Direct admin deep link to inspect and reply to the message in SMS Inbox (`/wp-admin/admin.php?page=snippen-booking-sms-inbox&view_message=<id>`).
+  - `{{booking_id}}`: Matched booking ID (or empty if unresolved).
   - Plus standard placeholders: `{{user_name}}`, `{{user_email}}`, `{{user_phone}}`, `{{booking_objects}}`, `{{booking_date}}`, `{{booking_time}}`, `{{booking_url}}`, `{{booking_price}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{payment_instructions}}`, and `{{reset_link}}`.
+
+### Inbound SMS Admin Relay (#348)
+- **Purpose**: Relays incoming SMS inquiries from customers to booking administrators (`manage_bookings` capability) via Email and optionally SMS.
+- **Rules Triggering Relay**: `single_active_booking`, `multiple_active_bookings` (disambiguation pending), `registered_user_no_booking` (general inquiry), `unknown_sender` (quarantined message), and `active_session`.
+- **Filtered Out (No Relay)**: System opt-out keywords (`STOPP`, `STOP`, `AVSLUTT`) and disambiguation numeric selections (`disambiguation_selection`).
+- **Loop Protection**:
+  - Prevents relay loops if an admin responds via SMS matching their registered phone (`snippen_phone`).
+  - Ignores incoming SMS sent from the gateway's own sender number (`snippen_sms_service_sender`).
+- **Settings**: Controlled per channel under **Innstillinger**:
+  - E-post: `snippen_email_inbound_sms_enabled` (default: **yes**)
+  - SMS: `snippen_sms_inbound_sms_enabled` (default: **no**)
 
 ## Yale Doorman Access Control REST API
 

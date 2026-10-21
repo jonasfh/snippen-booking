@@ -44,7 +44,7 @@ class PlaceholderRegistryTest extends TestCase {
 	public function test_all_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 21, $placeholders );
+		$this->assertCount( 26, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -68,6 +68,11 @@ class PlaceholderRegistryTest extends TestCase {
 			'booking_type',
 			'rejection_reason',
 			'payment_method',
+			'incoming_message',
+			'message_body',
+			'sender_phone',
+			'inbox_url',
+			'booking_id',
 		);
 
 		foreach ( $expected_keys as $key ) {
@@ -300,5 +305,33 @@ class PlaceholderRegistryTest extends TestCase {
 		$this->assertArrayHasKey( 'user_name', $allowed );
 		$this->assertArrayHasKey( 'booking_objects', $allowed );
 		$this->assertArrayHasKey( 'booking_url', $allowed );
+	}
+
+	/**
+	 * Test resolving inbound SMS placeholders and inbound_sms_received context
+	 */
+	public function test_resolve_inbound_sms_placeholders() {
+		$context = array(
+			'incoming_message' => 'Hei, vi trenger mer info om nøkkel.',
+			'message_body'     => 'Hei, vi trenger mer info om nøkkel.',
+			'sender_phone'     => '+4799887766',
+			'inbox_url'        => 'https://example.com/wp-admin/admin.php?page=snippen-booking-sms-inbox&view_message=12',
+			'booking_id'       => 123,
+		);
+
+		$this->assertEquals( 'Hei, vi trenger mer info om nøkkel.', $this->registry->resolve( 'incoming_message', 'inbound_sms_received', $context ) );
+		$this->assertEquals( 'Hei, vi trenger mer info om nøkkel.', $this->registry->resolve( 'message_body', 'inbound_sms_received', $context ) );
+		$this->assertEquals( '+4799887766', $this->registry->resolve( 'sender_phone', 'inbound_sms_received', $context ) );
+		$this->assertEquals( 'https://example.com/wp-admin/admin.php?page=snippen-booking-sms-inbox&view_message=12', $this->registry->resolve( 'inbox_url', 'inbound_sms_received', $context ) );
+		$this->assertEquals( '123', $this->registry->resolve( 'booking_id', 'inbound_sms_received', $context ) );
+
+		$allowed = $this->registry->get_placeholders_for_context( 'inbound_sms_received' );
+		$this->assertArrayHasKey( 'incoming_message', $allowed );
+		$this->assertArrayHasKey( 'message_body', $allowed );
+		$this->assertArrayHasKey( 'sender_phone', $allowed );
+		$this->assertArrayHasKey( 'inbox_url', $allowed );
+		$this->assertArrayHasKey( 'booking_id', $allowed );
+		$this->assertArrayHasKey( 'user_name', $allowed );
+		$this->assertArrayHasKey( 'booking_objects', $allowed );
 	}
 }

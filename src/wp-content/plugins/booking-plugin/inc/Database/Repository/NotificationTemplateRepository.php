@@ -366,6 +366,34 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hallo {{user_name}},\n\nDin reservasjonsforespørsel for {{booking_objects}} den {{booking_date}} {{booking_time}} har dessverre blitt avslått av styret.\n\nBegrunnelse:\n{{rejection_reason}}\n\nDu kan se detaljer om din reservasjon her:\n{{booking_url}}\n\nTa gjerne kontakt med styret ved spørsmål.\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
 				'connected_to' => 'booking-rejected',
 			),
+			array(
+				'name'         => __( 'Dørkode tildelt/endret (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Hei {{user_name}}! Din dørkode for {{booking_objects}} er {{door_code}}. Koden er gyldig fra {{door_code_valid_from}} til {{door_code_valid_to}}. Se detaljer: {{booking_url}}', 'snippen-booking' ),
+				'connected_to' => 'door-code-updated',
+			),
+			array(
+				'name'         => __( 'Dørkode tildelt/endret (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Dørkode for din booking - {{booking_objects}}', 'snippen-booking' ),
+				'message'      => __( "Hei {{user_name}},\n\nHer er din dørkode for leie av {{booking_objects}}:\n\nDørkode: {{door_code}}\n\nKoden er aktiv og gyldig i følgende tidsrom:\nFra: {{door_code_valid_from}}\nTil:  {{door_code_valid_to}}\n(Dette inkluderer adgang før start for forberedelser og etter slutt for rydding/låsing).\n\nAvtalt leietid: {{booking_date}} {{booking_time}}\n\nDu kan også se oppdatert bookinginformasjon på din side:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				'connected_to' => 'door-code-updated',
+			),
+			array(
+				'name'         => __( 'Innkommende SMS-varsel (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( '[Snippen] Ny SMS fra {{sender_phone}}: "{{incoming_message}}". Se innboks: {{inbox_url}}', 'snippen-booking' ),
+				'connected_to' => 'inbound-sms-received',
+			),
+			array(
+				'name'         => __( 'Innkommende SMS-varsel (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Ny SMS mottatt fra {{sender_phone}}', 'snippen-booking' ),
+				'message'      => __( "Hei!\n\nDet er mottatt en ny innkommende SMS på Snippen SMS-tjeneste.\n\nAvsender: {{sender_phone}}\nKunde: {{user_name}}\nTilknyttet booking: {{booking_objects}} ({{booking_date}})\n\nMeldingstekst:\n--------------------------------------------------\n{{incoming_message}}\n--------------------------------------------------\n\nDu kan behandle og svare på henvendelsen i SMS-innboksen:\n{{inbox_url}}", 'snippen-booking' ),
+				'connected_to' => 'inbound-sms-received',
+			),
 		);
 
 		$this->cleanup_duplicates();
