@@ -29,6 +29,7 @@ $from_name = getenv('SMTP_FROM_NAME') ?: 'Snippen Booking';
 if (!$user || !$pass) {
     update_option('snippen_smtp_enabled', 'no');
     echo "SMTP settings deactivated (SMTP_USER and/or SMTP_PASS empty in .env).\n";
+    echo "Falling back to local sendmail / mailcatcher (/var/log/mail.log).\n";
     exit(0);
 }
 

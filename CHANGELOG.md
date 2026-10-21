@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.47.1] - 2026-10-21
+- (#330) [Lokal Utvikling] Håndter manglende sendmail og feil i wp_mail under lokal kjøring:
+  - **Devcontainer & Docker-miljø**:
+    - Konfigurert `ServerName localhost` for Apache i `.devcontainer/Dockerfile` og `docker-entrypoint.sh` for å fjerne `AH00558`-oppstartsadvarsel.
+    - Installert en lokal dummy `sendmail`-fanger (`/usr/local/bin/sendmail-dummy`) med symlinker til `/usr/sbin/sendmail` og `/usr/lib/sendmail`. Lokale e-poster rutes til `/var/log/mail.log` uten feilmeldinger i Apache-loggen.
+  - **E-posttjeneste & CLI (`EmailProvider.php`, `demo-mail.php`)**:
+    - Forbedret feillogging i `EmailProvider::log_mail_failure()` med veiledende feilmelding dersom PHP `mail()` feiler.
+    - Tydelig tilbakemelding i `composer demo:mail` om lokal fallback til `/var/log/mail.log` når SMTP er deaktivert.
+  - **Tester & Dokumentasjon**:
+    - Lagt til enhetstester for `EmailProvider` i `tests/Unit/Service/EmailProviderTest.php`.
+    - Dokumentert lokal e-postfanger og loggfil i `DEV_README.md`.
+
 ## [2.47.0] - 2026-10-21
 - (#348) Relay innkommende SMS til booking-administrator med metadata:
   - **Varslingsmaler & Plassholdere (`PlaceholderRegistry.php`, `NotificationTemplateService.php`, `NotificationTemplateInstall.php`, `NotificationTemplateRepository.php`, `NotificationTemplatesPage.php`)**:

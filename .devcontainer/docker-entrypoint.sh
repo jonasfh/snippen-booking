@@ -25,6 +25,33 @@ if [ -f "/workspaces/snippen-booking/vendor/bin/phpcs" ] && [ ! -f "/usr/local/b
   ln -sf /workspaces/snippen-booking/vendor/bin/phpcs /usr/local/bin/phpcs || true
 fi
 
+# Ensure dummy sendmail exists for local mail catching
+if [ ! -f "/usr/local/bin/sendmail-dummy" ]; then
+  cat << 'EOF_SENDMAIL' > /usr/local/bin/sendmail-dummy
+#!/bin/sh
+LOG_FILE="/var/log/mail.log"
+if ! touch "$LOG_FILE" 2>/dev/null; then
+    LOG_FILE="/tmp/mail.log"
+    touch "$LOG_FILE" 2>/dev/null || true
+fi
+chmod 666 "$LOG_FILE" 2>/dev/null || true
+echo "=== EMAIL DISPATCH: $(date -Iseconds) ===" >> "$LOG_FILE"
+echo "Arguments: $*" >> "$LOG_FILE"
+cat >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
+exit 0
+EOF_SENDMAIL
+  chmod 755 /usr/local/bin/sendmail-dummy
+fi
+if [ ! -e "/usr/sbin/sendmail" ]; then
+  ln -sf /usr/local/bin/sendmail-dummy /usr/sbin/sendmail || true
+fi
+if [ ! -e "/usr/lib/sendmail" ]; then
+  ln -sf /usr/local/bin/sendmail-dummy /usr/lib/sendmail || true
+fi
+touch /var/log/mail.log 2>/dev/null || true
+chmod 666 /var/log/mail.log 2>/dev/null || true
+
 # 1. Database Initialization
 if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ]; then
   if [ -d "/etc/mysql/mariadb.conf.d" ]; then
@@ -189,6 +216,8 @@ chmod -R 777 "$WP_DIR/wp-content/uploads" || true
 
 # 6. Configure Apache VirtualHost (Always configured before any exit)
 echo "Configuring Apache..."
+echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf
+a2enconf servername >/dev/null 2>&1 || true
 cat > /etc/apache2/sites-available/000-default.conf <<EOF_APACHE
 <VirtualHost *:${PORT}>
     ServerAdmin webmaster@localhost
