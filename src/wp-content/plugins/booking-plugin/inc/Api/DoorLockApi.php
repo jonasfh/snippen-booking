@@ -47,6 +47,19 @@ class DoorLockApi {
 			return;
 		}
 
+		// GET /wp-json/snippen/v1/door/locks
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/' . self::REST_BASE . '/locks',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( __CLASS__, 'get_locks' ),
+					'permission_callback' => array( __CLASS__, 'verify_token' ),
+				),
+			)
+		);
+
 		// GET /wp-json/snippen/v1/door/bookings
 		register_rest_route(
 			self::REST_NAMESPACE,
@@ -56,6 +69,15 @@ class DoorLockApi {
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( __CLASS__, 'get_bookings' ),
 					'permission_callback' => array( __CLASS__, 'verify_token' ),
+					'args'                => array(
+						'lock_id' => array(
+							'required'          => false,
+							'validate_callback' => function ( $param ) {
+								return is_numeric( $param ) && (int) $param > 0;
+							},
+							'sanitize_callback' => 'absint',
+						),
+					),
 				),
 			)
 		);
@@ -135,15 +157,60 @@ class DoorLockApi {
 	}
 
 	/**
+	 * Handle GET /wp-json/snippen/v1/door/locks
+	 *
+	 * Returns full list of active door locks and the venues they serve.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response Response object.
+	 */
+	public static function get_locks( \WP_REST_Request $request ) {
+		$repo  = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$locks = $repo->find_all_with_objects();
+
+		return new \WP_REST_Response(
+			array(
+				'locks' => $locks,
+			),
+			200
+		);
+	}
+
+	/**
 	 * Handle GET /wp-json/snippen/v1/door/bookings
 	 *
 	 * Returns full list of active access periods for Yale Doorman service.
 	 *
 	 * @param \WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response Response object.
+	 * @return \WP_REST_Response|\WP_Error Response object.
 	 */
 	public static function get_bookings( \WP_REST_Request $request ) {
 		global $wpdb;
+
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock_id   = $request->get_param( 'lock_id' );
+
+		if ( ! empty( $lock_id ) ) {
+			$lock_id = (int) $lock_id;
+			$lock    = $lock_repo->find( $lock_id );
+			if ( ! $lock ) {
+				return new \WP_Error(
+					'lock_not_found',
+					__( 'Dørlås ble ikke funnet.', 'snippen-booking' ),
+					array( 'status' => 404 )
+				);
+			}
+		} else {
+			$all_locks = $lock_repo->find_all();
+			if ( count( $all_locks ) > 1 ) {
+				return new \WP_Error(
+					'missing_lock_id',
+					__( "Parameteret 'lock_id' er påkrevd når det finnes flere låser registrert.", 'snippen-booking' ),
+					array( 'status' => 400 )
+				);
+			}
+			$lock_id = ! empty( $all_locks ) ? (int) $all_locks[0]->id : 0;
+		}
 
 		$expose_hours   = intval( get_option( 'snippen_doorman_expose_hours_before', 168 ) );
 		$buffer_minutes = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
@@ -163,8 +230,39 @@ class DoorLockApi {
 		$table_bb       = $wpdb->prefix . 'snippen_booking_booking_blocks';
 		$table_blocks   = $wpdb->prefix . 'snippen_booking_blocks';
 		$table_slots    = $wpdb->prefix . 'snippen_time_slots';
+		$table_bbo      = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 
 		$status_placeholders = implode( ',', array_fill( 0, count( $statuses ), '%s' ) );
+		$query_params        = $statuses;
+
+		$lock_filter_sql = '';
+		if ( $lock_id > 0 ) {
+			$all_active_locks   = $lock_repo->find_all();
+			$has_multiple_locks = count( $all_active_locks ) > 1;
+
+			if ( $has_multiple_locks ) {
+				$lock_filter_sql = " AND (
+					b.id IN (
+						SELECT bbo.booking_id FROM {$table_bbo} bbo
+						INNER JOIN {$table_objects} bo ON bbo.booking_object_id = bo.id
+						WHERE bo.door_lock_id = %d AND bo.deleted_at IS NULL
+					)
+				)";
+				$query_params[]  = $lock_id;
+			} else {
+				// Single lock fallback allows bookings with no object link (e.g. legacy test helpers) to match
+				$lock_filter_sql = " AND (
+					b.id IN (
+						SELECT bbo.booking_id FROM {$table_bbo} bbo
+						INNER JOIN {$table_objects} bo ON bbo.booking_object_id = bo.id
+						WHERE bo.door_lock_id = %d AND bo.deleted_at IS NULL
+					)
+					OR NOT EXISTS (SELECT 1 FROM {$table_bbo} bbo_check WHERE bbo_check.booking_id = b.id)
+				)";
+				$query_params[]  = $lock_id;
+			}
+		}
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$query = $wpdb->prepare(
@@ -177,9 +275,10 @@ class DoorLockApi {
 			 LEFT JOIN {$table_blocks} s ON bb.booking_block_id = s.id
 			 LEFT JOIN {$table_slots} ts ON b.slot_id = ts.id
 			 WHERE b.deleted_at IS NULL AND b.status IN ({$status_placeholders})
+			 {$lock_filter_sql}
 			 GROUP BY b.id
 			 ORDER BY b.booking_date ASC, block_start ASC, b.id ASC",
-			...$statuses
+			...$query_params
 		);
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared

@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.48.0] - 2026-10-21
+- (#355) [Feature] Støtte for flere dørlåser og tilknytning til lokaler (GET /door/locks og lock_id parameter):
+  - **Datamodell & Database-migrering (`Migration_2_48_0.php`, `Install.php`)**:
+    - Ny tabell `wp_snippen_door_locks` for registrering av fysiske dørlåser (Yale Doorman-instanser) med `created_at` og `modified_at`.
+    - Ny kolonne `door_lock_id` i `wp_snippen_booking_objects` som knytter lokaler til dørlås (1-til-mange).
+    - Automatisk migrering med default-lås 'Hovedinngang' for eksisterende lokaler.
+  - **Repository-lag (`DoorLockRepository.php`)**:
+    - CRUD-operasjoner, myk sletting og relasjonsoppslag (`find_all_with_objects()`) for dørlåser og tilknyttede lokaler.
+  - **REST API (`DoorLockApi.php`)**:
+    - Nytt endepunkt `GET /wp-json/snippen/v1/door/locks` som lister alle aktive låser og hvilke lokaler de betjener.
+    - Utvidelse av `GET /wp-json/snippen/v1/door/bookings` med query-parameter `lock_id`.
+    - Robust validering: returnerer 400 (`missing_lock_id`) dersom det finnes flere låser og parameter utelates, 404 (`lock_not_found`) for ugyldig lås, og faller sømløst tilbake til default-lås når kun én lås er registrert.
+  - **Admin-grensesnitt (`BookingObjectsPage.php`)**:
+    - Ny fane *Dørlåser* under *Snippen Booking > Lokaler* for oppretting, redigering og sletting av låser.
+    - Nedtrekksfelt i lokale-skjemaet for å knytte hvert lokale til ønsket dørlås.
+  - **Tester & Dokumentasjon**:
+    - Integrasjonstester i `DoorLockApiTest.php`, enhetstester i `DoorLockRepositoryTest.php` og admin-sidetester i `BookingObjectsPageTest.php`.
+    - Oppdatert `README.md` og `DEV_README.md`.
+
 ## [2.47.1] - 2026-10-21
 - (#330) [Lokal Utvikling] Håndter manglende sendmail og feil i wp_mail under lokal kjøring:
   - **Devcontainer & Docker-miljø**:

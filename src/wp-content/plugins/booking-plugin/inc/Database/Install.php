@@ -20,10 +20,12 @@ class Install {
 			$table_blocks  = $wpdb->prefix . 'snippen_booking_blocks';
 			$table_objects = $wpdb->prefix . 'snippen_booking_objects';
 			$table_rules   = $wpdb->prefix . 'snippen_pricing_rules';
+			$table_locks   = $wpdb->prefix . 'snippen_door_locks';
 			if (
 				$wpdb->get_var( "SHOW TABLES LIKE '$table_blocks'" ) === $table_blocks &&
 				$wpdb->get_var( "SHOW TABLES LIKE '$table_objects'" ) === $table_objects &&
-				$wpdb->get_var( "SHOW TABLES LIKE '$table_rules'" ) === $table_rules
+				$wpdb->get_var( "SHOW TABLES LIKE '$table_rules'" ) === $table_rules &&
+				$wpdb->get_var( "SHOW TABLES LIKE '$table_locks'" ) === $table_locks
 			) {
 				return;
 			}
@@ -33,6 +35,19 @@ class Install {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+		// Door locks table
+		$table_door_locks = $wpdb->prefix . 'snippen_door_locks';
+		$sql_door_locks   = "CREATE TABLE $table_door_locks (
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+		dbDelta( $sql_door_locks );
+
 		// Booking objects table
 		$table_objects = $wpdb->prefix . 'snippen_booking_objects';
 		$sql_objects   = "CREATE TABLE $table_objects (
@@ -41,6 +56,7 @@ class Install {
             description TEXT,
             info_link VARCHAR(255),
             door_code VARCHAR(255) NULL,
+            door_lock_id INT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at DATETIME NULL,
