@@ -129,6 +129,11 @@ class EmailProvider implements EmailProviderInterface {
 	 * @param \WP_Error $error The WP_Error instance.
 	 */
 	public function log_mail_failure( $error ) {
-		error_log( 'EmailProvider: wp_mail failed: ' . $error->get_error_message() . ' Data: ' . wp_json_encode( $error->get_error_data() ) );
+		$error_message = $error->get_error_message();
+		$context       = '';
+		if ( false !== strpos( $error_message, 'Could not instantiate mail function' ) ) {
+			$context = ' (Local dev hint: configure SMTP via "composer demo:mail" or ensure /usr/sbin/sendmail is installed)';
+		}
+		error_log( 'EmailProvider: wp_mail failed: ' . $error_message . $context . ' Data: ' . wp_json_encode( $error->get_error_data() ) );
 	}
 }

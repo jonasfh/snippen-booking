@@ -47,9 +47,18 @@ RUN echo "xdebug.mode=debug" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.client_host=host.docker.internal" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini \
     && echo "xdebug.client_port=9003" >> /etc/php/8.3/cli/conf.d/20-xdebug.ini
 
-# Configure Apache to listen on port 8080
+# Configure Apache to listen on port 8080 and set global ServerName
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
-    && sed -i 's/:80/:8080/' /etc/apache2/sites-available/000-default.conf
+    && sed -i 's/:80/:8080/' /etc/apache2/sites-available/000-default.conf \
+    && echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername
+
+# Install dummy sendmail for local mail catching in devcontainer
+RUN printf '#!/bin/sh\nLOG_FILE="/var/log/mail.log"\nif ! touch "$LOG_FILE" 2>/dev/null; then\n    LOG_FILE="/tmp/mail.log"\n    touch "$LOG_FILE" 2>/dev/null || true\nfi\nchmod 666 "$LOG_FILE" 2>/dev/null || true\necho "=== EMAIL DISPATCH: $(date -Iseconds) ===" >> "$LOG_FILE"\necho "Arguments: $*" >> "$LOG_FILE"\ncat >> "$LOG_FILE"\necho "" >> "$LOG_FILE"\nexit 0\n' > /usr/local/bin/sendmail-dummy \
+    && chmod 755 /usr/local/bin/sendmail-dummy \
+    && ln -sf /usr/local/bin/sendmail-dummy /usr/sbin/sendmail \
+    && ln -sf /usr/local/bin/sendmail-dummy /usr/lib/sendmail \
+    && touch /var/log/mail.log && chmod 666 /var/log/mail.log
 
 ENV XDEBUG_MODE=debug
 
