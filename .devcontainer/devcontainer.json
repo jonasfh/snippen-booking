@@ -4,9 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": ".",
     "args": {
-      "USERNAME": "vscode",
-      "USER_UID": "${localEnv:UID}",
-      "USER_GID": "${localEnv:GID}"
+      "USERNAME": "vscode"
     }
   },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
@@ -38,10 +36,10 @@
     "HTTP_HOST": "localhost",
     "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright"
   },
-  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.gemini; sudo bash /entrypoint.sh setup",
+  "postCreateCommand": "sudo bash /entrypoint.sh setup",
   "postStartCommand": "nohup sudo bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
   "mounts": [
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=${localEnv:HOME}/.gitconfig,target=/etc/gitconfig,type=bind,readonly",
     "source=${localWorkspaceFolderBasename}-gemini-data,target=/home/vscode/.gemini,type=volume",
     "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind,consistency=cached"
   ],
