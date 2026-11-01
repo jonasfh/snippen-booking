@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../snippen-testing"
+		},
+		{
+			"path": "../snippen-doorman-service"
 		}
 	],
 	"settings": {}

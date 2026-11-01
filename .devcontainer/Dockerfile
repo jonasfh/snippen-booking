@@ -92,7 +92,8 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 RUN groupadd --gid "$USER_GID" "$USERNAME" || true \
  && useradd -s /bin/bash --uid "$USER_UID" --gid "$USER_GID" -m "$USERNAME" || true \
- && mkdir -p /home/$USERNAME/.local && chown -R $USER_UID:$USER_GID /home/$USERNAME
+ && mkdir -p /home/$USERNAME/.local /home/$USERNAME/.gemini \
+ && chown -R "$USER_UID":"$USER_GID" /home/$USERNAME
 
 # Allow the non-root user to run admin commands for starting services during postStart
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
