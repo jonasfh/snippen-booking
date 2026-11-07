@@ -942,27 +942,39 @@ curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/locks" \
 #### 2. `GET /wp-json/snippen/v1/door/bookings`
 Returns all qualifying, active, and approaching access windows in UTC ISO 8601.
 
-- **Query Parameter `lock_id` (optional/required)**:
-  - `GET /wp-json/snippen/v1/door/bookings?lock_id=1`
-  - If `lock_id` is specified, returns only reservations associated with that specific door lock. Returns HTTP 404 (`lock_not_found`) if the lock ID does not exist.
-  - If multiple locks exist and `lock_id` is omitted, returns HTTP 400 (`missing_lock_id`).
-  - If only a single lock exists in the system and `lock_id` is omitted, the API defaults automatically to that lock for seamless backward compatibility.
+- **Query Parameters**:
+  - `lock_id` (optional/required): Filter by logical door lock ID (`GET /wp-json/snippen/v1/door/bookings?lock_id=1`). If multiple locks exist and `lock_id` is omitted, returns HTTP 400 (`missing_lock_id`). If only a single lock exists, defaults automatically.
+  - `include_expired_days` (optional, default `0`, e.g. `7`): When `> 0`, includes reservations that expired within the specified number of days in addition to active/upcoming bookings.
+- **Rules**:
+  - `start_time` and `end_time`: ISO-8601 UTC timestamps (including buffer before and grace after).
+  - `door_code`: 4–6 digit PIN string, or `null` if none assigned yet.
+  - `door_code_updated_at`: ISO-8601 UTC timestamp of when code was last updated, or `null`.
+  - `booking_ids`: Array of integer IDs for all bookings in the merged contiguous chain. When multiple bookings in a chain have codes, the code with the newest `door_code_updated_at` (fallback `modified_at`) wins.
+  - `booking_objects`: List of booked venues (`id` and `name`, e.g. Peisestuen, Festsalen).
+  - `lock_ids`: List of logical lock IDs associated with the venues.
 
 **Request:**
 ```bash
-curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings?lock_id=1" \
+curl -s -X GET "https://snippen.example.com/wp-json/snippen/v1/door/bookings?lock_id=1&include_expired_days=7" \
   -H "Authorization: Bearer secret-token"
 ```
 
 **Response (HTTP 200):**
 ```json
 {
+  "server_time": "2026-11-07T13:15:00Z",
   "bookings": [
     {
-      "id": 105,
-      "start_time": "2026-10-24T17:30:00Z",
-      "end_time": "2026-10-25T13:00:00Z",
-      "door_code": "482910"
+      "id": 101,
+      "booking_ids": [101, 102],
+      "booking_objects": [
+        { "id": 1, "name": "Peisestuen" }
+      ],
+      "lock_ids": [1],
+      "start_time": "2026-11-07T15:00:00Z",
+      "end_time": "2026-11-09T11:00:00Z",
+      "door_code": "123456",
+      "door_code_updated_at": "2026-11-07T12:30:00Z"
     }
   ]
 }
@@ -973,38 +985,87 @@ Updates the door code for a booking and automatically propagates the code to all
 
 **Validation Rules:**
 - Only 4 to 6 digit numeric strings are accepted (`/^[0-9]{4,6}$/`).
-- `null` or clearing codes via PATCH is rejected with HTTP 400 (`door_code_cannot_be_null`). Code revocation is handled within the Doorman service when a booking naturally disappears from the GET list.
+- Returns full update summary including `updated_booking_ids` and `door_code_updated_at`.
 
 **Request:**
 ```bash
-curl -s -X PATCH "https://snippen.example.com/wp-json/snippen/v1/door/bookings/105/code" \
+curl -s -X PATCH "https://snippen.example.com/wp-json/snippen/v1/door/bookings/101/code" \
   -H "Authorization: Bearer secret-token" \
   -H "Content-Type: application/json" \
-  -d '{"door_code": "482910"}'
+  -d '{"door_code": "654321"}'
 ```
 
 **Response (HTTP 200):**
 ```json
 {
   "success": true,
-  "id": 105
+  "id": 101,
+  "updated_booking_ids": [101, 102],
+  "door_code": "654321",
+  "door_code_updated_at": "2026-11-07T13:15:05Z"
+}
+```
+
+#### 4. `POST /wp-json/snippen/v1/door/status`
+Receives full lock and reservation snapshot payload pushed from `snippen-doorman-service` after each sync cycle.
+
+**Headers:**
+```http
+Authorization: Bearer <SNIPPEN_DOORMAN_API_TOKEN>
+Content-Type: application/json
+```
+
+**Request Body:**
+Contains `generated_at`, `expired_window_days`, `locks`, `reservations_in_db`, `provisioned_on_locks`, and `recently_expired`.
+
+**Response (HTTP 200):**
+```json
+{
+  "success": true,
+  "received_at": "2026-11-07T13:15:11Z"
+}
+```
+
+#### 5. `GET /wp-json/snippen/v1/door/status`
+Returns the latest status snapshot enriched with customer details (`customer_name`, `customer_phone`, `customer_email`) and booked venue objects. Accessible with API Bearer token or by authenticated administrators.
+
+**Response (HTTP 200):**
+```json
+{
+  "server_time": "2026-11-07T13:20:00Z",
+  "doorman_last_received_at": "2026-11-07T13:15:11Z",
+  "doorman_status": {
+    "generated_at": "2026-11-07T13:15:10+00:00",
+    "expired_window_days": 7,
+    "locks": [ ... ],
+    "reservations_in_db": [ ... ],
+    "provisioned_on_locks": [ ... ],
+    "recently_expired": [ ... ]
+  }
 }
 ```
 
 ### Admin Door Codes Interface & Notification System
 
-In addition to automated assignment via Doorman service polling, administrators can manage door codes directly from the WordPress admin interface (**Snippen Booking > Dørkoder**):
+Administrators manage door codes and monitor physical door locks from **Snippen Booking > Dørkoder**:
 
-- **Upcoming Bookings Table**: Displays upcoming reservations within selectable horizons (7, 14, 30, 60 days) with filters for missing or assigned door codes.
-- **Contiguous Reservation Grouping**: Chains of adjacent reservations for the same tenant are automatically grouped into single rows displaying tenant details, agreed booking duration, and Doorman access window with buffer and grace periods.
-- **Manual Assignment & Bulk Save**: Administrators can assign codes inline per row or enter multiple codes and click **Lagre alle endrede koder**.
-- **Customer Notifications**: When a code is saved with the **Varsle** checkbox checked (or via REST API / AJAX), SMS and email notifications are dispatched using the `door_code_updated` template.
+- **Fane 1: Administrer dørkoder (`tab=manage`)**:
+  - **Upcoming Bookings Table**: Displays upcoming reservations within selectable horizons (7, 14, 30, 60 days) with filters for missing or assigned door codes.
+  - **Contiguous Reservation Grouping**: Chains of adjacent reservations for the same tenant are automatically grouped into single rows displaying tenant details, agreed booking duration, and Doorman access window with buffer and grace periods.
+  - **Physical Door Status Badges**: Each row displays real-time status per physical door from the latest Doorman snapshot (e.g. `Inngangsdør 1: I lås (Spor 3)`, `Planlagt i Doorman`, or `Kode-avvik!`).
+  - **Manual Assignment & Bulk Save**: Administrators can assign codes inline per row or enter multiple codes and click **Lagre alle endrede koder**.
+  - **Customer Notifications**: When a code is saved with the **Varsle** checkbox checked (or via REST API / AJAX), SMS and email notifications are dispatched using the `door_code_updated` template.
+- **Fane 2: Status i dørene & Doorman (`tab=status`)**:
+  - **Fysiske dørlåser (`locks`)**: Cards for each physical lock showing Bluetooth MAC address, battery percentage, lock/door status, last seen, and a visual grid of keypad slots 3–9.
+  - **Koder i dørene nå (`provisioned_on_locks`)**: Table showing codes currently programmed in each lock, slot, venue, tenant, and validity.
+  - **Planlagte reservasjoner i Doorman-databasen (`reservations_in_db`)**: Table of scheduled reservations with sync status per physical lock.
+  - **Nylig utløpte koder (`recently_expired`)**: Table of codes expired within the past 7 days.
 - **Placeholders**:
   - `{{door_code}}`: The 4–6 digit numeric PIN.
   - `{{door_code_valid_from}}`: Start of the access window (e.g. `24.10.2026 kl. 17:30`).
   - `{{door_code_valid_to}}`: End of the access window (e.g. `25.10.2026 kl. 13:00`).
   - `{{door_code_validity_period}}`: Formatted access period (e.g. `24.10.2026 kl. 17:30 – 13:00` or `24.10.2026 kl. 17:30 – 25.10.2026 kl. 13:00`).
-- **User Display**: Legacy static door codes on booking objects are removed. In user-facing views (My Bookings shortcode and modal popup), the door code is displayed (`🔓 <code>`) whenever assigned, or indicated as `Tildeles før leiestart` when pending assignment.
+- **User Display**: In user-facing views (My Bookings shortcode and modal popup), the door code is displayed (`🔓 <code>`) whenever assigned, or indicated as `Tildeles før leiestart` when pending assignment.
 
 ## Modal & Overlay Architecture
 

@@ -1069,4 +1069,149 @@ class DoorLockApiTest extends TestCase {
 		$adjacent_cancelled = DoorLockApi::find_adjacent_booking_ids( $b2_cancelled_id );
 		$this->assertSame( array( $b2_cancelled_id ), $adjacent_cancelled );
 	}
+
+	/**
+	 * Test POST /door/status saves snapshot and returns 200 (Issue #369).
+	 */
+	public function test_post_door_status_endpoint_success() {
+		$payload = array(
+			'generated_at'        => '2026-11-07T13:15:10+00:00',
+			'expired_window_days' => 7,
+			'locks'               => array(
+				array(
+					'name'        => 'Inngangsdør 1 (Hoveddør)',
+					'address'     => '98:1B:B5:0B:BB:35',
+					'key_slot'    => 1,
+					'lock_id'     => '1',
+					'battery'     => 85,
+					'lock_status' => 'LOCKED',
+					'door_status' => 'CLOSED',
+					'last_seen'   => '2026-11-07T13:15:08+00:00',
+					'slots'       => array(
+						'3' => '101',
+						'4' => null,
+						'5' => null,
+						'6' => null,
+						'7' => null,
+						'8' => null,
+						'9' => null,
+					),
+				),
+			),
+			'reservations_in_db'  => array(),
+			'provisioned_on_locks' => array(),
+			'recently_expired'    => array(),
+		);
+
+		$req = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
+		$req->set_header( 'Content-Type', 'application/json' );
+		$req->set_body( wp_json_encode( $payload ) );
+
+		$res  = rest_do_request( $req );
+		$data = $res->get_data();
+
+		$this->assertSame( 200, $res->get_status() );
+		$this->assertTrue( $data['success'] );
+		$this->assertNotEmpty( $data['received_at'] );
+
+		$saved = get_option( 'snippen_doorman_last_status' );
+		$this->assertIsArray( $saved );
+		$this->assertSame( '2026-11-07T13:15:10+00:00', $saved['generated_at'] );
+	}
+
+	/**
+	 * Test POST /door/status rejects unauthorized requests and invalid JSON (Issue #369).
+	 */
+	public function test_post_door_status_unauthorized_and_invalid_json() {
+		// Unauthorized
+		$unauth_req = new \WP_REST_Request( 'POST', '/snippen/v1/door/status' );
+		$res1       = rest_do_request( $unauth_req );
+		$this->assertSame( 401, $res1->get_status() );
+
+		// Invalid JSON
+		$req2 = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
+		$res2 = rest_do_request( $req2 );
+		$this->assertSame( 400, $res2->get_status() );
+	}
+
+	/**
+	 * Test GET /door/status returns null snapshot when empty and enriched data when populated (Issue #369).
+	 */
+	public function test_get_door_status_enriched_with_metadata() {
+		delete_option( 'snippen_doorman_last_status' );
+		delete_option( 'snippen_doorman_last_received_at' );
+
+		// 1. When empty
+		$req1  = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
+		$res1  = rest_do_request( $req1 );
+		$data1 = $res1->get_data();
+
+		$this->assertSame( 200, $res1->get_status() );
+		$this->assertArrayHasKey( 'server_time', $data1 );
+		$this->assertNull( $data1['doorman_last_received_at'] );
+		$this->assertNull( $data1['doorman_status'] );
+
+		// 2. Insert booking with venue in DB
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock_id   = $lock_repo->create( array( 'name' => 'Inngangsdør 1' ) );
+		$venue_id  = $this->create_venue( 'Peisestuen', $lock_id );
+
+		$b_id = $this->create_booking(
+			array(
+				'customer_name'  => 'Status Test Leietaker',
+				'customer_phone' => '+4799001122',
+				'customer_email' => 'status@test.com',
+				'status'         => 'confirmed',
+				'door_code'      => '123456',
+			)
+		);
+		$this->link_booking_venue( $b_id, $venue_id );
+
+		$payload = array(
+			'generated_at'        => '2026-11-07T13:15:10+00:00',
+			'expired_window_days' => 7,
+			'locks'               => array(
+				array(
+					'lock_id' => (string) $lock_id,
+					'name'    => 'Inngangsdør 1',
+					'battery' => 90,
+				),
+			),
+			'reservations_in_db'  => array(
+				array(
+					'booking_id' => (string) $b_id,
+					'pin'        => '123456',
+					'status'     => 'PROVISIONED',
+				),
+			),
+			'provisioned_on_locks' => array(
+				array(
+					'booking_id' => (string) $b_id,
+					'slot'       => 3,
+					'pin'        => '123456',
+				),
+			),
+			'recently_expired'    => array(),
+		);
+
+		update_option( 'snippen_doorman_last_status', $payload );
+		update_option( 'snippen_doorman_last_received_at', '2026-11-07T13:15:11Z' );
+
+		// 3. GET /door/status should be enriched
+		$req2  = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
+		$res2  = rest_do_request( $req2 );
+		$data2 = $res2->get_data();
+
+		$this->assertSame( 200, $res2->get_status() );
+		$this->assertSame( '2026-11-07T13:15:11Z', $data2['doorman_last_received_at'] );
+
+		$res_item = $data2['doorman_status']['reservations_in_db'][0];
+		$this->assertSame( 'Status Test Leietaker', $res_item['customer_name'] );
+		$this->assertSame( '+4799001122', $res_item['customer_phone'] );
+		$this->assertCount( 1, $res_item['booking_objects'] );
+		$this->assertSame( 'Peisestuen', $res_item['booking_objects'][0]['name'] );
+
+		$prov_item = $data2['doorman_status']['provisioned_on_locks'][0];
+		$this->assertSame( 'Status Test Leietaker', $prov_item['customer_name'] );
+	}
 }
