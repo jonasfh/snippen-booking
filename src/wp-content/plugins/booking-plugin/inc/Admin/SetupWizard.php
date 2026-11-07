@@ -56,22 +56,38 @@ class SetupWizard {
 		$table_rule_objects  = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
 
 		// 1. Create booking objects
-		$wpdb->insert(
-			$table_objects,
-			array(
-				'name'        => 'Festsalen',
-				'description' => 'Vårt største lokale med plass til mange gjester.',
-			)
+		$table_door_locks = $wpdb->prefix . 'snippen_door_locks';
+		$default_lock_id  = null;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$col_door_lock_id = $wpdb->get_results(
+			"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table_objects' AND COLUMN_NAME = 'door_lock_id'"
 		);
+		if ( ! empty( $col_door_lock_id ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$lock = $wpdb->get_row( "SELECT id FROM {$table_door_locks} WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1" );
+			if ( $lock ) {
+				$default_lock_id = (int) $lock->id;
+			}
+		}
+
+		$festsalen_data = array(
+			'name'        => 'Festsalen',
+			'description' => 'Vårt største lokale med plass til mange gjester.',
+		);
+		if ( null !== $default_lock_id ) {
+			$festsalen_data['door_lock_id'] = $default_lock_id;
+		}
+		$wpdb->insert( $table_objects, $festsalen_data );
 		$festsalen_id = $wpdb->insert_id;
 
-		$wpdb->insert(
-			$table_objects,
-			array(
-				'name'        => 'Peisestuen',
-				'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.',
-			)
+		$peisestuen_data = array(
+			'name'        => 'Peisestuen',
+			'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.',
 		);
+		if ( null !== $default_lock_id ) {
+			$peisestuen_data['door_lock_id'] = $default_lock_id;
+		}
+		$wpdb->insert( $table_objects, $peisestuen_data );
 		$peisestuen_id = $wpdb->insert_id;
 
 		$object_ids = array( $festsalen_id, $peisestuen_id );
@@ -471,22 +487,38 @@ class SetupWizard {
 		$table_rule_objects  = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
 
 		// 1. Create booking objects
-		$wpdb->insert(
-			$table_objects,
-			array(
-				'name'        => 'Festsalen',
-				'description' => 'Vårt største lokale med plass til mange gjester.',
-			)
+		$table_door_locks = $wpdb->prefix . 'snippen_door_locks';
+		$default_lock_id  = null;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$col_door_lock_id = $wpdb->get_results(
+			"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table_objects' AND COLUMN_NAME = 'door_lock_id'"
 		);
+		if ( ! empty( $col_door_lock_id ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$lock = $wpdb->get_row( "SELECT id FROM {$table_door_locks} WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1" );
+			if ( $lock ) {
+				$default_lock_id = (int) $lock->id;
+			}
+		}
+
+		$festsalen_data = array(
+			'name'        => 'Festsalen',
+			'description' => 'Vårt største lokale med plass til mange gjester.',
+		);
+		if ( null !== $default_lock_id ) {
+			$festsalen_data['door_lock_id'] = $default_lock_id;
+		}
+		$wpdb->insert( $table_objects, $festsalen_data );
 		$festsalen_id = $wpdb->insert_id;
 
-		$wpdb->insert(
-			$table_objects,
-			array(
-				'name'        => 'Peisestuen',
-				'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.',
-			)
+		$peisestuen_data = array(
+			'name'        => 'Peisestuen',
+			'description' => 'Koselig lokale med peis, perfekt for mindre samlinger.',
 		);
+		if ( null !== $default_lock_id ) {
+			$peisestuen_data['door_lock_id'] = $default_lock_id;
+		}
+		$wpdb->insert( $table_objects, $peisestuen_data );
 		$peisestuen_id = $wpdb->insert_id;
 
 		$object_ids = array( $festsalen_id, $peisestuen_id );
