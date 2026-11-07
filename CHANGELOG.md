@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.50.1] - 2026-11-07
+- (#28) [Fix] Demo setup and SetupWizard: Automatisk tilknytning av standard dørlås (`door_lock_id = 1`) til booking-objekter:
+  - `bin/demo-gateway.php`: Sørger for at starter-dørlås (`wp_snippen_door_locks` ID 1) eksisterer og tilknytter alle opprettede lokaler (`wp_snippen_booking_objects`) med `door_lock_id = 1`.
+  - `SetupWizard.php`: Sørger for at `create_starter_setup()` og `create_starter_setup_v2()` oppretter standardlokaler med `door_lock_id` satt til aktiv dørlås dersom tabellen eksisterer.
+
 ## [2.50.0] - 2026-11-07
 - (#372) [Feature] Støtt flere Doorman-services: Håndter service_id, flåtestatus og vis samlet oversikt i WP Admin:
   - **REST API (`DoorLockApi.php`)**:

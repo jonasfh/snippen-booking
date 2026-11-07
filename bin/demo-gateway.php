@@ -67,6 +67,36 @@ if ( empty( $objects ) ) {
 	}
 }
 
+// 2b. Ensure starter door lock exists and link booking objects to lock
+$table_door_locks = $wpdb->prefix . 'snippen_door_locks';
+$table_exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_door_locks ) );
+if ( $table_exists ) {
+	$lock = $wpdb->get_row( "SELECT id FROM {$table_door_locks} WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 1" );
+	if ( ! $lock ) {
+		$wpdb->insert(
+			$table_door_locks,
+			array(
+				'id'          => 1,
+				'name'        => 'Hovedinngang',
+				'description' => 'Felles ytterdør',
+				'created_at'  => current_time( 'mysql' ),
+				'modified_at' => current_time( 'mysql' ),
+			)
+		);
+		$lock_id = (int) ( $wpdb->insert_id ?: 1 );
+	} else {
+		$lock_id = (int) $lock->id;
+	}
+
+	$wpdb->query(
+		$wpdb->prepare(
+			"UPDATE {$table_objects} SET door_lock_id = %d WHERE door_lock_id IS NULL AND deleted_at IS NULL",
+			$lock_id
+		)
+	);
+	echo "Associated booking objects with door lock ID {$lock_id}.\n";
+}
+
 // 3. Generate frontend demo booking pages if demo-pages.php exists
 $demo_pages_script = __DIR__ . '/demo-pages.php';
 if ( file_exists( $demo_pages_script ) ) {
