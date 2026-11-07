@@ -166,12 +166,13 @@ class DoorCodeService {
 	/**
 	 * Apply a door code to a booking and all adjacent bookings in its chain.
 	 *
-	 * @param int    $booking_id
-	 * @param string $door_code
-	 * @param bool   $dispatch_notification
+	 * @param int         $booking_id
+	 * @param string      $door_code
+	 * @param bool        $dispatch_notification
+	 * @param string|null $old_code_override
 	 * @return true|\WP_Error
 	 */
-	public static function apply_door_code( int $booking_id, string $door_code, bool $dispatch_notification = true ) {
+	public static function apply_door_code( int $booking_id, string $door_code, bool $dispatch_notification = true, ?string $old_code_override = null ) {
 		global $wpdb;
 		$table_bookings = $wpdb->prefix . 'snippen_bookings';
 
@@ -185,7 +186,7 @@ class DoorCodeService {
 			return new \WP_Error( 'rest_invalid_param', __( 'Ugyldig dørkode. Koden må bestå av 4–6 numeriske sifre.', 'snippen-booking' ), array( 'status' => 400 ) );
 		}
 
-		$old_code    = (string) $booking->door_code;
+		$old_code    = ( null !== $old_code_override ) ? $old_code_override : (string) $booking->door_code;
 		$booking_ids = \SnippenBooking\Api\DoorLockApi::find_adjacent_booking_ids( $booking_id );
 		if ( empty( $booking_ids ) ) {
 			$booking_ids = array( $booking_id );
