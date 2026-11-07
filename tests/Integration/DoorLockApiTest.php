@@ -32,9 +32,11 @@ class DoorLockApiTest extends TestCase {
 		parent::setUp();
 		global $wpdb;
 
-		// Clean bookings
+		// Clean bookings and locks
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_bookings" );
 		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_blocks" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_booking_booking_objects" );
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
 
 		// Enable feature by default in tests
 		update_option( 'snippen_enable_doorman_api', 'yes' );
@@ -230,12 +232,14 @@ class DoorLockApiTest extends TestCase {
 
 		$this->assertSame( 200, $response->get_status() );
 		$data = $response->get_data();
+		$this->assertArrayHasKey( 'server_time', $data );
 		$this->assertCount( 1, $data['bookings'] );
 
 		$item = $data['bookings'][0];
 		$this->assertSame( $id, $item['id'] );
-		$this->assertArrayNotHasKey( 'booking_ids', $item );
+		$this->assertSame( array( $id ), $item['booking_ids'] );
 		$this->assertNull( $item['door_code'] );
+		$this->assertNull( $item['door_code_updated_at'] );
 
 		// 12:00 minus 30 min buffer = 11:30:00Z
 		$this->assertSame( $tomorrow . 'T11:30:00Z', $item['start_time'] );
@@ -353,7 +357,7 @@ class DoorLockApiTest extends TestCase {
 		$item = $data['bookings'][0];
 
 		$this->assertSame( $id1, $item['id'] );
-		$this->assertArrayNotHasKey( 'booking_ids', $item );
+		$this->assertSame( array( $id1, $id2 ), $item['booking_ids'] );
 
 		// Start: Day 1 at 18:00 minus 30 min buffer = Day 1 17:30:00Z
 		$this->assertSame( $day1 . 'T17:30:00Z', $item['start_time'] );
@@ -426,13 +430,13 @@ class DoorLockApiTest extends TestCase {
 
 		// Tenant A: chained across day 1 and day 2
 		$this->assertSame( $id_a1, $tenant_a_group['id'] );
-		$this->assertArrayNotHasKey( 'booking_ids', $tenant_a_group );
+		$this->assertSame( array( $id_a1, $id_a2 ), $tenant_a_group['booking_ids'] );
 		$this->assertSame( $day1 . 'T07:30:00Z', $tenant_a_group['start_time'] );
 		$this->assertSame( $day2 . 'T22:00:00Z', $tenant_a_group['end_time'] );
 
 		// Tenant B: single booking
 		$this->assertSame( $id_b1, $tenant_b_group['id'] );
-		$this->assertArrayNotHasKey( 'booking_ids', $tenant_b_group );
+		$this->assertSame( array( $id_b1 ), $tenant_b_group['booking_ids'] );
 
 		// Test PATCHing Tenant A's second booking propagates to both Tenant A bookings, but not Tenant B
 		$patch_req = $this->create_auth_request( 'PATCH', '/snippen/v1/door/bookings/' . $id_a2 . '/code' );
@@ -637,7 +641,7 @@ class DoorLockApiTest extends TestCase {
 		$chain = $data['bookings'][0];
 
 		$this->assertSame( $id1, $chain['id'] );
-		$this->assertArrayNotHasKey( 'booking_ids', $chain );
+		$this->assertSame( array( $id1, $id2, $id3 ), $chain['booking_ids'] );
 		// Start from day1 minus 30 min = 17:30
 		$this->assertSame( $day1 . 'T17:30:00Z', $chain['start_time'] );
 		// End from day3 plus 120 min = 14:00
@@ -811,5 +815,258 @@ class DoorLockApiTest extends TestCase {
 		$this->assertSame( 200, $res2->get_status() );
 		$this->assertCount( 1, $data2['bookings'] );
 		$this->assertSame( $booking2_id, $data2['bookings'][0]['id'] );
+	}
+
+	/**
+	 * Test GET /door/bookings JSON contract includes objects, lock_ids, and ISO timestamps (Issue #368).
+	 */
+	public function test_get_bookings_contract_with_objects_and_locks() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
+
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock_id   = $lock_repo->create( array( 'name' => 'Inngangsdør 1' ) );
+		$venue_id  = $this->create_venue( 'Peisestuen', $lock_id );
+
+		$tomorrow = date( 'Y-m-d', strtotime( '+1 day' ) );
+		$b_id     = $this->create_booking(
+			array(
+				'booking_date' => $tomorrow,
+				'start_time'   => '15:00:00',
+				'end_time'     => '18:00:00',
+				'status'       => 'confirmed',
+				'door_code'    => '123456',
+			)
+		);
+		$this->link_booking_venue( $b_id, $venue_id );
+
+		// Set explicit door_code_updated_at
+		$now_mysql = '2026-11-07 12:30:00';
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			array( 'door_code_updated_at' => $now_mysql ),
+			array( 'id' => $b_id )
+		);
+
+		$req      = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$res      = rest_do_request( $req );
+		$data     = $res->get_data();
+
+		$this->assertSame( 200, $res->get_status() );
+		$this->assertArrayHasKey( 'server_time', $data );
+		$this->assertCount( 1, $data['bookings'] );
+
+		$booking = $data['bookings'][0];
+		$this->assertSame( $b_id, $booking['id'] );
+		$this->assertSame( array( $b_id ), $booking['booking_ids'] );
+		$this->assertSame( '123456', $booking['door_code'] );
+		$this->assertSame( '2026-11-07T12:30:00Z', $booking['door_code_updated_at'] );
+		$this->assertSame( array( $lock_id ), $booking['lock_ids'] );
+		$this->assertCount( 1, $booking['booking_objects'] );
+		$this->assertSame( $venue_id, $booking['booking_objects'][0]['id'] );
+		$this->assertSame( 'Peisestuen', $booking['booking_objects'][0]['name'] );
+	}
+
+	/**
+	 * Test that when adjacent bookings in a chain have codes, the newest door_code_updated_at wins (Issue #368).
+	 */
+	public function test_get_bookings_chain_newest_door_code_updated_at_wins() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
+
+		$lock_repo = new \SnippenBooking\Database\Repository\DoorLockRepository();
+		$lock_id   = $lock_repo->create( array( 'name' => 'Felleslås' ) );
+		$venue_id  = $this->create_venue( 'Peisestuen', $lock_id );
+
+		$day1 = date( 'Y-m-d', strtotime( '+1 day' ) );
+		$day2 = date( 'Y-m-d', strtotime( '+2 days' ) );
+
+		// Booking 1: older code
+		$b1_id = $this->create_booking(
+			array(
+				'user_id'      => 55,
+				'booking_date' => $day1,
+				'start_time'   => '10:00:00',
+				'end_time'     => '14:00:00',
+				'status'       => 'confirmed',
+				'door_code'    => '111111',
+			)
+		);
+		$this->link_booking_venue( $b1_id, $venue_id );
+
+		// Booking 2: newer code
+		$b2_id = $this->create_booking(
+			array(
+				'user_id'      => 55,
+				'booking_date' => $day2,
+				'start_time'   => '10:00:00',
+				'end_time'     => '14:00:00',
+				'status'       => 'confirmed',
+				'door_code'    => '222222',
+			)
+		);
+		$this->link_booking_venue( $b2_id, $venue_id );
+
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			array( 'door_code_updated_at' => '2026-11-06 10:00:00' ),
+			array( 'id' => $b1_id )
+		);
+		$wpdb->update(
+			$wpdb->prefix . 'snippen_bookings',
+			array( 'door_code_updated_at' => '2026-11-07 14:00:00' ),
+			array( 'id' => $b2_id )
+		);
+
+		$req  = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$res  = rest_do_request( $req );
+		$data = $res->get_data();
+
+		$this->assertSame( 200, $res->get_status() );
+		$this->assertCount( 1, $data['bookings'] );
+		$chain = $data['bookings'][0];
+
+		$this->assertSame( array( $b1_id, $b2_id ), $chain['booking_ids'] );
+		$this->assertSame( '222222', $chain['door_code'], 'Newer code on booking 2 should win the merged chain' );
+		$this->assertSame( '2026-11-07T14:00:00Z', $chain['door_code_updated_at'] );
+	}
+
+	/**
+	 * Test include_expired_days query parameter returns recently expired bookings (Issue #368).
+	 */
+	public function test_get_bookings_include_expired_days() {
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}snippen_door_locks" );
+
+		$past_3_days  = date( 'Y-m-d', strtotime( '-3 days' ) );
+		$past_10_days = date( 'Y-m-d', strtotime( '-10 days' ) );
+
+		// Booking expired 3 days ago
+		$b_expired_3d = $this->create_booking(
+			array(
+				'user_id'      => 60,
+				'booking_date' => $past_3_days,
+				'start_time'   => '10:00:00',
+				'end_time'     => '12:00:00',
+				'status'       => 'confirmed',
+				'door_code'    => '333333',
+			)
+		);
+
+		// Booking expired 10 days ago
+		$b_expired_10d = $this->create_booking(
+			array(
+				'user_id'      => 61,
+				'booking_date' => $past_10_days,
+				'start_time'   => '10:00:00',
+				'end_time'     => '12:00:00',
+				'status'       => 'confirmed',
+				'door_code'    => '444444',
+			)
+		);
+
+		// 1. Without include_expired_days -> both should be excluded (already expired)
+		$req1  = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$res1  = rest_do_request( $req1 );
+		$data1 = $res1->get_data();
+		$this->assertSame( 200, $res1->get_status() );
+		$this->assertCount( 0, $data1['bookings'] );
+
+		// 2. With include_expired_days=7 -> b_expired_3d included, b_expired_10d excluded
+		$req2 = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$req2->set_param( 'include_expired_days', 7 );
+		$res2  = rest_do_request( $req2 );
+		$data2 = $res2->get_data();
+
+		$this->assertSame( 200, $res2->get_status() );
+		$this->assertCount( 1, $data2['bookings'] );
+		$this->assertSame( $b_expired_3d, $data2['bookings'][0]['id'] );
+		$this->assertSame( '333333', $data2['bookings'][0]['door_code'] );
+	}
+
+	/**
+	 * Test PATCH /door/bookings/{id}/code returns expected contract structure (Issue #368).
+	 */
+	public function test_patch_door_code_response_contract() {
+		$day1 = date( 'Y-m-d', strtotime( '+1 day' ) );
+		$day2 = date( 'Y-m-d', strtotime( '+2 days' ) );
+
+		$id1 = $this->create_booking(
+			array(
+				'user_id'      => 77,
+				'booking_date' => $day1,
+				'start_time'   => '10:00:00',
+				'end_time'     => '12:00:00',
+				'status'       => 'confirmed',
+			)
+		);
+
+		$id2 = $this->create_booking(
+			array(
+				'user_id'      => 77,
+				'booking_date' => $day2,
+				'start_time'   => '10:00:00',
+				'end_time'     => '12:00:00',
+				'status'       => 'confirmed',
+			)
+		);
+
+		$req = $this->create_auth_request( 'PATCH', '/snippen/v1/door/bookings/' . $id1 . '/code' );
+		$req->set_header( 'Content-Type', 'application/json' );
+		$req->set_body( wp_json_encode( array( 'door_code' => '654321' ) ) );
+
+		$res  = rest_do_request( $req );
+		$data = $res->get_data();
+
+		$this->assertSame( 200, $res->get_status() );
+		$this->assertTrue( $data['success'] );
+		$this->assertSame( $id1, $data['id'] );
+		$this->assertSame( array( $id1, $id2 ), $data['updated_booking_ids'] );
+		$this->assertSame( '654321', $data['door_code'] );
+		$this->assertNotEmpty( $data['door_code_updated_at'] );
+		$this->assertMatchesRegularExpression( '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $data['door_code_updated_at'] );
+	}
+
+	/**
+	 * Test find_adjacent_booking_ids excludes cancelled bookings and uses booking_snapshot times (Issue #368).
+	 */
+	public function test_find_adjacent_booking_ids_excludes_cancelled_and_uses_snapshot_times() {
+		$day1 = date( 'Y-m-d', strtotime( '+1 day' ) );
+		$day2 = date( 'Y-m-d', strtotime( '+2 days' ) );
+
+		$b1_id = $this->create_booking(
+			array(
+				'user_id'          => 88,
+				'booking_date'     => $day1,
+				'status'           => 'confirmed',
+				'booking_snapshot' => wp_json_encode(
+					array(
+						'start_time' => '12:00:00',
+						'end_time'   => '18:00:00',
+					)
+				),
+			)
+		);
+
+		// Adjacent day, but cancelled -> should NOT be chained
+		$b2_cancelled_id = $this->create_booking(
+			array(
+				'user_id'          => 88,
+				'booking_date'     => $day2,
+				'status'           => 'cancelled',
+				'booking_snapshot' => wp_json_encode(
+					array(
+						'start_time' => '12:00:00',
+						'end_time'   => '18:00:00',
+					)
+				),
+			)
+		);
+
+		$adjacent = DoorLockApi::find_adjacent_booking_ids( $b1_id );
+		$this->assertSame( array( $b1_id ), $adjacent );
+
+		$adjacent_cancelled = DoorLockApi::find_adjacent_booking_ids( $b2_cancelled_id );
+		$this->assertSame( array( $b2_cancelled_id ), $adjacent_cancelled );
 	}
 }

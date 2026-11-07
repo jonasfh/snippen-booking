@@ -70,10 +70,18 @@ class DoorLockApi {
 					'callback'            => array( __CLASS__, 'get_bookings' ),
 					'permission_callback' => array( __CLASS__, 'verify_token' ),
 					'args'                => array(
-						'lock_id' => array(
+						'lock_id'              => array(
 							'required'          => false,
 							'validate_callback' => function ( $param ) {
 								return is_numeric( $param ) && (int) $param > 0;
+							},
+							'sanitize_callback' => 'absint',
+						),
+						'include_expired_days' => array(
+							'required'          => false,
+							'default'           => 0,
+							'validate_callback' => function ( $param ) {
+								return is_numeric( $param ) && (int) $param >= 0;
 							},
 							'sanitize_callback' => 'absint',
 						),
@@ -212,9 +220,10 @@ class DoorLockApi {
 			$lock_id = ! empty( $all_locks ) ? (int) $all_locks[0]->id : 0;
 		}
 
-		$expose_hours   = intval( get_option( 'snippen_doorman_expose_hours_before', 168 ) );
-		$buffer_minutes = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
-		$grace_minutes  = intval( get_option( 'snippen_doorman_grace_minutes_after', 120 ) );
+		$include_expired_days = absint( $request->get_param( 'include_expired_days' ) );
+		$expose_hours         = intval( get_option( 'snippen_doorman_expose_hours_before', 168 ) );
+		$buffer_minutes       = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
+		$grace_minutes        = intval( get_option( 'snippen_doorman_grace_minutes_after', 120 ) );
 
 		$configured_statuses = get_option( 'snippen_doorman_booking_statuses', 'confirmed' );
 		if ( is_array( $configured_statuses ) ) {
@@ -267,7 +276,7 @@ class DoorLockApi {
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$query = $wpdb->prepare(
 			"SELECT b.id, b.user_id, b.customer_phone, b.customer_email, b.booking_date, b.status, 
-			        b.door_code, b.booking_type, b.booking_snapshot,
+			        b.door_code, b.door_code_updated_at, b.modified_at, b.booking_type, b.booking_snapshot,
 			        COALESCE(MIN(s.start_time), ts.start_time, '00:00:00') as block_start,
 			        COALESCE(MAX(s.end_time), ts.end_time, '23:59:59') as block_end
 			 FROM {$table_bookings} b
@@ -285,6 +294,29 @@ class DoorLockApi {
 		$raw_bookings = $wpdb->get_results( $query );
 		if ( ! is_array( $raw_bookings ) ) {
 			$raw_bookings = array();
+		}
+
+		// Preload booking objects and locks
+		$raw_booking_ids    = wp_list_pluck( $raw_bookings, 'id' );
+		$objects_by_booking = array();
+		if ( ! empty( $raw_booking_ids ) ) {
+			$id_placeholders = implode( ',', array_fill( 0, count( $raw_booking_ids ), '%d' ) );
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$obj_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT bbo.booking_id, bo.id as object_id, bo.name as object_name, bo.door_lock_id
+					 FROM {$table_bbo} bbo
+					 INNER JOIN {$table_objects} bo ON bbo.booking_object_id = bo.id
+					 WHERE bbo.booking_id IN ({$id_placeholders}) AND bo.deleted_at IS NULL
+					 ORDER BY bo.id ASC",
+					...$raw_booking_ids
+				)
+			);
+			if ( is_array( $obj_rows ) ) {
+				foreach ( $obj_rows as $orow ) {
+					$objects_by_booking[ (int) $orow->booking_id ][] = $orow;
+				}
+			}
 		}
 
 		// Calculate precise real start and end timestamps for each booking
@@ -323,24 +355,50 @@ class DoorLockApi {
 				$tenant_key = 'email_' . strtolower( trim( (string) $b->customer_email ) );
 			}
 
+			$b_objs  = array();
+			$b_locks = array();
+			if ( isset( $objects_by_booking[ (int) $b->id ] ) ) {
+				foreach ( $objects_by_booking[ (int) $b->id ] as $orow ) {
+					$b_objs[] = array(
+						'id'   => (int) $orow->object_id,
+						'name' => (string) $orow->object_name,
+					);
+					if ( ! empty( $orow->door_lock_id ) ) {
+						$b_locks[] = (int) $orow->door_lock_id;
+					}
+				}
+			}
+			if ( empty( $b_locks ) && $lock_id > 0 ) {
+				$b_locks[] = (int) $lock_id;
+			}
+			$b_locks = array_values( array_unique( $b_locks ) );
+
 			$normalized[] = array(
-				'id'           => (int) $b->id,
-				'booking_date' => $b->booking_date,
-				'door_code'    => $b->door_code,
-				'tenant_key'   => $tenant_key,
-				'real_start'   => $start_ts,
-				'real_end'     => $end_ts,
+				'id'                   => (int) $b->id,
+				'booking_date'         => $b->booking_date,
+				'door_code'            => $b->door_code,
+				'door_code_updated_at' => $b->door_code_updated_at,
+				'modified_at'          => $b->modified_at,
+				'tenant_key'           => $tenant_key,
+				'real_start'           => $start_ts,
+				'real_end'             => $end_ts,
+				'booking_objects'      => $b_objs,
+				'lock_ids'             => $b_locks,
 			);
 		}
 
 		// Group adjacent / consecutive bookings per tenant
 		$grouped_chains = self::build_contiguous_chains( $normalized );
 
-		// Filter groups based on expose horizon and grace period
+		// Filter groups based on expose horizon, expired horizon, and grace period
 		$now_ts         = time();
 		$expose_seconds = $expose_hours * 3600;
 		$buffer_seconds = $buffer_minutes * 60;
 		$grace_seconds  = $grace_minutes * 60;
+
+		$min_end = ( $include_expired_days > 0 )
+			? ( $now_ts - ( $include_expired_days * 86400 ) )
+			: $now_ts;
 
 		$response_bookings = array();
 		foreach ( $grouped_chains as $group ) {
@@ -349,18 +407,32 @@ class DoorLockApi {
 
 			$expose_limit = $group['group_start'] - $expose_seconds;
 
-			// Must be within expose horizon and not expired beyond grace period
-			if ( $now_ts >= $expose_limit && $now_ts <= $calc_end ) {
+			// Must be within expose horizon and not expired beyond grace / expired horizon
+			if ( $now_ts >= $expose_limit && $calc_end >= $min_end ) {
+				$door_code_updated_at_iso = null;
+				if ( ! empty( $group['door_code'] ) && ! empty( $group['door_code_updated_at'] ) ) {
+					$door_code_updated_at_iso = gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $group['door_code_updated_at'] ) );
+				}
+
 				$response_bookings[] = array(
-					'id'         => $group['primary_id'],
-					'start_time' => gmdate( 'Y-m-d\TH:i:s\Z', $calc_start ),
-					'end_time'   => gmdate( 'Y-m-d\TH:i:s\Z', $calc_end ),
-					'door_code'  => ! empty( $group['door_code'] ) ? (string) $group['door_code'] : null,
+					'id'                   => (int) $group['primary_id'],
+					'booking_ids'          => array_values( array_map( 'intval', $group['booking_ids'] ) ),
+					'booking_objects'      => ! empty( $group['booking_objects'] ) ? array_values( $group['booking_objects'] ) : array(),
+					'lock_ids'             => ! empty( $group['lock_ids'] ) ? array_values( array_map( 'intval', $group['lock_ids'] ) ) : array(),
+					'start_time'           => gmdate( 'Y-m-d\TH:i:s\Z', $calc_start ),
+					'end_time'             => gmdate( 'Y-m-d\TH:i:s\Z', $calc_end ),
+					'door_code'            => ! empty( $group['door_code'] ) ? (string) $group['door_code'] : null,
+					'door_code_updated_at' => $door_code_updated_at_iso,
 				);
 			}
 		}
 
-		return rest_ensure_response( array( 'bookings' => $response_bookings ) );
+		return rest_ensure_response(
+			array(
+				'server_time' => gmdate( 'Y-m-d\TH:i:s\Z', $now_ts ),
+				'bookings'    => $response_bookings,
+			)
+		);
 	}
 
 	/**
@@ -379,6 +451,19 @@ class DoorLockApi {
 			$by_tenant[ $b['tenant_key'] ][] = $b;
 		}
 
+		$get_code_ts = function ( $item ) {
+			if ( empty( $item['door_code'] ) ) {
+				return 0;
+			}
+			if ( ! empty( $item['door_code_updated_at'] ) ) {
+				return strtotime( $item['door_code_updated_at'] );
+			}
+			if ( ! empty( $item['modified_at'] ) ) {
+				return strtotime( $item['modified_at'] );
+			}
+			return 1;
+		};
+
 		$all_chains = array();
 
 		foreach ( $by_tenant as $tenant_bookings ) {
@@ -396,14 +481,20 @@ class DoorLockApi {
 			$current_chain = null;
 
 			foreach ( $tenant_bookings as $item ) {
+				$item_code_ts = $get_code_ts( $item );
+
 				if ( null === $current_chain ) {
 					$current_chain = array(
-						'primary_id'  => $item['id'],
-						'booking_ids' => array( $item['id'] ),
-						'group_start' => $item['real_start'],
-						'group_end'   => $item['real_end'],
-						'door_code'   => $item['door_code'],
-						'last_date'   => $item['booking_date'],
+						'primary_id'           => $item['id'],
+						'booking_ids'          => array( $item['id'] ),
+						'group_start'          => $item['real_start'],
+						'group_end'            => $item['real_end'],
+						'door_code'            => ! empty( $item['door_code'] ) ? (string) $item['door_code'] : null,
+						'door_code_updated_at' => ( ! empty( $item['door_code'] ) && ! empty( $item['door_code_updated_at'] ) ) ? $item['door_code_updated_at'] : null,
+						'code_version_ts'      => $item_code_ts,
+						'last_date'            => $item['booking_date'],
+						'booking_objects'      => isset( $item['booking_objects'] ) ? $item['booking_objects'] : array(),
+						'lock_ids'             => isset( $item['lock_ids'] ) ? $item['lock_ids'] : array(),
 					);
 					continue;
 				}
@@ -431,18 +522,40 @@ class DoorLockApi {
 					$current_chain['group_start']   = min( $current_chain['group_start'], $item['real_start'] );
 					$current_chain['group_end']     = max( $current_chain['group_end'], $item['real_end'] );
 					$current_chain['last_date']     = ( $item['booking_date'] > $current_chain['last_date'] ) ? $item['booking_date'] : $current_chain['last_date'];
-					if ( empty( $current_chain['door_code'] ) && ! empty( $item['door_code'] ) ) {
-						$current_chain['door_code'] = $item['door_code'];
+
+					if ( ! empty( $item['booking_objects'] ) ) {
+						$existing_ids = wp_list_pluck( $current_chain['booking_objects'], 'id' );
+						foreach ( $item['booking_objects'] as $obj ) {
+							if ( ! in_array( $obj['id'], $existing_ids, true ) ) {
+								$current_chain['booking_objects'][] = $obj;
+								$existing_ids[]                     = $obj['id'];
+							}
+						}
+					}
+
+					if ( ! empty( $item['lock_ids'] ) ) {
+						$current_chain['lock_ids'] = array_values( array_unique( array_merge( $current_chain['lock_ids'], $item['lock_ids'] ) ) );
+					}
+
+					// The code with the newest door_code_updated_at (fallback modified_at) wins
+					if ( $item_code_ts > $current_chain['code_version_ts'] ) {
+						$current_chain['door_code']            = (string) $item['door_code'];
+						$current_chain['door_code_updated_at'] = ! empty( $item['door_code_updated_at'] ) ? $item['door_code_updated_at'] : null;
+						$current_chain['code_version_ts']      = $item_code_ts;
 					}
 				} else {
 					$all_chains[]  = $current_chain;
 					$current_chain = array(
-						'primary_id'  => $item['id'],
-						'booking_ids' => array( $item['id'] ),
-						'group_start' => $item['real_start'],
-						'group_end'   => $item['real_end'],
-						'door_code'   => $item['door_code'],
-						'last_date'   => $item['booking_date'],
+						'primary_id'           => $item['id'],
+						'booking_ids'          => array( $item['id'] ),
+						'group_start'          => $item['real_start'],
+						'group_end'            => $item['real_end'],
+						'door_code'            => ! empty( $item['door_code'] ) ? (string) $item['door_code'] : null,
+						'door_code_updated_at' => ( ! empty( $item['door_code'] ) && ! empty( $item['door_code_updated_at'] ) ) ? $item['door_code_updated_at'] : null,
+						'code_version_ts'      => $item_code_ts,
+						'last_date'            => $item['booking_date'],
+						'booking_objects'      => isset( $item['booking_objects'] ) ? $item['booking_objects'] : array(),
+						'lock_ids'             => isset( $item['lock_ids'] ) ? $item['lock_ids'] : array(),
 					);
 				}
 			}
@@ -482,7 +595,7 @@ class DoorLockApi {
 			)
 		);
 
-		if ( ! $target ) {
+		if ( ! $target || 'cancelled' === $target->status ) {
 			return array( $booking_id );
 		}
 
@@ -503,14 +616,14 @@ class DoorLockApi {
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			"SELECT b.id, b.user_id, b.customer_phone, b.customer_email, b.booking_date, b.status, 
-			        b.door_code, b.booking_type, b.booking_snapshot,
+			        b.door_code, b.door_code_updated_at, b.modified_at, b.booking_type, b.booking_snapshot,
 			        COALESCE(MIN(s.start_time), ts.start_time, '00:00:00') as block_start,
 			        COALESCE(MAX(s.end_time), ts.end_time, '23:59:59') as block_end
 			 FROM {$table_bookings} b
 			 LEFT JOIN {$table_bb} bb ON b.id = bb.booking_id
 			 LEFT JOIN {$table_blocks} s ON bb.booking_block_id = s.id
 			 LEFT JOIN {$table_slots} ts ON b.slot_id = ts.id
-			 WHERE b.deleted_at IS NULL AND {$where_sql}
+			 WHERE b.deleted_at IS NULL AND b.status != 'cancelled' AND {$where_sql}
 			 GROUP BY b.id
 			 ORDER BY b.booking_date ASC, block_start ASC, b.id ASC"
 		);
@@ -523,18 +636,33 @@ class DoorLockApi {
 		foreach ( $rows as $b ) {
 			$start_time = $b->block_start ?: '00:00:00';
 			$end_time   = $b->block_end ?: '23:59:59';
-			$start_ts   = strtotime( $b->booking_date . ' ' . $start_time );
-			$end_ts     = ( $end_time < $start_time )
+
+			if ( ! empty( $b->booking_snapshot ) ) {
+				$snap = json_decode( $b->booking_snapshot, true );
+				if ( is_array( $snap ) ) {
+					if ( ! empty( $snap['start_time'] ) ) {
+						$start_time = $snap['start_time'];
+					}
+					if ( ! empty( $snap['end_time'] ) ) {
+						$end_time = $snap['end_time'];
+					}
+				}
+			}
+
+			$start_ts = strtotime( $b->booking_date . ' ' . $start_time );
+			$end_ts   = ( $end_time < $start_time )
 				? strtotime( date( 'Y-m-d', strtotime( $b->booking_date . ' +1 day' ) ) . ' ' . $end_time )
 				: strtotime( $b->booking_date . ' ' . $end_time );
 
 			$normalized[] = array(
-				'id'           => (int) $b->id,
-				'booking_date' => $b->booking_date,
-				'door_code'    => $b->door_code,
-				'tenant_key'   => 'tenant',
-				'real_start'   => $start_ts,
-				'real_end'     => $end_ts,
+				'id'                   => (int) $b->id,
+				'booking_date'         => $b->booking_date,
+				'door_code'            => $b->door_code,
+				'door_code_updated_at' => $b->door_code_updated_at,
+				'modified_at'          => $b->modified_at,
+				'tenant_key'           => 'tenant',
+				'real_start'           => $start_ts,
+				'real_end'             => $end_ts,
 			);
 		}
 
@@ -574,10 +702,24 @@ class DoorLockApi {
 			return $result;
 		}
 
+		global $wpdb;
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$row            = $wpdb->get_row( $wpdb->prepare( "SELECT door_code, door_code_updated_at FROM {$table_bookings} WHERE id = %d", $id ) );
+
+		$updated_ids = self::find_adjacent_booking_ids( $id );
+
+		$door_code_updated_at_iso = null;
+		if ( $row && ! empty( $row->door_code ) && ! empty( $row->door_code_updated_at ) ) {
+			$door_code_updated_at_iso = gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $row->door_code_updated_at ) );
+		}
+
 		return rest_ensure_response(
 			array(
-				'success' => true,
-				'id'      => $id,
+				'success'              => true,
+				'id'                   => $id,
+				'updated_booking_ids'  => array_values( array_map( 'intval', $updated_ids ) ),
+				'door_code'            => ( $row && ! empty( $row->door_code ) ) ? (string) $row->door_code : null,
+				'door_code_updated_at' => $door_code_updated_at_iso,
 			)
 		);
 	}

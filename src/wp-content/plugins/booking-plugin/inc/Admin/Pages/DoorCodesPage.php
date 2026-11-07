@@ -97,13 +97,15 @@ class DoorCodesPage {
 			}
 
 			$normalized[] = array(
-				'id'           => (int) $b->id,
-				'booking_date' => $b->booking_date,
-				'door_code'    => $b->door_code,
-				'tenant_key'   => $tenant_key,
-				'real_start'   => $start_ts,
-				'real_end'     => $end_ts,
-				'booking_row'  => $b,
+				'id'                   => (int) $b->id,
+				'booking_date'         => $b->booking_date,
+				'door_code'            => $b->door_code,
+				'door_code_updated_at' => $b->door_code_updated_at,
+				'modified_at'          => isset( $b->modified_at ) ? $b->modified_at : null,
+				'tenant_key'           => $tenant_key,
+				'real_start'           => $start_ts,
+				'real_end'             => $end_ts,
+				'booking_row'          => $b,
 			);
 		}
 

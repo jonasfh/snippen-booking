@@ -157,8 +157,18 @@ class BookingEditApi {
 		$payment_status_id = isset( $_POST['payment_status_id'] ) ? (int) $_POST['payment_status_id'] : 1;
 		$payment_notes     = isset( $_POST['payment_notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['payment_notes'] ) ) : null;
 		$door_code         = isset( $_POST['door_code'] ) ? sanitize_text_field( wp_unslash( $_POST['door_code'] ) ) : '';
-		$description       = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
-		$changes_summary   = isset( $_POST['changes_summary'] ) ? sanitize_textarea_field( wp_unslash( $_POST['changes_summary'] ) ) : '';
+		if ( '' !== $door_code && ! preg_match( '/^[0-9]{4,6}$/', $door_code ) ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'Ugyldig dørkode. Koden må bestå av 4–6 numeriske sifre.', 'snippen-booking' ),
+				),
+				400
+			);
+		}
+
+		$old_door_code   = (string) $existing->door_code;
+		$description     = isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '';
+		$changes_summary = isset( $_POST['changes_summary'] ) ? sanitize_textarea_field( wp_unslash( $_POST['changes_summary'] ) ) : '';
 
 		$update_data = array(
 			'booking_date'      => $booking_date,
@@ -170,7 +180,7 @@ class BookingEditApi {
 			'price'             => $price,
 			'discount_amount'   => $discount_amount,
 			'payment_status_id' => $payment_status_id,
-			'door_code'         => $door_code,
+			'door_code'         => '' !== $door_code ? $door_code : null,
 			'description'       => $description,
 		);
 
@@ -186,6 +196,12 @@ class BookingEditApi {
 		$result = $booking_repo->update( $booking_id, $update_data, $object_ids, $block_ids, $modifier_info );
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		// Propagate door code via DoorCodeService to set door_code_updated_at, chain bookings, and notify customer
+		if ( isset( $_POST['door_code'] ) ) {
+			\SnippenBooking\Service\DoorCodeService::apply_door_code( $booking_id, $door_code, true, $old_door_code );
+			$result = $booking_repo->find( $booking_id );
 		}
 
 		// Handle notifications if status changed

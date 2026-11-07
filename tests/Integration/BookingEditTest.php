@@ -346,6 +346,7 @@ class BookingEditTest extends TestCase {
 		$this->assertEquals( 'confirmed', $updated->status );
 		$this->assertEquals( 1200, (float) $updated->price );
 		$this->assertEquals( '4321', $updated->door_code );
+		$this->assertNotEmpty( $updated->door_code_updated_at );
 
 		// Check snapshot history
 		$snapshots = $booking_repo->get_snapshots( $booking_id );
@@ -353,5 +354,143 @@ class BookingEditTest extends TestCase {
 		$this->assertEquals( 2, (int) $snapshots[1]->revision );
 		$this->assertEquals( 'Admin flyttet dato og bekreftet booking', $snapshots[1]->changes_summary );
 		$this->assertEquals( $admin_id, (int) $snapshots[1]->modified_by_user_id );
+	}
+
+	/**
+	 * Test that BookingEditApi rejects invalid door code (must be 4-6 digits).
+	 */
+	public function test_booking_edit_rejects_invalid_door_code() {
+		$block_repo   = new BookingBlockRepository();
+		$blocks       = $block_repo->find_all();
+		$objects      = $this->get_objects();
+		$booking_repo = new BookingRepository();
+
+		$booking_id = $booking_repo->create(
+			array(
+				'user_id'        => 1,
+				'booking_date'   => '2026-11-28',
+				'customer_name'  => 'Door Code Validation Test',
+				'customer_email' => 'codeval@test.com',
+				'customer_phone' => '11223344',
+				'status'         => 'confirmed',
+			),
+			array( $objects[0]->id ),
+			array( $blocks[0]->id )
+		);
+
+		$admin_id = wp_insert_user(
+			array(
+				'user_login' => 'admin_code_validator_' . wp_generate_password( 6, false ),
+				'user_pass'  => 'password',
+				'role'       => 'administrator',
+			)
+		);
+		$admin    = get_user_by( 'id', $admin_id );
+		$admin->add_cap( 'manage_snippen_bookings' );
+		wp_set_current_user( $admin_id );
+
+		$_POST    = array(
+			'nonce'          => wp_create_nonce( 'snippen_admin_nonce' ),
+			'booking_id'     => $booking_id,
+			'customer_name'  => 'Door Code Validation Test',
+			'customer_email' => 'codeval@test.com',
+			'customer_phone' => '11223344',
+			'door_code'      => '12', // Too short (must be 4-6 digits)
+			'booking_date'   => '2026-11-28',
+			'object_ids'     => array( $objects[0]->id ),
+			'block_ids'      => array( $blocks[0]->id ),
+		);
+		$_REQUEST = $_POST;
+
+		ob_start();
+		try {
+			BookingEditApi::edit_booking();
+		} catch ( \Throwable $e ) {
+		}
+		$output = ob_get_clean();
+		$json   = json_decode( $output, true );
+
+		$this->assertFalse( $json['success'] );
+		$this->assertStringContainsString( 'Ugyldig dørkode', $json['data']['message'] );
+	}
+
+	/**
+	 * Test that BookingEditApi propagates door code across chained bookings and sets door_code_updated_at.
+	 */
+	public function test_booking_edit_propagates_door_code_to_chained_booking() {
+		$block_repo   = new BookingBlockRepository();
+		$blocks       = $block_repo->find_all();
+		$objects      = $this->get_objects();
+		$booking_repo = new BookingRepository();
+
+		// Create two adjacent bookings for the same tenant (phone)
+		$booking1_id = $booking_repo->create(
+			array(
+				'user_id'        => 1,
+				'booking_date'   => '2026-11-29',
+				'customer_name'  => 'Chain Tenant',
+				'customer_email' => 'chain@test.com',
+				'customer_phone' => '99887766',
+				'status'         => 'confirmed',
+			),
+			array( $objects[0]->id ),
+			array( $blocks[0]->id )
+		);
+
+		$booking2_id = $booking_repo->create(
+			array(
+				'user_id'        => 1,
+				'booking_date'   => '2026-11-30',
+				'customer_name'  => 'Chain Tenant',
+				'customer_email' => 'chain@test.com',
+				'customer_phone' => '99887766',
+				'status'         => 'confirmed',
+			),
+			array( $objects[0]->id ),
+			array( $blocks[0]->id )
+		);
+
+		$admin_id = wp_insert_user(
+			array(
+				'user_login' => 'admin_chain_editor_' . wp_generate_password( 6, false ),
+				'user_pass'  => 'password',
+				'role'       => 'administrator',
+			)
+		);
+		$admin    = get_user_by( 'id', $admin_id );
+		$admin->add_cap( 'manage_snippen_bookings' );
+		wp_set_current_user( $admin_id );
+
+		$_POST    = array(
+			'nonce'          => wp_create_nonce( 'snippen_admin_nonce' ),
+			'booking_id'     => $booking1_id,
+			'customer_name'  => 'Chain Tenant',
+			'customer_email' => 'chain@test.com',
+			'customer_phone' => '99887766',
+			'door_code'      => '987654',
+			'booking_date'   => '2026-11-29',
+			'object_ids'     => array( $objects[0]->id ),
+			'block_ids'      => array( $blocks[0]->id ),
+		);
+		$_REQUEST = $_POST;
+
+		ob_start();
+		try {
+			BookingEditApi::edit_booking();
+		} catch ( \Throwable $e ) {
+		}
+		$output = ob_get_clean();
+		$json   = json_decode( $output, true );
+
+		$this->assertTrue( $json['success'] );
+
+		// Check both bookings have new code and door_code_updated_at
+		$b1 = $booking_repo->find( $booking1_id );
+		$b2 = $booking_repo->find( $booking2_id );
+
+		$this->assertSame( '987654', $b1->door_code );
+		$this->assertSame( '987654', $b2->door_code );
+		$this->assertNotEmpty( $b1->door_code_updated_at );
+		$this->assertNotEmpty( $b2->door_code_updated_at );
 	}
 }
