@@ -189,4 +189,127 @@ class DoorCodesPageTest extends TestCase {
 		$this->assertCount( 2, $mismatch_badges );
 		$this->assertStringContainsString( 'Kode-avvik!', $mismatch_badges[0] );
 	}
+
+	public function test_status_tab_multi_service_fleet_and_filtering() {
+		$registry = array(
+			'grendehus-node' => array(
+				'service_id'  => 'grendehus-node',
+				'name'        => 'Grendehuset (Hovedbygg)',
+				'version'     => '0.19.0',
+				'hostname'    => 'snippen-pi-grendehus',
+				'ip_address'  => '192.168.1.120',
+				'mac_address' => 'd8:3a:dd:12:34:56',
+				'lock_ids'    => array( '1' ),
+				'last_seen'   => gmdate( 'Y-m-d\TH:i:s\Z', time() - 100 ),
+				'lock_count'  => 1,
+				'min_battery' => 88,
+			),
+			'hybel-node'     => array(
+				'service_id'  => 'hybel-node',
+				'name'        => 'Utleieleilighet (Hybel)',
+				'version'     => '0.19.1',
+				'hostname'    => 'snippen-pi-hybel',
+				'ip_address'  => '192.168.1.125',
+				'mac_address' => 'd8:3a:dd:98:76:54',
+				'lock_ids'    => array( '2' ),
+				'last_seen'   => gmdate( 'Y-m-d\TH:i:s\Z', time() - 200 ),
+				'lock_count'  => 1,
+				'min_battery' => 95,
+			),
+		);
+		update_option( 'snippen_door_services_registry', $registry );
+
+		$status_grendehus = array(
+			'service_id'           => 'grendehus-node',
+			'generated_at'         => '2026-11-07T14:30:00Z',
+			'expired_window_days'  => 7,
+			'locks'                => array(
+				array(
+					'lock_id' => '1',
+					'name'    => 'Grendehusdør',
+					'address' => 'AA:BB:CC:DD:EE:01',
+					'battery' => 88,
+				),
+			),
+			'reservations_in_db'   => array(),
+			'provisioned_on_locks' => array(),
+			'recently_expired'     => array(),
+		);
+		update_option( 'snippen_door_status_grendehus-node', $status_grendehus );
+
+		$status_hybel = array(
+			'service_id'           => 'hybel-node',
+			'generated_at'         => '2026-11-07T14:35:00Z',
+			'expired_window_days'  => 7,
+			'locks'                => array(
+				array(
+					'lock_id' => '2',
+					'name'    => 'Hybeldør',
+					'address' => 'AA:BB:CC:DD:EE:02',
+					'battery' => 95,
+				),
+			),
+			'reservations_in_db'   => array(),
+			'provisioned_on_locks' => array(),
+			'recently_expired'     => array(),
+		);
+		update_option( 'snippen_door_status_hybel-node', $status_hybel );
+
+		$_GET['tab'] = 'status';
+
+		// 1. All services (unified view)
+		$page = new DoorCodesPage();
+		ob_start();
+		$page->render();
+		$output_all = ob_get_clean();
+
+		$this->assertStringContainsString( 'Tilknyttede Doorman-noder (Flåteoversikt)', $output_all );
+		$this->assertStringContainsString( 'Grendehuset (Hovedbygg)', $output_all );
+		$this->assertStringContainsString( 'Utleieleilighet (Hybel)', $output_all );
+		$this->assertStringContainsString( 'http://192.168.1.120:8080', $output_all );
+		$this->assertStringContainsString( 'http://192.168.1.125:8080', $output_all );
+		$this->assertStringContainsString( 'Grendehusdør', $output_all );
+		$this->assertStringContainsString( 'Hybeldør', $output_all );
+
+		// 2. Filter by hybel-node
+		$_GET['service_id'] = 'hybel-node';
+		ob_start();
+		$page->render();
+		$output_filtered = ob_get_clean();
+
+		$this->assertStringContainsString( 'Hybeldør', $output_filtered );
+		$this->assertStringNotContainsString( 'Grendehusdør', $output_filtered );
+
+		unset( $_GET['tab'], $_GET['service_id'] );
+		delete_option( 'snippen_door_services_registry' );
+		delete_option( 'snippen_door_status_grendehus-node' );
+		delete_option( 'snippen_door_status_hybel-node' );
+	}
+
+	public function test_status_tab_offline_warning() {
+		$registry = array(
+			'dead-node' => array(
+				'service_id'  => 'dead-node',
+				'name'        => 'Fjernbygget Node',
+				'last_seen'   => gmdate( 'Y-m-d\TH:i:s\Z', time() - 3600 ), // 1 hour ago (> 15m)
+				'lock_ids'    => array( '9' ),
+				'min_battery' => 10,
+			),
+		);
+		update_option( 'snippen_door_services_registry', $registry );
+
+		$_GET['tab'] = 'status';
+
+		$page = new DoorCodesPage();
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Advarsel: Én eller flere Doorman-tjenester er offline!', $output );
+		$this->assertStringContainsString( 'Fjernbygget Node', $output );
+		$this->assertStringContainsString( 'Offline (&gt; 15m)', $output );
+
+		unset( $_GET['tab'] );
+		delete_option( 'snippen_door_services_registry' );
+	}
 }

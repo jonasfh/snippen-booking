@@ -163,7 +163,8 @@ class DoorCodesPage {
 
 		$buffer_minutes = intval( get_option( 'snippen_doorman_buffer_minutes_before', 30 ) );
 		$grace_minutes  = intval( get_option( 'snippen_doorman_grace_minutes_after', 120 ) );
-		$doorman_status = get_option( 'snippen_doorman_last_status', null );
+		$fleet_info     = DoorLockApi::get_all_services_status();
+		$doorman_status = $fleet_info['aggregated'] ?? get_option( 'snippen_doorman_last_status', null );
 
 		?>
 		<div class="tablenav top" style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px;">
@@ -430,36 +431,81 @@ class DoorCodesPage {
 	 * Render Tab 2: Status i dørene & Doorman
 	 */
 	private function render_status_tab() {
-		$raw_status  = get_option( 'snippen_doorman_last_status', null );
-		$received_at = get_option( 'snippen_doorman_last_received_at', null );
+		$fleet_data      = DoorLockApi::get_all_services_status();
+		$services        = $fleet_data['services'] ?? array();
+		$services_status = $fleet_data['services_status'] ?? array();
+		$aggregated      = $fleet_data['aggregated'] ?? null;
+		$last_recv_at    = $fleet_data['last_received_at'] ?? null;
 
-		if ( empty( $raw_status ) || ! is_array( $raw_status ) ) {
+		if ( empty( $services ) && empty( $aggregated ) ) {
 			?>
 			<div class="notice notice-info inline" style="padding:15px; margin-top:15px;">
 				<h3 style="margin-top:0;"><?php esc_html_e( 'Ingen status mottatt fra Doorman ennå', 'snippen-booking' ); ?></h3>
 				<p>
-					<?php esc_html_e( 'Ingen status-snapshot er mottatt fra snippen-doorman-service. Så snart tjenesten utfører en synkronisering og sender data til POST /wp-json/snippen/v1/door/status, vil aktiv låsestatus, batterinivå og koder i dørene vises her automatisk.', 'snippen-booking' ); ?>
+					<?php esc_html_e( 'Ingen status-snapshot er mottatt fra snippen-doorman-service. Så snart en tjeneste utfører en synkronisering og sender data til POST /wp-json/snippen/v1/door/status, vil aktiv låsestatus, batterinivå og koder i dørene vises her automatisk.', 'snippen-booking' ); ?>
 				</p>
 			</div>
 			<?php
 			return;
 		}
 
-		$status = DoorLockApi::enrich_status_metadata( $raw_status );
+		$selected_service = isset( $_GET['service_id'] ) ? sanitize_key( wp_unslash( $_GET['service_id'] ) ) : 'all';
+		if ( 'all' !== $selected_service && ! isset( $services_status[ $selected_service ] ) ) {
+			$selected_service = 'all';
+		}
+
+		$is_filtered = ( 'all' !== $selected_service );
+		if ( $is_filtered ) {
+			$status         = $services_status[ $selected_service ];
+			$active_service = $services[ $selected_service ] ?? null;
+		} else {
+			$status         = $aggregated ?: array();
+			$active_service = null;
+		}
 
 		$locks            = $status['locks'] ?? array();
 		$provisioned      = $status['provisioned_on_locks'] ?? array();
 		$reservations     = $status['reservations_in_db'] ?? array();
 		$recently_expired = $status['recently_expired'] ?? array();
 		$generated_at     = ! empty( $status['generated_at'] ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $status['generated_at'] ) ) : '-';
-		$received_fmt     = ! empty( $received_at ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $received_at ) ) : '-';
+		$received_fmt     = ! empty( $last_recv_at ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $last_recv_at ) ) : '-';
+
+		// Check for offline nodes (> 15 min)
+		$offline_nodes = array();
+		foreach ( $services as $snode ) {
+			if ( ! empty( $snode['is_offline'] ) ) {
+				$offline_nodes[] = $snode;
+			}
+		}
 
 		?>
-		<div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:14px 20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center;">
+		<?php if ( ! empty( $offline_nodes ) ) : ?>
+			<div class="notice notice-error inline" style="padding:14px 18px; margin:15px 0 20px; border-left-color:#dc2626; background:#fef2f2; border-radius:4px;">
+				<h3 style="margin:0 0 6px; color:#991b1b; font-size:15px;">
+					⚠️ <?php esc_html_e( 'Advarsel: Én eller flere Doorman-tjenester er offline!', 'snippen-booking' ); ?>
+				</h3>
+				<p style="margin:0; color:#7f1d1d; font-size:13px; line-height:1.5;">
+					<?php
+					$offline_strings = array();
+					foreach ( $offline_nodes as $on ) {
+						$ls_fmt            = ! empty( $on['last_seen'] ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $on['last_seen'] ) ) : __( 'aldri', 'snippen-booking' );
+						$offline_strings[] = sprintf( '<strong>%s</strong> (sist sett: %s)', esc_html( $on['name'] ?? $on['service_id'] ), esc_html( $ls_fmt ) );
+					}
+					printf(
+						/* translators: %s: list of offline node names and timestamps */
+						esc_html__( 'Følgende noder har ikke rapportert status på over 15 minutter og kan være offline eller ha nettverksproblemer: %s.', 'snippen-booking' ),
+						implode( ', ', $offline_strings ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					);
+					?>
+				</p>
+			</div>
+		<?php endif; ?>
+
+		<div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:14px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
 			<div>
 				<strong style="font-size:14px; color:#0f172a;"><?php esc_html_e( '📡 Yale Doorman-tjeneste tilkoblet', 'snippen-booking' ); ?></strong>
 				<div style="color:#64748b; font-size:12px; margin-top:3px;">
-					<?php printf( esc_html__( 'Sist mottatt fra Doorman: %1$s (Generert i tjeneste: %2$s)', 'snippen-booking' ), esc_html( $received_fmt ), esc_html( $generated_at ) ); ?>
+					<?php printf( esc_html__( 'Sist mottatt fra Doorman-flåten: %1$s (Generert i tjeneste: %2$s)', 'snippen-booking' ), esc_html( $received_fmt ), esc_html( $generated_at ) ); ?>
 				</div>
 			</div>
 			<div>
@@ -467,6 +513,112 @@ class DoorCodesPage {
 					<?php esc_html_e( '● Aktiv synkronisering', 'snippen-booking' ); ?>
 				</span>
 			</div>
+		</div>
+
+		<!-- Filter / Visningsvelger for noder -->
+		<div style="background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:12px 18px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+			<div style="display:flex; align-items:center; gap:12px;">
+				<label for="snippen-service-filter" style="font-weight:700; font-size:13px; color:#1e293b;">
+					<?php esc_html_e( 'Filter visning:', 'snippen-booking' ); ?>
+				</label>
+				<select id="snippen-service-filter" onchange="window.location.href=this.value;" style="padding:4px 10px; font-size:13px; border-radius:4px;">
+					<option value="<?php echo esc_url( admin_url( 'admin.php?page=snippen-booking-door-codes&tab=status&service_id=all' ) ); ?>" <?php selected( $selected_service, 'all' ); ?>>
+						<?php esc_html_e( '🌐 Alle noder (samlet oversikt)', 'snippen-booking' ); ?>
+					</option>
+					<?php foreach ( $services as $sid => $snode ) : ?>
+						<option value="<?php echo esc_url( admin_url( 'admin.php?page=snippen-booking-door-codes&tab=status&service_id=' . $sid ) ); ?>" <?php selected( $selected_service, $sid ); ?>>
+							<?php echo esc_html( ( $snode['is_offline'] ? '⚠️ ' : '● ' ) . ( $snode['name'] ?? $sid ) ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<div>
+				<span style="font-size:12px; color:#64748b;">
+					<?php printf( esc_html__( 'Totalt %d registrerte Doorman-noder', 'snippen-booking' ), count( $services ) ); ?>
+				</span>
+			</div>
+		</div>
+
+		<!-- Flåteoversikt: Statuskort per registrert node -->
+		<h2 style="font-size:18px; margin-bottom:12px; color:#0f172a;">
+			<?php esc_html_e( 'Tilknyttede Doorman-noder (Flåteoversikt)', 'snippen-booking' ); ?>
+		</h2>
+		<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:16px; margin-bottom:30px;">
+			<?php foreach ( $services as $sid => $snode ) : ?>
+				<?php
+				$is_node_offline = ! empty( $snode['is_offline'] );
+				$card_border     = $is_node_offline ? '1px solid #fca5a5' : '1px solid #e2e8f0';
+				$last_seen_fmt   = ! empty( $snode['last_seen'] ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $snode['last_seen'] ) ) : '-';
+				$ip_addr         = $snode['ip_address'] ?? '';
+				$ip_url          = '';
+				if ( ! empty( $ip_addr ) ) {
+					$ip_url = ( 0 === strpos( $ip_addr, 'http://' ) || 0 === strpos( $ip_addr, 'https://' ) )
+						? $ip_addr
+						: ( false !== strpos( $ip_addr, ':' ) ? 'http://' . $ip_addr : 'http://' . $ip_addr . ':8080' );
+				}
+				$node_locks_cnt = $snode['lock_count'] ?? count( (array) ( $snode['lock_ids'] ?? array() ) );
+				$min_batt       = isset( $snode['min_battery'] ) && null !== $snode['min_battery'] ? (int) $snode['min_battery'] : null;
+				$batt_color     = ( null !== $min_batt && $min_batt >= 50 ) ? '#16a34a' : ( ( null !== $min_batt && $min_batt >= 20 ) ? '#d97706' : '#dc2626' );
+				?>
+				<div style="background:#fff; border:<?php echo esc_attr( $card_border ); ?>; border-radius:8px; padding:16px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+					<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+						<div>
+							<h3 style="margin:0 0 4px; font-size:16px; font-weight:700; color:#1e293b;">
+								<?php echo esc_html( $snode['name'] ?? $sid ); ?>
+							</h3>
+							<div style="font-family:monospace; font-size:12px; color:#64748b;">
+								ID: <?php echo esc_html( $sid ); ?>
+								<?php if ( ! empty( $snode['version'] ) ) : ?>
+									· <span style="color:#0f172a; font-weight:600;">v<?php echo esc_html( $snode['version'] ); ?></span>
+								<?php endif; ?>
+							</div>
+						</div>
+						<div>
+							<?php if ( $is_node_offline ) : ?>
+								<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:4px 8px; border-radius:12px;">
+									⚠️ <?php esc_html_e( 'Offline (> 15m)', 'snippen-booking' ); ?>
+								</span>
+							<?php else : ?>
+								<span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; font-weight:700; padding:4px 8px; border-radius:12px;">
+									● <?php esc_html_e( 'Online', 'snippen-booking' ); ?>
+								</span>
+							<?php endif; ?>
+						</div>
+					</div>
+
+					<div style="font-size:12px; color:#475569; display:flex; flex-direction:column; gap:4px; margin-top:10px; border-top:1px solid #f1f5f9; padding-top:10px;">
+						<div>
+							<strong><?php esc_html_e( 'Sist sett:', 'snippen-booking' ); ?></strong>
+							<span style="color:#0f172a;"><?php echo esc_html( $last_seen_fmt ); ?></span>
+						</div>
+						<?php if ( ! empty( $snode['hostname'] ) ) : ?>
+							<div>
+								<strong><?php esc_html_e( 'Hostname:', 'snippen-booking' ); ?></strong>
+								<code style="font-size:11px;"><?php echo esc_html( $snode['hostname'] ); ?></code>
+							</div>
+						<?php endif; ?>
+						<?php if ( ! empty( $ip_url ) ) : ?>
+							<div>
+								<strong><?php esc_html_e( 'Lokalt dashbord:', 'snippen-booking' ); ?></strong>
+								<a href="<?php echo esc_url( $ip_url ); ?>" target="_blank" rel="noopener noreferrer" style="font-family:monospace; font-size:11px; color:#2563eb; font-weight:600; text-decoration:none;">
+									<?php echo esc_html( $ip_url ); ?> ↗
+								</a>
+							</div>
+						<?php endif; ?>
+						<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+							<span>
+								<strong><?php esc_html_e( 'Dører:', 'snippen-booking' ); ?></strong>
+								<?php printf( esc_html__( '%d tilknyttet', 'snippen-booking' ), (int) $node_locks_cnt ); ?>
+							</span>
+							<?php if ( null !== $min_batt ) : ?>
+								<span style="font-weight:700; color:<?php echo esc_attr( $batt_color ); ?>; font-size:12px;">
+									🔋 <?php echo esc_html( $min_batt ); ?>%
+								</span>
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
+			<?php endforeach; ?>
 		</div>
 
 		<!-- 1. Fysiske dørlåser -->
@@ -485,6 +637,7 @@ class DoorCodesPage {
 					$door_status   = $lock['door_status'] ?? 'UNKNOWN';
 					$handles_objs  = ! empty( $lock['handles_objects'] ) ? implode( ', ', wp_list_pluck( $lock['handles_objects'], 'name' ) ) : __( 'Peisestuen, Festsalen', 'snippen-booking' );
 					$slots         = isset( $lock['slots'] ) && is_array( $lock['slots'] ) ? $lock['slots'] : array();
+					$node_tag      = ! empty( $lock['service_name'] ) ? $lock['service_name'] : '';
 					?>
 					<div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:18px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
 						<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
@@ -494,6 +647,9 @@ class DoorCodesPage {
 								</h3>
 								<div style="font-family:monospace; font-size:12px; color:#64748b;">
 									MAC: <?php echo esc_html( $lock['address'] ?? '-' ); ?>
+									<?php if ( ! empty( $node_tag ) && ! $is_filtered ) : ?>
+										· <span style="color:#334155; font-weight:600;">🏢 <?php echo esc_html( $node_tag ); ?></span>
+									<?php endif; ?>
 								</div>
 							</div>
 							<div style="text-align:right;">
@@ -505,7 +661,7 @@ class DoorCodesPage {
 							</div>
 						</div>
 
-						<div style="display:flex; gap:8px; margin-bottom:14px; font-size:12px;">
+						<div style="display:flex; gap:8px; margin-bottom:14px; font-size:12px; flex-wrap:wrap;">
 							<span class="badge" style="background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:4px; font-weight:600;">
 								🔒 <?php echo esc_html( $lock_status ); ?>
 							</span>
@@ -554,6 +710,9 @@ class DoorCodesPage {
 			<thead>
 				<tr>
 					<th style="width:200px;"><?php esc_html_e( 'Fysisk dørlås', 'snippen-booking' ); ?></th>
+					<?php if ( ! $is_filtered ) : ?>
+						<th style="width:140px;"><?php esc_html_e( 'Node / Tjeneste', 'snippen-booking' ); ?></th>
+					<?php endif; ?>
 					<th style="width:90px; text-align:center;"><?php esc_html_e( 'Spor', 'snippen-booking' ); ?></th>
 					<th style="width:120px; text-align:center;"><?php esc_html_e( 'PIN-kode', 'snippen-booking' ); ?></th>
 					<th style="width:180px;"><?php esc_html_e( 'Lokale', 'snippen-booking' ); ?></th>
@@ -565,7 +724,7 @@ class DoorCodesPage {
 			<tbody>
 				<?php if ( empty( $provisioned ) ) : ?>
 					<tr>
-						<td colspan="7" style="text-align:center; padding:18px; color:#64748b;">
+						<td colspan="<?php echo $is_filtered ? 7 : 8; ?>" style="text-align:center; padding:18px; color:#64748b;">
 							<?php esc_html_e( 'Ingen koder er programmert i dørlåsene akkurat nå.', 'snippen-booking' ); ?>
 						</td>
 					</tr>
@@ -585,6 +744,13 @@ class DoorCodesPage {
 									<br><small style="font-family:monospace; color:#64748b;"><?php echo esc_html( $p['lock_address'] ); ?></small>
 								<?php endif; ?>
 							</td>
+							<?php if ( ! $is_filtered ) : ?>
+								<td>
+									<span class="badge" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;">
+										🏢 <?php echo esc_html( $p['service_name'] ?? ( $p['service_id'] ?? '-' ) ); ?>
+									</span>
+								</td>
+							<?php endif; ?>
 							<td style="text-align:center;">
 								<span class="badge" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:12px; font-weight:700;">
 									Spor <?php echo esc_html( $p['slot'] ?? '-' ); ?>
@@ -624,6 +790,9 @@ class DoorCodesPage {
 			<thead>
 				<tr>
 					<th style="width:120px;"><?php esc_html_e( 'Booking ID', 'snippen-booking' ); ?></th>
+					<?php if ( ! $is_filtered ) : ?>
+						<th style="width:140px;"><?php esc_html_e( 'Node / Tjeneste', 'snippen-booking' ); ?></th>
+					<?php endif; ?>
 					<th style="width:200px;"><?php esc_html_e( 'Leietaker', 'snippen-booking' ); ?></th>
 					<th style="width:160px;"><?php esc_html_e( 'Lokale', 'snippen-booking' ); ?></th>
 					<th style="width:110px; text-align:center;"><?php esc_html_e( 'PIN', 'snippen-booking' ); ?></th>
@@ -635,7 +804,7 @@ class DoorCodesPage {
 			<tbody>
 				<?php if ( empty( $reservations ) ) : ?>
 					<tr>
-						<td colspan="7" style="text-align:center; padding:18px; color:#64748b;">
+						<td colspan="<?php echo $is_filtered ? 7 : 8; ?>" style="text-align:center; padding:18px; color:#64748b;">
 							<?php esc_html_e( 'Ingen planlagte reservasjoner funnet i Doorman-databasen.', 'snippen-booking' ); ?>
 						</td>
 					</tr>
@@ -654,6 +823,13 @@ class DoorCodesPage {
 							<td>
 								<strong>#<?php echo esc_html( $r['booking_id'] ?? '-' ); ?></strong>
 							</td>
+							<?php if ( ! $is_filtered ) : ?>
+								<td>
+									<span class="badge" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;">
+										🏢 <?php echo esc_html( $r['service_name'] ?? ( $r['service_id'] ?? '-' ) ); ?>
+									</span>
+								</td>
+							<?php endif; ?>
 							<td>
 								<strong><?php echo esc_html( $t_name ); ?></strong>
 								<?php if ( ! empty( $t_phone ) ) : ?>
@@ -715,6 +891,9 @@ class DoorCodesPage {
 			<thead>
 				<tr>
 					<th style="width:120px;"><?php esc_html_e( 'Booking ID', 'snippen-booking' ); ?></th>
+					<?php if ( ! $is_filtered ) : ?>
+						<th style="width:140px;"><?php esc_html_e( 'Node / Tjeneste', 'snippen-booking' ); ?></th>
+					<?php endif; ?>
 					<th style="width:200px;"><?php esc_html_e( 'Leietaker', 'snippen-booking' ); ?></th>
 					<th style="width:160px;"><?php esc_html_e( 'Lokale', 'snippen-booking' ); ?></th>
 					<th style="width:110px; text-align:center;"><?php esc_html_e( 'PIN', 'snippen-booking' ); ?></th>
@@ -725,7 +904,7 @@ class DoorCodesPage {
 			<tbody>
 				<?php if ( empty( $recently_expired ) ) : ?>
 					<tr>
-						<td colspan="6" style="text-align:center; padding:18px; color:#64748b;">
+						<td colspan="<?php echo $is_filtered ? 6 : 7; ?>" style="text-align:center; padding:18px; color:#64748b;">
 							<?php esc_html_e( 'Ingen utløpte koder i arkivet for de siste 7 dagene.', 'snippen-booking' ); ?>
 						</td>
 					</tr>
@@ -742,6 +921,13 @@ class DoorCodesPage {
 							<td>
 								<strong>#<?php echo esc_html( $exp['booking_id'] ?? '-' ); ?></strong>
 							</td>
+							<?php if ( ! $is_filtered ) : ?>
+								<td>
+									<span class="badge" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;">
+										🏢 <?php echo esc_html( $exp['service_name'] ?? ( $exp['service_id'] ?? '-' ) ); ?>
+									</span>
+								</td>
+							<?php endif; ?>
 							<td>
 								<strong><?php echo esc_html( $t_name ); ?></strong>
 								<?php if ( ! empty( $t_phone ) ) : ?>

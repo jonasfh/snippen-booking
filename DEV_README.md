@@ -1007,7 +1007,7 @@ curl -s -X PATCH "https://snippen.example.com/wp-json/snippen/v1/door/bookings/1
 ```
 
 #### 4. `POST /wp-json/snippen/v1/door/status`
-Receives full lock and reservation snapshot payload pushed from `snippen-doorman-service` after each sync cycle.
+Receives full lock and reservation snapshot payload pushed from `snippen-doorman-service` after each sync cycle. Supports multiple independent service nodes (e.g. Grendehuset, Hybel, Anneks).
 
 **Headers:**
 ```http
@@ -1015,33 +1015,80 @@ Authorization: Bearer <SNIPPEN_DOORMAN_API_TOKEN>
 Content-Type: application/json
 ```
 
-**Request Body:**
-Contains `generated_at`, `expired_window_days`, `locks`, `reservations_in_db`, `provisioned_on_locks`, and `recently_expired`.
+**Request Body (Multi-Service Contract):**
+```json
+{
+  "service_id": "grendehus-node",
+  "service": {
+    "id": "grendehus-node",
+    "name": "Grendehuset (Hovedbygg)",
+    "version": "0.19.0",
+    "hostname": "snippen-pi-grendehus",
+    "ip_address": "192.168.1.120",
+    "mac_address": "d8:3a:dd:12:34:56",
+    "lock_ids": ["1"]
+  },
+  "generated_at": "2026-11-07T14:30:00Z",
+  "expired_window_days": 7,
+  "locks": [ ... ],
+  "reservations_in_db": [ ... ],
+  "provisioned_on_locks": [ ... ],
+  "recently_expired": [ ... ]
+}
+```
+
+**Storage:**
+- Status is stored per node in `snippen_door_status_<service_id>`.
+- The central node registry in `snippen_door_services_registry` is updated with `last_seen`, lock count, and battery status.
 
 **Response (HTTP 200):**
 ```json
 {
   "success": true,
-  "received_at": "2026-11-07T13:15:11Z"
+  "service_id": "grendehus-node",
+  "received_at": "2026-11-07T14:30:01Z"
 }
 ```
 
 #### 5. `GET /wp-json/snippen/v1/door/status`
-Returns the latest status snapshot enriched with customer details (`customer_name`, `customer_phone`, `customer_email`) and booked venue objects. Accessible with API Bearer token or by authenticated administrators.
+Returns the status snapshot enriched with customer details (`customer_name`, `customer_phone`, `customer_email`) and booked venue objects. Accessible with API Bearer token or by authenticated administrators.
 
-**Response (HTTP 200):**
+- **Query Parameters**:
+  - `service_id` (optional): When specified, returns status for only that node. When omitted, returns status for all registered nodes and an aggregated fleet overview.
+
+**Response without parameters (Unified Fleet Overview, HTTP 200):**
 ```json
 {
-  "server_time": "2026-11-07T13:20:00Z",
-  "doorman_last_received_at": "2026-11-07T13:15:11Z",
-  "doorman_status": {
-    "generated_at": "2026-11-07T13:15:10+00:00",
+  "server_time": "2026-11-07T14:35:00Z",
+  "services": {
+    "grendehus-node": {
+      "service_id": "grendehus-node",
+      "name": "Grendehuset (Hovedbygg)",
+      "version": "0.19.0",
+      "hostname": "snippen-pi-grendehus",
+      "ip_address": "192.168.1.120",
+      "mac_address": "d8:3a:dd:12:34:56",
+      "lock_ids": ["1"],
+      "last_seen": "2026-11-07T14:30:01Z",
+      "lock_count": 1,
+      "min_battery": 85,
+      "is_offline": false,
+      "status": "online"
+    }
+  },
+  "services_status": {
+    "grendehus-node": { ... }
+  },
+  "aggregated": {
+    "generated_at": "2026-11-07T14:30:00Z",
     "expired_window_days": 7,
     "locks": [ ... ],
     "reservations_in_db": [ ... ],
     "provisioned_on_locks": [ ... ],
     "recently_expired": [ ... ]
-  }
+  },
+  "doorman_last_received_at": "2026-11-07T14:30:01Z",
+  "doorman_status": { ... }
 }
 ```
 
@@ -1052,11 +1099,14 @@ Administrators manage door codes and monitor physical door locks from **Snippen 
 - **Fane 1: Administrer dørkoder (`tab=manage`)**:
   - **Upcoming Bookings Table**: Displays upcoming reservations within selectable horizons (7, 14, 30, 60 days) with filters for missing or assigned door codes.
   - **Contiguous Reservation Grouping**: Chains of adjacent reservations for the same tenant are automatically grouped into single rows displaying tenant details, agreed booking duration, and Doorman access window with buffer and grace periods.
-  - **Physical Door Status Badges**: Each row displays real-time status per physical door from the latest Doorman snapshot (e.g. `Inngangsdør 1: I lås (Spor 3)`, `Planlagt i Doorman`, or `Kode-avvik!`).
+  - **Physical Door Status Badges**: Each row displays real-time status per physical door aggregated across all Doorman nodes (e.g. `Inngangsdør 1: I lås (Spor 3)`, `Planlagt i Doorman`, or `Kode-avvik!`).
   - **Manual Assignment & Bulk Save**: Administrators can assign codes inline per row or enter multiple codes and click **Lagre alle endrede koder**.
   - **Customer Notifications**: When a code is saved with the **Varsle** checkbox checked (or via REST API / AJAX), SMS and email notifications are dispatched using the `door_code_updated` template.
 - **Fane 2: Status i dørene & Doorman (`tab=status`)**:
-  - **Fysiske dørlåser (`locks`)**: Cards for each physical lock showing Bluetooth MAC address, battery percentage, lock/door status, last seen, and a visual grid of keypad slots 3–9.
+  - **Flåteoversikt**: Status cards for each registered Doorman node showing online/offline status, last seen, local IP dashboard link (`http://<ip>:8080`), doors, and battery level.
+  - **Offline-varsel**: Displays a warning alert banner whenever a node's `last_seen` timestamp is older than 15 minutes.
+  - **Filter / Visning**: Dropdown filter to switch between a unified view of all nodes and a single specific node.
+  - **Fysiske dørlåser (`locks`)**: Cards for each physical lock showing Bluetooth MAC address, battery percentage, lock/door status, node tag, and keypad slots 3–9.
   - **Koder i dørene nå (`provisioned_on_locks`)**: Table showing codes currently programmed in each lock, slot, venue, tenant, and validity.
   - **Planlagte reservasjoner i Doorman-databasen (`reservations_in_db`)**: Table of scheduled reservations with sync status per physical lock.
   - **Nylig utløpte koder (`recently_expired`)**: Table of codes expired within the past 7 days.

@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.50.0] - 2026-11-07
+- (#372) [Feature] Støtt flere Doorman-services: Håndter service_id, flåtestatus og vis samlet oversikt i WP Admin:
+  - **REST API (`DoorLockApi.php`)**:
+    - `POST /wp-json/snippen/v1/door/status`: Mottar og indekserer status per node via `service_id` og `service`-metadata (`id`, `name`, `version`, `hostname`, `ip_address`, `mac_address`, `lock_ids`).
+    - Lagrer status per node i `snippen_door_status_<service_id>` og oppdaterer et felles register i `snippen_door_services_registry` med `last_seen`-tidsstempel, låsetelling og batteristatus.
+    - `GET /wp-json/snippen/v1/door/status`: Uten parametere returneres samlet flåtestatus (`services`, `services_status`, `aggregated` og `doorman_status`). Med `?service_id=<id>` returneres status spesifikt for den forespurte noden.
+    - Beregner `is_offline = true` og `status = 'offline'` for noder hvor `last_seen` er eldre enn 15 minutter.
+  - **WP Admin (`DoorCodesPage.php`)**:
+    - **Flåteoversikt:** Lagt til oversikt over tilknyttede Doorman-noder med Online/Offline-status, sist sett, IP-lenke til lokalt dashbord, tilknyttede dører og batterinivå.
+    - **Offline-varsel:** Viser en synlig advarselsboks dersom en eller flere Doorman-noder er offline (> 15 minutter).
+    - **Filter / Visning:** Støtter valg mellom samlet flåtevisning (standard) og filtrering på én spesifikk node, med tydelig merking av hvilken node hver lås og reservasjon tilhører.
+
 ## [2.49.0] - 2026-11-07
 - (#368) [Feature] DoorLockApi & DoorCodeService: Eksponer og synkroniser manuelt satt dørkode konsekvent i API og sammenhengende kjeder:
   - **REST API (`DoorLockApi.php`)**:
