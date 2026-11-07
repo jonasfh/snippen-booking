@@ -45,6 +45,9 @@ class DoorLockApiTest extends TestCase {
 		update_option( 'snippen_doorman_buffer_minutes_before', 30 );
 		update_option( 'snippen_doorman_grace_minutes_after', 120 );
 		update_option( 'snippen_doorman_booking_statuses', 'confirmed' );
+		delete_option( 'snippen_door_services_registry' );
+		delete_option( 'snippen_doorman_last_status' );
+		delete_option( 'snippen_doorman_last_received_at' );
 
 		DoorLockApi::register();
 		do_action( 'rest_api_init' );
@@ -60,6 +63,9 @@ class DoorLockApiTest extends TestCase {
 		delete_option( 'snippen_doorman_buffer_minutes_before' );
 		delete_option( 'snippen_doorman_grace_minutes_after' );
 		delete_option( 'snippen_doorman_booking_statuses' );
+		delete_option( 'snippen_door_services_registry' );
+		delete_option( 'snippen_doorman_last_status' );
+		delete_option( 'snippen_doorman_last_received_at' );
 		parent::tearDown();
 	}
 
@@ -1140,6 +1146,8 @@ class DoorLockApiTest extends TestCase {
 	public function test_get_door_status_enriched_with_metadata() {
 		delete_option( 'snippen_doorman_last_status' );
 		delete_option( 'snippen_doorman_last_received_at' );
+		delete_option( 'snippen_door_services_registry' );
+		delete_option( 'snippen_door_status_default' );
 
 		// 1. When empty
 		$req1  = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
@@ -1213,5 +1221,183 @@ class DoorLockApiTest extends TestCase {
 
 		$prov_item = $data2['doorman_status']['provisioned_on_locks'][0];
 		$this->assertSame( 'Status Test Leietaker', $prov_item['customer_name'] );
+	}
+
+	/**
+	 * Test POST /door/status supports multiple independent Doorman services (Issue #372).
+	 */
+	public function test_post_status_multi_service_support() {
+		// 1. Post from Node 1 (Grendehuset)
+		$payload1 = array(
+			'service_id'          => 'grendehus-node',
+			'service'             => array(
+				'id'          => 'grendehus-node',
+				'name'        => 'Grendehuset (Hovedbygg)',
+				'version'     => '0.19.0',
+				'hostname'    => 'snippen-pi-grendehus',
+				'ip_address'  => '192.168.1.120',
+				'mac_address' => 'd8:3a:dd:12:34:56',
+				'lock_ids'    => array( '1' ),
+			),
+			'generated_at'        => '2026-11-07T14:30:00Z',
+			'expired_window_days' => 7,
+			'locks'               => array(
+				array(
+					'lock_id'     => '1',
+					'name'        => 'Hoveddør Grendehuset',
+					'address'     => '98:1B:B5:0B:BB:35',
+					'battery'     => 85,
+					'lock_status' => 'LOCKED',
+					'door_status' => 'CLOSED',
+				),
+			),
+			'reservations_in_db'  => array(),
+			'provisioned_on_locks' => array(),
+			'recently_expired'    => array(),
+		);
+
+		$req1 = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
+		$req1->set_header( 'Content-Type', 'application/json' );
+		$req1->set_body( wp_json_encode( $payload1 ) );
+
+		$res1  = rest_do_request( $req1 );
+		$data1 = $res1->get_data();
+
+		$this->assertSame( 200, $res1->get_status() );
+		$this->assertTrue( $data1['success'] );
+		$this->assertSame( 'grendehus-node', $data1['service_id'] );
+
+		// Verify option saved for node 1
+		$saved_node1 = get_option( 'snippen_door_status_grendehus-node' );
+		$this->assertIsArray( $saved_node1 );
+		$this->assertSame( 'Grendehuset (Hovedbygg)', $saved_node1['service']['name'] );
+
+		// 2. Post from Node 2 (Hybel)
+		$payload2 = array(
+			'service_id'          => 'hybel-node',
+			'service'             => array(
+				'id'          => 'hybel-node',
+				'name'        => 'Utleieleilighet (Hybel)',
+				'version'     => '0.19.1',
+				'hostname'    => 'snippen-pi-hybel',
+				'ip_address'  => '192.168.1.125',
+				'mac_address' => 'd8:3a:dd:98:76:54',
+				'lock_ids'    => array( '2' ),
+			),
+			'generated_at'        => '2026-11-07T14:35:00Z',
+			'expired_window_days' => 7,
+			'locks'               => array(
+				array(
+					'lock_id'     => '2',
+					'name'        => 'Inngangsdør Hybel',
+					'address'     => '98:1B:B5:0B:CC:99',
+					'battery'     => 92,
+					'lock_status' => 'LOCKED',
+					'door_status' => 'CLOSED',
+				),
+			),
+			'reservations_in_db'  => array(),
+			'provisioned_on_locks' => array(),
+			'recently_expired'    => array(),
+		);
+
+		$req2 = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
+		$req2->set_header( 'Content-Type', 'application/json' );
+		$req2->set_body( wp_json_encode( $payload2 ) );
+
+		$res2  = rest_do_request( $req2 );
+		$data2 = $res2->get_data();
+
+		$this->assertSame( 200, $res2->get_status() );
+		$this->assertSame( 'hybel-node', $data2['service_id'] );
+
+		// Node 1 data must NOT be overwritten
+		$node1_check = get_option( 'snippen_door_status_grendehus-node' );
+		$this->assertSame( 'Grendehuset (Hovedbygg)', $node1_check['service']['name'] );
+
+		// Node 2 data must exist independently
+		$node2_check = get_option( 'snippen_door_status_hybel-node' );
+		$this->assertSame( 'Utleieleilighet (Hybel)', $node2_check['service']['name'] );
+
+		// Registry must contain both nodes
+		$registry = get_option( 'snippen_door_services_registry' );
+		$this->assertArrayHasKey( 'grendehus-node', $registry );
+		$this->assertArrayHasKey( 'hybel-node', $registry );
+		$this->assertSame( '192.168.1.120', $registry['grendehus-node']['ip_address'] );
+		$this->assertSame( '192.168.1.125', $registry['hybel-node']['ip_address'] );
+		$this->assertSame( 85, $registry['grendehus-node']['min_battery'] );
+		$this->assertSame( 92, $registry['hybel-node']['min_battery'] );
+	}
+
+	/**
+	 * Test GET /door/status returns aggregated overview without params and filtered by service_id (Issue #372).
+	 */
+	public function test_get_status_multi_service_aggregated_and_filtered() {
+		// Seed 2 services
+		$this->test_post_status_multi_service_support();
+
+		// 1. GET /door/status without params -> Aggregated + Services
+		$req_all = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
+		$res_all = rest_do_request( $req_all );
+		$data_all = $res_all->get_data();
+
+		$this->assertSame( 200, $res_all->get_status() );
+		$this->assertArrayHasKey( 'services', $data_all );
+		$this->assertArrayHasKey( 'services_status', $data_all );
+		$this->assertArrayHasKey( 'aggregated', $data_all );
+		$this->assertCount( 2, $data_all['services'] );
+		$this->assertCount( 2, $data_all['services_status'] );
+		$this->assertCount( 2, $data_all['aggregated']['locks'] );
+
+		// 2. GET /door/status?service_id=grendehus-node -> Specific node
+		$req_node1 = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
+		$req_node1->set_param( 'service_id', 'grendehus-node' );
+		$res_node1  = rest_do_request( $req_node1 );
+		$data_node1 = $res_node1->get_data();
+
+		$this->assertSame( 200, $res_node1->get_status() );
+		$this->assertSame( 'grendehus-node', $data_node1['service_id'] );
+		$this->assertCount( 1, $data_node1['doorman_status']['locks'] );
+		$this->assertSame( 'Hoveddør Grendehuset', $data_node1['doorman_status']['locks'][0]['name'] );
+
+		// 3. GET /door/status?service_id=nonexistent -> 404
+		$req_notfound = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
+		$req_notfound->set_param( 'service_id', 'nonexistent-node' );
+		$res_notfound = rest_do_request( $req_notfound );
+
+		$this->assertSame( 404, $res_notfound->get_status() );
+	}
+
+	/**
+	 * Test offline detection when last_seen is older than 15 minutes (Issue #372).
+	 */
+	public function test_multi_service_offline_detection() {
+		$now = time();
+		$registry = array(
+			'online-node' => array(
+				'service_id'  => 'online-node',
+				'name'        => 'Aktiv Node',
+				'last_seen'   => gmdate( 'Y-m-d\TH:i:s\Z', $now - 300 ), // 5 min ago
+				'lock_ids'    => array( '1' ),
+				'min_battery' => 80,
+			),
+			'offline-node' => array(
+				'service_id'  => 'offline-node',
+				'name'        => 'Død Node',
+				'last_seen'   => gmdate( 'Y-m-d\TH:i:s\Z', $now - 1200 ), // 20 min ago (> 15m)
+				'lock_ids'    => array( '2' ),
+				'min_battery' => 15,
+			),
+		);
+		update_option( 'snippen_door_services_registry', $registry );
+
+		$status = DoorLockApi::get_all_services_status();
+		$services = $status['services'];
+
+		$this->assertFalse( $services['online-node']['is_offline'] );
+		$this->assertSame( 'online', $services['online-node']['status'] );
+
+		$this->assertTrue( $services['offline-node']['is_offline'] );
+		$this->assertSame( 'offline', $services['offline-node']['status'] );
 	}
 }

@@ -128,6 +128,13 @@ class DoorLockApi {
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( __CLASS__, 'get_status' ),
 					'permission_callback' => array( __CLASS__, 'verify_token_or_admin' ),
+					'args'                => array(
+						'service_id' => array(
+							'required'          => false,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_key',
+						),
+					),
 				),
 			)
 		);
@@ -758,7 +765,7 @@ class DoorLockApi {
 	/**
 	 * Handle POST /wp-json/snippen/v1/door/status
 	 *
-	 * Receives complete status snapshot from snippen-doorman-service.
+	 * Receives complete status snapshot from a snippen-doorman-service node.
 	 *
 	 * @param \WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|\WP_Error Response object.
@@ -773,14 +780,84 @@ class DoorLockApi {
 			);
 		}
 
+		// Extract and sanitize service_id
+		$raw_service_id = $params['service_id'] ?? ( $params['service']['id'] ?? 'default' );
+		$service_id     = sanitize_key( (string) $raw_service_id );
+		if ( empty( $service_id ) ) {
+			$service_id = 'default';
+		}
+
+		// Parse service metadata
+		$service_meta = isset( $params['service'] ) && is_array( $params['service'] ) ? $params['service'] : array();
+		$service_name = ! empty( $service_meta['name'] )
+			? sanitize_text_field( $service_meta['name'] )
+			: ( 'default' === $service_id ? __( 'Standard Doorman-tjeneste', 'snippen-booking' ) : ucfirst( str_replace( array( '-', '_' ), ' ', $service_id ) ) );
+
+		$normalized_service = array(
+			'id'          => $service_id,
+			'name'        => $service_name,
+			'version'     => sanitize_text_field( $service_meta['version'] ?? '' ),
+			'hostname'    => sanitize_text_field( $service_meta['hostname'] ?? '' ),
+			'ip_address'  => sanitize_text_field( $service_meta['ip_address'] ?? '' ),
+			'mac_address' => sanitize_text_field( $service_meta['mac_address'] ?? '' ),
+			'lock_ids'    => isset( $service_meta['lock_ids'] ) && is_array( $service_meta['lock_ids'] )
+				? array_values( array_map( 'strval', $service_meta['lock_ids'] ) )
+				: array(),
+		);
+
+		$locks      = isset( $params['locks'] ) && is_array( $params['locks'] ) ? $params['locks'] : array();
+		$lock_count = count( $locks );
+		if ( 0 === $lock_count && ! empty( $normalized_service['lock_ids'] ) ) {
+			$lock_count = count( $normalized_service['lock_ids'] );
+		}
+
+		$min_battery = null;
+		foreach ( $locks as $l ) {
+			if ( isset( $l['battery'] ) && is_numeric( $l['battery'] ) ) {
+				$b = (int) $l['battery'];
+				if ( null === $min_battery || $b < $min_battery ) {
+					$min_battery = $b;
+				}
+			}
+		}
+
 		$now_iso = gmdate( 'Y-m-d\TH:i:s\Z' );
 
+		$params['service_id']  = $service_id;
+		$params['service']     = $normalized_service;
+		$params['received_at'] = $now_iso;
+
+		// 1. Save per-service status
+		update_option( "snippen_door_status_{$service_id}", $params );
+
+		// 2. Update shared services registry
+		$registry = get_option( 'snippen_door_services_registry', array() );
+		if ( ! is_array( $registry ) ) {
+			$registry = array();
+		}
+
+		$registry[ $service_id ] = array(
+			'service_id'  => $service_id,
+			'name'        => $normalized_service['name'],
+			'version'     => $normalized_service['version'],
+			'hostname'    => $normalized_service['hostname'],
+			'ip_address'  => $normalized_service['ip_address'],
+			'mac_address' => $normalized_service['mac_address'],
+			'lock_ids'    => $normalized_service['lock_ids'],
+			'last_seen'   => $now_iso,
+			'lock_count'  => $lock_count,
+			'min_battery' => $min_battery,
+		);
+		update_option( 'snippen_door_services_registry', $registry );
+
+		// 3. For backward compatibility: update global last status & received_at
 		update_option( 'snippen_doorman_last_status', $params );
 		update_option( 'snippen_doorman_last_received_at', $now_iso );
 
 		return rest_ensure_response(
 			array(
 				'success'     => true,
+				'service_id'  => $service_id,
 				'received_at' => $now_iso,
 			)
 		);
@@ -790,34 +867,206 @@ class DoorLockApi {
 	 * Handle GET /wp-json/snippen/v1/door/status
 	 *
 	 * Returns last received status snapshot enriched with booking metadata.
+	 * If ?service_id=<id> is specified, returns status for that node.
+	 * Without parameters, returns status for all registered nodes and an aggregated view.
 	 *
 	 * @param \WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response Response object.
+	 * @return \WP_REST_Response|\WP_Error Response object.
 	 */
 	public static function get_status( \WP_REST_Request $request ) {
-		$raw_status  = get_option( 'snippen_doorman_last_status', null );
-		$received_at = get_option( 'snippen_doorman_last_received_at', null );
-
+		$service_id  = $request->get_param( 'service_id' );
 		$server_time = gmdate( 'Y-m-d\TH:i:s\Z' );
 
-		if ( ! is_array( $raw_status ) ) {
+		// Specific service requested
+		if ( ! empty( $service_id ) ) {
+			$clean_id   = sanitize_key( $service_id );
+			$raw_status = get_option( "snippen_door_status_{$clean_id}", null );
+
+			if ( empty( $raw_status ) || ! is_array( $raw_status ) ) {
+				// Fallback: check if snippen_doorman_last_status matches
+				$last_global = get_option( 'snippen_doorman_last_status', null );
+				if ( is_array( $last_global ) && ( ( $last_global['service_id'] ?? '' ) === $clean_id || ( 'default' === $clean_id && empty( $last_global['service_id'] ) ) ) ) {
+					$raw_status = $last_global;
+				}
+			}
+
+			if ( empty( $raw_status ) || ! is_array( $raw_status ) ) {
+				return new \WP_Error(
+					'rest_service_not_found',
+					sprintf( __( 'Tjeneste med service_id "%s" ble ikke funnet.', 'snippen-booking' ), $clean_id ),
+					array( 'status' => 404 )
+				);
+			}
+
+			$enriched = self::enrich_status_metadata( $raw_status );
 			return rest_ensure_response(
 				array(
 					'server_time'              => $server_time,
-					'doorman_last_received_at' => $received_at,
-					'doorman_status'           => null,
+					'service_id'               => $clean_id,
+					'doorman_last_received_at' => $raw_status['received_at'] ?? ( get_option( 'snippen_doorman_last_received_at', null ) ),
+					'doorman_status'           => $enriched,
 				)
 			);
 		}
 
-		$enriched = self::enrich_status_metadata( $raw_status );
+		// No service_id: Return all registered nodes and aggregated overview
+		$all_data = self::get_all_services_status();
 
 		return rest_ensure_response(
 			array(
 				'server_time'              => $server_time,
-				'doorman_last_received_at' => $received_at,
-				'doorman_status'           => $enriched,
+				'services'                 => $all_data['services'],
+				'services_status'          => $all_data['services_status'],
+				'aggregated'               => $all_data['aggregated'],
+				'doorman_last_received_at' => $all_data['last_received_at'],
+				'doorman_status'           => $all_data['aggregated'], // For backward compatibility
 			)
+		);
+	}
+
+	/**
+	 * Get enriched status for all registered services and an aggregated fleet overview.
+	 *
+	 * @return array Array with 'services', 'services_status', 'aggregated', and 'last_received_at'.
+	 */
+	public static function get_all_services_status() {
+		$registry = get_option( 'snippen_door_services_registry', array() );
+		if ( ! is_array( $registry ) ) {
+			$registry = array();
+		}
+
+		// Backward compatibility: If registry is empty but snippen_doorman_last_status exists
+		if ( empty( $registry ) ) {
+			$last_global = get_option( 'snippen_doorman_last_status', null );
+			if ( is_array( $last_global ) ) {
+				$last_seen   = get_option( 'snippen_doorman_last_received_at', gmdate( 'Y-m-d\TH:i:s\Z' ) );
+				$def_service = $last_global['service'] ?? array();
+				$def_id      = sanitize_key( $last_global['service_id'] ?? ( $def_service['id'] ?? 'default' ) );
+				if ( empty( $def_id ) ) {
+					$def_id = 'default';
+				}
+				$registry[ $def_id ] = array(
+					'service_id'  => $def_id,
+					'name'        => $def_service['name'] ?? __( 'Standard Doorman-tjeneste', 'snippen-booking' ),
+					'version'     => $def_service['version'] ?? '',
+					'hostname'    => $def_service['hostname'] ?? '',
+					'ip_address'  => $def_service['ip_address'] ?? '',
+					'mac_address' => $def_service['mac_address'] ?? '',
+					'lock_ids'    => $def_service['lock_ids'] ?? array(),
+					'last_seen'   => $last_seen,
+					'lock_count'  => count( $last_global['locks'] ?? array() ),
+					'min_battery' => null,
+				);
+			}
+		}
+
+		$services_list    = array();
+		$services_status  = array();
+		$last_received_at = null;
+
+		$all_locks        = array();
+		$all_reservations = array();
+		$all_provisioned  = array();
+		$all_expired      = array();
+		$latest_gen_at    = null;
+		$max_win_days     = 7;
+
+		$current_time = time();
+
+		foreach ( $registry as $sid => $node_meta ) {
+			$node_status = get_option( "snippen_door_status_{$sid}", null );
+			if ( empty( $node_status ) || ! is_array( $node_status ) ) {
+				// Check fallback to global last status
+				$last_global = get_option( 'snippen_doorman_last_status', null );
+				if ( is_array( $last_global ) && ( ( $last_global['service_id'] ?? '' ) === $sid || 'default' === $sid ) ) {
+					$node_status = $last_global;
+				}
+			}
+
+			// Calculate online/offline status (15 min = 900s)
+			$last_seen_ts            = ! empty( $node_meta['last_seen'] ) ? strtotime( $node_meta['last_seen'] ) : 0;
+			$is_offline              = ( 0 === $last_seen_ts ) || ( ( $current_time - $last_seen_ts ) > 900 );
+			$node_meta['is_offline'] = $is_offline;
+			$node_meta['status']     = $is_offline ? 'offline' : 'online';
+
+			$services_list[ $sid ] = $node_meta;
+
+			if ( is_array( $node_status ) ) {
+				if ( ! empty( $node_meta['last_seen'] ) ) {
+					if ( null === $last_received_at || strtotime( $node_meta['last_seen'] ) > strtotime( $last_received_at ) ) {
+						$last_received_at = $node_meta['last_seen'];
+					}
+				}
+
+				$enriched                = self::enrich_status_metadata( $node_status );
+				$services_status[ $sid ] = $enriched;
+
+				// Tag items with service info for display clarity
+				$s_name = $node_meta['name'] ?? $sid;
+
+				if ( ! empty( $enriched['locks'] ) && is_array( $enriched['locks'] ) ) {
+					foreach ( $enriched['locks'] as $l ) {
+						$l['service_id']   = $sid;
+						$l['service_name'] = $s_name;
+						$all_locks[]       = $l;
+					}
+				}
+
+				if ( ! empty( $enriched['reservations_in_db'] ) && is_array( $enriched['reservations_in_db'] ) ) {
+					foreach ( $enriched['reservations_in_db'] as $r ) {
+						$r['service_id']    = $sid;
+						$r['service_name']  = $s_name;
+						$all_reservations[] = $r;
+					}
+				}
+
+				if ( ! empty( $enriched['provisioned_on_locks'] ) && is_array( $enriched['provisioned_on_locks'] ) ) {
+					foreach ( $enriched['provisioned_on_locks'] as $p ) {
+						$p['service_id']   = $sid;
+						$p['service_name'] = $s_name;
+						$all_provisioned[] = $p;
+					}
+				}
+
+				if ( ! empty( $enriched['recently_expired'] ) && is_array( $enriched['recently_expired'] ) ) {
+					foreach ( $enriched['recently_expired'] as $e ) {
+						$e['service_id']   = $sid;
+						$e['service_name'] = $s_name;
+						$all_expired[]     = $e;
+					}
+				}
+
+				if ( ! empty( $enriched['generated_at'] ) ) {
+					if ( null === $latest_gen_at || strtotime( $enriched['generated_at'] ) > strtotime( $latest_gen_at ) ) {
+						$latest_gen_at = $enriched['generated_at'];
+					}
+				}
+
+				if ( ! empty( $enriched['expired_window_days'] ) ) {
+					$max_win_days = max( $max_win_days, (int) $enriched['expired_window_days'] );
+				}
+			}
+		}
+
+		$aggregated = null;
+		if ( ! empty( $services_status ) || ! empty( $all_locks ) || ! empty( $all_reservations ) ) {
+			$aggregated = array(
+				'generated_at'         => $latest_gen_at ?: gmdate( 'Y-m-d\TH:i:s\Z' ),
+				'expired_window_days'  => $max_win_days,
+				'locks'                => $all_locks,
+				'reservations_in_db'   => $all_reservations,
+				'provisioned_on_locks' => $all_provisioned,
+				'recently_expired'     => $all_expired,
+			);
+		} else {
+			$last_received_at = null;
+		}
+
+		return array(
+			'services'         => $services_list,
+			'services_status'  => $services_status,
+			'aggregated'       => $aggregated,
+			'last_received_at' => $last_received_at,
 		);
 	}
 
