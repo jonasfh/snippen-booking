@@ -113,6 +113,24 @@ class DoorLockApi {
 				),
 			)
 		);
+
+		// POST and GET /wp-json/snippen/v1/door/status
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/' . self::REST_BASE . '/status',
+			array(
+				array(
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => array( __CLASS__, 'receive_status' ),
+					'permission_callback' => array( __CLASS__, 'verify_token' ),
+				),
+				array(
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => array( __CLASS__, 'get_status' ),
+					'permission_callback' => array( __CLASS__, 'verify_token_or_admin' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -162,6 +180,19 @@ class DoorLockApi {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Verify token from header or allow authenticated admin users.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return true|\WP_Error True if valid, WP_Error otherwise.
+	 */
+	public static function verify_token_or_admin( \WP_REST_Request $request ) {
+		if ( current_user_can( 'manage_snippen_bookings' ) || current_user_can( 'manage_options' ) ) {
+			return true;
+		}
+		return self::verify_token( $request );
 	}
 
 	/**
@@ -275,7 +306,7 @@ class DoorLockApi {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$query = $wpdb->prepare(
-			"SELECT b.id, b.user_id, b.customer_phone, b.customer_email, b.booking_date, b.status, 
+			"SELECT b.id, b.user_id, b.customer_phone, b.customer_email, b.booking_date, b.status,
 			        b.door_code, b.door_code_updated_at, b.modified_at, b.booking_type, b.booking_snapshot,
 			        COALESCE(MIN(s.start_time), ts.start_time, '00:00:00') as block_start,
 			        COALESCE(MAX(s.end_time), ts.end_time, '23:59:59') as block_end
@@ -615,7 +646,7 @@ class DoorLockApi {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
-			"SELECT b.id, b.user_id, b.customer_phone, b.customer_email, b.booking_date, b.status, 
+			"SELECT b.id, b.user_id, b.customer_phone, b.customer_email, b.booking_date, b.status,
 			        b.door_code, b.door_code_updated_at, b.modified_at, b.booking_type, b.booking_snapshot,
 			        COALESCE(MIN(s.start_time), ts.start_time, '00:00:00') as block_start,
 			        COALESCE(MAX(s.end_time), ts.end_time, '23:59:59') as block_end
@@ -722,5 +753,195 @@ class DoorLockApi {
 				'door_code_updated_at' => $door_code_updated_at_iso,
 			)
 		);
+	}
+
+	/**
+	 * Handle POST /wp-json/snippen/v1/door/status
+	 *
+	 * Receives complete status snapshot from snippen-doorman-service.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|\WP_Error Response object.
+	 */
+	public static function receive_status( \WP_REST_Request $request ) {
+		$params = $request->get_json_params();
+		if ( empty( $params ) || ! is_array( $params ) ) {
+			return new \WP_Error(
+				'rest_invalid_json',
+				__( 'Ugyldig eller manglende JSON i forespørselen.', 'snippen-booking' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$now_iso = gmdate( 'Y-m-d\TH:i:s\Z' );
+
+		update_option( 'snippen_doorman_last_status', $params );
+		update_option( 'snippen_doorman_last_received_at', $now_iso );
+
+		return rest_ensure_response(
+			array(
+				'success'     => true,
+				'received_at' => $now_iso,
+			)
+		);
+	}
+
+	/**
+	 * Handle GET /wp-json/snippen/v1/door/status
+	 *
+	 * Returns last received status snapshot enriched with booking metadata.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response Response object.
+	 */
+	public static function get_status( \WP_REST_Request $request ) {
+		$raw_status  = get_option( 'snippen_doorman_last_status', null );
+		$received_at = get_option( 'snippen_doorman_last_received_at', null );
+
+		$server_time = gmdate( 'Y-m-d\TH:i:s\Z' );
+
+		if ( ! is_array( $raw_status ) ) {
+			return rest_ensure_response(
+				array(
+					'server_time'              => $server_time,
+					'doorman_last_received_at' => $received_at,
+					'doorman_status'           => null,
+				)
+			);
+		}
+
+		$enriched = self::enrich_status_metadata( $raw_status );
+
+		return rest_ensure_response(
+			array(
+				'server_time'              => $server_time,
+				'doorman_last_received_at' => $received_at,
+				'doorman_status'           => $enriched,
+			)
+		);
+	}
+
+	/**
+	 * Enrich Doorman status snapshot with booking metadata and venue info.
+	 *
+	 * @param array $status Raw Doorman status array.
+	 * @return array Enriched status array.
+	 */
+	public static function enrich_status_metadata( array $status ) {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_bbo      = $wpdb->prefix . 'snippen_booking_booking_objects';
+		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
+
+		$booking_ids = array();
+		foreach ( array( 'reservations_in_db', 'provisioned_on_locks', 'recently_expired' ) as $key ) {
+			if ( ! empty( $status[ $key ] ) && is_array( $status[ $key ] ) ) {
+				foreach ( $status[ $key ] as $item ) {
+					if ( ! empty( $item['booking_id'] ) && is_numeric( $item['booking_id'] ) ) {
+						$booking_ids[] = (int) $item['booking_id'];
+					}
+				}
+			}
+		}
+
+		$booking_ids = array_values( array_unique( array_filter( $booking_ids ) ) );
+		$meta_map    = array();
+
+		if ( ! empty( $booking_ids ) ) {
+			$placeholders = implode( ',', array_fill( 0, count( $booking_ids ), '%d' ) );
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$b_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id, customer_name, customer_phone, customer_email, status, booking_date
+					 FROM {$table_bookings}
+					 WHERE id IN ({$placeholders})",
+					...$booking_ids
+				)
+			);
+
+			if ( is_array( $b_rows ) ) {
+				foreach ( $b_rows as $row ) {
+					$meta_map[ (int) $row->id ] = array(
+						'customer_name'   => $row->customer_name,
+						'customer_phone'  => $row->customer_phone,
+						'customer_email'  => $row->customer_email,
+						'status'          => $row->status,
+						'booking_date'    => $row->booking_date,
+						'booking_objects' => array(),
+					);
+				}
+			}
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$obj_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT bbo.booking_id, bo.id as object_id, bo.name as object_name, bo.door_lock_id
+					 FROM {$table_bbo} bbo
+					 INNER JOIN {$table_objects} bo ON bbo.booking_object_id = bo.id
+					 WHERE bbo.booking_id IN ({$placeholders}) AND bo.deleted_at IS NULL
+					 ORDER BY bo.id ASC",
+					...$booking_ids
+				)
+			);
+
+			if ( is_array( $obj_rows ) ) {
+				foreach ( $obj_rows as $orow ) {
+					$b_id = (int) $orow->booking_id;
+					if ( isset( $meta_map[ $b_id ] ) ) {
+						$meta_map[ $b_id ]['booking_objects'][] = array(
+							'id'   => (int) $orow->object_id,
+							'name' => (string) $orow->object_name,
+						);
+					}
+				}
+			}
+		}
+
+		// Enrich collections
+		foreach ( array( 'reservations_in_db', 'provisioned_on_locks', 'recently_expired' ) as $key ) {
+			if ( ! empty( $status[ $key ] ) && is_array( $status[ $key ] ) ) {
+				foreach ( $status[ $key ] as &$item ) {
+					$b_id = ! empty( $item['booking_id'] ) ? (int) $item['booking_id'] : 0;
+					if ( $b_id > 0 && isset( $meta_map[ $b_id ] ) ) {
+						$item['customer_name']   = $meta_map[ $b_id ]['customer_name'];
+						$item['customer_phone']  = $meta_map[ $b_id ]['customer_phone'];
+						$item['customer_email']  = $meta_map[ $b_id ]['customer_email'];
+						$item['booking_objects'] = $meta_map[ $b_id ]['booking_objects'];
+					} else {
+						$item['customer_name']   = $item['customer_name'] ?? null;
+						$item['customer_phone']  = $item['customer_phone'] ?? null;
+						$item['customer_email']  = $item['customer_email'] ?? null;
+						$item['booking_objects'] = $item['booking_objects'] ?? array();
+					}
+				}
+				unset( $item );
+			}
+		}
+
+		// Attach venues to locks
+		if ( ! empty( $status['locks'] ) && is_array( $status['locks'] ) ) {
+			$lock_repo  = new \SnippenBooking\Database\Repository\DoorLockRepository();
+			$repo_locks = $lock_repo->find_all_with_objects();
+			$lock_map   = array();
+			foreach ( $repo_locks as $rl ) {
+				$rl_id              = is_object( $rl ) ? (int) $rl->id : (int) $rl['id'];
+				$rl_handles         = is_object( $rl ) ? $rl->handles_objects : ( $rl['handles_objects'] ?? array() );
+				$lock_map[ $rl_id ] = $rl_handles;
+			}
+
+			foreach ( $status['locks'] as &$lock_item ) {
+				$l_id = ! empty( $lock_item['lock_id'] ) ? (int) $lock_item['lock_id'] : 0;
+				if ( $l_id > 0 && isset( $lock_map[ $l_id ] ) ) {
+					$lock_item['handles_objects'] = $lock_map[ $l_id ];
+				} else {
+					$lock_item['handles_objects'] = $lock_item['handles_objects'] ?? array();
+				}
+			}
+			unset( $lock_item );
+		}
+
+		return $status;
 	}
 }

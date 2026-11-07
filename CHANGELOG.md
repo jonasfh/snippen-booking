@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.49.0] - 2026-11-07
+- (#368) [Feature] DoorLockApi & DoorCodeService: Eksponer og synkroniser manuelt satt dørkode konsekvent i API og sammenhengende kjeder:
+  - **REST API (`DoorLockApi.php`)**:
+    - Utvidet `GET /wp-json/snippen/v1/door/bookings` med `server_time`, `booking_ids`, `booking_objects` (`id`, `name`), `lock_ids` og `door_code_updated_at`.
+    - Lagt til valgfritt query-parameter `include_expired_days` (standard `0`) for å inkludere nylig utløpte reservasjoner.
+    - Ved sammenslåing av reservasjoner til sammenhengende kjeder (`build_contiguous_chains`), velges dørkoden med nyest `door_code_updated_at` (fallback til `modified_at`).
+    - Oppdatert `PATCH /wp-json/snippen/v1/door/bookings/{id}/code` til å returnere `updated_booking_ids`, `door_code` og `door_code_updated_at`.
+    - `find_adjacent_booking_ids` filtrerer ut kansellerte reservasjoner og benytter tidsrom fra `booking_snapshot`.
+  - **Booking-redigering (`BookingEditApi.php`, `DoorCodeService.php`)**:
+    - Validerer at dørkode i rediger-booking-modal er 4–6 numeriske sifre.
+    - Propagerer dørkodeendring via `DoorCodeService::apply_door_code()` slik at `door_code_updated_at` oppdateres, endringen rulles ut til hele kjeden og leietaker varsles.
+- (#369) [Feature] Dørkoder Admin & REST API: Status-endepunkt og status-side for aktive koder i dørene, Doorman-database og nylig utløpte koder:
+  - **REST API (`DoorLockApi.php`)**:
+    - Nytt endepunkt `POST /wp-json/snippen/v1/door/status` for mottak og persistering av komplett status-JSON fra `snippen-doorman-service` sikret med Bearer-token.
+    - Nytt endepunkt `GET /wp-json/snippen/v1/door/status` som returnerer sist mottatte status beriket med booking-metadata (`customer_name`, `customer_phone`, `booking_objects`).
+  - **Admin-grensesnitt (`DoorCodesPage.php`)**:
+    - Utvidet *Snippen Booking > Dørkoder* med faner (*Administrer dørkoder* og *Status i dørene & Doorman*).
+    - Fane 1 viser sanntids-statusmerke per fysiske dør (*Inngangsdør 1* / *Inngangsdør 2*) med tastaturspor, Doorman-status og kode-avviksadvarsel.
+    - Fane 2 viser fysiske dørlåser (status, batteri, MAC-adresse, tastaturspor 3–9), koder i dørene nå (`provisioned_on_locks`), planlagte reservasjoner i Doorman (`reservations_in_db`) og nylig utløpte koder (`recently_expired`).
+
 ## [2.48.0] - 2026-10-21
 - (#355) [Feature] Støtte for flere dørlåser og tilknytning til lokaler (GET /door/locks og lock_id parameter):
   - **Datamodell & Database-migrering (`Migration_2_48_0.php`, `Install.php`)**:
