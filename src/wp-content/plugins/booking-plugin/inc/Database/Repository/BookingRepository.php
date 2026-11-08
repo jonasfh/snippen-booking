@@ -66,11 +66,11 @@ class BookingRepository {
 
 		$bookings = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT b.* 
+				"SELECT b.*
 				 FROM $table_bookings b
 				 JOIN $table_junction j ON b.id = j.booking_id
-				 WHERE j.booking_object_id = %d 
-				   AND b.booking_date BETWEEN %s AND %s 
+				 WHERE j.booking_object_id = %d
+				   AND b.booking_date BETWEEN %s AND %s
 				   AND b.deleted_at IS NULL
 				   AND b.status != 'cancelled'",
 				(int) $object_id,
@@ -278,6 +278,8 @@ class BookingRepository {
 				'modified_at'         => current_time( 'mysql' ),
 			)
 		);
+
+		delete_transient( 'booking_nye_antall' );
 
 		return $booking_id;
 	}
@@ -498,6 +500,26 @@ class BookingRepository {
 			}
 		}
 
+		delete_transient( 'booking_nye_antall' );
+
 		return $this->find( $booking_id );
+	}
+
+	/**
+	 * Count pending bookings.
+	 *
+	 * @return int
+	 */
+	public function count_pending() {
+		global $wpdb;
+		$table = $wpdb->prefix . 'snippen_bookings';
+
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(id) FROM {$table} WHERE status IN (%s, %s) AND deleted_at IS NULL",
+				'pending',
+				'ny'
+			)
+		);
 	}
 }

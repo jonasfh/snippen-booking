@@ -275,13 +275,14 @@ class DoorLockApiTest extends TestCase {
 		);
 
 		// 2. Ended 4 hours ago (beyond 2-hour grace period) -> Excluded
-		$today          = current_time( 'Y-m-d' );
-		$four_hours_ago = date( 'H:i:s', time() - 4 * 3600 );
+		$time_4h_ago    = time() - 4 * 3600;
+		$date_4h_ago    = date( 'Y-m-d', $time_4h_ago );
+		$four_hours_ago = date( 'H:i:s', $time_4h_ago );
 		$five_hours_ago = date( 'H:i:s', time() - 5 * 3600 );
 		$this->create_booking(
 			array(
 				'user_id'      => 102,
-				'booking_date' => $today,
+				'booking_date' => $date_4h_ago,
 				'start_time'   => $five_hours_ago,
 				'end_time'     => $four_hours_ago,
 				'status'       => 'confirmed',
@@ -289,12 +290,14 @@ class DoorLockApiTest extends TestCase {
 		);
 
 		// 3. Ended 1 hour ago (within 2-hour grace period) -> Included!
-		$one_hour_ago  = date( 'H:i:s', time() - 3600 );
+		$time_1h_ago   = time() - 3600;
+		$date_1h_ago   = date( 'Y-m-d', $time_1h_ago );
+		$one_hour_ago  = date( 'H:i:s', $time_1h_ago );
 		$two_hours_ago = date( 'H:i:s', time() - 2 * 3600 );
 		$id_grace      = $this->create_booking(
 			array(
 				'user_id'      => 103,
-				'booking_date' => $today,
+				'booking_date' => $date_1h_ago,
 				'start_time'   => $two_hours_ago,
 				'end_time'     => $one_hour_ago,
 				'status'       => 'confirmed',

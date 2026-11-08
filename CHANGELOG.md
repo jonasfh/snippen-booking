@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.51.0] - 2026-11-08
+- (#370) [Feature] Admin Bar-snarvei med dynamisk teller for nye reservasjoner:
+  - **Admin Bar-integrasjon (`AdminBar.php`)**:
+    - Lagt til `hurtiglenke-booking`-node i WordPress Admin Bar tilgjengelig for brukere med `manage_snippen_bookings` eller `manage_options`.
+    - Viser direktelenke til reservasjonslisten (`admin.php?page=snippen-booking`).
+    - Dynamisk teller som henter antall nye/ubehandlede bookinger med status `pending` fra databasen.
+    - Visuell varslingsbadge (`span.update-plugins`) som viser antallet når telleren er større enn 0, og skjules når telleren er 0.
+    - Omdirigerer eventuelle forespørsler til `booking-oversikt` automatisk til `snippen-booking`.
+  - **Ytelse & Caching**:
+    - Cachet telleren med WordPress Transient API (`booking_nye_antall`) i 5 minutter for å unngå gjentatte spørringer ved sidelasting.
+    - Automatisk ugyldiggjøring av transienten når reservasjoner opprettes (`BookingRepository::create()`), oppdateres (`BookingRepository::update()`) eller endrer status (`BookingActionsApi::update_status()`).
+  - **Tester**:
+    - Lagt til integrasjonstester i `tests/Integration/AdminBarTest.php` som verifiserer tilgangskontroll, visuell varslingsbadge, transient-caching, automatisk cache-invalidering og omdirigering.
+
 ## [2.50.1] - 2026-11-07
 - (#28) [Fix] Demo setup and SetupWizard: Automatisk tilknytning av standard dørlås (`door_lock_id = 1`) til booking-objekter:
   - `bin/demo-gateway.php`: Sørger for at starter-dørlås (`wp_snippen_door_locks` ID 1) eksisterer og tilknytter alle opprettede lokaler (`wp_snippen_booking_objects`) med `door_lock_id = 1`.

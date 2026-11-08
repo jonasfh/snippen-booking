@@ -93,6 +93,8 @@ class BookingActionsApi {
 		);
 
 		if ( $updated !== false ) {
+			delete_transient( 'booking_nye_antall' );
+
 			if ( 'confirmed' === $status && 'confirmed' !== $existing_booking->status ) {
 				$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
 				$notification_manager->send_booking_confirmed_notification( $id );
@@ -176,9 +178,9 @@ class BookingActionsApi {
 		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 		$objs           = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT o.name 
-				 FROM $table_junction bo 
-				 JOIN $table_objects o ON bo.booking_object_id = o.id 
+				"SELECT o.name
+				 FROM $table_junction bo
+				 JOIN $table_objects o ON bo.booking_object_id = o.id
 				 WHERE bo.booking_id = %d",
 				$booking_id
 			)
@@ -290,9 +292,9 @@ class BookingActionsApi {
 		$table_objects  = $wpdb->prefix . 'snippen_booking_objects';
 		$objs           = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT o.name 
-				 FROM $table_junction bo 
-				 JOIN $table_objects o ON bo.booking_object_id = o.id 
+				"SELECT o.name
+				 FROM $table_junction bo
+				 JOIN $table_objects o ON bo.booking_object_id = o.id
 				 WHERE bo.booking_id = %d",
 				$booking_id
 			)
