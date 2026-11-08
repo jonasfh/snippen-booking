@@ -512,6 +512,15 @@ The plugin distinguishes between different rental purposes and supports conditio
 - When cancelling or rejecting a booking, administrators can provide an optional explanation message (`rejection_reason`), which is stored in `wp_snippen_bookings.rejection_reason` and displayed in the booking details card.
 - Database changes are managed by `SnippenBooking\Database\Migrations\Migration_2_32_0`.
 
+### Admin Bar Shortcut & Dynamic Pending Notification Badge (#370)
+- **Class**: `SnippenBooking\Admin\AdminBar` (`inc/Admin/AdminBar.php`).
+- **Hook**: Hooked to `admin_bar_menu` at priority 100, accessible on both frontend and wp-admin for users with `manage_snippen_bookings` or `manage_options`.
+- **Node**: `hurtiglenke-booking` directing to `admin_url('admin.php?page=snippen-booking')`.
+- **Legacy Redirect**: Redirects `admin.php?page=booking-oversikt` to `admin.php?page=snippen-booking` on `admin_init`.
+- **Dynamic Badge**: Formats title as `📅 Reservasjoner <span class="update-plugins count-X"><span class="plugin-count">X</span></span>` when pending count > 0; hides badge when count is 0.
+- **Caching**: Pending count is cached via Transient API under `booking_nye_antall` for 5 minutes (`300` seconds).
+- **Cache Invalidation**: Automatically deleted upon booking creation (`BookingRepository::create()`), booking updates (`BookingRepository::update()`), and admin status changes (`BookingActionsApi::update_status()`).
+
 ## SMS Gateway REST API Synchronization
 
 The plugin integrates with the `snippen-sms-service` daemon via REST API endpoints under `/wp-json/snippen/v1/sms`.

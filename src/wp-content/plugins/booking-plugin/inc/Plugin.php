@@ -48,6 +48,7 @@ class Plugin {
 		\SnippenBooking\Api\PricingPreviewApi::register();
 		\SnippenBooking\Api\ToggleStatusApi::register();
 		AdminLoader::register();
+		\SnippenBooking\Admin\AdminBar::register();
 		\SnippenBooking\Api\BookingActionsApi::register();
 		\SnippenBooking\Api\BookingEditApi::register();
 		\SnippenBooking\Api\UserApi::register();
@@ -242,9 +243,9 @@ class Plugin {
 
 		$booking = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT b.*, s.name as slot_name, s.start_time, s.end_time 
-				 FROM $table_bookings b 
-				 LEFT JOIN $table_slots s ON b.slot_id = s.id 
+				"SELECT b.*, s.name as slot_name, s.start_time, s.end_time
+				 FROM $table_bookings b
+				 LEFT JOIN $table_slots s ON b.slot_id = s.id
 				 WHERE b.uuid = %s AND b.deleted_at IS NULL",
 				$uuid
 			)
@@ -270,9 +271,9 @@ class Plugin {
 				// Get associated objects/locales
 				$objs         = $wpdb->get_col(
 					$wpdb->prepare(
-						"SELECT o.name 
-						 FROM $table_junction bo 
-						 JOIN $table_objects o ON bo.booking_object_id = o.id 
+						"SELECT o.name
+						 FROM $table_junction bo
+						 JOIN $table_objects o ON bo.booking_object_id = o.id
 						 WHERE bo.booking_id = %d",
 						$booking->id
 					)

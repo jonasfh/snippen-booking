@@ -46,6 +46,12 @@ Administrators can edit existing reservations directly in **Snippen Booking > Bo
 - **Snapshot Tracking**: Every modification increments the booking's revision number and logs an immutable JSON snapshot in `wp_snippen_booking_snapshots` with timestamps, modifying administrator, and reason/summary of changes.
 - **Revision Timeline**: The full history of revisions can be reviewed either inside the modal's «Snapshot-historikk» tab or expanded directly within the booking details view.
 
+### Admin Bar Shortcut & Pending Notification Badge (Admin Bar-snarvei med dynamisk teller)
+When logged in with booking administration capabilities (`manage_snippen_bookings` or `manage_options`), an Admin Bar shortcut **📅 Reservasjoner** is displayed in the WordPress top toolbar:
+- **Direct Navigation**: Clicking the shortcut takes administrators directly to the booking list (`admin.php?page=snippen-booking`).
+- **Dynamic Badge**: When there are pending bookings awaiting review (`status = 'pending'`), a notification badge (`span.update-plugins`) displays the number of pending bookings. The badge is automatically hidden when the count is 0.
+- **Performance & Caching**: The count is cached via the WordPress Transient API (`booking_nye_antall`) for 5 minutes and automatically invalidated when bookings are created, edited, or updated.
+
 ### Custom Instructions (Egendefinert melding)
 Booking blocks and time slots can be configured in the WordPress Admin dashboard under **Snippen Booking > Bookingblokker** with the **Egendefinert melding / instruksjoner** text field.
 When configured for a time slot, users booking that slot are informed directly in the booking wizard and summary confirmation box. Bookings with custom instructions are also flagged with an **Info** badge in the admin bookings overview.
