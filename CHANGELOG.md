@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.52.1] - 2026-11-09
+- (#382) [Fix] Fiks JavaScript-syntaksfeil i SettingsPage for Doorman-nøkler:
+  - Rettet feil i jQuery selector-escaping som forårsaket `Uncaught SyntaxError: missing ) after argument list` på innstillingssiden og blokkerte fanebytte.
+  - Benytter nå rene klassereferanser (`.doorman-name-input`) og `wp_json_encode` for lokaliserte tekster.
+  - Lagt til automatisk syntakstest (`node -c`) for generert inline JavaScript i `SettingsPageTest`.
+
 ## [2.52.0] - 2026-11-09
 - (#380) [Feature] Skille ut settings for Doorman-service og støtte flere API-nøkler:
   - **Admin Innstillinger (`SettingsPage.php`)**:
