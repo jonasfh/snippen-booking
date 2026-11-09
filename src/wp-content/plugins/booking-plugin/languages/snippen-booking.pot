@@ -1807,20 +1807,12 @@ msgstr ""
 msgid "Kontoen er allerede bekreftet. Vennligst logg inn."
 msgstr ""
 
-#: inc/Api/UserApi.php:109
-msgid "Bekreftelseskode er sendt på SMS."
+#: inc/Api/UserApi.php:111
+msgid "Bekreftelseskode er sendt på e-post eller SMS."
 msgstr ""
 
-#: inc/Api/UserApi.php:109
-msgid "Bekreftelseskode er sendt på e-post."
-msgstr ""
-
-#: inc/Api/UserApi.php:116
-msgid "Kunne ikke sende SMS. Kontakt administrator."
-msgstr ""
-
-#: inc/Api/UserApi.php:116
-msgid "Kunne ikke sende e-post. Kontakt administrator."
+#: inc/Api/UserApi.php:118
+msgid "Kunne ikke sende bekreftelseskode. Kontakt administrator."
 msgstr ""
 
 #: inc/Api/UserApi.php:139
@@ -2279,24 +2271,16 @@ msgstr ""
 msgid "Bekreft din konto"
 msgstr ""
 
-#: inc/Shortcode/AccountConfirmationShortcode.php:65
-msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på SMS."
+#: inc/Shortcode/AccountConfirmationShortcode.php:66
+msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post eller SMS."
 msgstr ""
 
-#: inc/Shortcode/AccountConfirmationShortcode.php:67
-msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post."
-msgstr ""
-
-#: inc/Shortcode/AccountConfirmationShortcode.php:81
+#: inc/Shortcode/AccountConfirmationShortcode.php:74
 msgid "Skriv inn kode"
 msgstr ""
 
-#: inc/Shortcode/AccountConfirmationShortcode.php:85
-msgid "Vi har sendt en 6-sifret kode til ditt telefonnummer."
-msgstr ""
-
-#: inc/Shortcode/AccountConfirmationShortcode.php:87
-msgid "Vi har sendt en 6-sifret kode til din e-post."
+#: inc/Shortcode/AccountConfirmationShortcode.php:76
+msgid "Vi har sendt en 6-sifret kode på e-post eller SMS."
 msgstr ""
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:94

@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.51.1] - 2026-11-09
+- (#376) [Fix] Tydeliggjør at bekreftelseskode for kontobekreftelse sendes på e-post eller SMS:
+  - **Kontobekreftelse (`AccountConfirmationShortcode.php` & `UserApi.php`)**:
+    - Oppdatert instruksjonstekst og tilbakemeldinger til å opplyse om at bekreftelseskode mottas på «e-post eller SMS» («Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post eller SMS.», «Vi har sendt en 6-sifret kode på e-post eller SMS.», og AJAX-svar «Bekreftelseskode er sendt på e-post eller SMS.»).
+    - Fjernet feilaktig avhengighet til utdatert opsjon i visningslogikk, slik at brukere veiledes riktig uavhengig av om koden rutes til SMS, e-post eller begge deler.
+    - Oppdatert oversettelser i `.pot`, `.po` og kompilert `.mo`.
+  - **Tester**:
+    - Oppdatert integrasjonstester i `AccountConfirmationShortcodeTest` og `AccountConfirmationTest` for å verifisere den nye ordlyden og API-respons.
+
 ## [2.51.0] - 2026-11-08
 - (#370) [Feature] Admin Bar-snarvei med dynamisk teller for nye reservasjoner:
   - **Admin Bar-integrasjon (`AdminBar.php`)**:
