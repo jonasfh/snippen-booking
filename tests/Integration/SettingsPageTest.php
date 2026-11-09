@@ -254,12 +254,51 @@ class SettingsPageTest extends TestCase {
 		$page->render();
 		$output = ob_get_clean();
 
+		$this->assertStringContainsString( 'data-tab="doorman"', $output );
+		$this->assertStringContainsString( 'id="tab-doorman"', $output );
+		$this->assertStringContainsString( 'id="snippen-doorman-keys-table"', $output );
 		$this->assertStringContainsString( 'name="snippen_enable_doorman_api"', $output );
 		$this->assertStringContainsString( 'name="snippen_doorman_api_token"', $output );
 		$this->assertStringContainsString( 'name="snippen_doorman_expose_hours_before"', $output );
 		$this->assertStringContainsString( 'name="snippen_doorman_buffer_minutes_before"', $output );
 		$this->assertStringContainsString( 'name="snippen_doorman_grace_minutes_after"', $output );
 		$this->assertStringContainsString( 'name="snippen_doorman_booking_statuses"', $output );
+	}
+
+	/**
+	 * Test that the settings page renders existing multiple Doorman API keys in the table.
+	 */
+	public function test_settings_page_renders_existing_doorman_api_keys() {
+		update_option(
+			'snippen_doorman_api_keys',
+			array(
+				array(
+					'id'         => 'node_alpha',
+					'name'       => 'Hoveddør Grendehus',
+					'token'      => 'token-abc-111',
+					'created_at' => '2026-11-09 10:00:00',
+				),
+				array(
+					'id'         => 'node_beta',
+					'name'       => 'Sidedør Utleie',
+					'token'      => 'token-xyz-222',
+					'created_at' => '2026-11-09 10:05:00',
+				),
+			)
+		);
+
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		delete_option( 'snippen_doorman_api_keys' );
+
+		$this->assertStringContainsString( 'Hoveddør Grendehus', $output );
+		$this->assertStringContainsString( 'token-abc-111', $output );
+		$this->assertStringContainsString( 'Sidedør Utleie', $output );
+		$this->assertStringContainsString( 'token-xyz-222', $output );
 	}
 
 	/**
@@ -292,9 +331,63 @@ class SettingsPageTest extends TestCase {
 		// Clean up
 		delete_option( 'snippen_enable_doorman_api' );
 		delete_option( 'snippen_doorman_api_token' );
+		delete_option( 'snippen_doorman_api_keys' );
 		delete_option( 'snippen_doorman_expose_hours_before' );
 		delete_option( 'snippen_doorman_buffer_minutes_before' );
 		delete_option( 'snippen_doorman_grace_minutes_after' );
 		delete_option( 'snippen_doorman_booking_statuses' );
+	}
+
+	/**
+	 * Test saving multiple Yale Doorman API keys.
+	 */
+	public function test_settings_page_saves_multiple_doorman_api_keys() {
+		$_POST['snippen_settings_nonce']     = wp_create_nonce( 'snippen_save_settings' );
+		$_POST['snippen_enable_doorman_api'] = 'yes';
+		$_POST['snippen_doorman_api_keys']   = array(
+			array(
+				'id'    => 'key_alpha',
+				'name'  => 'Hoveddør Grendehuset',
+				'token' => 'token-primary-999',
+			),
+			array(
+				'id'    => 'key_beta',
+				'name'  => 'Utleiedel Node 2',
+				'token' => 'token-secondary-888',
+			),
+			array(
+				'id'    => 'key_empty',
+				'name'  => 'Empty Token Key',
+				'token' => '   ', // Should be skipped
+			),
+		);
+
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		ob_get_clean();
+
+		$_POST = array();
+
+		$saved_keys = get_option( 'snippen_doorman_api_keys' );
+		$this->assertIsArray( $saved_keys );
+		$this->assertCount( 2, $saved_keys );
+
+		$this->assertSame( 'key_alpha', $saved_keys[0]['id'] );
+		$this->assertSame( 'Hoveddør Grendehuset', $saved_keys[0]['name'] );
+		$this->assertSame( 'token-primary-999', $saved_keys[0]['token'] );
+
+		$this->assertSame( 'key_beta', $saved_keys[1]['id'] );
+		$this->assertSame( 'Utleiedel Node 2', $saved_keys[1]['name'] );
+		$this->assertSame( 'token-secondary-888', $saved_keys[1]['token'] );
+
+		// Legacy token is synchronized with first key
+		$this->assertSame( 'token-primary-999', get_option( 'snippen_doorman_api_token' ) );
+
+		// Clean up
+		delete_option( 'snippen_enable_doorman_api' );
+		delete_option( 'snippen_doorman_api_token' );
+		delete_option( 'snippen_doorman_api_keys' );
 	}
 }

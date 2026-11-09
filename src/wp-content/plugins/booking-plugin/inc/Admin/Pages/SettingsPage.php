@@ -58,8 +58,61 @@ class SettingsPage {
 		$enable_doorman_api = isset( $_POST['snippen_enable_doorman_api'] ) ? 'yes' : 'no';
 		update_option( 'snippen_enable_doorman_api', $enable_doorman_api );
 
-		if ( isset( $_POST['snippen_doorman_api_token'] ) ) {
-			update_option( 'snippen_doorman_api_token', sanitize_text_field( wp_unslash( $_POST['snippen_doorman_api_token'] ) ) );
+		if ( isset( $_POST['snippen_doorman_api_keys'] ) && is_array( $_POST['snippen_doorman_api_keys'] ) ) {
+			$raw_keys    = wp_unslash( $_POST['snippen_doorman_api_keys'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$parsed_keys = array();
+			foreach ( $raw_keys as $key_item ) {
+				if ( ! is_array( $key_item ) ) {
+					continue;
+				}
+				$token = isset( $key_item['token'] ) ? trim( sanitize_text_field( $key_item['token'] ) ) : '';
+				if ( '' === $token ) {
+					continue;
+				}
+				$name = isset( $key_item['name'] ) ? trim( sanitize_text_field( $key_item['name'] ) ) : '';
+				if ( '' === $name ) {
+					$name = __( 'Doorman-tjeneste', 'snippen-booking' );
+				}
+				$id = isset( $key_item['id'] ) && '' !== trim( sanitize_key( $key_item['id'] ) )
+					? sanitize_key( $key_item['id'] )
+					: 'key_' . wp_generate_password( 8, false );
+
+				$created_at = isset( $key_item['created_at'] ) && '' !== trim( sanitize_text_field( $key_item['created_at'] ) )
+					? sanitize_text_field( $key_item['created_at'] )
+					: current_time( 'mysql' );
+
+				$parsed_keys[] = array(
+					'id'         => $id,
+					'name'       => $name,
+					'token'      => $token,
+					'created_at' => $created_at,
+				);
+			}
+			update_option( 'snippen_doorman_api_keys', $parsed_keys );
+			if ( ! empty( $parsed_keys ) ) {
+				update_option( 'snippen_doorman_api_token', $parsed_keys[0]['token'] );
+			} else {
+				delete_option( 'snippen_doorman_api_token' );
+			}
+		} elseif ( isset( $_POST['snippen_doorman_api_token'] ) ) {
+			$single_token = sanitize_text_field( wp_unslash( $_POST['snippen_doorman_api_token'] ) );
+			update_option( 'snippen_doorman_api_token', $single_token );
+			if ( '' !== $single_token ) {
+				$existing_keys = get_option( 'snippen_doorman_api_keys', array() );
+				if ( empty( $existing_keys ) ) {
+					update_option(
+						'snippen_doorman_api_keys',
+						array(
+							array(
+								'id'         => 'key_' . wp_generate_password( 8, false ),
+								'name'       => __( 'Standard Doorman-tjeneste', 'snippen-booking' ),
+								'token'      => $single_token,
+								'created_at' => current_time( 'mysql' ),
+							),
+						)
+					);
+				}
+			}
 		}
 
 		$doorman_expose_hours = isset( $_POST['snippen_doorman_expose_hours_before'] ) ? intval( $_POST['snippen_doorman_expose_hours_before'] ) : 168;
@@ -209,6 +262,17 @@ class SettingsPage {
 		$door_code_hours_after  = get_option( 'snippen_door_code_hours_after', 2 );
 		$enable_doorman_api     = get_option( 'snippen_enable_doorman_api', 'no' );
 		$doorman_api_token      = get_option( 'snippen_doorman_api_token', '' );
+		$doorman_api_keys       = get_option( 'snippen_doorman_api_keys', array() );
+		if ( empty( $doorman_api_keys ) && ! empty( $doorman_api_token ) ) {
+			$doorman_api_keys = array(
+				array(
+					'id'         => 'legacy_1',
+					'name'       => __( 'Standard Doorman-tjeneste', 'snippen-booking' ),
+					'token'      => $doorman_api_token,
+					'created_at' => '',
+				),
+			);
+		}
 		$doorman_expose_hours   = get_option( 'snippen_doorman_expose_hours_before', 168 );
 		$doorman_buffer_minutes = get_option( 'snippen_doorman_buffer_minutes_before', 30 );
 		$doorman_grace_minutes  = get_option( 'snippen_doorman_grace_minutes_after', 120 );
@@ -271,6 +335,7 @@ class SettingsPage {
 		echo '<a href="#" class="nav-tab" data-tab="keysms">' . esc_html__( 'KeySMS (SMS)', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="snippen_sms">' . esc_html__( 'Snippen SMS (Gateway)', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="payment">' . esc_html__( 'Betaling', 'snippen-booking' ) . '</a>';
+		echo '<a href="#" class="nav-tab" data-tab="doorman">' . esc_html__( 'Yale Doorman', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="general">' . esc_html__( 'Generelt', 'snippen-booking' ) . '</a>';
 		echo '</h2>';
 
@@ -574,7 +639,121 @@ class SettingsPage {
 
 		echo '</div>';
 
-		// 4. Generelt tab content
+		// 5. Yale Doorman tab content
+		echo '<div class="tab-content" id="tab-doorman" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'Yale Doorman Adgangskontroll (REST API)', 'snippen-booking' ) . '</h3>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom:20px; padding:12px 16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px;">';
+		echo '<p style="margin:0 0 6px 0; font-size:13px;"><strong>' . esc_html__( 'REST API Endepunkter:', 'snippen-booking' ) . '</strong></p>';
+		echo '<ul style="margin:0 0 8px 18px; list-style-type:disc; font-size:13px;">';
+		echo '<li>' . esc_html__( 'Hente adgangsperioder / dørkoder:', 'snippen-booking' ) . ' <code style="background:#fff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px;">GET ' . esc_url( rest_url( 'snippen/v1/door/bookings' ) ) . '</code></li>';
+		echo '<li>' . esc_html__( 'Motta lås- og nodestatus:', 'snippen-booking' ) . ' <code style="background:#fff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px;">POST ' . esc_url( rest_url( 'snippen/v1/door/status' ) ) . '</code></li>';
+		echo '</ul>';
+		echo '<p class="description" style="margin:0;">' . esc_html__( 'Doorman-nodene (snippen-doorman-service) må autentisere med en av de konfigurerte API-nøklene nedenfor som Bearer-token i Authorization-headeren eller i X-API-Key-headeren.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_enable_doorman_api" id="snippen_enable_doorman_api" value="yes" ' . checked( $enable_doorman_api, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Aktiver Yale Doorman REST API (/wp-json/snippen/v1/door)', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Når aktivert, kan snippen-doorman-service hente relevante reservasjoner og tildele dørkoder.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		$is_const_token = defined( 'SNIPPEN_DOORMAN_API_TOKEN' );
+		echo '<div id="snippen-doorman-api-settings" style="' . ( 'yes' === $enable_doorman_api ? '' : 'display:none;' ) . '">';
+
+		if ( $is_const_token ) {
+			echo '<div class="notice notice-info inline" style="margin:12px 0 20px 0; padding:10px 14px; background:#f0fdf4; border-left:4px solid #16a34a; border-radius:4px;">';
+			echo '<p style="margin:0; font-weight:600; color:#15803d;">';
+			echo '🔒 ' . esc_html__( 'Konfigurert via konstant i wp-config.php (sikker modus)', 'snippen-booking' );
+			echo '</p>';
+			echo '<p class="description" style="margin:4px 0 0 0; color:#166534;">';
+			echo esc_html__( 'SNIPPEN_DOORMAN_API_TOKEN er definert i wp-config.php og er aktiv som en gyldig nøkkel i tillegg til nøklene nedenfor.', 'snippen-booking' );
+			echo '</p>';
+			echo '</div>';
+		}
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 25px;">';
+		echo '<label style="display:block; font-weight:700; margin-bottom:6px; font-size:14px;">' . esc_html__( 'Doorman Services & API-nøkler', 'snippen-booking' ) . '</label>';
+		echo '<p class="description" style="margin-bottom:12px;">' . esc_html__( 'Definer API-nøkler for hver Doorman-service eller lokasjon. Gi hver tjeneste et gjenkjennelig navn (f.eks. for grendehus eller utleiedel) og et hemmelig token.', 'snippen-booking' ) . '</p>';
+
+		echo '<table class="widefat fixed striped" id="snippen-doorman-keys-table" style="max-width:900px; background:#fff; border:1px solid #ccd0d4; border-radius:4px;">';
+		echo '<thead>';
+		echo '<tr>';
+		echo '<th style="width:35%; font-weight:600;">' . esc_html__( 'Tjeneste / Beskrivelse', 'snippen-booking' ) . '</th>';
+		echo '<th style="width:45%; font-weight:600;">' . esc_html__( 'API-nøkkel (Token)', 'snippen-booking' ) . '</th>';
+		echo '<th style="width:20%; text-align:right; font-weight:600;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
+		echo '</tr>';
+		echo '</thead>';
+		echo '<tbody id="snippen-doorman-keys-body">';
+
+		if ( empty( $doorman_api_keys ) ) {
+			echo '<tr class="no-keys-row"><td colspan="3" style="text-align:center; padding:16px; color:#64748b;">' . esc_html__( 'Ingen API-nøkler lagt til ennå. Klikk på knappen under for å opprette en nøkkel.', 'snippen-booking' ) . '</td></tr>';
+		} else {
+			foreach ( $doorman_api_keys as $idx => $key_item ) {
+				$key_id    = esc_attr( $key_item['id'] ?? ( 'key_' . $idx ) );
+				$key_name  = esc_attr( $key_item['name'] ?? '' );
+				$key_token = esc_attr( $key_item['token'] ?? '' );
+				$key_date  = esc_attr( $key_item['created_at'] ?? '' );
+
+				echo '<tr data-index="' . esc_attr( $idx ) . '">';
+				echo '<td>';
+				echo '<input type="hidden" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][id]" value="' . $key_id . '">';
+				echo '<input type="hidden" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][created_at]" value="' . $key_date . '">';
+				echo '<input type="text" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][name]" value="' . $key_name . '" class="regular-text" style="width:100%;" placeholder="' . esc_attr__( 'F.eks. Hovedinngang Grendehus', 'snippen-booking' ) . '" required>';
+				echo '</td>';
+				echo '<td>';
+				echo '<div style="display:flex; gap:6px; align-items:center;">';
+				echo '<input type="text" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][token]" value="' . $key_token . '" class="regular-text doorman-token-input" style="width:100%; font-family:monospace;" placeholder="' . esc_attr__( 'Token', 'snippen-booking' ) . '" required>';
+				echo '<button type="button" class="button snippen-gen-key-btn" title="' . esc_attr__( 'Generer tilfeldig nøkkel', 'snippen-booking' ) . '">🎲</button>';
+				echo '</div>';
+				echo '</td>';
+				echo '<td style="text-align:right;">';
+				echo '<button type="button" class="button button-link-delete snippen-del-key-btn" style="color:#d63638; text-decoration:none; padding:4px 8px;">' . esc_html__( 'Slett', 'snippen-booking' ) . '</button>';
+				echo '</td>';
+				echo '</tr>';
+			}
+		}
+
+		echo '</tbody>';
+		echo '</table>';
+
+		echo '<div style="margin-top:10px;">';
+		echo '<button type="button" class="button" id="snippen-add-doorman-key-btn">+ ' . esc_html__( 'Legg til ny nøkkel', 'snippen-booking' ) . '</button>';
+		echo '</div>';
+
+		// Hidden fallback input for backwards compatibility
+		echo '<input type="hidden" name="snippen_doorman_api_token" id="snippen_doorman_api_token" value="' . esc_attr( $doorman_api_token ) . '">';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_doorman_expose_hours_before" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Eksponeringshorisont (timer før start)', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_doorman_expose_hours_before" id="snippen_doorman_expose_hours_before" value="' . esc_attr( $doorman_expose_hours ) . '" class="small-text" min="1">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange timer før bookingstart skal reservasjonen dukke opp i Doorman API-listen. Standard er 168 timer (7 dager).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_doorman_buffer_minutes_before" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Adgangsbuffer før start (minutter)', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_doorman_buffer_minutes_before" id="snippen_doorman_buffer_minutes_before" value="' . esc_attr( $doorman_buffer_minutes ) . '" class="small-text" min="0">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange minutter før leietidens start skal koden være aktiv i låsen. Standard er 30 minutter.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_doorman_grace_minutes_after" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Grace-periode etter slutt (minutter)', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_doorman_grace_minutes_after" id="snippen_doorman_grace_minutes_after" value="' . esc_attr( $doorman_grace_minutes ) . '" class="small-text" min="0">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange minutter etter leietidens slutt skal koden forbli aktiv i låsen (f.eks. for opprydding/gjenglemte ting). Standard er 120 minutter (2 timer).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_doorman_booking_statuses" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Kvalifiserende bookingstatuser', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_doorman_booking_statuses" id="snippen_doorman_booking_statuses" value="' . esc_attr( $doorman_statuses ) . '" class="regular-text">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Kommaseparert liste over bookingstatuser som skal kvalifisere for dørkode (f.eks. confirmed).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '</div>'; // #tab-doorman
+
+		// 6. Generelt tab content
 		echo '<div class="tab-content" id="tab-general" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Generelle innstillinger', 'snippen-booking' ) . '</h3>';
 
@@ -602,58 +781,6 @@ class SettingsPage {
 		echo '</label>';
 		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Aktiver adgangskontroll og tildeling av dørkoder for reservasjoner.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
-
-		// Yale Doorman REST API Settings
-		echo '<hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">';
-		echo '<h4 style="margin: 0 0 15px 0;">' . esc_html__( 'Yale Doorman Adgangskontroll (REST API)', 'snippen-booking' ) . '</h4>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
-		echo '<input type="checkbox" name="snippen_enable_doorman_api" id="snippen_enable_doorman_api" value="yes" ' . checked( $enable_doorman_api, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Aktiver Yale Doorman REST API (/wp-json/snippen/v1/door)', 'snippen-booking' );
-		echo '</label>';
-		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Når aktivert, kan snippen-doorman-service hente relevante reservasjoner og tildele dørkoder.', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		$is_const_token = defined( 'SNIPPEN_DOORMAN_API_TOKEN' );
-		echo '<div id="snippen-doorman-api-settings" style="' . ( 'yes' === $enable_doorman_api ? '' : 'display:none;' ) . '">';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label for="snippen_doorman_api_token" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Doorman Service API Token', 'snippen-booking' ) . '</label>';
-		echo '<input type="password" name="snippen_doorman_api_token" id="snippen_doorman_api_token" value="' . esc_attr( $doorman_api_token ) . '" class="regular-text"' . ( $is_const_token ? ' disabled' : '' ) . '>';
-		if ( $is_const_token ) {
-			echo '<p class="description" style="margin-top:4px; color:#15803d;">' . esc_html__( 'Token er overstyrt av SNIPPEN_DOORMAN_API_TOKEN konstant i wp-config.php.', 'snippen-booking' ) . '</p>';
-		} else {
-			echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hemmelig token for autentisering fra snippen-doorman-service (kan også defineres som SNIPPEN_DOORMAN_API_TOKEN i wp-config.php).', 'snippen-booking' ) . '</p>';
-		}
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label for="snippen_doorman_expose_hours_before" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Eksponeringshorisont (timer før start)', 'snippen-booking' ) . '</label>';
-		echo '<input type="number" name="snippen_doorman_expose_hours_before" id="snippen_doorman_expose_hours_before" value="' . esc_attr( $doorman_expose_hours ) . '" class="small-text" min="1">';
-		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange timer før bookingstart skal reservasjonen dukke opp i Doorman API-listen. Standard er 168 timer (7 dager).', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label for="snippen_doorman_buffer_minutes_before" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Adgangsbuffer før start (minutter)', 'snippen-booking' ) . '</label>';
-		echo '<input type="number" name="snippen_doorman_buffer_minutes_before" id="snippen_doorman_buffer_minutes_before" value="' . esc_attr( $doorman_buffer_minutes ) . '" class="small-text" min="0">';
-		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange minutter før leietidens start skal koden være aktiv i låsen. Standard er 30 minutter.', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label for="snippen_doorman_grace_minutes_after" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Grace-periode etter slutt (minutter)', 'snippen-booking' ) . '</label>';
-		echo '<input type="number" name="snippen_doorman_grace_minutes_after" id="snippen_doorman_grace_minutes_after" value="' . esc_attr( $doorman_grace_minutes ) . '" class="small-text" min="0">';
-		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange minutter etter leietidens slutt skal koden forbli aktiv i låsen (f.eks. for opprydding/gjenglemte ting). Standard er 120 minutter (2 timer).', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label for="snippen_doorman_booking_statuses" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Kvalifiserende bookingstatuser', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_doorman_booking_statuses" id="snippen_doorman_booking_statuses" value="' . esc_attr( $doorman_statuses ) . '" class="regular-text">';
-		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Kommaseparert liste over bookingstatuser som skal kvalifisere for dørkode (f.eks. confirmed).', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '</div>';
-		echo '<hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
 		echo '<label for="snippen_terms_url" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Lenke til vilkår/regler for leie', 'snippen-booking' ) . '</label>';
@@ -717,6 +844,74 @@ class SettingsPage {
 				} else {
 					$("#snippen-doorman-api-settings").hide();
 				}
+			});
+
+			function generateDoormanToken() {
+				var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+				var res = "";
+				if (window.crypto && window.crypto.getRandomValues) {
+					var arr = new Uint8Array(32);
+					window.crypto.getRandomValues(arr);
+					for (var i = 0; i < arr.length; i++) {
+						res += chars[arr[i] % chars.length];
+					}
+				} else {
+					for (var j = 0; j < 32; j++) {
+						res += chars.charAt(Math.floor(Math.random() * chars.length));
+					}
+				}
+				return res;
+			}
+
+			function syncFirstToken() {
+				var firstToken = $("#snippen-doorman-keys-body .doorman-token-input").first().val() || "";
+				$("#snippen_doorman_api_token").val(firstToken);
+			}
+
+			$("#snippen-add-doorman-key-btn").on("click", function(e) {
+				e.preventDefault();
+				$("#snippen-doorman-keys-body .no-keys-row").remove();
+				var newIdx = new Date().getTime();
+				var randomToken = generateDoormanToken();
+				var rowHtml = "<tr data-index=\"" + newIdx + "\">" +
+					"<td>" +
+						"<input type=\"hidden\" name=\"snippen_doorman_api_keys[" + newIdx + "][id]\" value=\"key_" + newIdx + "\">" +
+						"<input type=\"hidden\" name=\"snippen_doorman_api_keys[" + newIdx + "][created_at]\" value=\"" + new Date().toISOString() + "\">" +
+						"<input type=\"text\" name=\"snippen_doorman_api_keys[" + newIdx + "][name]\" value=\"\" class=\"regular-text\" style=\"width:100%;\" placeholder=\"" + "' . esc_js( __( 'F.eks. Hovedinngang Grendehus', 'snippen-booking' ) ) . '" + "\" required>" +
+					"</td>" +
+					"<td>" +
+						"<div style=\"display:flex; gap:6px; align-items:center;\">" +
+							"<input type=\"text\" name=\"snippen_doorman_api_keys[" + newIdx + "][token]\" value=\"" + randomToken + "\" class=\"regular-text doorman-token-input\" style=\"width:100%; font-family:monospace;\" placeholder=\"Token\" required>" +
+							"<button type=\"button\" class=\"button snippen-gen-key-btn\" title=\"" + "' . esc_js( __( 'Generer tilfeldig nøkkel', 'snippen-booking' ) ) . '" + "\">🎲</button>" +
+						"</div>" +
+					"</td>" +
+					"<td style=\"text-align:right;\">" +
+						"<button type=\"button\" class=\"button button-link-delete snippen-del-key-btn\" style=\"color:#d63638; text-decoration:none; padding:4px 8px;\">" + "' . esc_js( __( 'Slett', 'snippen-booking' ) ) . '" + "</button>" +
+					"</td>" +
+				"</tr>";
+				$("#snippen-doorman-keys-body").append(rowHtml);
+				syncFirstToken();
+				$("#snippen-doorman-keys-body tr[data-index=\"" + newIdx + "\"] input[name$=\\\"[name]\\\"]").focus();
+			});
+
+			$(document).on("click", ".snippen-del-key-btn", function(e) {
+				e.preventDefault();
+				$(this).closest("tr").remove();
+				if ($("#snippen-doorman-keys-body tr").length === 0) {
+					$("#snippen-doorman-keys-body").append("<tr class=\"no-keys-row\"><td colspan=\"3\" style=\"text-align:center; padding:16px; color:#64748b;\">" + "' . esc_js( __( 'Ingen API-nøkler lagt til ennå. Klikk på knappen under for å opprette en nøkkel.', 'snippen-booking' ) ) . '" + "</td></tr>");
+				}
+				syncFirstToken();
+			});
+
+			$(document).on("click", ".snippen-gen-key-btn", function(e) {
+				e.preventDefault();
+				var $tokenInput = $(this).closest("tr").find(".doorman-token-input");
+				$tokenInput.val(generateDoormanToken());
+				syncFirstToken();
+			});
+
+			$(document).on("input change", ".doorman-token-input", function() {
+				syncFirstToken();
 			});
 			$("#snippen-vipps-test-btn").on("click", function(e) {
 				e.preventDefault();

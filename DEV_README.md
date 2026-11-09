@@ -896,10 +896,11 @@ The plugin integrates with the `snippen-doorman-service` daemon via lightweight 
 
 - **Master Toggle (`snippen_enable_doorman_api`)**:
   - Disabled by default (`no`). When disabled, `/wp-json/snippen/v1/door/*` routes return HTTP 404 (`rest_no_route`), ensuring zero overhead or disruption for standard installs.
-  - Enabled via WordPress Admin (**Snippen Booking > Innstillinger > Adgangskontroll (Yale Doorman)**) or WP-CLI.
-- **Authentication**:
-  - Configured via option `snippen_doorman_api_token` or environment/constant `SNIPPEN_DOORMAN_API_TOKEN`.
-  - Timing-safe comparison (`hash_equals`) supporting either `Authorization: Bearer <token>` or `X-API-Key: <token>`.
+  - Enabled via WordPress Admin (**Snippen Booking > Innstillinger > Yale Doorman**) or WP-CLI.
+- **Authentication & Multiple API Keys**:
+  - Multiple Doorman services and nodes are supported via option `snippen_doorman_api_keys` (managed in WP Admin under **Innstillinger > Yale Doorman** with descriptive service names and tokens).
+  - Also supports single legacy option `snippen_doorman_api_token` (auto-synced) or environment/constant `SNIPPEN_DOORMAN_API_TOKEN` in `wp-config.php`.
+  - Timing-safe comparison (`hash_equals`) supporting either `Authorization: Bearer <token>` or `X-API-Key: <token>` against any configured key.
 - **Zero PII / GDPR Compliance**:
   - Responses contain strictly operational access details (`id`, `start_time`, `end_time`, `door_code`). No customer names, phone numbers, or emails are exposed.
 
