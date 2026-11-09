@@ -205,6 +205,55 @@ class DoorLockApiTest extends TestCase {
 	}
 
 	/**
+	 * Test verify_token with multiple configured API keys (Issue #380).
+	 */
+	public function test_verify_token_with_multiple_keys() {
+		delete_option( 'snippen_doorman_api_token' );
+		update_option(
+			'snippen_doorman_api_keys',
+			array(
+				array(
+					'id'    => 'node_main',
+					'name'  => 'Hovedhus Node',
+					'token' => 'token-main-node-123',
+				),
+				array(
+					'id'    => 'node_annex',
+					'name'  => 'Utleiedel Node',
+					'token' => 'token-annex-node-456',
+				),
+			)
+		);
+
+		// Valid Node 1 via Bearer
+		$req1 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req1->add_header( 'Authorization', 'Bearer token-main-node-123' );
+		$this->assertTrue( DoorLockApi::verify_token( $req1 ) );
+
+		// Valid Node 2 via X-API-Key
+		$req2 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req2->add_header( 'X-API-Key', 'token-annex-node-456' );
+		$this->assertTrue( DoorLockApi::verify_token( $req2 ) );
+
+		// Invalid token
+		$req3 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req3->add_header( 'Authorization', 'Bearer unauthorized-token' );
+		$res3 = DoorLockApi::verify_token( $req3 );
+		$this->assertInstanceOf( \WP_Error::class, $res3 );
+		$this->assertSame( 401, $res3->get_error_data()['status'] );
+
+		// Legacy token is also accepted alongside multiple keys
+		update_option( 'snippen_doorman_api_token', 'token-legacy-789' );
+		$req4 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req4->add_header( 'Authorization', 'Bearer token-legacy-789' );
+		$this->assertTrue( DoorLockApi::verify_token( $req4 ) );
+
+		// Cleanup
+		delete_option( 'snippen_doorman_api_keys' );
+		update_option( 'snippen_doorman_api_token', self::TEST_TOKEN );
+	}
+
+	/**
 	 * Test GET /door/bookings when database is empty
 	 */
 	public function test_get_bookings_empty() {

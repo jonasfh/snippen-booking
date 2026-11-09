@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.52.0] - 2026-11-09
+- (#380) [Feature] Skille ut settings for Doorman-service og støtte flere API-nøkler:
+  - **Admin Innstillinger (`SettingsPage.php`)**:
+    - Skilt ut Yale Doorman-innstillinger i en egen fane (*Yale Doorman*, `tab-doorman`) i stedet for å ligge under *Generelt*.
+    - Lagt til oversiktlig boks med Doorman REST API endepunkter (`/wp-json/snippen/v1/door/bookings` og `/wp-json/snippen/v1/door/status`).
+    - Støtte for flere API-nøkler med dynamisk grensesnitt: tabell over noder/tjenester med felt for beskrivende navn (f.eks. "Hovedinngang Grendehus", "Utleiedel"), API-nøkkel (token), slett-knapp og tilfeldig nøkkelgenerator.
+    - Lagrer nøkler strukturert i `snippen_doorman_api_keys` og holder legacy-opsjonen `snippen_doorman_api_token` synkronisert for 100% bakoverkompatibilitet.
+    - Tydelig varsel når `SNIPPEN_DOORMAN_API_TOKEN` er definert via konstant i `wp-config.php`.
+  - **REST API (`DoorLockApi.php`)**:
+    - Utvidet `DoorLockApi::verify_token()` til å validere innkommende Bearer- og X-API-Key-tokens mot alle konfigurerte nøkler i `snippen_doorman_api_keys`, legacy-token `snippen_doorman_api_token` og miljøkonstant `SNIPPEN_DOORMAN_API_TOKEN`.
+  - **Tester**:
+    - Utvidet `SettingsPageTest.php` med tester for rendering av Doorman-fanen og lagring av flere API-nøkler.
+    - Utvidet `DoorLockApiTest.php` med tester for autentisering med flere samtidige API-nøkler, Bearer og X-API-Key.
+
 ## [2.51.1] - 2026-11-09
 - (#376) [Fix] Tydeliggjør at bekreftelseskode for kontobekreftelse sendes på e-post eller SMS:
   - **Kontobekreftelse (`AccountConfirmationShortcode.php` & `UserApi.php`)**:

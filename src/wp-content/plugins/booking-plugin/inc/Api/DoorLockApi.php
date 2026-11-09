@@ -155,11 +155,9 @@ class DoorLockApi {
 			);
 		}
 
-		$configured_token = defined( 'SNIPPEN_DOORMAN_API_TOKEN' )
-			? constant( 'SNIPPEN_DOORMAN_API_TOKEN' )
-			: get_option( 'snippen_doorman_api_token', '' );
+		$configured_tokens = self::get_configured_tokens();
 
-		if ( empty( $configured_token ) ) {
+		if ( empty( $configured_tokens ) ) {
 			return new \WP_Error(
 				'rest_unauthorized',
 				__( 'Doorman API-token er ikke konfigurert.', 'snippen-booking' ),
@@ -178,7 +176,7 @@ class DoorLockApi {
 			$token = $request->get_header( 'x-api-key' );
 		}
 
-		if ( empty( $token ) || ! hash_equals( (string) $configured_token, (string) $token ) ) {
+		if ( empty( $token ) ) {
 			return new \WP_Error(
 				'rest_unauthorized',
 				__( 'Ugyldig eller manglende autorisasjonstoken.', 'snippen-booking' ),
@@ -186,7 +184,49 @@ class DoorLockApi {
 			);
 		}
 
-		return true;
+		foreach ( $configured_tokens as $valid_token ) {
+			if ( hash_equals( (string) $valid_token, (string) $token ) ) {
+				return true;
+			}
+		}
+
+		return new \WP_Error(
+			'rest_unauthorized',
+			__( 'Ugyldig eller manglende autorisasjonstoken.', 'snippen-booking' ),
+			array( 'status' => 401 )
+		);
+	}
+
+	/**
+	 * Get all configured Doorman API tokens.
+	 *
+	 * Checks SNIPPEN_DOORMAN_API_TOKEN constant, snippen_doorman_api_keys option array,
+	 * and snippen_doorman_api_token legacy single token option.
+	 *
+	 * @return array<string> List of valid API tokens.
+	 */
+	public static function get_configured_tokens(): array {
+		$tokens = array();
+
+		if ( defined( 'SNIPPEN_DOORMAN_API_TOKEN' ) && ! empty( constant( 'SNIPPEN_DOORMAN_API_TOKEN' ) ) ) {
+			$tokens[] = (string) constant( 'SNIPPEN_DOORMAN_API_TOKEN' );
+		}
+
+		$api_keys = get_option( 'snippen_doorman_api_keys', array() );
+		if ( is_array( $api_keys ) ) {
+			foreach ( $api_keys as $key_data ) {
+				if ( is_array( $key_data ) && ! empty( $key_data['token'] ) ) {
+					$tokens[] = (string) $key_data['token'];
+				}
+			}
+		}
+
+		$single_token = get_option( 'snippen_doorman_api_token', '' );
+		if ( ! empty( $single_token ) && ! in_array( (string) $single_token, $tokens, true ) ) {
+			$tokens[] = (string) $single_token;
+		}
+
+		return array_values( array_unique( $tokens ) );
 	}
 
 	/**
