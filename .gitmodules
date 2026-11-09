@@ -4,3 +4,6 @@
 [submodule ".agents/node-agent-instructions"]
 	path = .agents/node-agent-instructions
 	url = https://github.com/jonasfh/node-agent-instructions.git
+[submodule ".agents/php-agent-instructions"]
+	path = .agents/php-agent-instructions
+	url = https://github.com/jonasfh/php-agent-instructions.git

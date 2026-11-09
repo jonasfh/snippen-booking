@@ -27,6 +27,13 @@ Guide AI agents working in this repository.
 - 🧪 **[Quality & Testing Principles](file:///.agents/common-agent-instructions/TESTING.md)**: Automated test requirements, zero-linting policy, and formatting hygiene.
 - 📐 **[Common Architecture](file:///.agents/common-agent-instructions/ARCHITECTURE.md)**: Modularity, decoupling, and universal database timestamp rules.
 
+### PHP Submodule Guidelines
+- 🛠️ **[PHP Environment & Tooling](file:///.agents/php-agent-instructions/PHP_ENVIRONMENT_AND_TOOLING.md)**: Composer dependency management, PSR-4 autoloading standards, custom scripts, and runtime environment.
+- 🎨 **[PHP Code Style & Quality](file:///.agents/php-agent-instructions/PHP_CODE_STYLE.md)**: PSR standards, PHPCS linting, PHPCBF auto-formatting, zero-lint policy, and formatting hygiene.
+- 🧪 **[PHP Testing & QA](file:///.agents/php-agent-instructions/PHP_TESTING.md)**: PHPUnit testing framework, unit vs. integration separation, fast local feedback loops, and state isolation.
+- 📐 **[PHP Architecture](file:///.agents/php-agent-instructions/PHP_ARCHITECTURE.md)**: Modular design, thin controllers, domain services, universal database timestamp rules, and safe query execution.
+- 🖥️ **[PHP Server & Database](file:///.agents/php-agent-instructions/PHP_SERVER_AND_DATABASE.md)**: Dev-server execution in Apache, error logging inspection, database connectivity, and CLI tools.
+
 ### Node.js & UI Testing Guidelines
 - 📦 **[Node.js Testing & Quality Assurance](file:///.agents/node-agent-instructions/TESTING.md)**: Playwright visual regression testing, snapshot tolerances, and zero-lint policy.
 
