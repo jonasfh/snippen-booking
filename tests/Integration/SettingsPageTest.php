@@ -390,4 +390,29 @@ class SettingsPageTest extends TestCase {
 		delete_option( 'snippen_doorman_api_token' );
 		delete_option( 'snippen_doorman_api_keys' );
 	}
+
+	/**
+	 * Test that inline JavaScript rendered by settings page is syntactically valid.
+	 */
+	public function test_settings_page_script_has_valid_javascript_syntax() {
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertMatchesRegularExpression( '/<script>([\s\S]*?)<\/script>/', $output );
+		preg_match( '/<script>([\s\S]*?)<\/script>/', $output, $matches );
+		$script = $matches[1];
+
+		$temp_file = tempnam( sys_get_temp_dir(), 'settings_js_' ) . '.js';
+		file_put_contents( $temp_file, $script );
+
+		$exec_output = array();
+		$return_code = 0;
+		exec( 'node -c ' . escapeshellarg( $temp_file ) . ' 2>&1', $exec_output, $return_code );
+		unlink( $temp_file );
+
+		$this->assertSame( 0, $return_code, 'JavaScript in SettingsPage has syntax errors: ' . implode( "\n", $exec_output ) );
+	}
 }

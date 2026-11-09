@@ -701,7 +701,7 @@ class SettingsPage {
 				echo '<td>';
 				echo '<input type="hidden" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][id]" value="' . $key_id . '">';
 				echo '<input type="hidden" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][created_at]" value="' . $key_date . '">';
-				echo '<input type="text" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][name]" value="' . $key_name . '" class="regular-text" style="width:100%;" placeholder="' . esc_attr__( 'F.eks. Hovedinngang Grendehus', 'snippen-booking' ) . '" required>';
+				echo '<input type="text" name="snippen_doorman_api_keys[' . esc_attr( $idx ) . '][name]" value="' . $key_name . '" class="regular-text doorman-name-input" style="width:100%;" placeholder="' . esc_attr__( 'F.eks. Hovedinngang Grendehus', 'snippen-booking' ) . '" required>';
 				echo '</td>';
 				echo '<td>';
 				echo '<div style="display:flex; gap:6px; align-items:center;">';
@@ -868,37 +868,49 @@ class SettingsPage {
 				$("#snippen_doorman_api_token").val(firstToken);
 			}
 
+			var doormanNamePlaceholder = ' . wp_json_encode( __( 'F.eks. Hovedinngang Grendehus', 'snippen-booking' ) ) . ';
+			var doormanGenKeyTitle     = ' . wp_json_encode( __( 'Generer tilfeldig nøkkel', 'snippen-booking' ) ) . ';
+			var doormanDelKeyText      = ' . wp_json_encode( __( 'Slett', 'snippen-booking' ) ) . ';
+			var doormanEmptyMsg        = ' . wp_json_encode( __( 'Ingen API-nøkler lagt til ennå. Klikk på knappen under for å opprette en nøkkel.', 'snippen-booking' ) ) . ';
+
 			$("#snippen-add-doorman-key-btn").on("click", function(e) {
 				e.preventDefault();
 				$("#snippen-doorman-keys-body .no-keys-row").remove();
 				var newIdx = new Date().getTime();
 				var randomToken = generateDoormanToken();
-				var rowHtml = "<tr data-index=\"" + newIdx + "\">" +
+				var $newRow = $("<tr data-index=\"" + newIdx + "\">" +
 					"<td>" +
 						"<input type=\"hidden\" name=\"snippen_doorman_api_keys[" + newIdx + "][id]\" value=\"key_" + newIdx + "\">" +
 						"<input type=\"hidden\" name=\"snippen_doorman_api_keys[" + newIdx + "][created_at]\" value=\"" + new Date().toISOString() + "\">" +
-						"<input type=\"text\" name=\"snippen_doorman_api_keys[" + newIdx + "][name]\" value=\"\" class=\"regular-text\" style=\"width:100%;\" placeholder=\"" + "' . esc_js( __( 'F.eks. Hovedinngang Grendehus', 'snippen-booking' ) ) . '" + "\" required>" +
+						"<input type=\"text\" name=\"snippen_doorman_api_keys[" + newIdx + "][name]\" value=\"\" class=\"regular-text doorman-name-input\" style=\"width:100%;\" required>" +
 					"</td>" +
 					"<td>" +
 						"<div style=\"display:flex; gap:6px; align-items:center;\">" +
 							"<input type=\"text\" name=\"snippen_doorman_api_keys[" + newIdx + "][token]\" value=\"" + randomToken + "\" class=\"regular-text doorman-token-input\" style=\"width:100%; font-family:monospace;\" placeholder=\"Token\" required>" +
-							"<button type=\"button\" class=\"button snippen-gen-key-btn\" title=\"" + "' . esc_js( __( 'Generer tilfeldig nøkkel', 'snippen-booking' ) ) . '" + "\">🎲</button>" +
+							"<button type=\"button\" class=\"button snippen-gen-key-btn\">🎲</button>" +
 						"</div>" +
 					"</td>" +
 					"<td style=\"text-align:right;\">" +
-						"<button type=\"button\" class=\"button button-link-delete snippen-del-key-btn\" style=\"color:#d63638; text-decoration:none; padding:4px 8px;\">" + "' . esc_js( __( 'Slett', 'snippen-booking' ) ) . '" + "</button>" +
+						"<button type=\"button\" class=\"button button-link-delete snippen-del-key-btn\" style=\"color:#d63638; text-decoration:none; padding:4px 8px;\"></button>" +
 					"</td>" +
-				"</tr>";
-				$("#snippen-doorman-keys-body").append(rowHtml);
+				"</tr>");
+
+				$newRow.find(".doorman-name-input").attr("placeholder", doormanNamePlaceholder);
+				$newRow.find(".snippen-gen-key-btn").attr("title", doormanGenKeyTitle);
+				$newRow.find(".snippen-del-key-btn").text(doormanDelKeyText);
+
+				$("#snippen-doorman-keys-body").append($newRow);
 				syncFirstToken();
-				$("#snippen-doorman-keys-body tr[data-index=\"" + newIdx + "\"] input[name$=\\\"[name]\\\"]").focus();
+				$newRow.find(".doorman-name-input").focus();
 			});
 
 			$(document).on("click", ".snippen-del-key-btn", function(e) {
 				e.preventDefault();
 				$(this).closest("tr").remove();
 				if ($("#snippen-doorman-keys-body tr").length === 0) {
-					$("#snippen-doorman-keys-body").append("<tr class=\"no-keys-row\"><td colspan=\"3\" style=\"text-align:center; padding:16px; color:#64748b;\">" + "' . esc_js( __( 'Ingen API-nøkler lagt til ennå. Klikk på knappen under for å opprette en nøkkel.', 'snippen-booking' ) ) . '" + "</td></tr>");
+					var $emptyRow = $("<tr class=\"no-keys-row\"><td colspan=\"3\" style=\"text-align:center; padding:16px; color:#64748b;\"></td></tr>");
+					$emptyRow.find("td").text(doormanEmptyMsg);
+					$("#snippen-doorman-keys-body").append($emptyRow);
 				}
 				syncFirstToken();
 			});
