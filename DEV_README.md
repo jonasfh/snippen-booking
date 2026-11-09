@@ -897,10 +897,13 @@ The plugin integrates with the `snippen-doorman-service` daemon via lightweight 
 - **Master Toggle (`snippen_enable_doorman_api`)**:
   - Disabled by default (`no`). When disabled, `/wp-json/snippen/v1/door/*` routes return HTTP 404 (`rest_no_route`), ensuring zero overhead or disruption for standard installs.
   - Enabled via WordPress Admin (**Snippen Booking > Innstillinger > Yale Doorman**) or WP-CLI.
-- **Authentication & Multiple API Keys**:
-  - Multiple Doorman services and nodes are supported via option `snippen_doorman_api_keys` (managed in WP Admin under **Innstillinger > Yale Doorman** with descriptive service names and tokens).
-  - Also supports single legacy option `snippen_doorman_api_token` (auto-synced) or environment/constant `SNIPPEN_DOORMAN_API_TOKEN` in `wp-config.php`.
-  - Timing-safe comparison (`hash_equals`) supporting either `Authorization: Bearer <token>` or `X-API-Key: <token>` against any configured key.
+- **Authentication & Personal Access Tokens (PAT)**:
+  - Doorman services authenticate with secure Personal Access Tokens (PAT, e.g. `sdo_<32-hex-chars>`) managed in WP Admin under **Innstillinger > Yale Doorman**.
+  - **One-time plain display**: Tokens are revealed strictly once upon creation in the admin modal with a clipboard copy helper and security warning.
+  - **Salted One-way Hashing**: Secret tokens are never stored in cleartext. Only a salted HMAC-SHA256 hash (`hash_hmac('sha256', $token, wp_salt('auth'))`) and masked representation (`sdo_8f2a••••••••••••••••b4e1`) are stored in `snippen_doorman_api_keys`.
+  - **Auto-migration**: Legacy plaintext keys are automatically converted to salted hashes on first inspection.
+  - Supports constant `SNIPPEN_DOORMAN_API_TOKEN` in `wp-config.php` and legacy fallback option `snippen_doorman_api_token`.
+  - Timing-safe verification (`hash_equals`) supporting either `Authorization: Bearer <token>` or `X-API-Key: <token>` against any configured key (< 0.05 ms verification latency).
 - **Zero PII / GDPR Compliance**:
   - Responses contain strictly operational access details (`id`, `start_time`, `end_time`, `door_code`). No customer names, phone numbers, or emails are exposed.
 

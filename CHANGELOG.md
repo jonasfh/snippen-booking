@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.53.0] - 2026-11-09
+- (#384) [Feature] Sikker håndtering av Doorman API-nøkler som Personal Access Tokens (PAT):
+  - **Sikker token-håndtering & hashing**:
+    - Doorman API-nøkler opprettes nå som hemmelige Personal Access Tokens med prefiks `sdo_` og 32 tilfeldige hex-tegn (`sdo_<32-hex>`).
+    - Tokens lagres aldri i klartekst i databasen. Kun en salted kryptografisk enveis-hash beregnet med `hash_hmac('sha256', $token, wp_salt('auth'))` og en maskert representasjon lagres i `snippen_doorman_api_keys`.
+    - Bakoverkompatibel automatisk migrering: Eksisterende klartekstnøkler i databasen migreres transparent til salted hash ved første gangs lesing/verifisering.
+  - **Admin-grensesnitt (`SettingsPage.php`)**:
+    - Nøkler i Doorman-fanen vises kun maskert (f.eks. `sdo_8f2a••••••••••••••••b4e1`). Ingen klartekstnøkler finnes i DOM eller input-felter.
+    - Modal for opprettelse av ny nøkkel med tjenestenavn via AJAX.
+    - Engangsvisning (One-time reveal modal) ved generering med "Kopier til utklippstavle"-knapp og tydelig sikkerhetsadvarsel om at nøkkelen aldri vises igjen.
+    - Sikker sletting av nøkler via AJAX med bekreftelsesdialog.
+  - **AJAX Endepunkter (`DoormanApiKeyApi.php`)**:
+    - Lagt til `wp_ajax_snippen_create_doorman_api_key` for opprettelse av PAT.
+    - Lagt til `wp_ajax_snippen_delete_doorman_api_key` for sletting av PAT.
+    - Nonce- og rettighetsvalidering (`manage_snippen_bookings` / `manage_options`).
+  - **REST API-autentisering (`DoorLockApi.php`)**:
+    - `DoorLockApi::verify_token()` hasher innkommende Bearer / X-API-Key med `wp_salt('auth')` og sammenligner mot lagrede hasher med timing-safe `hash_equals()`.
+  - **Tester**:
+    - Lagt til `tests/Integration/DoormanApiKeyApiTest.php` som tester token-generering, hashing, maskering, auto-migrering, AJAX-opprettelse og sletting.
+    - Oppdatert `tests/Integration/SettingsPageTest.php` for maskert nøkkelvisning og sikker lagring.
+    - Oppdatert `tests/Integration/DoorLockApiTest.php` med tester for validering mot hashede PAT-nøkler.
+
 ## [2.52.1] - 2026-11-09
 - (#382) [Fix] Fiks JavaScript-syntaksfeil i SettingsPage for Doorman-nøkler:
   - Rettet feil i jQuery selector-escaping som forårsaket `Uncaught SyntaxError: missing ) after argument list` på innstillingssiden og blokkerte fanebytte.
