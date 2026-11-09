@@ -155,9 +155,11 @@ class DoorLockApi {
 			);
 		}
 
-		$configured_tokens = self::get_configured_tokens();
+		$api_keys     = DoormanApiKeyApi::get_keys();
+		$single_token = get_option( 'snippen_doorman_api_token', '' );
+		$has_const    = defined( 'SNIPPEN_DOORMAN_API_TOKEN' ) && ! empty( constant( 'SNIPPEN_DOORMAN_API_TOKEN' ) );
 
-		if ( empty( $configured_tokens ) ) {
+		if ( ! $has_const && empty( $api_keys ) && empty( $single_token ) ) {
 			return new \WP_Error(
 				'rest_unauthorized',
 				__( 'Doorman API-token er ikke konfigurert.', 'snippen-booking' ),
@@ -184,10 +186,31 @@ class DoorLockApi {
 			);
 		}
 
-		foreach ( $configured_tokens as $valid_token ) {
-			if ( hash_equals( (string) $valid_token, (string) $token ) ) {
-				return true;
+		// 1. Check SNIPPEN_DOORMAN_API_TOKEN constant
+		if ( $has_const && hash_equals( (string) constant( 'SNIPPEN_DOORMAN_API_TOKEN' ), (string) $token ) ) {
+			return true;
+		}
+
+		// 2. Check hashed keys in snippen_doorman_api_keys
+		$incoming_hash = DoormanApiKeyApi::hash_token( (string) $token );
+		if ( is_array( $api_keys ) ) {
+			foreach ( $api_keys as $key_data ) {
+				if ( ! is_array( $key_data ) ) {
+					continue;
+				}
+				if ( ! empty( $key_data['token_hash'] ) && hash_equals( (string) $key_data['token_hash'], $incoming_hash ) ) {
+					return true;
+				}
+				// Support legacy unhashed token in array if any
+				if ( ! empty( $key_data['token'] ) && hash_equals( (string) $key_data['token'], (string) $token ) ) {
+					return true;
+				}
 			}
+		}
+
+		// 3. Check legacy single token option
+		if ( ! empty( $single_token ) && hash_equals( (string) $single_token, (string) $token ) ) {
+			return true;
 		}
 
 		return new \WP_Error(
@@ -212,11 +235,15 @@ class DoorLockApi {
 			$tokens[] = (string) constant( 'SNIPPEN_DOORMAN_API_TOKEN' );
 		}
 
-		$api_keys = get_option( 'snippen_doorman_api_keys', array() );
+		$api_keys = DoormanApiKeyApi::get_keys();
 		if ( is_array( $api_keys ) ) {
 			foreach ( $api_keys as $key_data ) {
-				if ( is_array( $key_data ) && ! empty( $key_data['token'] ) ) {
-					$tokens[] = (string) $key_data['token'];
+				if ( is_array( $key_data ) ) {
+					if ( ! empty( $key_data['token_hash'] ) ) {
+						$tokens[] = (string) $key_data['token_hash'];
+					} elseif ( ! empty( $key_data['token'] ) ) {
+						$tokens[] = (string) $key_data['token'];
+					}
 				}
 			}
 		}

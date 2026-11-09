@@ -41,6 +41,7 @@ class DoorLockApiTest extends TestCase {
 		// Enable feature by default in tests
 		update_option( 'snippen_enable_doorman_api', 'yes' );
 		update_option( 'snippen_doorman_api_token', self::TEST_TOKEN );
+		delete_option( 'snippen_doorman_api_keys' );
 		update_option( 'snippen_doorman_expose_hours_before', 168 );
 		update_option( 'snippen_doorman_buffer_minutes_before', 30 );
 		update_option( 'snippen_doorman_grace_minutes_after', 120 );
@@ -59,6 +60,7 @@ class DoorLockApiTest extends TestCase {
 	protected function tearDown(): void {
 		delete_option( 'snippen_enable_doorman_api' );
 		delete_option( 'snippen_doorman_api_token' );
+		delete_option( 'snippen_doorman_api_keys' );
 		delete_option( 'snippen_doorman_expose_hours_before' );
 		delete_option( 'snippen_doorman_buffer_minutes_before' );
 		delete_option( 'snippen_doorman_grace_minutes_after' );
@@ -156,6 +158,7 @@ class DoorLockApiTest extends TestCase {
 	 */
 	public function test_verify_token_unconfigured() {
 		delete_option( 'snippen_doorman_api_token' );
+		delete_option( 'snippen_doorman_api_keys' );
 
 		$request = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
 		$result  = DoorLockApi::verify_token( $request );
@@ -247,6 +250,57 @@ class DoorLockApiTest extends TestCase {
 		$req4 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
 		$req4->add_header( 'Authorization', 'Bearer token-legacy-789' );
 		$this->assertTrue( DoorLockApi::verify_token( $req4 ) );
+
+		// Cleanup
+		delete_option( 'snippen_doorman_api_keys' );
+		update_option( 'snippen_doorman_api_token', self::TEST_TOKEN );
+	}
+
+	/**
+	 * Test verify_token with PAT hashed API keys (Issue #384).
+	 */
+	public function test_verify_token_with_pat_hashed_keys() {
+		delete_option( 'snippen_doorman_api_token' );
+
+		$plain_token1 = 'sdo_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+		$plain_token2 = 'sdo_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+
+		update_option(
+			'snippen_doorman_api_keys',
+			array(
+				array(
+					'id'           => 'pat_key_1',
+					'name'         => 'Hoveddør Grendehuset',
+					'token_hash'   => \SnippenBooking\Api\DoormanApiKeyApi::hash_token( $plain_token1 ),
+					'masked_token' => \SnippenBooking\Api\DoormanApiKeyApi::mask_token( $plain_token1 ),
+					'created_at'   => '2026-11-09 10:00:00',
+				),
+				array(
+					'id'           => 'pat_key_2',
+					'name'         => 'Utleiedel Node',
+					'token_hash'   => \SnippenBooking\Api\DoormanApiKeyApi::hash_token( $plain_token2 ),
+					'masked_token' => \SnippenBooking\Api\DoormanApiKeyApi::mask_token( $plain_token2 ),
+					'created_at'   => '2026-11-09 10:00:00',
+				),
+			)
+		);
+
+		// Valid key 1 via Bearer
+		$req1 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req1->add_header( 'Authorization', 'Bearer ' . $plain_token1 );
+		$this->assertTrue( DoorLockApi::verify_token( $req1 ) );
+
+		// Valid key 2 via X-API-Key
+		$req2 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req2->add_header( 'X-API-Key', $plain_token2 );
+		$this->assertTrue( DoorLockApi::verify_token( $req2 ) );
+
+		// Invalid token
+		$req3 = new \WP_REST_Request( 'GET', '/snippen/v1/door/bookings' );
+		$req3->add_header( 'Authorization', 'Bearer sdo_invalid_token' );
+		$res3 = DoorLockApi::verify_token( $req3 );
+		$this->assertInstanceOf( \WP_Error::class, $res3 );
+		$this->assertSame( 401, $res3->get_error_data()['status'] );
 
 		// Cleanup
 		delete_option( 'snippen_doorman_api_keys' );
