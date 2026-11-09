@@ -55,11 +55,36 @@ class AccountConfirmationTest extends TestCase {
         \update_user_meta($user_id, 'snippen_phone', '+4711223344');
 
         $_POST['phone'] = '+4711223344';
+        $_POST['nonce'] = \wp_create_nonce('snippen_confirmation_nonce');
+        $_REQUEST = $_POST;
         
-        $service = new AccountConfirmationService();
-        $this->assertFalse($service->is_confirmed($user_id));
+        $output = '';
+        add_filter(
+            'wp_die_ajax_handler',
+            function() {
+                return function( $message ) {
+                    throw new \Exception( is_string( $message ) ? $message : wp_json_encode( $message ) );
+                };
+            }
+        );
+
+        ob_start();
+        try {
+            \SnippenBooking\Api\UserApi::request_confirmation_code();
+        } catch ( \Exception $e ) {
+            $output = $e->getMessage();
+        }
+        if ( empty( $output ) ) {
+            $output = ob_get_clean();
+        } else {
+            ob_end_clean();
+        }
+
+        $json = json_decode( $output, true );
+        $this->assertTrue( $json['success'] );
+        $this->assertEquals( 'Bekreftelseskode er sendt på e-post eller SMS.', $json['data']['message'] );
+        $this->assertEquals( $user_id, $json['data']['user_id'] );
 
         \wp_delete_user($user_id);
-        $this->assertTrue(true); 
     }
 }

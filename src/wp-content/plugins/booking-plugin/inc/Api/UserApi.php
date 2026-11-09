@@ -64,7 +64,7 @@ class UserApi {
 		wp_send_json_success( $results );
 	}
 	/**
-	 * Request a confirmation code via SMS
+	 * Request a confirmation code via email or SMS
 	 */
 	public static function request_confirmation_code() {
 		check_ajax_referer( 'snippen_confirmation_nonce', 'nonce' );
@@ -106,18 +106,17 @@ class UserApi {
 			wp_send_json_error( array( 'message' => __( 'Kontoen er allerede bekreftet. Vennligst logg inn.', 'snippen-booking' ) ) );
 		}
 
-		$sms_enabled = 'yes' === get_option( 'snippen_sms_account_confirmation_enabled' );
 		if ( $service->send_code( $user->ID ) ) {
 			wp_send_json_success(
 				array(
-					'message' => $sms_enabled ? __( 'Bekreftelseskode er sendt på SMS.', 'snippen-booking' ) : __( 'Bekreftelseskode er sendt på e-post.', 'snippen-booking' ),
+					'message' => __( 'Bekreftelseskode er sendt på e-post eller SMS.', 'snippen-booking' ),
 					'user_id' => $user->ID,
 				)
 			);
 		} else {
 			wp_send_json_error(
 				array(
-					'message' => $sms_enabled ? __( 'Kunne ikke sende SMS. Kontakt administrator.', 'snippen-booking' ) : __( 'Kunne ikke sende e-post. Kontakt administrator.', 'snippen-booking' ),
+					'message' => __( 'Kunne ikke sende bekreftelseskode. Kontakt administrator.', 'snippen-booking' ),
 				)
 			);
 		}

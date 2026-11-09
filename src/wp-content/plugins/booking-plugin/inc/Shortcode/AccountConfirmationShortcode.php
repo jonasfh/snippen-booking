@@ -57,20 +57,13 @@ class AccountConfirmationShortcode {
 			)
 		);
 
-		$sms_enabled = 'yes' === get_option( 'snippen_sms_account_confirmation_enabled' );
 		ob_start();
 		?>
 		<div class="snippen-confirmation-container">
 			<div id="confirmation-step-1" class="confirmation-step">
 				<h3><?php esc_html_e( 'Bekreft din konto', 'snippen-booking' ); ?></h3>
 				<p>
-					<?php
-					if ( $sms_enabled ) {
-						esc_html_e( 'Skriv inn ditt telefonnummer for å motta en bekreftelseskode på SMS.', 'snippen-booking' );
-					} else {
-						esc_html_e( 'Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post.', 'snippen-booking' );
-					}
-					?>
+					<?php esc_html_e( 'Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post eller SMS.', 'snippen-booking' ); ?>
 				</p>
 				<div class="snippen-form-group">
 					<label for="snippen_phone_confirm"><?php esc_html_e( 'Telefonnummer', 'snippen-booking' ); ?></label>
@@ -84,13 +77,7 @@ class AccountConfirmationShortcode {
 			<form id="confirmation-step-2" class="confirmation-step" style="display: none;" onsubmit="return false;">
 				<h3><?php esc_html_e( 'Skriv inn kode', 'snippen-booking' ); ?></h3>
 				<p>
-					<?php
-					if ( $sms_enabled ) {
-						esc_html_e( 'Vi har sendt en 6-sifret kode til ditt telefonnummer.', 'snippen-booking' );
-					} else {
-						esc_html_e( 'Vi har sendt en 6-sifret kode til din e-post.', 'snippen-booking' );
-					}
-					?>
+					<?php esc_html_e( 'Vi har sendt en 6-sifret kode på e-post eller SMS.', 'snippen-booking' ); ?>
 				</p>
 				<input type="hidden" id="snippen_confirm_user_id">
 				

@@ -54,5 +54,7 @@ class AccountConfirmationShortcodeTest extends TestCase {
 		$this->assertStringContainsString( 'class="snippen-confirmation-container"', $output );
 		$this->assertStringContainsString( 'id="confirmation-step-1"', $output );
 		$this->assertStringContainsString( 'id="snippen-request-code"', $output );
+		$this->assertStringContainsString( 'Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post eller SMS.', $output );
+		$this->assertStringContainsString( 'Vi har sendt en 6-sifret kode på e-post eller SMS.', $output );
 	}
 }

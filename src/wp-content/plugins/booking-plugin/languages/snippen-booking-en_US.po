@@ -1014,21 +1014,13 @@ msgstr "This resident is deleted or deactivated. Contact administrator."
 msgid "Kontoen er allerede bekreftet. Vennligst logg inn."
 msgstr "Account is already confirmed. Please log in."
 
-#: inc/Api/UserApi.php:109
-msgid "Bekreftelseskode er sendt på SMS."
-msgstr "Verification code sent via SMS."
+#: inc/Api/UserApi.php:111
+msgid "Bekreftelseskode er sendt på e-post eller SMS."
+msgstr "Verification code sent via email or SMS."
 
-#: inc/Api/UserApi.php:109
-msgid "Bekreftelseskode er sendt på e-post."
-msgstr "Verification code sent via email."
-
-#: inc/Api/UserApi.php:116
-msgid "Kunne ikke sende SMS. Kontakt administrator."
-msgstr "Could not send SMS. Contact administrator."
-
-#: inc/Api/UserApi.php:116
-msgid "Kunne ikke sende e-post. Kontakt administrator."
-msgstr "Could not send email. Contact administrator."
+#: inc/Api/UserApi.php:118
+msgid "Kunne ikke sende bekreftelseskode. Kontakt administrator."
+msgstr "Could not send verification code. Contact administrator."
 
 #: inc/Api/UserApi.php:139
 msgid "Ugyldig eller utløpt kode."
@@ -1429,25 +1421,17 @@ msgstr "Confirm and Save Password"
 msgid "Bekreft din konto"
 msgstr "Confirm your account"
 
-#: inc/Shortcode/AccountConfirmationShortcode.php:65
-msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på SMS."
-msgstr "Enter your phone number to receive a verification code via SMS."
+#: inc/Shortcode/AccountConfirmationShortcode.php:66
+msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post eller SMS."
+msgstr "Enter your phone number to receive a verification code via email or SMS."
 
-#: inc/Shortcode/AccountConfirmationShortcode.php:67
-msgid "Skriv inn ditt telefonnummer for å motta en bekreftelseskode på e-post."
-msgstr "Enter your phone number to receive a verification code via email."
-
-#: inc/Shortcode/AccountConfirmationShortcode.php:81
+#: inc/Shortcode/AccountConfirmationShortcode.php:74
 msgid "Skriv inn kode"
 msgstr "Enter Code"
 
-#: inc/Shortcode/AccountConfirmationShortcode.php:85
-msgid "Vi har sendt en 6-sifret kode til ditt telefonnummer."
-msgstr "We have sent a 6-digit code to your phone number."
-
-#: inc/Shortcode/AccountConfirmationShortcode.php:87
-msgid "Vi har sendt en 6-sifret kode til din e-post."
-msgstr "We have sent a 6-digit code to your email."
+#: inc/Shortcode/AccountConfirmationShortcode.php:76
+msgid "Vi har sendt en 6-sifret kode på e-post eller SMS."
+msgstr "We have sent a 6-digit code via email or SMS."
 
 #: inc/Shortcode/AccountConfirmationShortcode.php:94
 msgid "Bekreftelseskode"
