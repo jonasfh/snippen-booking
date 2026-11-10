@@ -118,10 +118,9 @@ class DoorCodesPage {
 				}
 			}
 
-			$start_ts = strtotime( $b->booking_date . ' ' . $start_time );
-			$end_ts   = ( $end_time < $start_time )
-				? strtotime( date( 'Y-m-d', strtotime( $b->booking_date . ' +1 day' ) ) . ' ' . $end_time )
-				: strtotime( $b->booking_date . ' ' . $end_time );
+			$timestamps = DoorLockApi::parse_booking_timestamps( $b->booking_date, $start_time, $end_time );
+			$start_ts   = $timestamps['start_ts'];
+			$end_ts     = $timestamps['end_ts'];
 
 			$tenant_key = '';
 			if ( ! empty( $b->user_id ) && (int) $b->user_id > 0 ) {
@@ -278,10 +277,10 @@ class DoorCodesPage {
 							</td>
 							<td>
 								<?php
-								$start_fmt = date_i18n( 'd.m.Y H:i', $chain['group_start'] );
-								$end_fmt   = ( date( 'Y-m-d', $chain['group_start'] ) === date( 'Y-m-d', $chain['group_end'] ) )
-									? date_i18n( 'H:i', $chain['group_end'] )
-									: date_i18n( 'd.m.Y H:i', $chain['group_end'] );
+								$start_fmt = wp_date( 'd.m.Y H:i', $chain['group_start'] );
+								$end_fmt   = ( wp_date( 'Y-m-d', $chain['group_start'] ) === wp_date( 'Y-m-d', $chain['group_end'] ) )
+									? wp_date( 'H:i', $chain['group_end'] )
+									: wp_date( 'd.m.Y H:i', $chain['group_end'] );
 								echo esc_html( $start_fmt . ' – ' . $end_fmt );
 								?>
 							</td>

@@ -2,6 +2,8 @@
 
 namespace SnippenBooking\Service;
 
+use SnippenBooking\Api\DoorLockApi;
+
 /**
  * Service to manage door codes for booking objects and bookings
  */
@@ -120,10 +122,9 @@ class DoorCodeService {
 				}
 			}
 
-			$start_ts = strtotime( $r->booking_date . ' ' . $start_time );
-			$end_ts   = ( $end_time < $start_time )
-				? strtotime( date( 'Y-m-d', strtotime( $r->booking_date . ' +1 day' ) ) . ' ' . $end_time )
-				: strtotime( $r->booking_date . ' ' . $end_time );
+			$timestamps = DoorLockApi::parse_booking_timestamps( $r->booking_date, $start_time, $end_time );
+			$start_ts   = $timestamps['start_ts'];
+			$end_ts     = $timestamps['end_ts'];
 
 			if ( null === $min_start || $start_ts < $min_start ) {
 				$min_start = $start_ts;
@@ -144,11 +145,11 @@ class DoorCodeService {
 		$calc_start = $min_start - ( $buffer_minutes * 60 );
 		$calc_end   = $max_end + ( $grace_minutes * 60 );
 
-		$valid_from = date_i18n( 'd.m.Y \k\l. H:i', $calc_start );
-		$valid_to   = date_i18n( 'd.m.Y \k\l. H:i', $calc_end );
+		$valid_from = wp_date( 'd.m.Y \k\l. H:i', $calc_start );
+		$valid_to   = wp_date( 'd.m.Y \k\l. H:i', $calc_end );
 
-		if ( date_i18n( 'Y-m-d', $calc_start ) === date_i18n( 'Y-m-d', $calc_end ) ) {
-			$validity_period = sprintf( '%s – %s', $valid_from, date_i18n( 'H:i', $calc_end ) );
+		if ( wp_date( 'Y-m-d', $calc_start ) === wp_date( 'Y-m-d', $calc_end ) ) {
+			$validity_period = sprintf( '%s – %s', $valid_from, wp_date( 'H:i', $calc_end ) );
 		} else {
 			$validity_period = sprintf( '%s – %s', $valid_from, $valid_to );
 		}
