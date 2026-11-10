@@ -959,7 +959,7 @@ Returns all qualifying, active, and approaching access windows in UTC ISO 8601.
   - `lock_id` (optional/required): Filter by logical door lock ID (`GET /wp-json/snippen/v1/door/bookings?lock_id=1`). If multiple locks exist and `lock_id` is omitted, returns HTTP 400 (`missing_lock_id`). If only a single lock exists, defaults automatically.
   - `include_expired_days` (optional, default `0`, e.g. `7`): When `> 0`, includes reservations that expired within the specified number of days in addition to active/upcoming bookings.
 - **Rules**:
-  - `start_time` and `end_time`: ISO-8601 UTC timestamps (including buffer before and grace after).
+  - `start_time` and `end_time`: ISO-8601 UTC timestamps (including buffer before and grace after). Local booking dates and times are interpreted in the site's configured timezone (`wp_timezone()`, e.g. `Europe/Oslo`) and converted to true UTC timestamps before applying buffer and grace (Issue #386).
   - `door_code`: 4–6 digit PIN string, or `null` if none assigned yet.
   - `door_code_updated_at`: ISO-8601 UTC timestamp of when code was last updated, or `null`.
   - `booking_ids`: Array of integer IDs for all bookings in the merged contiguous chain. When multiple bookings in a chain have codes, the code with the newest `door_code_updated_at` (fallback `modified_at`) wins.

@@ -31,6 +31,15 @@ class DoorCodeServiceTest extends TestCase {
 		// Reset options
 		delete_option( 'snippen_door_code_hours_before' );
 		delete_option( 'snippen_door_code_hours_after' );
+		delete_option( 'timezone_string' );
+	}
+
+	/**
+	 * Tear down the test environment
+	 */
+	protected function tearDown(): void {
+		delete_option( 'timezone_string' );
+		parent::tearDown();
 	}
 
 	/**
@@ -114,6 +123,50 @@ class DoorCodeServiceTest extends TestCase {
 		$this->assertNotEmpty( $window['valid_to'] );
 		$this->assertNotEmpty( $window['validity_period'] );
 		$this->assertContains( $booking_id, $window['booking_ids'] );
+	}
+
+	/**
+	 * Test DoorCodeService::get_access_window with Europe/Oslo timezone (Issue #386).
+	 */
+	public function test_get_access_window_with_oslo_timezone() {
+		update_option( 'timezone_string', 'Europe/Oslo' );
+		update_option( 'snippen_doorman_buffer_minutes_before', 30 );
+		update_option( 'snippen_doorman_grace_minutes_after', 120 );
+
+		global $wpdb;
+		$booking_date = date( 'Y-m-d', strtotime( '+2 days' ) );
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'user_id'          => 1,
+				'booking_date'     => $booking_date,
+				'customer_name'    => 'Kari Nordmann',
+				'customer_email'   => 'kari@example.com',
+				'status'           => 'confirmed',
+				'booking_snapshot' => wp_json_encode(
+					array(
+						'start_time' => '12:00:00',
+						'end_time'   => '16:00:00',
+					)
+				),
+			)
+		);
+		$booking_id = $wpdb->insert_id;
+
+		$window = DoorCodeService::get_access_window( $booking_id );
+
+		$tz       = new \DateTimeZone( 'Europe/Oslo' );
+		$start_dt = new \DateTime( $booking_date . ' 12:00:00', $tz );
+		$end_dt   = new \DateTime( $booking_date . ' 16:00:00', $tz );
+
+		$expected_start_ts = $start_dt->getTimestamp() - ( 30 * 60 );
+		$expected_end_ts   = $end_dt->getTimestamp() + ( 120 * 60 );
+
+		$this->assertEquals( $expected_start_ts, $window['calc_start'] );
+		$this->assertEquals( $expected_end_ts, $window['calc_end'] );
+		$this->assertStringContainsString( '11:30', $window['valid_from'] );
+		$this->assertStringContainsString( '18:00', $window['valid_to'] );
 	}
 
 	/**

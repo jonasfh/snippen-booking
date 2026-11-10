@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.53.1] - 2026-11-10
+- (#386) [Fix] Korrekt tidssone-håndtering i DoorLockApi (lokaltid konverteres til UTC):
+  - **REST API (`DoorLockApi.php`)**:
+    - Ny hjelpemetode `DoorLockApi::parse_booking_timestamps()` som tolker lokale booking-datoer og klokkeslett med WordPress-tidssonen (`wp_timezone()`), og konverterer dem til korrekte UTC Unix-timestamps før buffer og grace beregnes og returneres som ISO 8601 UTC-strenger (`start_time` og `end_time`).
+    - Løser problemet der bookinger i norsk tid (Europe/Oslo / UTC+1 eller UTC+2) ble tolket direkte som UTC, som førte til feilaktige adgangsperioder i dørlåsen og at leietakere ble avvist i forhåndsbufferen.
+    - Håndterer automatisk overganger over midnatt og sommertid/vintertid (DST).
+    - Oppdatert kjede-gruppering (`build_contiguous_chains()`) og nabosøk (`find_adjacent_booking_ids()`) til å benytte samme tidssone-sikre logikk.
+  - **Admin & Tjenester (`DoorCodesPage.php` & `DoorCodeService.php`)**:
+    - Oppdatert `DoorCodesPage` og `DoorCodeService` til å bruke `DoorLockApi::parse_booking_timestamps()` og `wp_date()` i stedet for `date_i18n()` / `strtotime()`, for konsistent visning av lokale tidspunkter og beregning av adgangsvinduer.
+  - **Tester**:
+    - Utvidet `DoorLockApiTest.php` med tester for tidssonekonvertering med Europe/Oslo (både vanlig dag og midnattskryssing) og verifisering av eksakte UTC ISO-strenger.
+    - Utvidet `DoorCodeServiceTest.php` med tester for adgangsvindu under Europe/Oslo-tidssone.
+
 ## [2.53.0] - 2026-11-09
 - (#384) [Feature] Sikker håndtering av Doorman API-nøkler som Personal Access Tokens (PAT):
   - **Sikker token-håndtering & hashing**:

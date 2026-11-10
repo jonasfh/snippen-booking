@@ -442,12 +442,9 @@ class DoorLockApi {
 				}
 			}
 
-			$start_ts = strtotime( $b->booking_date . ' ' . $start_time );
-			if ( $end_time < $start_time ) {
-				$end_ts = strtotime( date( 'Y-m-d', strtotime( $b->booking_date . ' +1 day' ) ) . ' ' . $end_time );
-			} else {
-				$end_ts = strtotime( $b->booking_date . ' ' . $end_time );
-			}
+			$timestamps = self::parse_booking_timestamps( $b->booking_date, $start_time, $end_time );
+			$start_ts   = $timestamps['start_ts'];
+			$end_ts     = $timestamps['end_ts'];
 
 			// Tenant grouping key
 			$tenant_key = '';
@@ -514,10 +511,9 @@ class DoorLockApi {
 
 			// Must be within expose horizon and not expired beyond grace / expired horizon
 			if ( $now_ts >= $expose_limit && $calc_end >= $min_end ) {
-				$door_code_updated_at_iso = null;
-				if ( ! empty( $group['door_code'] ) && ! empty( $group['door_code_updated_at'] ) ) {
-					$door_code_updated_at_iso = gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $group['door_code_updated_at'] ) );
-				}
+				$door_code_updated_at_iso = ( ! empty( $group['door_code'] ) && ! empty( $group['door_code_updated_at'] ) )
+					? gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $group['door_code_updated_at'] ) )
+					: null;
 
 				$response_bookings[] = array(
 					'id'                   => (int) $group['primary_id'],
@@ -537,6 +533,36 @@ class DoorLockApi {
 				'server_time' => gmdate( 'Y-m-d\TH:i:s\Z', $now_ts ),
 				'bookings'    => $response_bookings,
 			)
+		);
+	}
+
+	/**
+	 * Parse local booking date and times into UTC timestamps.
+	 *
+	 * Uses wp_timezone() to interpret the local date and start/end times in the
+	 * WordPress site timezone, converting them to true Unix timestamps (UTC seconds since epoch).
+	 *
+	 * @param string $booking_date Y-m-d format.
+	 * @param string $start_time   H:i:s or H:i format.
+	 * @param string $end_time     H:i:s or H:i format.
+	 * @return array{start_ts: int, end_ts: int}
+	 */
+	public static function parse_booking_timestamps( string $booking_date, string $start_time, string $end_time ): array {
+		$tz       = wp_timezone();
+		$start_dt = new \DateTime( $booking_date . ' ' . $start_time, $tz );
+		$start_ts = $start_dt->getTimestamp();
+
+		if ( $end_time < $start_time ) {
+			$next_day = ( clone $start_dt )->modify( '+1 day' )->format( 'Y-m-d' );
+			$end_dt   = new \DateTime( $next_day . ' ' . $end_time, $tz );
+		} else {
+			$end_dt = new \DateTime( $booking_date . ' ' . $end_time, $tz );
+		}
+		$end_ts = $end_dt->getTimestamp();
+
+		return array(
+			'start_ts' => $start_ts,
+			'end_ts'   => $end_ts,
 		);
 	}
 
@@ -609,8 +635,8 @@ class DoorLockApi {
 				$curr_date_ts      = strtotime( $item['booking_date'] );
 				$booking_days_diff = ( $curr_date_ts - $prev_date_ts ) / 86400;
 
-				$chain_end_date_ts  = strtotime( date( 'Y-m-d', $current_chain['group_end'] ) );
-				$item_start_date_ts = strtotime( date( 'Y-m-d', $item['real_start'] ) );
+				$chain_end_date_ts  = strtotime( wp_date( 'Y-m-d', $current_chain['group_end'] ) );
+				$item_start_date_ts = strtotime( wp_date( 'Y-m-d', $item['real_start'] ) );
 				$end_to_start_days  = ( $item_start_date_ts - $chain_end_date_ts ) / 86400;
 
 				$is_adjacent = false;
@@ -754,10 +780,9 @@ class DoorLockApi {
 				}
 			}
 
-			$start_ts = strtotime( $b->booking_date . ' ' . $start_time );
-			$end_ts   = ( $end_time < $start_time )
-				? strtotime( date( 'Y-m-d', strtotime( $b->booking_date . ' +1 day' ) ) . ' ' . $end_time )
-				: strtotime( $b->booking_date . ' ' . $end_time );
+			$timestamps = self::parse_booking_timestamps( $b->booking_date, $start_time, $end_time );
+			$start_ts   = $timestamps['start_ts'];
+			$end_ts     = $timestamps['end_ts'];
 
 			$normalized[] = array(
 				'id'                   => (int) $b->id,
@@ -813,10 +838,9 @@ class DoorLockApi {
 
 		$updated_ids = self::find_adjacent_booking_ids( $id );
 
-		$door_code_updated_at_iso = null;
-		if ( $row && ! empty( $row->door_code ) && ! empty( $row->door_code_updated_at ) ) {
-			$door_code_updated_at_iso = gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $row->door_code_updated_at ) );
-		}
+		$door_code_updated_at_iso = ( $row && ! empty( $row->door_code ) && ! empty( $row->door_code_updated_at ) )
+			? gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $row->door_code_updated_at ) )
+			: null;
 
 		return rest_ensure_response(
 			array(

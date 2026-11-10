@@ -49,6 +49,7 @@ class DoorLockApiTest extends TestCase {
 		delete_option( 'snippen_door_services_registry' );
 		delete_option( 'snippen_doorman_last_status' );
 		delete_option( 'snippen_doorman_last_received_at' );
+		delete_option( 'timezone_string' );
 
 		DoorLockApi::register();
 		do_action( 'rest_api_init' );
@@ -68,6 +69,7 @@ class DoorLockApiTest extends TestCase {
 		delete_option( 'snippen_door_services_registry' );
 		delete_option( 'snippen_doorman_last_status' );
 		delete_option( 'snippen_doorman_last_received_at' );
+		delete_option( 'timezone_string' );
 		parent::tearDown();
 	}
 
@@ -359,6 +361,70 @@ class DoorLockApiTest extends TestCase {
 		$this->assertArrayNotHasKey( 'customer_name', $item );
 		$this->assertArrayNotHasKey( 'customer_email', $item );
 		$this->assertArrayNotHasKey( 'customer_phone', $item );
+	}
+
+	/**
+	 * Test GET /door/bookings converts local timezone (Europe/Oslo) to true UTC ISO strings (Issue #386).
+	 */
+	public function test_get_bookings_timezone_conversion_europe_oslo() {
+		update_option( 'timezone_string', 'Europe/Oslo' );
+		update_option( 'snippen_doorman_buffer_minutes_before', 60 );
+		update_option( 'snippen_doorman_grace_minutes_after', 120 );
+
+		// Booking tomorrow 22:00 to 23:00 in Oslo
+		$tomorrow = date( 'Y-m-d', strtotime( '+1 day' ) );
+		$id       = $this->create_booking(
+			array(
+				'booking_date' => $tomorrow,
+				'start_time'   => '22:00:00',
+				'end_time'     => '23:00:00',
+				'status'       => 'confirmed',
+				'door_code'    => '1234',
+			)
+		);
+
+		$request  = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$response = rest_do_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+		$data = $response->get_data();
+		$this->assertCount( 1, $data['bookings'] );
+
+		$item = $data['bookings'][0];
+		$this->assertSame( $id, $item['id'] );
+
+		// In Oslo (winter CET = UTC+1, summer CEST = UTC+2):
+		// 22:00 local with 60 min buffer, 23:00 local with 120 min grace.
+		$tz       = new \DateTimeZone( 'Europe/Oslo' );
+		$start_dt = new \DateTime( $tomorrow . ' 22:00:00', $tz );
+		$start_ts = $start_dt->getTimestamp() - 3600;
+		$end_dt   = new \DateTime( $tomorrow . ' 23:00:00', $tz );
+		$end_ts   = $end_dt->getTimestamp() + 7200;
+
+		$expected_start_iso = gmdate( 'Y-m-d\TH:i:s\Z', $start_ts );
+		$expected_end_iso   = gmdate( 'Y-m-d\TH:i:s\Z', $end_ts );
+
+		$this->assertSame( $expected_start_iso, $item['start_time'] );
+		$this->assertSame( $expected_end_iso, $item['end_time'] );
+	}
+
+	/**
+	 * Test parse_booking_timestamps with Europe/Oslo timezone and midnight crossover (Issue #386).
+	 */
+	public function test_parse_booking_timestamps_oslo_midnight_crossover() {
+		update_option( 'timezone_string', 'Europe/Oslo' );
+
+		// Booking from 23:00 to 02:00 next day in Oslo
+		$booking_date = '2026-11-10';
+		$parsed       = DoorLockApi::parse_booking_timestamps( $booking_date, '23:00:00', '02:00:00' );
+
+		$tz       = new \DateTimeZone( 'Europe/Oslo' );
+		$start_dt = new \DateTime( '2026-11-10 23:00:00', $tz );
+		$end_dt   = new \DateTime( '2026-11-11 02:00:00', $tz );
+
+		$this->assertSame( $start_dt->getTimestamp(), $parsed['start_ts'] );
+		$this->assertSame( $end_dt->getTimestamp(), $parsed['end_ts'] );
+		$this->assertSame( 3 * 3600, $parsed['end_ts'] - $parsed['start_ts'] );
 	}
 
 	/**
@@ -960,9 +1026,9 @@ class DoorLockApiTest extends TestCase {
 			array( 'id' => $b_id )
 		);
 
-		$req      = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
-		$res      = rest_do_request( $req );
-		$data     = $res->get_data();
+		$req  = $this->create_auth_request( 'GET', '/snippen/v1/door/bookings' );
+		$res  = rest_do_request( $req );
+		$data = $res->get_data();
 
 		$this->assertSame( 200, $res->get_status() );
 		$this->assertArrayHasKey( 'server_time', $data );
@@ -1187,9 +1253,9 @@ class DoorLockApiTest extends TestCase {
 	 */
 	public function test_post_door_status_endpoint_success() {
 		$payload = array(
-			'generated_at'        => '2026-11-07T13:15:10+00:00',
-			'expired_window_days' => 7,
-			'locks'               => array(
+			'generated_at'         => '2026-11-07T13:15:10+00:00',
+			'expired_window_days'  => 7,
+			'locks'                => array(
 				array(
 					'name'        => 'Inngangsdør 1 (Hoveddør)',
 					'address'     => '98:1B:B5:0B:BB:35',
@@ -1210,9 +1276,9 @@ class DoorLockApiTest extends TestCase {
 					),
 				),
 			),
-			'reservations_in_db'  => array(),
+			'reservations_in_db'   => array(),
 			'provisioned_on_locks' => array(),
-			'recently_expired'    => array(),
+			'recently_expired'     => array(),
 		);
 
 		$req = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
@@ -1282,16 +1348,16 @@ class DoorLockApiTest extends TestCase {
 		$this->link_booking_venue( $b_id, $venue_id );
 
 		$payload = array(
-			'generated_at'        => '2026-11-07T13:15:10+00:00',
-			'expired_window_days' => 7,
-			'locks'               => array(
+			'generated_at'         => '2026-11-07T13:15:10+00:00',
+			'expired_window_days'  => 7,
+			'locks'                => array(
 				array(
 					'lock_id' => (string) $lock_id,
 					'name'    => 'Inngangsdør 1',
 					'battery' => 90,
 				),
 			),
-			'reservations_in_db'  => array(
+			'reservations_in_db'   => array(
 				array(
 					'booking_id' => (string) $b_id,
 					'pin'        => '123456',
@@ -1305,7 +1371,7 @@ class DoorLockApiTest extends TestCase {
 					'pin'        => '123456',
 				),
 			),
-			'recently_expired'    => array(),
+			'recently_expired'     => array(),
 		);
 
 		update_option( 'snippen_doorman_last_status', $payload );
@@ -1335,8 +1401,8 @@ class DoorLockApiTest extends TestCase {
 	public function test_post_status_multi_service_support() {
 		// 1. Post from Node 1 (Grendehuset)
 		$payload1 = array(
-			'service_id'          => 'grendehus-node',
-			'service'             => array(
+			'service_id'           => 'grendehus-node',
+			'service'              => array(
 				'id'          => 'grendehus-node',
 				'name'        => 'Grendehuset (Hovedbygg)',
 				'version'     => '0.19.0',
@@ -1345,9 +1411,9 @@ class DoorLockApiTest extends TestCase {
 				'mac_address' => 'd8:3a:dd:12:34:56',
 				'lock_ids'    => array( '1' ),
 			),
-			'generated_at'        => '2026-11-07T14:30:00Z',
-			'expired_window_days' => 7,
-			'locks'               => array(
+			'generated_at'         => '2026-11-07T14:30:00Z',
+			'expired_window_days'  => 7,
+			'locks'                => array(
 				array(
 					'lock_id'     => '1',
 					'name'        => 'Hoveddør Grendehuset',
@@ -1357,9 +1423,9 @@ class DoorLockApiTest extends TestCase {
 					'door_status' => 'CLOSED',
 				),
 			),
-			'reservations_in_db'  => array(),
+			'reservations_in_db'   => array(),
 			'provisioned_on_locks' => array(),
-			'recently_expired'    => array(),
+			'recently_expired'     => array(),
 		);
 
 		$req1 = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
@@ -1380,8 +1446,8 @@ class DoorLockApiTest extends TestCase {
 
 		// 2. Post from Node 2 (Hybel)
 		$payload2 = array(
-			'service_id'          => 'hybel-node',
-			'service'             => array(
+			'service_id'           => 'hybel-node',
+			'service'              => array(
 				'id'          => 'hybel-node',
 				'name'        => 'Utleieleilighet (Hybel)',
 				'version'     => '0.19.1',
@@ -1390,9 +1456,9 @@ class DoorLockApiTest extends TestCase {
 				'mac_address' => 'd8:3a:dd:98:76:54',
 				'lock_ids'    => array( '2' ),
 			),
-			'generated_at'        => '2026-11-07T14:35:00Z',
-			'expired_window_days' => 7,
-			'locks'               => array(
+			'generated_at'         => '2026-11-07T14:35:00Z',
+			'expired_window_days'  => 7,
+			'locks'                => array(
 				array(
 					'lock_id'     => '2',
 					'name'        => 'Inngangsdør Hybel',
@@ -1402,9 +1468,9 @@ class DoorLockApiTest extends TestCase {
 					'door_status' => 'CLOSED',
 				),
 			),
-			'reservations_in_db'  => array(),
+			'reservations_in_db'   => array(),
 			'provisioned_on_locks' => array(),
-			'recently_expired'    => array(),
+			'recently_expired'     => array(),
 		);
 
 		$req2 = $this->create_auth_request( 'POST', '/snippen/v1/door/status' );
@@ -1443,8 +1509,8 @@ class DoorLockApiTest extends TestCase {
 		$this->test_post_status_multi_service_support();
 
 		// 1. GET /door/status without params -> Aggregated + Services
-		$req_all = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
-		$res_all = rest_do_request( $req_all );
+		$req_all  = $this->create_auth_request( 'GET', '/snippen/v1/door/status' );
+		$res_all  = rest_do_request( $req_all );
 		$data_all = $res_all->get_data();
 
 		$this->assertSame( 200, $res_all->get_status() );
@@ -1478,9 +1544,9 @@ class DoorLockApiTest extends TestCase {
 	 * Test offline detection when last_seen is older than 15 minutes (Issue #372).
 	 */
 	public function test_multi_service_offline_detection() {
-		$now = time();
+		$now      = time();
 		$registry = array(
-			'online-node' => array(
+			'online-node'  => array(
 				'service_id'  => 'online-node',
 				'name'        => 'Aktiv Node',
 				'last_seen'   => gmdate( 'Y-m-d\TH:i:s\Z', $now - 300 ), // 5 min ago
@@ -1497,7 +1563,7 @@ class DoorLockApiTest extends TestCase {
 		);
 		update_option( 'snippen_door_services_registry', $registry );
 
-		$status = DoorLockApi::get_all_services_status();
+		$status   = DoorLockApi::get_all_services_status();
 		$services = $status['services'];
 
 		$this->assertFalse( $services['online-node']['is_offline'] );
