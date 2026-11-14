@@ -352,6 +352,58 @@
             });
         });
 
+        // One-click post-rental feedback questionnaire dispatch
+        $('.bookings-table').on('click', '.snippen-btn-send-feedback', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const $container = $btn.closest('.booking-assistant-actions');
+            const id = $btn.data('id') || $container.data('id');
+            const bookingDate = String($btn.data('booking-date') || '').slice(0, 10);
+            const alreadySent = String($btn.attr('data-feedback-sent') || '0') === '1';
+            const $feedback = $container.find('.assistant-feedback');
+            const $badge = $container.find('.snippen-feedback-sent-badge');
+
+            if (alreadySent) {
+                if (!confirm('Spørreskjema er allerede sendt for denne bookingen. Vil du sende det på nytt?')) {
+                    return;
+                }
+            } else if (bookingDate) {
+                const now = new Date();
+                const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+                if (bookingDate > today) {
+                    if (!confirm('Leieforholdet har ikke avsluttet ennå (' + bookingDate + '). Vil du sende spørreskjemaet likevel?')) {
+                        return;
+                    }
+                }
+            }
+
+            $btn.prop('disabled', true).css('opacity', '0.5');
+            $feedback.html('<span class="spinner is-active" style="float:none; margin:0 4px 0 0; vertical-align:middle; display:inline-block; visibility:visible;"></span> Sender spørreskjema...').css('color', '#6b7280');
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_send_rental_feedback',
+                nonce: snippenAdmin.nonce,
+                id: id
+            }, function(response) {
+                if (response.success) {
+                    const sentAt = (response.data && response.data.sent_at) ? response.data.sent_at : '';
+                    $btn.attr('data-feedback-sent', '1');
+                    $badge.text(sentAt ? ('✓ Sendt ' + sentAt) : '✓ Sendt').show();
+                    $feedback.text((response.data && response.data.message) ? response.data.message : 'Spørreskjema sendt.').css('color', '#15803d');
+                    if (id) {
+                        refreshBookingMessages(id);
+                    }
+                } else {
+                    const errMsg = (response.data && response.data.message) ? response.data.message : 'Kunne ikke sende spørreskjema.';
+                    $feedback.text(errMsg).css('color', '#b91c1c');
+                }
+            }).fail(function() {
+                $feedback.text('En ukjent feil oppstod.').css('color', '#b91c1c');
+            }).always(function() {
+                $btn.prop('disabled', false).css('opacity', '1');
+            });
+        });
+
         // Function to refresh booking messages via AJAX
         function refreshBookingMessages(bookingId) {
             const $historyContainer = $('.booking-messages-history[data-booking-id="' + bookingId + '"]');

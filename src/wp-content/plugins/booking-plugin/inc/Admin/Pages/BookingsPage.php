@@ -478,11 +478,28 @@ class BookingsPage {
 
 		echo '<div class="snippen-mobile-detail" style="display:none;"><strong>' . esc_html__( 'Pris:', 'snippen-booking' ) . '</strong><br>' . number_format( $booking->price, 0, ',', ' ' ) . ',-</div>';
 
+		$messages         = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking( (int) $booking->id );
+		$feedback_sent_at = '';
+		foreach ( $messages as $msg ) {
+			if ( isset( $msg->event_type ) && 'rental_feedback' === $msg->event_type && isset( $msg->status ) && 'failed' !== $msg->status ) {
+				$feedback_sent_at = ! empty( $msg->created_at ) ? wp_date( 'd.m H:i', strtotime( $msg->created_at ) ) : '';
+				break;
+			}
+		}
+
 		echo '<div class="booking-assistant-actions" data-id="' . esc_attr( $booking->id ) . '" data-uuid="' . esc_attr( $booking->uuid ) . '">';
 		echo '<strong>' . esc_html__( 'Booking-hjelper:', 'snippen-booking' ) . '</strong><br>';
 		echo '<button class="button snippen-btn-dispatch" data-channel="email_customer" style="margin-top:6px; margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'E-post til kunde', 'snippen-booking' ) . '</button>';
 		echo '<button class="button snippen-btn-dispatch" data-channel="sms_customer" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-phone" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'SMS til kunde', 'snippen-booking' ) . '</button>';
 		echo '<button class="button snippen-btn-dispatch" data-channel="email_admin" style="margin-bottom:6px; display:block; width:100%; text-align:left;"><span class="dashicons dashicons-email" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'Varsel til admin', 'snippen-booking' ) . '</button>';
+		echo '<div class="snippen-feedback-action-row" style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">';
+		echo '<button type="button" class="button snippen-btn-send-feedback" data-id="' . esc_attr( $booking->id ) . '" data-booking-date="' . esc_attr( $booking->booking_date ) . '" data-feedback-sent="' . ( '' !== $feedback_sent_at ? '1' : '0' ) . '" style="flex:1; text-align:left;"><span class="dashicons dashicons-feedback" style="vertical-align:middle; margin-right:4px; font-size:16px; width:16px; height:16px; line-height:16px;"></span> ' . esc_html__( 'Send spørreskjema', 'snippen-booking' ) . '</button>';
+		if ( '' !== $feedback_sent_at ) {
+			echo '<span class="snippen-feedback-sent-badge" style="color:#15803d; font-size:11px; font-weight:600; white-space:nowrap;">&#10003; ' . sprintf( esc_html__( 'Sendt %s', 'snippen-booking' ), esc_html( $feedback_sent_at ) ) . '</span>';
+		} else {
+			echo '<span class="snippen-feedback-sent-badge" style="color:#15803d; font-size:11px; font-weight:600; white-space:nowrap; display:none;"></span>';
+		}
+		echo '</div>';
 		echo '<div class="assistant-feedback" style="margin-top:6px; font-size:11px; font-weight:600; min-height:15px;"></div>';
 		echo '</div>';
 
@@ -546,8 +563,6 @@ class BookingsPage {
 		echo '</div>'; // .booking-revisions-history
 
 		// Communication / Messages history block for this booking
-		$messages = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking( (int) $booking->id );
-
 		$known_event_types = array(
 			'booking_confirmation'            => __( 'Booking-bekreftelse', 'snippen-booking' ),
 			'manual_dispatch_customer'        => __( 'Manuell leietakermelding', 'snippen-booking' ),
@@ -562,6 +577,7 @@ class BookingsPage {
 			'inbound_sms'                     => __( 'Innkommende SMS', 'snippen-booking' ),
 			'sms_disambiguation_prompt'       => __( 'Valgforespørsel (SMS)', 'snippen-booking' ),
 			'sms_disambiguation_confirmation' => __( 'Valgbekreftelse (SMS)', 'snippen-booking' ),
+			'rental_feedback'                 => __( 'Spørreskjema etter leieforhold', 'snippen-booking' ),
 		);
 
 		$total_count    = count( $messages );

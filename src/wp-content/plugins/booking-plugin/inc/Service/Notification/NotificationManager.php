@@ -71,6 +71,11 @@ class NotificationManager {
 	const TYPE_INBOUND_SMS_RECEIVED = 'inbound_sms_received';
 
 	/**
+	 * Notification type: Post-rental feedback questionnaire
+	 */
+	const TYPE_RENTAL_FEEDBACK = 'rental_feedback';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -1294,6 +1299,104 @@ class NotificationManager {
 		}
 
 		return $sms_sent || $email_sent;
+	}
+
+	/**
+	 * Send post-rental feedback questionnaire to customer via SMS and/or email.
+	 *
+	 * @param int $booking_id Booking ID.
+	 * @return array{sent: bool, sms_sent: bool, email_sent: bool} Dispatch result per channel.
+	 */
+	public function send_rental_feedback_notification( int $booking_id ): array {
+		global $wpdb;
+
+		$result = array(
+			'sent'       => false,
+			'sms_sent'   => false,
+			'email_sent' => false,
+		);
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$booking        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return $result;
+		}
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_rental_feedback_enabled', 'yes' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_rental_feedback_enabled', 'yes' );
+
+		if ( ! $sms_enabled && ! $email_enabled ) {
+			return $result;
+		}
+
+		$object_names = $this->get_booking_object_names( $booking_id, $booking );
+		$booking_time = $this->get_booking_time( $booking );
+		$booking_url  = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$context      = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( self::TYPE_RENTAL_FEEDBACK, 'sms', $context );
+		$rendered_email   = $template_service->render_template( self::TYPE_RENTAL_FEEDBACK, 'email', $context );
+
+		$phone = ! empty( $booking->customer_phone ) ? $booking->customer_phone : '';
+		if ( empty( $phone ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$phone = get_user_meta( $user->ID, 'snippen_phone', true ) ?: ( get_user_meta( $user->ID, 'phone', true ) ?: ( get_user_meta( $user->ID, 'billing_phone', true ) ?: '' ) );
+			}
+		}
+
+		if ( $sms_enabled && ! empty( $phone ) && ! empty( $rendered_sms['body'] ) ) {
+			$provider = $this->get_active_sms_provider();
+			if ( $provider && $provider->is_configured() ) {
+				$sms_sent           = $provider->send_sms( $phone, $rendered_sms['body'] );
+				$result['sms_sent'] = $sms_sent;
+				$provider_id        = $provider->get_id();
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'sms',
+					$phone,
+					null,
+					$rendered_sms['body'],
+					self::TYPE_RENTAL_FEEDBACK,
+					$this->get_sms_initial_status( $sms_sent, $provider_id ),
+					array( 'provider' => $provider_id )
+				);
+			}
+		}
+
+		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
+		if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$recipient = $user->user_email;
+			}
+		}
+
+		if ( $email_enabled && ! empty( $recipient ) && ! empty( $rendered_email['body'] ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject              = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : sprintf( __( 'Tilbakemelding på ditt leieforhold - %s', 'snippen-booking' ), $object_names );
+				$email_sent           = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+				$result['email_sent'] = $email_sent;
+
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$recipient,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_RENTAL_FEEDBACK,
+					$email_sent ? 'sent' : 'failed'
+				);
+			}
+		}
+
+		$result['sent'] = $result['sms_sent'] || $result['email_sent'];
+
+		return $result;
 	}
 
 	/**

@@ -193,6 +193,7 @@ class NotificationContextContractTest extends TestCase {
 			'payment_receipt_uploaded' => array( 'payment_receipt_uploaded' ),
 			'payment_received'         => array( 'payment_received' ),
 			'door_code_updated'        => array( 'door_code_updated' ),
+			'rental_feedback'          => array( 'rental_feedback' ),
 		);
 	}
 

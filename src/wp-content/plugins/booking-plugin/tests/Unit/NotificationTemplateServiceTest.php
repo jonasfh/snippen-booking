@@ -167,6 +167,30 @@ class NotificationTemplateServiceTest extends TestCase {
 	}
 
 	/**
+	 * Test default template and placeholders for rental-feedback
+	 */
+	public function test_rental_feedback_default_template_and_placeholders() {
+		$sms_tpl = $this->service->get_template( 'rental_feedback', 'sms' );
+		$this->assertTrue( $sms_tpl['is_default'] );
+		$this->assertStringContainsString( '{{user_name}}', $sms_tpl['body'] );
+		$this->assertStringContainsString( '{{booking_objects}}', $sms_tpl['body'] );
+		$this->assertStringContainsString( 'https://example.com', $sms_tpl['body'] );
+
+		$email_tpl = $this->service->get_template( 'rental-feedback', 'email' );
+		$this->assertTrue( $email_tpl['is_default'] );
+		$this->assertNotEmpty( $email_tpl['subject'] );
+		$this->assertStringContainsString( '{{booking_objects}}', $email_tpl['subject'] );
+		$this->assertStringContainsString( 'https://example.com', $email_tpl['body'] );
+
+		$placeholders = $this->service->get_available_placeholders( 'rental_feedback' );
+		$this->assertArrayHasKey( 'user_name', $placeholders );
+		$this->assertArrayHasKey( 'booking_objects', $placeholders );
+		$this->assertArrayHasKey( 'booking_date', $placeholders );
+		$this->assertArrayHasKey( 'booking_time', $placeholders );
+		$this->assertArrayHasKey( 'booking_url', $placeholders );
+	}
+
+	/**
 	 * Test email templates have subject lines
 	 */
 	public function test_email_templates_have_subjects() {

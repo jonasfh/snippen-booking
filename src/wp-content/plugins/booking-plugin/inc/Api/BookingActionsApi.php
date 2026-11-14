@@ -18,6 +18,7 @@ class BookingActionsApi {
 		add_action( 'wp_ajax_snippen_get_notification_preview', array( __CLASS__, 'get_notification_preview' ) );
 		add_action( 'wp_ajax_snippen_update_door_code', array( __CLASS__, 'update_door_code' ) );
 		add_action( 'wp_ajax_snippen_notify_door_code', array( __CLASS__, 'notify_door_code' ) );
+		add_action( 'wp_ajax_snippen_send_rental_feedback', array( __CLASS__, 'send_rental_feedback' ) );
 		add_action( 'wp_ajax_snippen_get_booking_messages', array( __CLASS__, 'get_booking_messages' ) );
 	}
 
@@ -191,6 +192,56 @@ class BookingActionsApi {
 	}
 
 	/**
+	 * Manually dispatch post-rental feedback questionnaire (SMS + email) for a booking.
+	 */
+	public static function send_rental_feedback() {
+		check_ajax_referer( 'snippen_admin_nonce', 'nonce' );
+
+		if ( ! Capabilities::can_manage_bookings() ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
+		}
+
+		global $wpdb;
+		$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		if ( ! $id ) {
+			wp_send_json_error( array( 'message' => __( 'Ugyldig forespørsel.', 'snippen-booking' ) ) );
+		}
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$booking        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		if ( ! $booking ) {
+			wp_send_json_error( array( 'message' => __( 'Booking ble ikke funnet.', 'snippen-booking' ) ) );
+		}
+
+		$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+		$result               = $notification_manager->send_rental_feedback_notification( $id );
+
+		if ( empty( $result['sent'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Kunne ikke sende spørreskjema. Sjekk SMS/e-post-innstillinger og kundens kontaktinfo.', 'snippen-booking' ) ) );
+		}
+
+		$channels = array();
+		if ( ! empty( $result['email_sent'] ) ) {
+			$channels[] = __( 'e-post', 'snippen-booking' );
+		}
+		if ( ! empty( $result['sms_sent'] ) ) {
+			$channels[] = __( 'SMS', 'snippen-booking' );
+		}
+
+		/* translators: %s: comma-separated list of channels (e.g., e-post, SMS) */
+		$msg = sprintf( __( 'Spørreskjema sendt på %s.', 'snippen-booking' ), implode( ' og ', $channels ) );
+
+		wp_send_json_success(
+			array(
+				'message'    => $msg,
+				'sent_at'    => wp_date( 'd.m H:i' ),
+				'sms_sent'   => ! empty( $result['sms_sent'] ),
+				'email_sent' => ! empty( $result['email_sent'] ),
+			)
+		);
+	}
+
+	/**
 	 * Get preview of notification message/subject before manual dispatch
 	 */
 	public static function get_notification_preview() {
@@ -245,6 +296,7 @@ class BookingActionsApi {
 			'password_reset'       => __( 'Passordtilbakestilling', 'snippen-booking' ),
 			'payment_reminder'     => __( 'Betalingspurring', 'snippen-booking' ),
 			'door_code_updated'    => __( 'Dørkode oppdatert', 'snippen-booking' ),
+			'rental_feedback'      => __( 'Spørreskjema etter leieforhold', 'snippen-booking' ),
 		);
 
 		foreach ( $all_templates as $event_type => $channels ) {
