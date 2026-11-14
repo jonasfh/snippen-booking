@@ -839,7 +839,7 @@ The system supports three booking types (`booking_type` in `wp_snippen_bookings`
 3. **`cleaning` (Utvask)**: Complimentary next-day cleaning time slot linked to evening events where `supports_cleaning = 1`.
 
 ### Notification Templates & Placeholders
-- **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, `password-reset`, `door-code-updated`, and `inbound-sms-received`.
+- **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, `password-reset`, `door-code-updated`, `inbound-sms-received`, and `rental-feedback`.
 - **System Placeholders**: Managed by `PlaceholderRegistry`:
   - `{{door_code}}`: Dynamic or static door PIN code for entering the venue (displayed or passed to SMS/email templates).
   - `{{door_code_valid_from}}`, `{{door_code_valid_to}}`, `{{door_code_validity_period}}`: Access window timestamps and period computed via `DoorCodeService::get_access_window()`.

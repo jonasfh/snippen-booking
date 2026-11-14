@@ -321,6 +321,92 @@ class BookingActionsTest extends TestCase {
     }
 
     /**
+     * Test that an admin can manually send post-rental feedback questionnaire via AJAX
+     */
+    public function test_admin_can_send_rental_feedback_notification() {
+        $user_id = wp_insert_user([
+            'user_login' => 'admin_test_feedback',
+            'user_pass'  => 'password',
+            'role'       => 'administrator',
+        ]);
+        $user = get_user_by('id', $user_id);
+        $user->add_cap('manage_snippen_bookings');
+        wp_set_current_user($user_id);
+
+        $customer_id = wp_insert_user([
+            'user_login' => 'customer_feedback_test',
+            'user_pass'  => 'password',
+            'role'       => 'subscriber',
+        ]);
+        $booking_id = $this->create_test_booking($customer_id);
+
+        update_option('snippen_email_rental_feedback_enabled', 'yes');
+        update_option('snippen_sms_rental_feedback_enabled', 'no');
+
+        $sent_emails = [];
+        $mail_filter = function($null, $atts) use (&$sent_emails) {
+            $sent_emails[] = $atts;
+            return true;
+        };
+        add_filter('pre_wp_mail', $mail_filter, 10, 2);
+
+        $_POST['id']       = $booking_id;
+        $_POST['nonce']    = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
+
+        ob_start();
+        try {
+            BookingActionsApi::send_rental_feedback();
+        } catch (\Throwable $e) {
+            // Expected wp_die from wp_send_json_success.
+        }
+        $json = ob_get_clean();
+        remove_filter('pre_wp_mail', $mail_filter, 10);
+
+        $response = json_decode($json, true);
+        $this->assertIsArray($response);
+        $this->assertTrue($response['success'], 'Expected success JSON response, got: ' . $json);
+        $this->assertTrue($response['data']['email_sent']);
+        $this->assertCount(1, $sent_emails);
+        $this->assertEquals('test@test.com', $sent_emails[0]['to']);
+        $this->assertStringContainsString('https://example.com', $sent_emails[0]['message']);
+
+        $logged = \SnippenBooking\Service\Notification\MessageLoggerService::get_messages_for_booking($booking_id);
+        $feedback_logs = array_filter($logged, function($msg) {
+            return isset($msg->event_type) && 'rental_feedback' === $msg->event_type;
+        });
+        $this->assertNotEmpty($feedback_logs);
+    }
+
+    /**
+     * Test that a non-admin cannot send rental feedback questionnaire
+     */
+    public function test_non_admin_cannot_send_rental_feedback_notification() {
+        $customer_id = wp_insert_user([
+            'user_login' => 'subscriber_feedback_test',
+            'user_pass'  => 'password',
+            'role'       => 'subscriber',
+        ]);
+        wp_set_current_user($customer_id);
+        $booking_id = $this->create_test_booking($customer_id);
+
+        $_POST['id']       = $booking_id;
+        $_POST['nonce']    = wp_create_nonce('snippen_admin_nonce');
+        $_REQUEST['nonce'] = $_POST['nonce'];
+
+        ob_start();
+        try {
+            BookingActionsApi::send_rental_feedback();
+        } catch (\Throwable $e) {
+            // Expected wp_die from wp_send_json_error.
+        }
+        $json = ob_get_clean();
+        $response = json_decode($json, true);
+        $this->assertIsArray($response);
+        $this->assertFalse($response['success']);
+    }
+
+    /**
      * Helper to create a test booking
      */
     private function create_test_booking($user_id) {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.54.0] - 2026-11-14
+- (#395) [Feat] Manuell utsendelse av spørreskjema etter avsluttet leieforhold (`rental_feedback`):
+  - **Ny varslingshendelse & standardmaler (`NotificationTemplateService.php`, `NotificationTemplateRepository.php`, `NotificationTemplateInstall.php`, `PlaceholderRegistry.php`, `NotificationTemplatesPage.php`)**: Lagt til `rental_feedback` / `rental-feedback` med redigerbare standardmaler for både SMS og e-post (med `https://example.com` som plassholder-lenke til spørreskjema).
+  - **Varslingsmotor & Innstillinger (`NotificationManager.php`, `SettingsPage.php`)**: Lagt til `NotificationManager::send_rental_feedback_notification()` og kanalinnstillingene `snippen_email_rental_feedback_enabled` / `snippen_sms_rental_feedback_enabled` (standard `'yes'`).
+  - **Ett-klikks utsendelse i Booking Oversikt (`BookingsPage.php`, `BookingActionsApi.php`, `js/admin.js`)**: Lagt til knappen **«Send spørreskjema»** under *Booking-hjelper* på alle bookinger (via nytt AJAX-endepunkt `snippen_send_rental_feedback`), med statusmerke (`✓ Sendt`) når skjemaet allerede er sendt og bekreftelsesdialog ved gjentatt sending eller fremtidig leiedato. Malen er også tilgjengelig i den manuelle SMS/e-post-modalen.
+  - **Tester & Dokumentasjon**: Lagt til enhets- og integrasjonstester i `NotificationTemplateServiceTest.php`, `NotificationContextContractTest.php` og `BookingActionsTest.php`, samt oppdatert `README.md` og `DEV_README.md`.
+
 ## [2.53.4] - 2026-11-14
 - (#392) [Feat] Deteksjon av endret adgangsvindu og egen «Varsle»-knapp i Dørkoder & Adgangskontroll:
   - **Varslings-snapshot i meldingslogg (`NotificationManager.php`)**: Lagrer nå `door_code`, `calc_start`, `calc_end`, `door_code_valid_from` og `door_code_valid_to` i `metadata` på `wp_snippen_messages` ved utsending av `door_code_updated` (SMS og e-post).

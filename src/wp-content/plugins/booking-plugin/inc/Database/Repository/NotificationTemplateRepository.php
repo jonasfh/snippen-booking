@@ -394,6 +394,20 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hei!\n\nDet er mottatt en ny innkommende SMS på Snippen SMS-tjeneste.\n\nAvsender: {{sender_phone}}\nKunde: {{user_name}}\nTilknyttet booking: {{booking_objects}} ({{booking_date}})\n\nMeldingstekst:\n--------------------------------------------------\n{{incoming_message}}\n--------------------------------------------------\n\nDu kan behandle og svare på henvendelsen i SMS-innboksen:\n{{inbox_url}}", 'snippen-booking' ),
 				'connected_to' => 'inbound-sms-received',
 			),
+			array(
+				'name'         => __( 'Spørreskjema etter leieforhold (SMS)', 'snippen-booking' ),
+				'type'         => 'sms',
+				'title'        => null,
+				'message'      => __( 'Hei {{user_name}}! Takk for at du leide {{booking_objects}} den {{booking_date}}. Vi setter stor pris på om du vil gi oss en kort tilbakemelding på leieforholdet her: https://example.com', 'snippen-booking' ),
+				'connected_to' => 'rental-feedback',
+			),
+			array(
+				'name'         => __( 'Spørreskjema etter leieforhold (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Tilbakemelding på ditt leieforhold - {{booking_objects}}', 'snippen-booking' ),
+				'message'      => __( "Hei {{user_name}},\n\nTakk for at du leide {{booking_objects}} den {{booking_date}} ({{booking_time}}).\n\nVi håper dere hadde et fint opphold! For at vi skal kunne forbedre tilbudet vårt, setter vi stor pris på om du tar deg tid til å svare på et kort spørreskjema om leieforholdet:\nhttps://example.com\n\nDu kan også se detaljer om din booking her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				'connected_to' => 'rental-feedback',
+			),
 		);
 
 		$this->cleanup_duplicates();

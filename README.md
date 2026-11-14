@@ -102,6 +102,7 @@ You can customize templates for both Email and SMS notifications under **Snippen
   - `payment-receipt-uploaded`: Alert sent to admin when resident uploads a payment receipt.
   - `door-code-updated`: Notification sent to resident when door access code is assigned or changed.
   - `inbound-sms-received`: Relay of incoming SMS message to booking administrators.
+  - `rental-feedback`: Post-rental feedback questionnaire sent manually by administrators (SMS and Email).
   - `password-reset`: Password reset link.
 - **Dynamic Placeholders**:
   - `{{user_name}}`: Resident/customer full name or display name.
