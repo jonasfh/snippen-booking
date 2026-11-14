@@ -17,6 +17,7 @@ class BookingActionsApi {
 		add_action( 'wp_ajax_snippen_dispatch_notification_manually', array( __CLASS__, 'dispatch_notification_manually' ) );
 		add_action( 'wp_ajax_snippen_get_notification_preview', array( __CLASS__, 'get_notification_preview' ) );
 		add_action( 'wp_ajax_snippen_update_door_code', array( __CLASS__, 'update_door_code' ) );
+		add_action( 'wp_ajax_snippen_notify_door_code', array( __CLASS__, 'notify_door_code' ) );
 		add_action( 'wp_ajax_snippen_get_booking_messages', array( __CLASS__, 'get_booking_messages' ) );
 	}
 
@@ -144,6 +145,47 @@ class BookingActionsApi {
 			array(
 				'message'   => __( 'Dørkode oppdatert.', 'snippen-booking' ),
 				'door_code' => $door_code,
+			)
+		);
+	}
+
+	/**
+	 * Send door code updated notification for an existing booking door code
+	 */
+	public static function notify_door_code() {
+		check_ajax_referer( 'snippen_admin_nonce', 'nonce' );
+
+		if ( ! Capabilities::can_manage_bookings() ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen tilgang.', 'snippen-booking' ) ) );
+		}
+
+		global $wpdb;
+		$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		if ( ! $id ) {
+			wp_send_json_error( array( 'message' => __( 'Ugyldig forespørsel.', 'snippen-booking' ) ) );
+		}
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$booking        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		if ( ! $booking ) {
+			wp_send_json_error( array( 'message' => __( 'Booking ble ikke funnet.', 'snippen-booking' ) ) );
+		}
+
+		if ( empty( $booking->door_code ) ) {
+			wp_send_json_error( array( 'message' => __( 'Ingen dørkode er lagret på reservasjonen ennå.', 'snippen-booking' ) ) );
+		}
+
+		$notification_manager = new \SnippenBooking\Service\Notification\NotificationManager();
+		$sent                 = $notification_manager->send_door_code_updated_notification( $id, (string) $booking->door_code );
+
+		if ( ! $sent ) {
+			wp_send_json_error( array( 'message' => __( 'Kunne ikke sende varsel. Sjekk SMS/e-post-innstillinger og kundens kontaktinfo.', 'snippen-booking' ) ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Varsel sendt til kunden.', 'snippen-booking' ),
+				'sent_at' => wp_date( 'd.m H:i' ),
 			)
 		);
 	}

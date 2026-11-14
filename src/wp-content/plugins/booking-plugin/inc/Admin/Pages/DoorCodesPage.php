@@ -236,17 +236,7 @@ class DoorCodesPage {
 						$user_phone      = $primary_booking ? $primary_booking->customer_phone : '';
 						$user_email      = $primary_booking ? $primary_booking->customer_email : '';
 
-						// Check if door_code_updated notification has been logged
-						$last_notif = MessageLoggerService::get_messages_for_booking( $primary_id );
-						$sent_info  = null;
-						if ( is_array( $last_notif ) ) {
-							foreach ( $last_notif as $msg ) {
-								if ( isset( $msg->event_type ) && 'door_code_updated' === $msg->event_type ) {
-									$sent_info = $msg;
-									break;
-								}
-							}
-						}
+						$notif_status = self::get_notification_status_for_booking( $primary_id, $chain['door_code'] ?? '', $window );
 
 						$door_badges = self::get_doorman_badges_for_chain( $chain['booking_ids'], $chain['door_code'], $doorman_status );
 						?>
@@ -307,11 +297,23 @@ class DoorCodesPage {
 										placeholder="••••••"
 										style="width:90px; text-align:center; font-family:monospace; font-size:15px; font-weight:bold; letter-spacing:2px; border-radius:4px; padding:4px;">
 							</td>
-							<td>
-								<?php if ( $sent_info ) : ?>
+							<td class="notif-status-cell">
+								<?php if ( 'sent' === $notif_status['state'] && $notif_status['message'] ) : ?>
 									<span class="badge-notif-sent" style="display:inline-flex; align-items:center; gap:4px; color:#16a34a; font-weight:600; font-size:12px;">
-										<span>✓</span> <?php printf( esc_html__( 'Sendt %s', 'snippen-booking' ), esc_html( date_i18n( 'd.m H:i', strtotime( $sent_info->created_at ) ) ) ); ?>
+										<span>✓</span> <?php printf( esc_html__( 'Sendt %s', 'snippen-booking' ), esc_html( wp_date( 'd.m H:i', strtotime( $notif_status['message']->created_at ) ) ) ); ?>
 									</span>
+								<?php elseif ( 'changed' === $notif_status['state'] && $notif_status['message'] ) : ?>
+									<?php
+									$badge_label = 'code_changed' === $notif_status['reason']
+										? __( 'Kode endret siden varsel', 'snippen-booking' )
+										: __( 'Tid endret siden varsel', 'snippen-booking' );
+									?>
+									<span class="badge-notif-changed"
+										style="display:inline-flex; align-items:center; gap:4px; background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:600; font-size:11px;"
+										title="<?php echo esc_attr( $notif_status['tooltip'] ); ?>">
+										<span>⚠</span> <?php echo esc_html( $badge_label ); ?>
+									</span>
+									<br><small style="color:#64748b;"><?php printf( esc_html__( 'Forrige: %s', 'snippen-booking' ), esc_html( wp_date( 'd.m H:i', strtotime( $notif_status['message']->created_at ) ) ) ); ?></small>
 								<?php else : ?>
 									<span class="badge-notif-none" style="color:#94a3b8; font-size:12px;">
 										<?php esc_html_e( 'Ikke varslet', 'snippen-booking' ); ?>
@@ -324,10 +326,13 @@ class DoorCodesPage {
 										<button type="button" class="button button-primary btn-save-row" style="font-weight:600;">
 											<?php esc_html_e( 'Lagre', 'snippen-booking' ); ?>
 										</button>
-										<label style="font-size:11px; display:inline-flex; align-items:center; gap:3px;" title="<?php esc_attr_e( 'Send SMS og e-post varsel til kunden ved lagring', 'snippen-booking' ); ?>">
-											<input type="checkbox" class="cb-notify-customer" checked="checked">
+										<button type="button"
+												class="button button-secondary btn-notify-row"
+												style="font-weight:600;"
+												<?php disabled( empty( $chain['door_code'] ) ); ?>
+												title="<?php esc_attr_e( 'Send SMS og e-post med gjeldende dørkode og adgangsvindu til kunden', 'snippen-booking' ); ?>">
 											<?php esc_html_e( 'Varsle', 'snippen-booking' ); ?>
-										</label>
+										</button>
 									</div>
 									<span class="row-status-msg" style="font-size:11px; min-height:14px;"></span>
 								</div>
@@ -343,8 +348,8 @@ class DoorCodesPage {
 			function saveDoorCodeRow($row, callback) {
 				var id = $row.data('id');
 				var code = $row.find('.door-code-field').val().trim();
-				var notify = $row.find('.cb-notify-customer').is(':checked');
 				var $btn = $row.find('.btn-save-row');
+				var $notifyBtn = $row.find('.btn-notify-row');
 				var $msg = $row.find('.row-status-msg');
 
 				$btn.prop('disabled', true);
@@ -355,32 +360,87 @@ class DoorCodesPage {
 					nonce: snippenAdmin.nonce,
 					id: id,
 					door_code: code,
-					dispatch_notification: notify ? 'true' : 'false'
+					dispatch_notification: 'false'
 				}, function(res) {
 					if (res.success) {
 						$row.data('initial-code', code);
+						$notifyBtn.prop('disabled', code === '');
 						$msg.text('Lagret!').css('color', '#16a34a');
-						if (notify && code !== '') {
-							$row.find('.badge-notif-none').replaceWith('<span class="badge-notif-sent" style="display:inline-flex; align-items:center; gap:4px; color:#16a34a; font-weight:600; font-size:12px;"><span>✓</span> Varsel sendt</span>');
-						}
 						setTimeout(function() {
 							$msg.fadeOut(function() { $(this).text('').show(); });
 						}, 3000);
 					} else {
 						$msg.text(res.data ? res.data.message : 'Feil ved lagring').css('color', '#dc2626');
 					}
+					if (callback) callback(!!res.success);
 				}).fail(function() {
 					$msg.text('Nettverksfeil').css('color', '#dc2626');
+					if (callback) callback(false);
 				}).always(function() {
 					$btn.prop('disabled', false);
-					if (callback) callback();
 				});
+			}
+
+			function notifyDoorCodeRow($row) {
+				var id = $row.data('id');
+				var currentCode = $row.find('.door-code-field').val().trim();
+				var initialCode = String($row.data('initial-code') || '').trim();
+				var $notifyBtn = $row.find('.btn-notify-row');
+				var $msg = $row.find('.row-status-msg');
+
+				if (currentCode === '') {
+					$msg.text('Skriv inn en dørkode først.').css('color', '#dc2626');
+					return;
+				}
+
+				var doNotify = function() {
+					$notifyBtn.prop('disabled', true);
+					$msg.text('Sender varsel...').css('color', '#64748b');
+
+					$.post(snippenAdmin.ajaxUrl, {
+						action: 'snippen_notify_door_code',
+						nonce: snippenAdmin.nonce,
+						id: id
+					}, function(res) {
+						if (res.success) {
+							var sentAt = (res.data && res.data.sent_at) ? res.data.sent_at : '';
+							var label = sentAt ? ('Sendt ' + sentAt) : 'Varsel sendt';
+							$row.find('.notif-status-cell').html('<span class="badge-notif-sent" style="display:inline-flex; align-items:center; gap:4px; color:#16a34a; font-weight:600; font-size:12px;"><span>✓</span> ' + label + '</span>');
+							$msg.text('Varsel sendt!').css('color', '#16a34a');
+							setTimeout(function() {
+								$msg.fadeOut(function() { $(this).text('').show(); });
+							}, 3000);
+						} else {
+							$msg.text(res.data ? res.data.message : 'Feil ved varsling').css('color', '#dc2626');
+						}
+					}).fail(function() {
+						$msg.text('Nettverksfeil').css('color', '#dc2626');
+					}).always(function() {
+						$notifyBtn.prop('disabled', false);
+					});
+				};
+
+				if (currentCode !== initialCode) {
+					saveDoorCodeRow($row, function(saved) {
+						if (saved) {
+							doNotify();
+						}
+					});
+				} else {
+					doNotify();
+				}
 			}
 
 			// Save individual row
 			$('.snippen-door-codes-admin').on('click', '.btn-save-row', function() {
 				var $row = $(this).closest('.door-code-row');
 				saveDoorCodeRow($row);
+			});
+
+			// Notify individual row
+			$('.snippen-door-codes-admin').on('click', '.btn-notify-row', function() {
+				var $row = $(this).closest('.door-code-row');
+				notifyDoorCodeRow($row);
 			});
 
 			// Enter key in input field triggers save
@@ -1070,5 +1130,88 @@ class DoorCodesPage {
 		}
 		$formatted = wp_date( $format, $ts );
 		return false !== $formatted ? $formatted : $fallback;
+	}
+
+	/**
+	 * Determine door code notification status for a booking, detecting if the
+	 * access window or door code changed since the last door_code_updated message.
+	 *
+	 * @param int         $booking_id   Booking ID.
+	 * @param string|null $current_code Current door code on the booking.
+	 * @param array       $window       Current access window from DoorCodeService::get_access_window().
+	 * @return array{state: string, message: object|null, reason: string, tooltip: string}
+	 */
+	public static function get_notification_status_for_booking( int $booking_id, ?string $current_code, array $window ): array {
+		$messages  = MessageLoggerService::get_messages_for_booking( $booking_id );
+		$sent_info = null;
+
+		if ( is_array( $messages ) ) {
+			foreach ( $messages as $msg ) {
+				if ( isset( $msg->event_type ) && 'door_code_updated' === $msg->event_type ) {
+					$sent_info = $msg;
+					break;
+				}
+			}
+		}
+
+		if ( ! $sent_info ) {
+			return array(
+				'state'   => 'none',
+				'message' => null,
+				'reason'  => '',
+				'tooltip' => '',
+			);
+		}
+
+		$meta = ! empty( $sent_info->metadata ) ? json_decode( (string) $sent_info->metadata, true ) : null;
+		if ( is_array( $meta ) ) {
+			$logged_code = isset( $meta['door_code'] ) ? (string) $meta['door_code'] : null;
+			if ( null !== $logged_code && '' !== (string) $current_code && $logged_code !== (string) $current_code ) {
+				return array(
+					'state'   => 'changed',
+					'message' => $sent_info,
+					'reason'  => 'code_changed',
+					'tooltip' => sprintf(
+						/* translators: 1: previously notified code, 2: current code */
+						__( 'Varslet kode: %1$s → Nå: %2$s', 'snippen-booking' ),
+						$logged_code,
+						(string) $current_code
+					),
+				);
+			}
+
+			$logged_start = isset( $meta['calc_start'] ) ? (int) $meta['calc_start'] : 0;
+			$logged_end   = isset( $meta['calc_end'] ) ? (int) $meta['calc_end'] : 0;
+			$curr_start   = isset( $window['calc_start'] ) ? (int) $window['calc_start'] : 0;
+			$curr_end     = isset( $window['calc_end'] ) ? (int) $window['calc_end'] : 0;
+
+			if ( $logged_start > 0 && $logged_end > 0 && ( $logged_start !== $curr_start || $logged_end !== $curr_end ) ) {
+				$old_from = ! empty( $meta['door_code_valid_from'] ) ? $meta['door_code_valid_from'] : wp_date( 'd.m.Y H:i', $logged_start );
+				$old_to   = ! empty( $meta['door_code_valid_to'] ) ? $meta['door_code_valid_to'] : wp_date( 'd.m.Y H:i', $logged_end );
+				$new_from = ! empty( $window['valid_from'] ) ? $window['valid_from'] : wp_date( 'd.m.Y H:i', $curr_start );
+				$new_to   = ! empty( $window['valid_to'] ) ? $window['valid_to'] : wp_date( 'd.m.Y H:i', $curr_end );
+
+				return array(
+					'state'   => 'changed',
+					'message' => $sent_info,
+					'reason'  => 'time_changed',
+					'tooltip' => sprintf(
+						/* translators: 1: old from, 2: old to, 3: new from, 4: new to */
+						__( 'Varslet: %1$s – %2$s → Nå: %3$s – %4$s', 'snippen-booking' ),
+						$old_from,
+						$old_to,
+						$new_from,
+						$new_to
+					),
+				);
+			}
+		}
+
+		return array(
+			'state'   => 'sent',
+			'message' => $sent_info,
+			'reason'  => '',
+			'tooltip' => '',
+		);
 	}
 }

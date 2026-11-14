@@ -1225,6 +1225,14 @@ class NotificationManager {
 		$rendered_sms     = $template_service->render_template( 'door_code_updated', 'sms', $context );
 		$rendered_email   = $template_service->render_template( 'door_code_updated', 'email', $context );
 
+		$log_metadata = array(
+			'door_code'            => $door_code,
+			'calc_start'           => isset( $window['calc_start'] ) ? (int) $window['calc_start'] : 0,
+			'calc_end'             => isset( $window['calc_end'] ) ? (int) $window['calc_end'] : 0,
+			'door_code_valid_from' => (string) ( $window['valid_from'] ?? '' ),
+			'door_code_valid_to'   => (string) ( $window['valid_to'] ?? '' ),
+		);
+
 		$sms_sent   = false;
 		$email_sent = false;
 
@@ -1252,7 +1260,7 @@ class NotificationManager {
 					$rendered_sms['body'],
 					self::TYPE_DOOR_CODE_UPDATED,
 					$initial_status,
-					array( 'provider' => $provider_id )
+					array_merge( array( 'provider' => $provider_id ), $log_metadata )
 				);
 			}
 		}
@@ -1279,7 +1287,8 @@ class NotificationManager {
 					$subject,
 					$rendered_email['body'],
 					self::TYPE_DOOR_CODE_UPDATED,
-					$email_sent ? 'sent' : 'failed'
+					$email_sent ? 'sent' : 'failed',
+					$log_metadata
 				);
 			}
 		}

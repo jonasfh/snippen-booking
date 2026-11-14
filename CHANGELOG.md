@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.53.4] - 2026-11-14
+- (#392) [Feat] Deteksjon av endret adgangsvindu og egen «Varsle»-knapp i Dørkoder & Adgangskontroll:
+  - **Varslings-snapshot i meldingslogg (`NotificationManager.php`)**: Lagrer nå `door_code`, `calc_start`, `calc_end`, `door_code_valid_from` og `door_code_valid_to` i `metadata` på `wp_snippen_messages` ved utsending av `door_code_updated` (SMS og e-post).
+  - **Deteksjon av tids- og kodeavvik (`DoorCodesPage.php`)**: Sammenligner siste varslede adgangsvindu og kode mot nåværende `DoorCodeService::get_access_window()`, og viser tydelig advarselsbadge (`⚠ Tid endret siden varsel` / `⚠ Kode endret siden varsel`) når reservasjonstid, buffer/grace-innstillinger eller kode har endret seg etter siste varsel. Bruker `wp_date()` for lokaltid på sendt-tidspunkt.
+  - **Separert «Lagre» og «Varsle» (`DoorCodesPage.php` & `BookingActionsApi.php`)**: «Lagre»-knappen lagrer nå kun dørkoden uten å sende varsel, mens en egen **«Varsle»**-knapp (via nytt AJAX-endepunkt `snippen_notify_door_code`) lar administrator sende oppdatert varsel ved behov.
+  - **Tester & Dokumentasjon**: Lagt til integrasjonstester i `DoorCodesPageTest.php` og oppdatert `DEV_README.md`.
+
 ## [2.53.3] - 2026-11-14
 - (#390) [Fix] Konsistent placeholder-håndtering og kontraktstesting for SMS og e-post:
   - **Felles kontekstbygger (`BookingContextBuilder.php`)**: Ny tjeneste som samler bygging av booking-kontekst (inkludert `door_code_valid_from`, `door_code_valid_to`, `door_code_validity_period`, `booking_id`, `booking_type`, `payment_method` og `rejection_reason`) for både `NotificationManager` og `BookingActionsApi`.
