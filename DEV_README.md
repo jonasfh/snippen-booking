@@ -842,6 +842,7 @@ The system supports three booking types (`booking_type` in `wp_snippen_bookings`
 - **Templates**: Available in **Snippen Booking > Varslingsmaler**: `account-activation`, `booking-confirmation`, `admin-booking-alert`, `booking-confirmed`, `booking-rejected`, `payment-received`, `payment-reminder`, `payment-receipt-uploaded`, `password-reset`, `door-code-updated`, and `inbound-sms-received`.
 - **System Placeholders**: Managed by `PlaceholderRegistry`:
   - `{{door_code}}`: Dynamic or static door PIN code for entering the venue (displayed or passed to SMS/email templates).
+  - `{{door_code_valid_from}}`, `{{door_code_valid_to}}`, `{{door_code_validity_period}}`: Access window timestamps and period computed via `DoorCodeService::get_access_window()`.
   - `{{booking_type}}`: Resolves to «Privat arrangement», «Åpent arrangement» or «Utvask».
   - `{{rejection_reason}}`: Board's reason for rejecting a booking request.
   - `{{payment_method}}`: Resolves to «Vipps», «Bankoverføring» or «Fritatt».
@@ -850,6 +851,9 @@ The system supports three booking types (`booking_type` in `wp_snippen_bookings`
   - `{{inbox_url}}`: Direct admin deep link to inspect and reply to the message in SMS Inbox (`/wp-admin/admin.php?page=snippen-booking-sms-inbox&view_message=<id>`).
   - `{{booking_id}}`: Matched booking ID (or empty if unresolved).
   - Plus standard placeholders: `{{user_name}}`, `{{user_email}}`, `{{user_phone}}`, `{{booking_objects}}`, `{{booking_date}}`, `{{booking_time}}`, `{{booking_url}}`, `{{booking_price}}`, `{{bank_account}}`, `{{vipps_number}}`, `{{payment_instructions}}`, and `{{reset_link}}`.
+- **Single Source of Truth & Contract Testing**:
+  - `BookingContextBuilder::build()` is the shared context builder used by both `NotificationManager` and `BookingActionsApi` (manual preview & dispatch), ensuring identical placeholder availability across automatic and manual notifications.
+  - `NotificationContextContractTest` and `PlaceholderIntegrationTest` verify that every registered placeholder and default template resolves cleanly in all allowed contexts without leaving raw `{{...}}` tokens.
 
 ### Inbound SMS Admin Relay (#348)
 - **Purpose**: Relays incoming SMS inquiries from customers to booking administrators (`manage_bookings` capability) via Email and optionally SMS.

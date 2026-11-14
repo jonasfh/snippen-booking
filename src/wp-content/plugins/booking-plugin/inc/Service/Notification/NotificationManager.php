@@ -1013,38 +1013,14 @@ class NotificationManager {
 	 * @return array
 	 */
 	private function build_booking_context( $booking, string $object_names, string $booking_time, string $booking_url, string $rejection_reason = '' ): array {
-		$default_payment_instructions = __( 'Vennligst overfør leiebeløpet innen 3 dager fra booking. Merk betalingen med ditt navn eller booking-ID.', 'snippen-booking' );
-
-		$booking_type_label = 'open' === ( $booking->booking_type ?? 'private' )
-			? __( 'Åpent arrangement', 'snippen-booking' )
-			: ( 'cleaning' === ( $booking->booking_type ?? 'private' ) ? __( 'Utvask', 'snippen-booking' ) : __( 'Privat arrangement', 'snippen-booking' ) );
-
-		$payment_method_label = ( floatval( $booking->price ) <= 0 || 'open' === ( $booking->booking_type ?? 'private' ) )
-			? __( 'Fritatt', 'snippen-booking' )
-			: ( ( ! empty( $booking->payment_notes ) && false !== stripos( (string) $booking->payment_notes, 'vipps' ) ) ? __( 'Vipps', 'snippen-booking' ) : __( 'Bankoverføring', 'snippen-booking' ) );
-
-		$reason = ! empty( $rejection_reason )
-			? $rejection_reason
-			: ( ! empty( $booking->rejection_reason ) ? $booking->rejection_reason : __( 'Ingen begrunnelse oppgitt.', 'snippen-booking' ) );
-
-		return array(
-			'user_name'            => $booking->customer_name,
-			'user_email'           => $booking->customer_email,
-			'user_phone'           => $booking->customer_phone,
-			'booking_objects'      => $object_names,
-			'booking_date'         => $booking->booking_date,
-			'booking_time'         => $booking_time,
-			'booking_url'          => $booking_url,
-			'booking_price'        => number_format( (float) $booking->price, 0, ',', ' ' ),
-			'bank_account'         => get_option( 'snippen_payment_bank_account', '' ),
-			'vipps_number'         => get_option( 'snippen_payment_vipps_number', '' ),
-			'payment_instructions' => get_option( 'snippen_payment_instructions', $default_payment_instructions ),
-			'booking_description'  => $booking->description ?? '',
-			'booking_type'         => $booking_type_label,
-			'rejection_reason'     => $reason,
-			'payment_method'       => $payment_method_label,
-			'door_code'            => ! empty( $booking->door_code ) ? (string) $booking->door_code : '',
-			'booking'              => $booking,
+		return BookingContextBuilder::build(
+			$booking,
+			array(
+				'object_names'     => $object_names,
+				'booking_time'     => $booking_time,
+				'booking_url'      => $booking_url,
+				'rejection_reason' => $rejection_reason,
+			)
 		);
 	}
 
