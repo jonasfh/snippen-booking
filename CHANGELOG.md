@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.53.2] - 2026-11-14
+- (#388) [Fix] Korrekt lokaltid i «Status i dørene & Doorman»-fanen (`DoorCodesPage.php`):
+  - Erstattet `date_i18n( ..., strtotime( ... ) )` med `wp_date( ..., strtotime( ... ) )` via hjelpemetoden `DoorCodesPage::format_status_datetime()`, slik at ISO 8601 UTC-tidsstempler (`generated_at`, `last_received_at`, `last_seen`, `valid_from` og `valid_to`) konverteres til WordPress-nettstedets tidssone (f.eks. `Europe/Oslo`) i stedet for å vises som UTC.
+  - Lagt til integrasjonstest `DoorCodesPageTest::test_status_tab_formats_utc_timestamps_in_site_timezone()` som verifiserer korrekt tidssonekonvertering for alle tidsstempler i statusfanen.
+
 ## [2.53.1] - 2026-11-10
 - (#386) [Fix] Korrekt tidssone-håndtering i DoorLockApi (lokaltid konverteres til UTC):
   - **REST API (`DoorLockApi.php`)**:
