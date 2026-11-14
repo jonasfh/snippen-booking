@@ -580,7 +580,7 @@ class PlaceholderRegistry {
 	 * @throws DisallowedPlaceholderException If placeholder is not allowed for connected_to.
 	 * @throws MissingPlaceholderValueException If value is missing in context.
 	 */
-	public function resolve( string $name, string $connected_to, array $context ): string {
+	public function resolve( string $name, string $connected_to, array $context, bool $strict = true ): string {
 		$definition = $this->get_placeholder( $name );
 		if ( ! $definition ) {
 			throw new UnknownPlaceholderException( $name );
@@ -597,7 +597,7 @@ class PlaceholderRegistry {
 			$value = call_user_func( $definition['resolver'], $context );
 		}
 
-		if ( null === $value || '' === $value ) {
+		if ( null === $value || ( $strict && '' === $value ) ) {
 			throw new MissingPlaceholderValueException( $name );
 		}
 
@@ -642,11 +642,13 @@ class PlaceholderRegistry {
 			function ( $matches ) use ( $connected_to, $context, $strict ) {
 				$name = $matches[1];
 				try {
-					return $this->resolve( $name, $connected_to, $context );
+					return $this->resolve( $name, $connected_to, $context, $strict );
 				} catch ( MissingPlaceholderValueException $e ) {
 					if ( $strict ) {
 						throw $e;
 					}
+					// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+					error_log( sprintf( 'SnippenBooking PlaceholderRegistry: Missing value for placeholder "{{%s}}" in context "%s".', $name, $connected_to ) );
 					return $matches[0];
 				}
 			},
@@ -662,13 +664,15 @@ class PlaceholderRegistry {
 	 * @return string|null
 	 */
 	private function resolve_path( array $context, array $paths ) {
+		$found_empty = false;
+
 		foreach ( $paths as $path ) {
 			$keys = explode( '.', $path );
 			$curr = $context;
 
 			$found = true;
 			foreach ( $keys as $key ) {
-				if ( is_array( $curr ) && isset( $curr[ $key ] ) ) {
+				if ( is_array( $curr ) && array_key_exists( $key, $curr ) ) {
 					$curr = $curr[ $key ];
 				} elseif ( is_object( $curr ) && isset( $curr->$key ) ) {
 					$curr = $curr->$key;
@@ -678,13 +682,18 @@ class PlaceholderRegistry {
 				}
 			}
 
-			if ( $found && null !== $curr && '' !== $curr ) {
+			if ( $found && null !== $curr ) {
+				if ( '' === $curr ) {
+					$found_empty = true;
+					continue;
+				}
+
 				return is_scalar( $curr ) || ( is_object( $curr ) && method_exists( $curr, '__toString' ) )
 					? (string) $curr
 					: null;
 			}
 		}
 
-		return null;
+		return $found_empty ? '' : null;
 	}
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.53.3] - 2026-11-14
+- (#390) [Fix] Konsistent placeholder-håndtering og kontraktstesting for SMS og e-post:
+  - **Felles kontekstbygger (`BookingContextBuilder.php`)**: Ny tjeneste som samler bygging av booking-kontekst (inkludert `door_code_valid_from`, `door_code_valid_to`, `door_code_validity_period`, `booking_id`, `booking_type`, `payment_method` og `rejection_reason`) for både `NotificationManager` og `BookingActionsApi`.
+  - **Enhetlig rendering (`BookingActionsApi.php`)**: Fjernet duplisert `get_booking_context()` og `replace_placeholders()` slik at manuell forhåndsvisning og utsending av SMS/e-post går gjennom `PlaceholderRegistry` / `NotificationTemplateService`.
+  - **Trygg håndtering av tomme verdier (`PlaceholderRegistry.php`)**: Tomme strenger (`''`) som finnes i konteksten erstattes nå med `''` i ikke-streng modus (`$strict = false`) i stedet for å lekke rå `{{...}}`-tokens til mottaker, mens manglende nøkler logges.
+  - **Kontraktstester (`NotificationContextContractTest.php` & `PlaceholderIntegrationTest.php`)**: Utvidet testsuiten til å dynamisk teste alle 26 registrerte placeholders, alle standardmaler (SMS og e-post) og faktiske kontekstbyggere på tvers av alle 11 varslingskontekster.
+
 ## [2.53.2] - 2026-11-14
 - (#388) [Fix] Korrekt lokaltid i «Status i dørene & Doorman»-fanen (`DoorCodesPage.php`):
   - Erstattet `date_i18n( ..., strtotime( ... ) )` med `wp_date( ..., strtotime( ... ) )` via hjelpemetoden `DoorCodesPage::format_status_datetime()`, slik at ISO 8601 UTC-tidsstempler (`generated_at`, `last_received_at`, `last_seen`, `valid_from` og `valid_to`) konverteres til WordPress-nettstedets tidssone (f.eks. `Europe/Oslo`) i stedet for å vises som UTC.
