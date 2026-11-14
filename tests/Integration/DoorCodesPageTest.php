@@ -312,4 +312,92 @@ class DoorCodesPageTest extends TestCase {
 		unset( $_GET['tab'] );
 		delete_option( 'snippen_door_services_registry' );
 	}
+
+	/**
+	 * Verify that all UTC ISO 8601 timestamps in the Status tab are converted to the WordPress site timezone (Issue #388).
+	 */
+	public function test_status_tab_formats_utc_timestamps_in_site_timezone() {
+		$prev_tz = get_option( 'timezone_string' );
+		update_option( 'timezone_string', 'Europe/Oslo' );
+
+		$registry = array(
+			'oslo-node' => array(
+				'service_id'  => 'oslo-node',
+				'name'        => 'Oslo Node',
+				'last_seen'   => '2026-11-07T13:15:08+00:00', // 14:15:08 CET (UTC+1)
+				'lock_ids'    => array( '1' ),
+				'min_battery' => 90,
+			),
+		);
+		update_option( 'snippen_door_services_registry', $registry );
+
+		$mock_status = array(
+			'generated_at'         => '2026-11-07T13:15:10+00:00', // 14:15:10 CET
+			'locks'                => array(),
+			'provisioned_on_locks' => array(
+				array(
+					'booking_id'   => '101',
+					'lock_id'      => '1',
+					'lock_name'    => 'Hoveddør',
+					'slot'         => 3,
+					'pin'          => '123456',
+					'valid_from'   => '2026-11-07T15:00:00+00:00', // 16:00 CET
+					'valid_to'     => '2026-11-09T11:00:00+00:00', // 12:00 CET
+					'status'       => 'PROVISIONED',
+				),
+			),
+			'reservations_in_db'   => array(
+				array(
+					'booking_id'            => '102',
+					'pin'                   => '654321',
+					'valid_from'            => '2026-11-07T16:00:00+00:00', // 17:00 CET
+					'valid_to'              => '2026-11-09T12:00:00+00:00', // 13:00 CET
+					'status'                => 'SCHEDULED',
+					'all_locks_provisioned' => false,
+					'physical_locks'        => array(),
+				),
+			),
+			'recently_expired'     => array(
+				array(
+					'booking_id' => '100',
+					'pin'        => '111222',
+					'valid_from' => '2026-11-01T10:00:00+00:00', // 11:00 CET
+					'valid_to'   => '2026-11-01T12:00:00+00:00', // 13:00 CET
+				),
+			),
+		);
+		update_option( 'snippen_door_status_oslo-node', $mock_status );
+
+		$_GET['tab'] = 'status';
+
+		try {
+			$page = new DoorCodesPage();
+			ob_start();
+			$page->render();
+			$output = ob_get_clean();
+
+			// Fleet header: last_received_at (derived from last_seen 13:15:08 UTC) & generated_at (13:15:10 UTC)
+			$this->assertStringContainsString( '07.11.2026 14:15:08', $output );
+			$this->assertStringContainsString( '07.11.2026 14:15:10', $output );
+
+			// Provisioned on locks
+			$this->assertStringContainsString( '07.11.2026 16:00 – 09.11.2026 12:00', $output );
+
+			// Reservations in DB
+			$this->assertStringContainsString( '07.11.2026 17:00 – 09.11.2026 13:00', $output );
+
+			// Recently expired
+			$this->assertStringContainsString( '01.11.2026 11:00 – 01.11.2026 13:00', $output );
+
+			// Ensure UTC times are NOT rendered
+			$this->assertStringNotContainsString( '07.11.2026 13:15:08', $output );
+			$this->assertStringNotContainsString( '07.11.2026 13:15:10', $output );
+			$this->assertStringNotContainsString( '07.11.2026 15:00', $output );
+		} finally {
+			unset( $_GET['tab'] );
+			delete_option( 'snippen_door_services_registry' );
+			delete_option( 'snippen_door_status_oslo-node' );
+			update_option( 'timezone_string', $prev_tz );
+		}
+	}
 }

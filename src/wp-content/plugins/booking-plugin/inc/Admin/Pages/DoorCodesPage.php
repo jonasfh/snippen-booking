@@ -466,8 +466,8 @@ class DoorCodesPage {
 		$provisioned      = $status['provisioned_on_locks'] ?? array();
 		$reservations     = $status['reservations_in_db'] ?? array();
 		$recently_expired = $status['recently_expired'] ?? array();
-		$generated_at     = ! empty( $status['generated_at'] ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $status['generated_at'] ) ) : '-';
-		$received_fmt     = ! empty( $last_recv_at ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $last_recv_at ) ) : '-';
+		$generated_at     = $this->format_status_datetime( $status['generated_at'] ?? null );
+		$received_fmt     = $this->format_status_datetime( $last_recv_at );
 
 		// Check for offline nodes (> 15 min)
 		$offline_nodes = array();
@@ -487,7 +487,7 @@ class DoorCodesPage {
 					<?php
 					$offline_strings = array();
 					foreach ( $offline_nodes as $on ) {
-						$ls_fmt            = ! empty( $on['last_seen'] ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $on['last_seen'] ) ) : __( 'aldri', 'snippen-booking' );
+						$ls_fmt            = $this->format_status_datetime( $on['last_seen'] ?? null, 'd.m.Y H:i:s', __( 'aldri', 'snippen-booking' ) );
 						$offline_strings[] = sprintf( '<strong>%s</strong> (sist sett: %s)', esc_html( $on['name'] ?? $on['service_id'] ), esc_html( $ls_fmt ) );
 					}
 					printf(
@@ -547,7 +547,7 @@ class DoorCodesPage {
 				<?php
 				$is_node_offline = ! empty( $snode['is_offline'] );
 				$card_border     = $is_node_offline ? '1px solid #fca5a5' : '1px solid #e2e8f0';
-				$last_seen_fmt   = ! empty( $snode['last_seen'] ) ? date_i18n( 'd.m.Y H:i:s', strtotime( $snode['last_seen'] ) ) : '-';
+				$last_seen_fmt   = $this->format_status_datetime( $snode['last_seen'] ?? null );
 				$ip_addr         = $snode['ip_address'] ?? '';
 				$ip_url          = '';
 				if ( ! empty( $ip_addr ) ) {
@@ -733,8 +733,8 @@ class DoorCodesPage {
 						$loc_names = ! empty( $p['booking_objects'] ) ? implode( ', ', wp_list_pluck( $p['booking_objects'], 'name' ) ) : __( 'Snippen', 'snippen-booking' );
 						$t_name    = $p['customer_name'] ?? ( '#' . ( $p['booking_id'] ?? '' ) );
 						$t_phone   = $p['customer_phone'] ?? '';
-						$v_from    = ! empty( $p['valid_from'] ) ? date_i18n( 'd.m.Y H:i', strtotime( $p['valid_from'] ) ) : '-';
-						$v_to      = ! empty( $p['valid_to'] ) ? date_i18n( 'd.m.Y H:i', strtotime( $p['valid_to'] ) ) : '-';
+						$v_from    = $this->format_status_datetime( $p['valid_from'] ?? null, 'd.m.Y H:i' );
+						$v_to      = $this->format_status_datetime( $p['valid_to'] ?? null, 'd.m.Y H:i' );
 						?>
 						<tr>
 							<td>
@@ -813,8 +813,8 @@ class DoorCodesPage {
 						$loc_names = ! empty( $r['booking_objects'] ) ? implode( ', ', wp_list_pluck( $r['booking_objects'], 'name' ) ) : __( 'Peisestuen', 'snippen-booking' );
 						$t_name    = $r['customer_name'] ?? ( '#' . ( $r['booking_id'] ?? '' ) );
 						$t_phone   = $r['customer_phone'] ?? '';
-						$v_from    = ! empty( $r['valid_from'] ) ? date_i18n( 'd.m.Y H:i', strtotime( $r['valid_from'] ) ) : '-';
-						$v_to      = ! empty( $r['valid_to'] ) ? date_i18n( 'd.m.Y H:i', strtotime( $r['valid_to'] ) ) : '-';
+						$v_from    = $this->format_status_datetime( $r['valid_from'] ?? null, 'd.m.Y H:i' );
+						$v_to      = $this->format_status_datetime( $r['valid_to'] ?? null, 'd.m.Y H:i' );
 						$plocks    = isset( $r['physical_locks'] ) && is_array( $r['physical_locks'] ) ? $r['physical_locks'] : array();
 						$is_all    = ! empty( $r['all_locks_provisioned'] );
 						?>
@@ -913,8 +913,8 @@ class DoorCodesPage {
 						$loc_names = ! empty( $exp['booking_objects'] ) ? implode( ', ', wp_list_pluck( $exp['booking_objects'], 'name' ) ) : __( 'Peisestuen', 'snippen-booking' );
 						$t_name    = $exp['customer_name'] ?? ( '#' . ( $exp['booking_id'] ?? '' ) );
 						$t_phone   = $exp['customer_phone'] ?? '';
-						$v_from    = ! empty( $exp['valid_from'] ) ? date_i18n( 'd.m.Y H:i', strtotime( $exp['valid_from'] ) ) : '-';
-						$v_to      = ! empty( $exp['valid_to'] ) ? date_i18n( 'd.m.Y H:i', strtotime( $exp['valid_to'] ) ) : '-';
+						$v_from    = $this->format_status_datetime( $exp['valid_from'] ?? null, 'd.m.Y H:i' );
+						$v_to      = $this->format_status_datetime( $exp['valid_to'] ?? null, 'd.m.Y H:i' );
 						?>
 						<tr>
 							<td>
@@ -1050,5 +1050,25 @@ class DoorCodesPage {
 		}
 
 		return $badges;
+	}
+
+	/**
+	 * Format an ISO 8601 / UTC datetime string in the WordPress site timezone.
+	 *
+	 * @param string|null $datetime_str Datetime string (typically ISO 8601 UTC).
+	 * @param string      $format       PHP date format.
+	 * @param string      $fallback     Fallback string when empty or unparseable.
+	 * @return string
+	 */
+	private function format_status_datetime( ?string $datetime_str, string $format = 'd.m.Y H:i:s', string $fallback = '-' ): string {
+		if ( empty( $datetime_str ) ) {
+			return $fallback;
+		}
+		$ts = strtotime( $datetime_str );
+		if ( false === $ts ) {
+			return $fallback;
+		}
+		$formatted = wp_date( $format, $ts );
+		return false !== $formatted ? $formatted : $fallback;
 	}
 }
