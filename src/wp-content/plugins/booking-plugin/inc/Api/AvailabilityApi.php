@@ -152,8 +152,9 @@ class AvailabilityApi {
 
 				$is_available = $available_capacity > 0;
 
-				$base_price    = $pricing_service->getPrice( $object_ids, array( $block->id ), $date_str );
-				$discount_info = $discount_service->applyDiscount( $base_price, $object_ids, array( $block->id ), $date_str );
+				$price_breakdown = $pricing_service->getPriceBreakdown( $object_ids, array( $block->id ), $date_str );
+				$base_price      = $price_breakdown['total_price'];
+				$discount_info   = $discount_service->applyDiscountWithBreakdown( $price_breakdown, $object_ids, $date_str );
 
 				$day_blocks[] = array(
 					'id'                     => (int) $block->id,
@@ -315,9 +316,10 @@ class AvailabilityApi {
 		$discount_name   = null;
 
 		if ( ! empty( $selected_object_ids ) ) {
-			$base_price       = $pricing_service->getPrice( $selected_object_ids, $block_ids, $event_date );
+			$price_breakdown  = $pricing_service->getPriceBreakdown( $selected_object_ids, $block_ids, $event_date );
+			$base_price       = $price_breakdown['total_price'];
 			$discount_service = new DiscountService();
-			$discount_info    = $discount_service->applyDiscount( $base_price, $selected_object_ids, $block_ids, $event_date );
+			$discount_info    = $discount_service->applyDiscountWithBreakdown( $price_breakdown, $selected_object_ids, $event_date );
 			$final_price      = $discount_info['final_price'];
 			$discount_amount  = $discount_info['discount_amount'];
 			if ( $discount_info['discount_rule'] ) {

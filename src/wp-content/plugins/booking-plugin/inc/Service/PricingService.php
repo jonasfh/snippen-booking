@@ -33,8 +33,35 @@ class PricingService {
 	 * @return float Total price
 	 */
 	public function getPrice( array $objectIds, array $blockIds, $date ) {
+		$breakdown = $this->getPriceBreakdown( $objectIds, $blockIds, $date );
+		return $breakdown['total_price'];
+	}
+
+	/**
+	 * Get price breakdown separating discountable and discount-excluded blocks.
+	 *
+	 * @param array  $objectIds List of booking object IDs.
+	 * @param array  $blockIds  List of booking block IDs.
+	 * @param string $date      YYYY-MM-DD.
+	 * @return array{
+	 *     total_price: float,
+	 *     discountable_price: float,
+	 *     excluded_price: float,
+	 *     discountable_block_ids: int[],
+	 *     excluded_block_ids: int[],
+	 * }
+	 */
+	public function getPriceBreakdown( array $objectIds, array $blockIds, $date ) {
+		$empty_breakdown = array(
+			'total_price'            => 0.0,
+			'discountable_price'     => 0.0,
+			'excluded_price'         => 0.0,
+			'discountable_block_ids' => array(),
+			'excluded_block_ids'     => array(),
+		);
+
 		if ( empty( $objectIds ) || empty( $blockIds ) || empty( $date ) ) {
-			return 0.0;
+			return $empty_breakdown;
 		}
 
 		global $wpdb;
@@ -55,10 +82,15 @@ class PricingService {
 				...$blockIds
 			);
 			$legacy_price   = $wpdb->get_var( $query );
-			if ( $legacy_price !== null ) {
-				return (float) $legacy_price;
-			}
-			return 0.0;
+			$price          = $legacy_price !== null ? (float) $legacy_price : 0.0;
+
+			return array(
+				'total_price'            => $price,
+				'discountable_price'     => $price,
+				'excluded_price'         => 0.0,
+				'discountable_block_ids' => array_values( array_map( 'intval', $blockIds ) ),
+				'excluded_block_ids'     => array(),
+			);
 		}
 
 		$is_holiday  = $this->holiday_service->isHoliday( $date );
@@ -99,7 +131,11 @@ class PricingService {
 		}
 
 		// Now, for each object and each block, find the rule with the highest priority
-		$total_price = 0.0;
+		$total_price            = 0.0;
+		$discountable_price     = 0.0;
+		$excluded_price         = 0.0;
+		$discountable_block_map = array();
+		$excluded_block_map     = array();
 
 		$table_rule_blocks  = $wpdb->prefix . 'snippen_pricing_rule_booking_blocks';
 		$table_rule_objects = $wpdb->prefix . 'snippen_pricing_rule_booking_objects';
@@ -136,11 +172,29 @@ class PricingService {
 				}
 
 				if ( $best_rule ) {
-					$total_price += (float) $best_rule->price;
+					$rule_price   = (float) $best_rule->price;
+					$total_price += $rule_price;
+
+					if ( ! empty( $best_rule->exclude_from_discounts ) ) {
+						$excluded_price                       += $rule_price;
+						$excluded_block_map[ (int) $block_id ] = true;
+					} else {
+						$discountable_price                       += $rule_price;
+						$discountable_block_map[ (int) $block_id ] = true;
+					}
 				}
 			}
 		}
 
-		return $total_price;
+		$discountable_block_ids = array_keys( $discountable_block_map );
+		$excluded_block_ids     = array_values( array_diff( array_keys( $excluded_block_map ), $discountable_block_ids ) );
+
+		return array(
+			'total_price'            => $total_price,
+			'discountable_price'     => $discountable_price,
+			'excluded_price'         => $excluded_price,
+			'discountable_block_ids' => $discountable_block_ids,
+			'excluded_block_ids'     => $excluded_block_ids,
+		);
 	}
 }

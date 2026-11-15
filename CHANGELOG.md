@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.55.0] - 2026-11-15
+- (#401) [Feat] Støtte for «Ikke rabattberettiget» (`exclude_from_discounts`) på prisregler med del-beregning av varighetsrabatt:
+  - **Database (`Install.php`, `Migration_2_55_0.php`, `MigrationManager.php`)**: Lagt til kolonnen `exclude_from_discounts TINYINT(1) DEFAULT 0` på `wp_snippen_pricing_rules`.
+  - **Pris- og rabattberegning (`PricingService.php`, `DiscountService.php`)**: Lagt til `PricingService::getPriceBreakdown()` og `DiscountService::applyDiscountWithBreakdown()` som holder blokker priset av regler med `exclude_from_discounts = 1` utenfor både varighetsberegning og rabattgrunnlag, og legger deres fastpris uendret tilbake på sluttprisen.
+  - **API & Admin UI (`AvailabilityApi.php`, `BookingApi.php`, `PricingPreviewApi.php`, `PricingPage.php`)**: Oppdatert prisberegningen i alle API-er til å bruke del-beregning, lagt til avkrysningsboksen *«Ikke rabattberettiget (unntas fra varighetsrabatter)»* i prisregel-skjemaet samt «Uten rabatt»-badge i oversikten.
+  - **Tester & Dokumentasjon**: Lagt til integrasjonstester i `PricingServiceTest.php` og `DiscountServiceTest.php`, samt oppdatert `README.md` og `DEV_README.md`.
+
 ## [2.54.1] - 2026-11-15
 - (#399) [Fix] Fikset manglende `</div>` i Yale Doorman-fanen (`SettingsPage.php`) for `#snippen-doorman-api-settings`, som førte til at Generelt-fanen (`#tab-general`) og «Lagre innstillinger»-knappen ble nøstet inne i `#tab-doorman` og dermed skjult. Lagt til integrasjonstest i `SettingsPageTest.php`.
 
