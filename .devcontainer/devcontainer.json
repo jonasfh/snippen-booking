@@ -36,8 +36,8 @@
     "HTTP_HOST": "localhost",
     "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright"
   },
-  "postCreateCommand": "sudo bash /entrypoint.sh setup",
-  "postStartCommand": "nohup sudo bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.gemini 2>/dev/null || true; sudo bash /entrypoint.sh setup",
+  "postStartCommand": "sudo chown -R vscode:vscode /home/vscode/.gemini 2>/dev/null || true; nohup sudo bash /entrypoint.sh > /tmp/wp-server.log 2>&1 &",
   "mounts": [
     "source=${localEnv:HOME}/.gitconfig,target=/etc/gitconfig,type=bind,readonly",
     "source=${localWorkspaceFolderBasename}-gemini-data,target=/home/vscode/.gemini,type=volume",
