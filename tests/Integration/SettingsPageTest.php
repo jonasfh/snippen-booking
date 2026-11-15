@@ -415,4 +415,31 @@ class SettingsPageTest extends TestCase {
 
 		$this->assertSame( 0, $return_code, 'JavaScript in SettingsPage has syntax errors: ' . implode( "\n", $exec_output ) );
 	}
+
+	/**
+	 * Test that all settings tabs and the save button are direct children of the form (balanced div tags).
+	 */
+	public function test_settings_page_tabs_and_save_button_are_direct_children_of_form() {
+		$page = new SettingsPage();
+
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$dom = new \DOMDocument();
+		libxml_use_internal_errors( true );
+		$dom->loadHTML( '<?xml encoding="utf-8" ?>' . $output );
+		libxml_clear_errors();
+
+		$xpath = new \DOMXPath( $dom );
+
+		$expected_ids = array( 'tab-email', 'tab-keysms', 'tab-snippen_sms', 'tab-payment', 'tab-doorman', 'tab-general' );
+		foreach ( $expected_ids as $tab_id ) {
+			$nodes = $xpath->query( '//form/div[@id="' . $tab_id . '"]' );
+			$this->assertSame( 1, $nodes->length, "Expected #$tab_id to be a direct child of <form>" );
+		}
+
+		$actions = $xpath->query( '//form/div[contains(@class, "snippen-form-actions")]/button[@type="submit"]' );
+		$this->assertSame( 1, $actions->length, 'Expected submit button inside .snippen-form-actions as a direct child of <form>' );
+	}
 }

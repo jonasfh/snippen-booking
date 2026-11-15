@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.54.1] - 2026-11-15
+- (#399) [Fix] Fikset manglende `</div>` i Yale Doorman-fanen (`SettingsPage.php`) for `#snippen-doorman-api-settings`, som førte til at Generelt-fanen (`#tab-general`) og «Lagre innstillinger»-knappen ble nøstet inne i `#tab-doorman` og dermed skjult. Lagt til integrasjonstest i `SettingsPageTest.php`.
+
 ## [2.54.0] - 2026-11-14
 - (#395) [Feat] Manuell utsendelse av spørreskjema etter avsluttet leieforhold (`rental_feedback`):
   - **Ny varslingshendelse & standardmaler (`NotificationTemplateService.php`, `NotificationTemplateRepository.php`, `NotificationTemplateInstall.php`, `PlaceholderRegistry.php`, `NotificationTemplatesPage.php`)**: Lagt til `rental_feedback` / `rental-feedback` med redigerbare standardmaler for både SMS og e-post (med `https://example.com` som plassholder-lenke til spørreskjema).
