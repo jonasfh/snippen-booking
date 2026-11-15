@@ -788,6 +788,8 @@ class SettingsPage {
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Kommaseparert liste over bookingstatuser som skal kvalifisere for dørkode (f.eks. confirmed).', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
+		echo '</div>'; // #snippen-doorman-api-settings
+
 		echo '</div>'; // #tab-doorman
 
 		// 6. Generelt tab content
