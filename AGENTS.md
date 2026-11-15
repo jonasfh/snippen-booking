@@ -26,6 +26,7 @@ Guide AI agents working in this repository.
 - 📝 **[Documentation Standards & Diagrams](file:///.agents/common-agent-instructions/DOCUMENTATION.md)**: Documentation synchronization, README/DEV_README maintenance, and Mermaid syntax rules.
 - 🧪 **[Quality & Testing Principles](file:///.agents/common-agent-instructions/TESTING.md)**: Automated test requirements, zero-linting policy, and formatting hygiene.
 - 📐 **[Common Architecture](file:///.agents/common-agent-instructions/ARCHITECTURE.md)**: Modularity, decoupling, and universal database timestamp rules.
+- 📊 **[Diagram & Architecture Documentation](file:///.agents/diagram-agent-instructions/DIAGRAM_GUIDELINES.md)**: Tool selection (Mermaid vs. D2 vs. Python diagrams), SVG-first policy, vendor icons, and visual verification.
 
 ### PHP Submodule Guidelines
 - 🛠️ **[PHP Environment & Tooling](file:///.agents/php-agent-instructions/PHP_ENVIRONMENT_AND_TOOLING.md)**: Composer dependency management, PSR-4 autoloading standards, custom scripts, and runtime environment.

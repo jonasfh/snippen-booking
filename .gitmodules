@@ -7,3 +7,6 @@
 [submodule ".agents/php-agent-instructions"]
 	path = .agents/php-agent-instructions
 	url = https://github.com/jonasfh/php-agent-instructions.git
+[submodule ".agents/diagram-agent-instructions"]
+	path = .agents/diagram-agent-instructions
+	url = https://github.com/jonasfh/diagram-agent-instructions.git
