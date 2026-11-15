@@ -1,0 +1,73 @@
+direction: right
+
+classes: {
+  lane: {
+    style: {
+      fill: "#f8fafc"
+      stroke: "#cbd5e1"
+      border-radius: 8
+    }
+  }
+  step: {
+    style: {
+      fill: "#ffffff"
+      stroke: "#0284c7"
+      border-radius: 6
+    }
+  }
+  decision: {
+    shape: diamond
+    style: {
+      fill: "#eff6ff"
+      stroke: "#2563eb"
+    }
+  }
+  success: {
+    style: {
+      fill: "#ecfdf5"
+      stroke: "#059669"
+      border-radius: 6
+    }
+  }
+  warn: {
+    style: {
+      fill: "#fef2f2"
+      stroke: "#dc2626"
+      border-radius: 6
+    }
+  }
+}
+
+submit: "1. Submit Booking\n(BookingApi)" { class: step }
+type_check: "Booking Type\n& Price > 0?" { class: decision }
+
+private_flow: "Private Paid Flow (Vipps ePayment)" {
+  class: lane
+  icon: ../assets/icons/vipps.svg
+  pending: "2a. Reserve Slot\n(status: pending)" { class: step }
+  checkout: "3a. Vipps Checkout\nRedirect" { class: step }
+  webhook: "4a. Webhook / Return\nPayment Authorized?" { class: decision }
+  confirmed: "5a. Confirmed\n+ Receipt Notification" { class: success }
+  expired: "5b. Expired (>30m)\nWP-Cron Cleanup" { class: warn }
+}
+
+open_flow: "Open Community Flow (Board Approval)" {
+  class: lane
+  awaiting: "2b. Save Request\n(status: pending)" { class: step }
+  board: "3b. Board Review\nin WP Admin" { class: decision }
+  approved: "4b. Approved\n+ Confirmation" { class: success }
+  rejected: "4c. Rejected + Reason\n+ Rejection Notice" { class: warn }
+}
+
+submit -> type_check
+type_check -> private_flow.pending: "private & price > 0"
+type_check -> open_flow.awaiting: "open (free)"
+
+private_flow.pending -> private_flow.checkout: "VippsClient"
+private_flow.checkout -> private_flow.webhook: "Callback"
+private_flow.webhook -> private_flow.confirmed: "Yes"
+private_flow.webhook -> private_flow.expired: "No / Timeout"
+
+open_flow.awaiting -> open_flow.board: "Notify Admin"
+open_flow.board -> open_flow.approved: "Approve"
+open_flow.board -> open_flow.rejected: "Reject"

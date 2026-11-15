@@ -206,6 +206,30 @@ The plugin implements a proper `uninstall.php` to clean up its footprint when a 
 
 Use [tastewp.com](https://tastewp.com). This is perhaps the easiest service. You just go to the site, press "Set it up!", and you get a ready-to-use WordPress site that lasts for 48 hours. Here you can go into the admin panel, upload your .zip file under Plugins, and check that everything works and looks good.
 
+## System Architecture & Flows
+
+Diagram sources live in `docs/diagrams/src/` and are compiled to self-contained SVGs in `docs/diagrams/out/` using `.agents/diagram-agent-instructions/skills/` (while database schemas below stay inline as Mermaid `erDiagram`).
+
+### System Architecture (D2)
+
+![Snippen Booking System Architecture](docs/diagrams/out/system-architecture.svg)
+
+### Booking & Payment Flow (D2)
+
+![Snippen Booking Payment and Approval Flow](docs/diagrams/out/booking-payment-flow.svg)
+
+### Runtime Topology (Python `diagrams`)
+
+![Snippen Booking Runtime Topology](docs/diagrams/out/deployment-topology.svg)
+
+Regenerate diagrams after editing sources:
+
+```bash
+python3 .agents/diagram-agent-instructions/skills/d2-diagrams/scripts/render_d2.py docs/diagrams/src/system-architecture.d2 docs/diagrams/out/system-architecture.svg
+python3 .agents/diagram-agent-instructions/skills/d2-diagrams/scripts/render_d2.py docs/diagrams/src/booking-payment-flow.d2 docs/diagrams/out/booking-payment-flow.svg
+python3 .agents/diagram-agent-instructions/skills/python-diagrams/scripts/render_py_diagram.py docs/diagrams/src/deployment-topology.py
+```
+
 ## Database Schema
 
 ```mermaid

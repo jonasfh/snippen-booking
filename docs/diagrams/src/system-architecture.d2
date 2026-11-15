@@ -1,0 +1,98 @@
+direction: right
+
+classes: {
+  layer: {
+    style: {
+      fill: "#f8fafc"
+      stroke: "#cbd5e1"
+      border-radius: 10
+      font-size: 16
+      bold: true
+    }
+  }
+  component: {
+    style: {
+      fill: "#ffffff"
+      stroke: "#2563eb"
+      border-radius: 6
+    }
+  }
+  external: {
+    style: {
+      fill: "#fffbeb"
+      stroke: "#d97706"
+      stroke-dash: 4
+      border-radius: 6
+    }
+  }
+}
+
+clients: "Clients" {
+  class: layer
+  visitor: "Visitor / Booker" {
+    shape: person
+  }
+  admin: "Board / Admin" {
+    shape: person
+  }
+}
+
+wordpress: "WordPress & Snippen Booking Plugin" {
+  class: layer
+  icon: ../assets/icons/wordpress.svg
+
+  presentation: "Presentation & API" {
+    class: layer
+    shortcode: "BookingShortcode\n(Wizard JS/CSS)" { class: component }
+    ajax: "AJAX Endpoints\n(Availability / Booking)" { class: component }
+    rest: "REST Webhook\n(/snippen/v1/vipps/webhook)" { class: component }
+    admin_ui: "WP Admin Pages\n(Bookings & Templates)" { class: component }
+  }
+
+  domain: "Domain Services (PHP 8.3)" {
+    class: layer
+    icon: ../assets/icons/php.svg
+    vipps_svc: "VippsService\n& VippsClient" { class: component }
+    notif: "NotificationManager\n& PlaceholderRegistry" { class: component }
+    cron: "WP-Cron\n(30m Unpaid Cleanup)" { class: component }
+  }
+
+  db: "WordPress MySQL" {
+    shape: cylinder
+    icon: ../assets/icons/mysql.svg
+  }
+}
+
+externals: "External Providers" {
+  class: layer
+  vipps: "Vipps ePayment API" {
+    class: external
+    icon: ../assets/icons/vipps.svg
+  }
+  sms: "SMS Gateway" {
+    class: external
+  }
+  smtp: "Email / SMTP" {
+    class: external
+  }
+}
+
+clients.visitor -> wordpress.presentation.shortcode: "HTTPS"
+clients.admin -> wordpress.presentation.admin_ui: "WP Admin"
+
+wordpress.presentation.shortcode -> wordpress.presentation.ajax: "AJAX"
+wordpress.presentation.ajax -> wordpress.domain.vipps_svc: "Private Paid Booking"
+wordpress.presentation.ajax -> wordpress.domain.notif: "Open / Free Booking"
+wordpress.presentation.admin_ui -> wordpress.domain.notif: "Approve / Reject"
+
+wordpress.domain.vipps_svc -> externals.vipps: "Create Payment"
+externals.vipps -> wordpress.presentation.rest: "Async Webhook"
+wordpress.presentation.rest -> wordpress.domain.vipps_svc: "Verify & Confirm"
+wordpress.presentation.rest -> wordpress.domain.notif: "Send Receipt"
+
+wordpress.domain.notif -> externals.sms: "SMS"
+wordpress.domain.notif -> externals.smtp: "Email"
+
+wordpress.domain.vipps_svc -> wordpress.db: "SQL"
+wordpress.domain.notif -> wordpress.db: "Templates & Logs"
+wordpress.domain.cron -> wordpress.db: "Purge Expired (>30m)"
