@@ -43,19 +43,24 @@ class PricingPreviewApi {
 		$rule       = $repository->find_matching_rule( $date, $object_id, $block_id );
 
 		if ( $rule ) {
-			$base_price       = floatval( $rule->price );
-			$discount_service = new DiscountService();
-			$discount_info    = $discount_service->applyDiscount( $base_price, array( $object_id ), array( $block_id ), $date );
-
-			$final_price     = $discount_info['final_price'];
-			$discount_amount = $discount_info['discount_amount'];
+			$base_price      = floatval( $rule->price );
+			$final_price     = $base_price;
+			$discount_amount = 0.0;
 			$discount_name   = '';
-			if ( $discount_info['discount_rule'] ) {
-				$discount_name = $discount_info['discount_rule']->name;
-				if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {
-					$discount_name .= ' (' . floatval( $discount_info['discount_rule']->discount_value ) . '%)';
-				} elseif ( $discount_info['discount_rule']->discount_type === 'fixed_price' ) {
-					$discount_name .= ' (' . sprintf( __( 'Fast pris %s kr', 'snippen-booking' ), floatval( $discount_info['discount_rule']->discount_value ) ) . ')';
+
+			if ( empty( $rule->exclude_from_discounts ) ) {
+				$discount_service = new DiscountService();
+				$discount_info    = $discount_service->applyDiscount( $base_price, array( $object_id ), array( $block_id ), $date );
+
+				$final_price     = $discount_info['final_price'];
+				$discount_amount = $discount_info['discount_amount'];
+				if ( $discount_info['discount_rule'] ) {
+					$discount_name = $discount_info['discount_rule']->name;
+					if ( $discount_info['discount_rule']->discount_type === 'percentage' ) {
+						$discount_name .= ' (' . floatval( $discount_info['discount_rule']->discount_value ) . '%)';
+					} elseif ( $discount_info['discount_rule']->discount_type === 'fixed_price' ) {
+						$discount_name .= ' (' . sprintf( __( 'Fast pris %s kr', 'snippen-booking' ), floatval( $discount_info['discount_rule']->discount_value ) ) . ')';
+					}
 				}
 			}
 

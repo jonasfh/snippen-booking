@@ -105,15 +105,16 @@ class PricingPage {
 			return;
 		}
 
-		$id           = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-		$name         = sanitize_text_field( $_POST['name'] );
-		$description  = sanitize_textarea_field( $_POST['description'] );
-		$price        = floatval( $_POST['price'] );
-		$priority     = intval( $_POST['priority'] );
-		$is_active    = isset( $_POST['is_active'] ) ? 1 : 0;
-		$holiday_only = isset( $_POST['holiday_only'] ) ? 1 : 0;
-		$date_start   = ! empty( $_POST['date_start'] ) ? sanitize_text_field( $_POST['date_start'] ) : null;
-		$date_end     = ! empty( $_POST['date_end'] ) ? sanitize_text_field( $_POST['date_end'] ) : null;
+		$id                     = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+		$name                   = sanitize_text_field( $_POST['name'] );
+		$description            = sanitize_textarea_field( $_POST['description'] );
+		$price                  = floatval( $_POST['price'] );
+		$priority               = intval( $_POST['priority'] );
+		$is_active              = isset( $_POST['is_active'] ) ? 1 : 0;
+		$holiday_only           = isset( $_POST['holiday_only'] ) ? 1 : 0;
+		$exclude_from_discounts = isset( $_POST['exclude_from_discounts'] ) ? 1 : 0;
+		$date_start             = ! empty( $_POST['date_start'] ) ? sanitize_text_field( $_POST['date_start'] ) : null;
+		$date_end               = ! empty( $_POST['date_end'] ) ? sanitize_text_field( $_POST['date_end'] ) : null;
 
 		$object_ids = isset( $_POST['booking_objects'] ) ? array_map( 'intval', (array) $_POST['booking_objects'] ) : array();
 		$block_ids  = isset( $_POST['booking_blocks'] ) ? array_map( 'intval', (array) $_POST['booking_blocks'] ) : array();
@@ -127,15 +128,16 @@ class PricingPage {
 		}
 
 		$data = array(
-			'name'         => $name,
-			'description'  => $description,
-			'price'        => $price,
-			'priority'     => $priority,
-			'is_active'    => $is_active,
-			'holiday_only' => $holiday_only,
-			'date_start'   => $date_start,
-			'date_end'     => $date_end,
-			'days_of_week' => $days_of_week,
+			'name'                   => $name,
+			'description'            => $description,
+			'price'                  => $price,
+			'priority'               => $priority,
+			'is_active'              => $is_active,
+			'holiday_only'           => $holiday_only,
+			'exclude_from_discounts' => $exclude_from_discounts,
+			'date_start'             => $date_start,
+			'date_end'               => $date_end,
+			'days_of_week'           => $days_of_week,
 		);
 
 		$repo     = new PricingRuleRepository();
@@ -259,8 +261,13 @@ class PricingPage {
 
 				$is_active = (int) $rule->is_active === 1;
 
+				$is_excluded = ! empty( $rule->exclude_from_discounts );
 				echo '<tr>';
-				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong></td>';
+				echo '<td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( $rule->name ) . '</a></strong>';
+				if ( $is_excluded ) {
+					echo ' <span class="snippen-badge" style="background:#f3f4f6; color:#374151; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:4px;">' . esc_html__( 'Uten rabatt', 'snippen-booking' ) . '</span>';
+				}
+				echo '</td>';
 				echo '<td>' . esc_html( $rule->object_names ?: '-' ) . '</td>';
 				echo '<td>' . esc_html( $rule->block_names ?: '-' ) . '</td>';
 				echo '<td>' . esc_html( number_format( $rule->price, 0, ',', ' ' ) ) . ' kr</td>';
@@ -314,6 +321,15 @@ class PricingPage {
 		echo '<input type="number" name="priority" id="priority" value="' . esc_attr( $rule ? $rule->priority : 10 ) . '" style="max-width:100px;"></div>';
 		echo '</div>';
 		echo '<p class="description" style="margin-top:-10px; margin-bottom:20px;">' . esc_html__( 'Høyere prioritet overstyrer lavere prioritet. Standard regler bør ha lav prioritet (f.eks. 10), unntak bør ha høy (f.eks. 100).', 'snippen-booking' ) . '</p>';
+
+		$exclude_from_discounts = $rule && ! empty( $rule->exclude_from_discounts ) ? 1 : 0;
+		echo '<div class="snippen-form-group" style="margin-bottom:20px;">';
+		echo '<label style="font-weight:bold; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="exclude_from_discounts" id="exclude_from_discounts" value="1" ' . checked( $exclude_from_discounts, 1, false ) . '>';
+		echo esc_html__( 'Ikke rabattberettiget (unntas fra varighetsrabatter)', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description">' . esc_html__( 'Huk av hvis denne regelen gir en fastpris som ikke skal kombineres med eller overskrives av varighetsbaserte rabatter. Ved kombinerte bookinger holdes denne tidsluken utenfor rabattberegningen.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
 
 		echo '<hr><h3 style="margin-top:25px;">' . esc_html__( 'Omfang', 'snippen-booking' ) . '</h3>';
 

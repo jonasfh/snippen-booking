@@ -106,6 +106,7 @@ class Install {
             is_active TINYINT(1) DEFAULT 1,
             days_of_week VARCHAR(50) DEFAULT NULL,
             holiday_only TINYINT(1) DEFAULT 0,
+            exclude_from_discounts TINYINT(1) DEFAULT 0,
             date_start DATE DEFAULT NULL,
             date_end DATE DEFAULT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

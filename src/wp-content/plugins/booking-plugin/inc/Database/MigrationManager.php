@@ -53,6 +53,7 @@ class MigrationManager {
 			'2.44.0' => \SnippenBooking\Database\Migrations\Migration_2_44_0::class,
 			'2.45.0' => \SnippenBooking\Database\Migrations\Migration_2_45_0::class,
 			'2.48.0' => \SnippenBooking\Database\Migrations\Migration_2_48_0::class,
+			'2.55.0' => \SnippenBooking\Database\Migrations\Migration_2_55_0::class,
 		);
 
 		foreach ( $migrations as $version => $class ) {

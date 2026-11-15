@@ -4,8 +4,11 @@ namespace SnippenBooking\Tests\Integration\Service;
 
 use SnippenBooking\Tests\TestCase;
 use SnippenBooking\Service\DiscountService;
+use SnippenBooking\Service\PricingService;
 use SnippenBooking\Database\Install;
+use SnippenBooking\Database\Repository\BookingBlockRepository;
 use SnippenBooking\Database\Repository\DiscountRuleRepository;
+use SnippenBooking\Database\Repository\PricingRuleRepository;
 
 /**
  * Unit tests for DiscountService
@@ -164,5 +167,138 @@ class DiscountServiceTest extends TestCase {
 		$this->assertEquals( 400.00, $discount_info['final_price'] );
 		$this->assertEquals( 600.00, $discount_info['discount_amount'] );
 		$this->assertEquals( $rule_id, $discount_info['discount_rule']->id );
+	}
+
+	/**
+	 * Test that a pricing rule marked exclude_from_discounts is not overridden by a duration discount.
+	 */
+	public function test_excluded_pricing_rule_ignores_duration_discount() {
+		$block_repo        = new BookingBlockRepository();
+		$pricing_rule_repo = new PricingRuleRepository();
+		$pricing_service   = new PricingService();
+
+		// Weekday half-day discount: 4-8 hours -> fixed_price 500 NOK (Mon-Fri: 1,2,3,4,5)
+		$discount_rule_id = $this->repo->save(
+			array(
+				'name'               => 'Hverdag halvdag',
+				'discount_type'      => 'fixed_price',
+				'discount_value'     => 500.0,
+				'min_duration_hours' => 4.0,
+				'max_duration_hours' => 8.0,
+				'days_of_week'       => '1,2,3,4,5',
+				'priority'           => 10,
+			)
+		);
+		$this->repo->sync_booking_objects( $discount_rule_id, array( $this->objectId ) );
+
+		// Evening block (7 hours) with fixed weekend price excluded from discounts
+		$evening_block_id = $block_repo->save(
+			array(
+				'name'       => 'Kveld 16-23',
+				'start_time' => '16:00:00',
+				'end_time'   => '23:00:00',
+				'is_active'  => 1,
+			)
+		);
+		$evening_rule_id  = $pricing_rule_repo->save(
+			array(
+				'name'                   => 'Halv dag helg',
+				'price'                  => 1000.00,
+				'priority'               => 50,
+				'is_active'              => 1,
+				'days_of_week'           => '5,6,0',
+				'exclude_from_discounts' => 1,
+			)
+		);
+		$pricing_rule_repo->sync_booking_objects( $evening_rule_id, array( $this->objectId ) );
+		$pricing_rule_repo->sync_booking_blocks( $evening_rule_id, array( $evening_block_id ) );
+
+		$friday        = '2026-06-05'; // Friday
+		$breakdown     = $pricing_service->getPriceBreakdown( array( $this->objectId ), array( $evening_block_id ), $friday );
+		$discount_info = $this->service->applyDiscountWithBreakdown( $breakdown, array( $this->objectId ), $friday );
+
+		$this->assertEquals( 1000.00, $discount_info['final_price'] );
+		$this->assertEquals( 0.0, $discount_info['discount_amount'] );
+		$this->assertNull( $discount_info['discount_rule'] );
+	}
+
+	/**
+	 * Test partial calculation when combining discountable daytime blocks with an excluded evening block.
+	 */
+	public function test_combined_discountable_day_and_excluded_evening_uses_partial_calculation() {
+		$block_repo        = new BookingBlockRepository();
+		$pricing_rule_repo = new PricingRuleRepository();
+		$pricing_service   = new PricingService();
+
+		// Weekday half-day discount: 4-8 hours -> fixed_price 500 NOK (Mon-Fri: 1,2,3,4,5)
+		$discount_rule_id = $this->repo->save(
+			array(
+				'name'               => 'Hverdag halvdag',
+				'discount_type'      => 'fixed_price',
+				'discount_value'     => 500.0,
+				'min_duration_hours' => 4.0,
+				'max_duration_hours' => 8.0,
+				'days_of_week'       => '1,2,3,4,5',
+				'priority'           => 10,
+			)
+		);
+		$this->repo->sync_booking_objects( $discount_rule_id, array( $this->objectId ) );
+
+		// Daytime 4-hour block priced at 600 NOK (discountable)
+		$day_block_id = $block_repo->save(
+			array(
+				'name'       => 'Formiddag 10-14',
+				'start_time' => '10:00:00',
+				'end_time'   => '14:00:00',
+				'is_active'  => 1,
+			)
+		);
+		$day_rule_id  = $pricing_rule_repo->save(
+			array(
+				'name'                   => 'Formiddag hverdag',
+				'price'                  => 600.00,
+				'priority'               => 50,
+				'is_active'              => 1,
+				'days_of_week'           => '1,2,3,4,5',
+				'exclude_from_discounts' => 0,
+			)
+		);
+		$pricing_rule_repo->sync_booking_objects( $day_rule_id, array( $this->objectId ) );
+		$pricing_rule_repo->sync_booking_blocks( $day_rule_id, array( $day_block_id ) );
+
+		// Evening 7-hour block priced at 1000 NOK (excluded from discounts)
+		$evening_block_id = $block_repo->save(
+			array(
+				'name'       => 'Kveld 16-23',
+				'start_time' => '16:00:00',
+				'end_time'   => '23:00:00',
+				'is_active'  => 1,
+			)
+		);
+		$evening_rule_id  = $pricing_rule_repo->save(
+			array(
+				'name'                   => 'Halv dag helg',
+				'price'                  => 1000.00,
+				'priority'               => 50,
+				'is_active'              => 1,
+				'days_of_week'           => '5,6,0',
+				'exclude_from_discounts' => 1,
+			)
+		);
+		$pricing_rule_repo->sync_booking_objects( $evening_rule_id, array( $this->objectId ) );
+		$pricing_rule_repo->sync_booking_blocks( $evening_rule_id, array( $evening_block_id ) );
+
+		$friday        = '2026-06-05'; // Friday
+		$breakdown     = $pricing_service->getPriceBreakdown(
+			array( $this->objectId ),
+			array( $day_block_id, $evening_block_id ),
+			$friday
+		);
+		$discount_info = $this->service->applyDiscountWithBreakdown( $breakdown, array( $this->objectId ), $friday );
+
+		// Daytime 600 -> discounted to 500 (100 NOK discount); Evening stays 1000 -> total 1500
+		$this->assertEquals( 1500.00, $discount_info['final_price'] );
+		$this->assertEquals( 100.00, $discount_info['discount_amount'] );
+		$this->assertEquals( $discount_rule_id, $discount_info['discount_rule']->id );
 	}
 }

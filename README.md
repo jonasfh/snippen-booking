@@ -56,6 +56,11 @@ When logged in with booking administration capabilities (`manage_snippen_booking
 Booking blocks and time slots can be configured in the WordPress Admin dashboard under **Snippen Booking > Bookingblokker** with the **Egendefinert melding / instruksjoner** text field.
 When configured for a time slot, users booking that slot are informed directly in the booking wizard and summary confirmation box. Bookings with custom instructions are also flagged with an **Info** badge in the admin bookings overview.
 
+### Pricing Rules & Non-Discountable Fixed Prices (Prisregler uten rabatt)
+Pricing rules under **Snippen Booking > Prisregler** can be marked with **Ikke rabattberettiget (unntas fra varighetsrabatter)** (`exclude_from_discounts = 1`).
+- Blocks priced by such a rule (for example fixed-price weekend/holiday evening blocks) are excluded from duration calculation and duration-based discounts.
+- When combined with discountable daytime blocks in the same booking, partial calculation applies: the discountable blocks are evaluated on their own duration and price, while the excluded block keeps its fixed price.
+
 ### User Account Confirmation
 Users must confirm their account via SMS before they can create bookings. The account confirmation form is displayed using the following shortcode:
 

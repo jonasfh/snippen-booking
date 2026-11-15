@@ -513,6 +513,7 @@ The plugin includes a manual payment tracking system, allowing users to view pay
 - **`SnippenBooking\Api\UploadPaymentReceiptApi`**: AJAX endpoint (`snippen_upload_payment_receipt`) for file upload validation (JPEG, PNG, WEBP, PDF) and storing receipt attachments in the WP Media Library. Supports guest authorization via booking UUID.
 - **`SnippenBooking\Api\UpdatePaymentStatusApi`**: AJAX endpoint (`snippen_update_payment_status`) for administrators (`manage_bookings`) to update payment status and notes.
 - **`SnippenBooking\Database\Migrations\Migration_2_6_0`**: Database migration creating table `wp_snippen_payment_statuses` and adding payment metadata columns to `wp_snippen_bookings`.
+- **`SnippenBooking\Database\Migrations\Migration_2_55_0`**: Adds `exclude_from_discounts TINYINT(1) DEFAULT 0` to `wp_snippen_pricing_rules` so fixed-price rules can opt out of duration-based discounts via `PricingService::getPriceBreakdown()` and `DiscountService::applyDiscountWithBreakdown()`.
 
 ## Booking Types & Next-Day Cleaning Architecture
 

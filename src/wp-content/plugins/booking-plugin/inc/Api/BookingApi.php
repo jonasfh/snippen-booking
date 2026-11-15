@@ -266,13 +266,10 @@ class BookingApi {
 		} else {
 			// Calculate total price
 			$pricing_service = new PricingService();
-			$base_price      = $pricing_service->getPrice( $booking_object_ids, $block_ids, $booking_date );
-			if ( $base_price === null ) {
-				$base_price = 0.0;
-			}
+			$price_breakdown = $pricing_service->getPriceBreakdown( $booking_object_ids, $block_ids, $booking_date );
 
 			$discount_service  = new DiscountService();
-			$discount_info     = $discount_service->applyDiscount( $base_price, $booking_object_ids, $block_ids, $booking_date );
+			$discount_info     = $discount_service->applyDiscountWithBreakdown( $price_breakdown, $booking_object_ids, $booking_date );
 			$final_price       = $discount_info['final_price'];
 			$discount_amount   = $discount_info['discount_amount'];
 			$discount_rule_id  = $discount_info['discount_rule'] ? $discount_info['discount_rule']->id : null;

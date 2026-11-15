@@ -121,4 +121,36 @@ class DiscountService {
 			'discount_rule'   => $rule,
 		);
 	}
+
+	/**
+	 * Calculate discount using a price breakdown so excluded pricing rules
+	 * are kept outside duration calculation and discount application.
+	 *
+	 * @param array       $price_breakdown Breakdown from PricingService::getPriceBreakdown().
+	 * @param array       $object_ids      Array of object IDs.
+	 * @param string|null $date            The booking date (Y-m-d).
+	 * @return array Associative array with 'final_price', 'discount_amount', and 'discount_rule'.
+	 */
+	public function applyDiscountWithBreakdown( array $price_breakdown, array $object_ids, $date = null ) {
+		$total_price            = (float) ( $price_breakdown['total_price'] ?? 0.0 );
+		$discountable_price     = (float) ( $price_breakdown['discountable_price'] ?? 0.0 );
+		$excluded_price         = (float) ( $price_breakdown['excluded_price'] ?? 0.0 );
+		$discountable_block_ids = $price_breakdown['discountable_block_ids'] ?? array();
+
+		if ( empty( $discountable_block_ids ) || $discountable_price <= 0.0 ) {
+			return array(
+				'final_price'     => $total_price,
+				'discount_amount' => 0.0,
+				'discount_rule'   => null,
+			);
+		}
+
+		$discount_result = $this->applyDiscount( $discountable_price, $object_ids, $discountable_block_ids, $date );
+
+		return array(
+			'final_price'     => $excluded_price + $discount_result['final_price'],
+			'discount_amount' => $discount_result['discount_amount'],
+			'discount_rule'   => $discount_result['discount_rule'],
+		);
+	}
 }
