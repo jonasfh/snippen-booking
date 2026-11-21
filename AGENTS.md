@@ -8,7 +8,7 @@ Guide AI agents working in `snippen-booking`. Keep this root file as a concise r
 - **Database Rules**: Always include `created_at` and `modified_at` timestamps on custom database tables.
 - **Formatting & Quality**: Run `composer lint:fix` (`phpcbf`) routinely on modified PHP files; resolve all `composer lint` (`phpcs`) errors/warnings and `composer test` failures before completion.
 - **UI Testing Scope**: Run `npm run test:ui:fast` **only** when modifying UI, CSS, templates, or frontend logic (use `npm run test:ui:update` for intentional visual changes).
-- **GitHub Issue Workflow**: Follow `gh-issue/<id>` branching, `(#<id>) Description` commits, **Rebase and merge** (`gh pr merge <id> --rebase --delete-branch`), and stop after `gh pr create`.
+- **GitHub Issue Workflow**: Follow `gh-issue/<id>` branching, Conventional Commits (`<type>[scope]: <description> (#<id>)`), **Rebase and merge** (`gh pr merge <id> --rebase --delete-branch`), and stop after `gh pr create`.
 - **Documentation & Versioning**: Keep `README.md`, `DEV_README.md`, and architecture docs in sync; bump version in `src/wp-content/plugins/booking-plugin/booking-plugin.php` and add a `CHANGELOG.md` entry under `## [X.Y.Z] - YYYY-MM-DD` on functional changes.
 
 ## Multi-Agent & Complexity Triage
