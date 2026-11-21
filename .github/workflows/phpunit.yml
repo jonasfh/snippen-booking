@@ -9,12 +9,6 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, v2.0 ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'composer.json'
-      - 'composer.lock'
-      - '.github/workflows/**'
 
 jobs:
   phpunit:
