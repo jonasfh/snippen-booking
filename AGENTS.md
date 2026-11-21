@@ -4,6 +4,7 @@
 Guide AI agents working in `snippen-booking`. Keep this root file as a concise router; load detailed procedures from `.agents/` sub-guidelines and `skills/` on demand.
 
 ## Always-On Rules
+- **Host-First Execution (`./dev`)**: When running on the host (outside Dev Containers), execute all PHP/Composer/Node/Playwright commands through `./dev` (`./dev test`, `./dev lint`, `./dev lint:fix`, `./dev ui-test`, `./dev up`, `./dev down`), which runs ephemeral `booking-tools` or delegates fullstack orchestration to `../snippen-testing/dev`.
 - **WordPress & PSR-4**: Use `SnippenBooking\` namespace under `src/wp-content/plugins/booking-plugin/inc/`.
 - **Database Rules**: Always include `created_at` and `modified_at` timestamps on custom database tables.
 - **Formatting & Quality**: Run `composer lint:fix` (`phpcbf`) routinely on modified PHP files; resolve all `composer lint` (`phpcs`) errors/warnings and `composer test` failures before completion.

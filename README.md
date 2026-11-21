@@ -210,4 +210,38 @@ If you are uninstalling the plugin temporarily or wish to keep the booking data,
 
 ## Contributing and Development
 
-If you are a developer looking to contribute to the code, set up the dev environment, or run tests, please refer to the developer documentation in [DEV_README.md](DEV_README.md).
+For host-first development (running tools and tests from your host machine without entering a Dev Container), use the `./dev` wrapper. It requires `../snippen-testing` in the same parent directory and Docker Compose.
+
+### Host-First Development (`./dev`)
+
+Tooling commands run inside an ephemeral `booking-tools` container (defined in `../snippen-testing/compose.tools.yml`):
+
+```bash
+# Tests & linting
+./dev test               # Full PHPUnit suite (composer test)
+./dev test:unit          # Unit tests only
+./dev test:integration   # Integration tests only
+./dev lint               # PHPCS check
+./dev lint:fix           # PHPCBF auto-fix
+./dev ui-test            # Playwright fast UI tests
+./dev ui-test:update     # Update Playwright visual snapshots
+
+# Arbitrary tool commands & shell
+./dev composer <args>
+./dev npm <args>
+./dev wp <args>
+./dev shell              # Interactive bash shell in booking-tools
+./dev build              # Rebuild booking-tools image
+```
+
+Full-stack orchestration (delegates to `../snippen-testing/dev`, bind-mounting live source from all 4 repos):
+
+```bash
+./dev up                 # Start all 4 services (WordPress UI at http://localhost:8081)
+./dev down               # Stop fullstack
+./dev ps                 # Show container status
+./dev logs [service]     # Tail logs
+./dev restart [service]  # Restart stack or specific service
+```
+
+For full developer documentation, architecture, and Dev Container details, see [DEV_README.md](DEV_README.md).
