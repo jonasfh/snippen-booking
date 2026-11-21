@@ -1,47 +1,34 @@
 # AGENTS.md
 
 ## Purpose
-Guide AI agents working in this repository.
+Guide AI agents working in `snippen-booking`. Keep this root file as a concise router; load detailed procedures from `.agents/` sub-guidelines and `skills/` on demand.
 
-## Key Rules & Guidelines
-
-- **Follow WordPress Plugin Best Practices**: Use PSR-4 autoloading (`SnippenBooking\` namespace) under `src/wp-content/plugins/booking-plugin/inc/`.
-- **Testing & Quality Control**:
-  - Always write tests for new functionality and update existing tests when modifying functionality.
-  - Run `phpcbf` (or `composer lint:fix`) routinely on modified files to automatically fix coding standards and formatting violations.
-  - **Fast Local Feedback**: During active development, use targeted test runs (`composer test:changed`, `composer test:fast`, or `vendor/bin/phpunit path/to/Test.php`) for near-instant execution (< 1s).
-  - Run `composer lint` (or `phpcs`) and `composer test` to verify all changes before completion. Resolving all PHPCS errors and warnings is mandatory.
-- **UI & Visual Regression Testing**:
-  - Run visual UI tests (`npm run test:ui:fast`) **only** when actively modifying UI, CSS, templates, or frontend logic. Never run visual suites for purely backend, PHP, API, or database changes.
-  - Use `npm run test:ui:update` to update golden baselines when UI changes are intentional.
+## Always-On Rules
+- **WordPress & PSR-4**: Use `SnippenBooking\` namespace under `src/wp-content/plugins/booking-plugin/inc/`.
 - **Database Rules**: Always include `created_at` and `modified_at` timestamps on custom database tables.
-- **GitHub Issue Workflow**: All development MUST follow an associated GitHub Issue or direct Code Scanning / Dependabot alert IDs. Create branches like `gh-issue/<id>`, `dep-<ids>-fix-dependabot-issues`, or `sec-<ids>-fix-code-scanning-issues`, create PRs, and format commit messages accordingly (`(#<id>) Description` or `(sec-<ids>) Description` / `(dep-<ids>) Description`).
-- **PR Merging Strategy**: When merging PRs, ALWAYS use **Rebase and merge** (`gh pr merge <id> --rebase --delete-branch`) by default. If rebasing issues or conflicts arise, create a standard merge commit (`gh pr merge <id> --merge --delete-branch`). Do NOT use squash and merge (`--squash`) unless explicitly instructed or required for a specific reason.
-- **Documentation**: Always update documentation (`README.md`, `DEV_README.md`, and architecture documents) whenever implementing new features, endpoints, data models, or database schemas. Keeping documentation in sync with the codebase is mandatory.
+- **Formatting & Quality**: Run `composer lint:fix` (`phpcbf`) routinely on modified PHP files; resolve all `composer lint` (`phpcs`) errors/warnings and `composer test` failures before completion.
+- **UI Testing Scope**: Run `npm run test:ui:fast` **only** when modifying UI, CSS, templates, or frontend logic (use `npm run test:ui:update` for intentional visual changes).
+- **GitHub Issue Workflow**: Follow `gh-issue/<id>` branching, `(#<id>) Description` commits, **Rebase and merge** (`gh pr merge <id> --rebase --delete-branch`), and stop after `gh pr create`.
+- **Documentation & Versioning**: Keep `README.md`, `DEV_README.md`, and architecture docs in sync; bump version in `src/wp-content/plugins/booking-plugin/booking-plugin.php` and add a `CHANGELOG.md` entry under `## [X.Y.Z] - YYYY-MM-DD` on functional changes.
+
+## Multi-Agent & Complexity Triage
+- **Automatic Triage**: The primary agent automatically selects Level 1 (Single Agent Fast Path), Level 2 (Coordinator + `Researcher`/`Verifier` subagents), or Level 3 (Multi-Agent Team) per [ROLES.md](file:///.agents/common-agent-instructions/ROLES.md) and [PLAYBOOK.md](file:///.agents/common-agent-instructions/PLAYBOOK.md).
+- **Approval Gate**: On Level 2/3 tasks, Coordinator runs `/plan` and stops **once** for user approval before launching parallel implementation workers.
+- **Isolation**: Parallel `Implementer` workers (e.g., PHP backend vs. JS/UI frontend) must use isolated workspaces (`workspace: "share"` / `git worktree`); readers and `Verifier` share `inherit`.
 
 ## Modular Sub-guidelines
 
-### Common (Technology-Agnostic) Submodule Guidelines
-- 🔄 **[Workflow Guidelines](file:///.agents/common-agent-instructions/WORKFLOW.md)**: GitHub issue-driven workflow, branching, commit conventions, PR merge rules, SemVer, and CHANGELOG maintenance.
-- 📝 **[Documentation Standards & Diagrams](file:///.agents/common-agent-instructions/DOCUMENTATION.md)**: Documentation synchronization, README/DEV_README maintenance, and Mermaid syntax rules.
-- 🧪 **[Quality & Testing Principles](file:///.agents/common-agent-instructions/TESTING.md)**: Automated test requirements, zero-linting policy, and formatting hygiene.
-- 📐 **[Common Architecture](file:///.agents/common-agent-instructions/ARCHITECTURE.md)**: Modularity, decoupling, and universal database timestamp rules.
-- 📊 **[Diagram & Architecture Documentation](file:///.agents/diagram-agent-instructions/DIAGRAM_GUIDELINES.md)**: Tool selection (Mermaid vs. D2 vs. Python diagrams), SVG-first policy, vendor icons, and visual verification.
+### Common Guidelines
+- 🔄 **[Workflow Guidelines](file:///.agents/common-agent-instructions/WORKFLOW.md)**: Issue-driven flow, Fast Path vs. Multi-Agent Path, submodule updates, and PR rules.
+- 🤝 **[Multi-Agent Roles](file:///.agents/common-agent-instructions/ROLES.md)**: Complexity triage, role contracts, hand-offs, and Antigravity/Copilot portability.
+- 📖 **[Developer Playbook](file:///.agents/common-agent-instructions/PLAYBOOK.md)**: Practical developer manual for `/plan`, `/teamwork`, `/grill-me`, and Copilot.
+- 📝 **[Documentation Standards](file:///.agents/common-agent-instructions/DOCUMENTATION.md)**: Documentation sync and Mermaid rules.
+- 🧪 **[Quality & Testing Principles](file:///.agents/common-agent-instructions/TESTING.md)**: Automated tests, zero-lint policy, and formatting hygiene.
+- 📐 **[Common Architecture](file:///.agents/common-agent-instructions/ARCHITECTURE.md)**: Modularity, decoupling, and universal DB timestamps.
+- 📊 **[Diagram Guidelines](file:///.agents/diagram-agent-instructions/DIAGRAM_GUIDELINES.md)**: Mermaid vs. D2 vs. Python diagrams and visual verification.
 
-### PHP Submodule Guidelines
-- 🛠️ **[PHP Environment & Tooling](file:///.agents/php-agent-instructions/PHP_ENVIRONMENT_AND_TOOLING.md)**: Composer dependency management, PSR-4 autoloading standards, custom scripts, and runtime environment.
-- 🎨 **[PHP Code Style & Quality](file:///.agents/php-agent-instructions/PHP_CODE_STYLE.md)**: PSR standards, PHPCS linting, PHPCBF auto-formatting, zero-lint policy, and formatting hygiene.
-- 🧪 **[PHP Testing & QA](file:///.agents/php-agent-instructions/PHP_TESTING.md)**: PHPUnit testing framework, unit vs. integration separation, fast local feedback loops, and state isolation.
-- 📐 **[PHP Architecture](file:///.agents/php-agent-instructions/PHP_ARCHITECTURE.md)**: Modular design, thin controllers, domain services, universal database timestamp rules, and safe query execution.
-- 🖥️ **[PHP Server & Database](file:///.agents/php-agent-instructions/PHP_SERVER_AND_DATABASE.md)**: Dev-server execution in Apache, error logging inspection, database connectivity, and CLI tools.
-
-### Node.js & UI Testing Guidelines
-- 📦 **[Node.js Testing & Quality Assurance](file:///.agents/node-agent-instructions/TESTING.md)**: Playwright visual regression testing, snapshot tolerances, and zero-lint policy.
-
-### Project-Specific Guidelines
-- 📐 **[Architecture & Coding Standards](file:///.agents/ARCHITECTURE.md)**: Tech stack, plugin directory structure, namespace mapping, DB rules, and CSS styling.
-- 🧪 **[Testing & Quality Assurance](file:///.agents/TESTING.md)**: Running tests and linting (`composer test`, `composer lint`), writing unit/integration tests, and debugging/logging.
-
-## Versioning & Changelog
-- **Version Bump**: Update version in `src/wp-content/plugins/booking-plugin/booking-plugin.php` on functional changes.
-- **CHANGELOG.md**: Add an entry under `## [X.Y.Z] - YYYY-MM-DD` for every version bump.
+### Technology & Project Guidelines
+- 🛠️ **[PHP Guidelines](file:///.agents/php-agent-instructions/README.md)**: Environment, PSR-4, PHPCS/PHPCBF, PHPUnit, architecture, and Apache/DB debugging.
+- 📦 **[Node.js & UI Testing](file:///.agents/node-agent-instructions/TESTING.md)**: Playwright visual regression testing and zero-lint policy.
+- 📐 **[Project Architecture](file:///.agents/ARCHITECTURE.md)**: Plugin structure, Vipps ePayment, booking types, and CSS styling.
+- 🧪 **[Project Testing & QA](file:///.agents/TESTING.md)**: Exact `composer` / `npm` test commands and log locations.

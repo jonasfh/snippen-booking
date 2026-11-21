@@ -1,6 +1,15 @@
 {
   "entries": [
     {
+      "path": "common-agent-instructions/skills"
+    },
+    {
+      "path": "php-agent-instructions/skills"
+    },
+    {
+      "path": "node-agent-instructions/skills"
+    },
+    {
       "path": "diagram-agent-instructions/skills"
     }
   ]
