@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TESTING_DIR="$(cd "$SCRIPT_DIR/../snippen-testing" && pwd)"
+COMPOSE_TOOLS="$TESTING_DIR/compose.tools.yml"
+
+run_tool() {
+  docker compose -f "$COMPOSE_TOOLS" run -T --rm --no-deps booking-tools "$@"
+}
+
+run_interactive() {
+  docker compose -f "$COMPOSE_TOOLS" run --rm --no-deps booking-tools "$@"
+}
+
+ensure_composer_cmd() {
+  local cmd="$1"
+  run_tool bash -lc "[ -f vendor/autoload.php ] || composer install --no-interaction --prefer-dist; $cmd"
+}
+
+ensure_wp_test_cmd() {
+  local cmd="$1"
+  run_tool bash -lc "[ -f vendor/autoload.php ] || composer install --no-interaction --prefer-dist; sudo bash /entrypoint.sh setup >/dev/null 2>&1; $cmd"
+}
+
+ensure_npm_cmd() {
+  local cmd="$1"
+  run_tool bash -lc "[ -d node_modules/@playwright/test ] || npm ci --no-audit --no-fund; sudo bash /entrypoint.sh setup >/dev/null 2>&1; sudo bash /entrypoint.sh start >/dev/null 2>&1; $cmd"
+}
+
+usage() {
+  cat <<'EOF'
+Usage: ./dev <command> [args...]
+
+Tooling (runs in ephemeral booking-tools container):
+  test               Run PHPUnit test suite (composer test)
+  test:unit          Run unit tests (composer test:unit)
+  test:integration   Run integration tests (composer test:integration)
+  lint               Run PHPCS (composer lint)
+  lint:fix           Run PHPCBF (composer lint:fix)
+  ui-test            Run Playwright fast UI tests
+  ui-test:update     Update Playwright visual snapshots
+  composer <args>    Run arbitrary composer command
+  npm <args>         Run arbitrary npm command
+  wp <args>          Run WP-CLI command
+  shell              Open interactive bash shell in booking-tools
+
+Fullstack integration (delegates to snippen-testing):
+  up                 Start full 4-service stack (http://localhost:8081)
+  down               Stop fullstack
+  logs [service]     Tail fullstack logs
+  ps                 Show fullstack status
+  restart [service]  Restart fullstack or specific service
+  build              Build tooling image
+EOF
+}
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  test)             ensure_wp_test_cmd "composer test" ;;
+  test:unit)        ensure_wp_test_cmd "composer test:unit" ;;
+  test:integration) ensure_wp_test_cmd "composer test:integration" ;;
+  lint)             ensure_composer_cmd "composer lint" ;;
+  lint:fix)         ensure_composer_cmd "composer lint:fix" ;;
+  ui-test)          ensure_npm_cmd "npm run test:ui:fast" ;;
+  ui-test:update)   ensure_npm_cmd "npm run test:ui:update" ;;
+  composer)         run_tool composer "$@" ;;
+  npm)              run_tool npm "$@" ;;
+  wp)               run_tool wp "$@" ;;
+  shell)            run_interactive bash ;;
+  up|down|logs|ps|restart)
+    exec "$TESTING_DIR/dev" "$cmd" "$@"
+    ;;
+  build)            docker compose -f "$COMPOSE_TOOLS" build booking-tools ;;
+  help|-h|--help)   usage ;;
+  *)
+    echo "Unknown command: $cmd" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
