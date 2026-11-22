@@ -587,4 +587,69 @@ class DoorCodesPageTest extends TestCase {
 			remove_filter( 'pre_wp_mail', $mail_cb, 10 );
 		}
 	}
+
+	/**
+	 * Verify that DoorCodesPage aggregates notification status across all bookings in a chain (Issue #393).
+	 */
+	public function test_notification_status_aggregates_across_chain_bookings() {
+		global $wpdb;
+
+		update_option( 'snippen_email_door_code_updated_enabled', 'yes' );
+		update_option( 'snippen_sms_door_code_updated_enabled', 'no' );
+		add_filter( 'pre_wp_mail', '__return_true' );
+
+		$future_date = wp_date( 'Y-m-d', strtotime( '+6 days' ) );
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'             => wp_generate_uuid4(),
+				'customer_name'    => 'Kjede Kunde',
+				'customer_email'   => 'kjede_kunde@example.com',
+				'booking_date'     => $future_date,
+				'status'           => 'confirmed',
+				'door_code'        => '445566',
+				'booking_snapshot' => wp_json_encode(
+					array(
+						'start_time' => '10:00:00',
+						'end_time'   => '14:00:00',
+					)
+				),
+			)
+		);
+		$primary_id = (int) $wpdb->insert_id;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'uuid'             => wp_generate_uuid4(),
+				'customer_name'    => 'Kjede Kunde',
+				'customer_email'   => 'kjede_kunde@example.com',
+				'booking_date'     => $future_date,
+				'status'           => 'confirmed',
+				'door_code'        => '445566',
+				'booking_snapshot' => wp_json_encode(
+					array(
+						'start_time' => '14:00:00',
+						'end_time'   => '18:00:00',
+					)
+				),
+			)
+		);
+		$secondary_id = (int) $wpdb->insert_id;
+
+		try {
+			// Notification was logged on the secondary booking ID, not the primary ID.
+			$manager = new \SnippenBooking\Service\Notification\NotificationManager();
+			$manager->send_door_code_updated_notification( $secondary_id, '445566' );
+
+			$window = \SnippenBooking\Service\DoorCodeService::get_access_window( $primary_id );
+			$status = DoorCodesPage::get_notification_status_for_chain( array( $primary_id, $secondary_id ), '445566', $window );
+
+			$this->assertEquals( 'sent', $status['state'] );
+			$this->assertNotNull( $status['message'] );
+			$this->assertEquals( $secondary_id, (int) $status['message']->booking_id );
+		} finally {
+			remove_filter( 'pre_wp_mail', '__return_true' );
+		}
+	}
 }
