@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.56.0] - 2026-11-22
+- (#412) [Feat] Lagt til **Utboks (Utgående)**-fane under **Snippen Booking > SMS Innboks** (`SmsInboxPage.php`):
+  - **`MessageLoggerService.php`**: Lagt til `get_outbound_sms_messages()` og `count_outbound_sms_messages()` (samt felles `query_sms_messages()` / `build_sms_where()`), som henter utgående SMS (`channel = 'sms'` og `event_type != 'inbound_sms'`).
+  - **`SmsInboxPage.php`**: Lagt til fanen *Utboks (Utgående)* med tellere for `queued` og `failed`, statusfilter (`queued`, `sent`, `failed`), visning av `event_type` og gateway-/feilmetadata, samt «Re-kø»-knapp for å legge feilede meldinger tilbake i kø.
+  - **Tester**: Lagt til integrasjonstest i `SmsInboxPageTest.php`.
+
 ## [2.55.2] - 2026-11-22
 - (#393) [Fix] Aggregerer nå `door_code_updated`-varslingsstatus på tvers av alle booking-ID-er i en kjede i `DoorCodesPage::get_notification_status_for_chain()`, slik at rader i **Dørkoder & Adgangskontroll** ikke vises som «Ikke varslet» når varselet ble logget på en sekundær booking i kjeden. Lagt til integrasjonstest i `DoorCodesPageTest.php`.
 

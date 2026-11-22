@@ -26,6 +26,7 @@ class SmsInboxPage {
 
 		$this->handle_actions();
 
+		$tab           = ( isset( $_GET['tab'] ) && 'outbox' === sanitize_key( wp_unslash( $_GET['tab'] ) ) ) ? 'outbox' : 'inbox';
 		$status_filter = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
 		$connection    = isset( $_GET['connection'] ) ? sanitize_text_field( wp_unslash( $_GET['connection'] ) ) : '';
 		$date_filter   = isset( $_GET['date_filter'] ) ? sanitize_text_field( wp_unslash( $_GET['date_filter'] ) ) : '';
@@ -48,8 +49,13 @@ class SmsInboxPage {
 			'offset'      => $offset,
 		);
 
-		$messages = MessageLoggerService::get_inbound_messages( $args );
-		$total    = MessageLoggerService::count_inbound_messages( $args );
+		if ( 'outbox' === $tab ) {
+			$messages = MessageLoggerService::get_outbound_sms_messages( $args );
+			$total    = MessageLoggerService::count_outbound_sms_messages( $args );
+		} else {
+			$messages = MessageLoggerService::get_inbound_messages( $args );
+			$total    = MessageLoggerService::count_inbound_messages( $args );
+		}
 
 		// Status counts for navigation tabs
 		$counts = array(
@@ -58,14 +64,21 @@ class SmsInboxPage {
 			'pending_selection' => MessageLoggerService::count_inbound_messages( array( 'status' => 'pending_selection' ) ),
 			'general_inquiry'   => MessageLoggerService::count_inbound_messages( array( 'status' => 'general_inquiry' ) ),
 			'received'          => MessageLoggerService::count_inbound_messages( array( 'status' => 'received' ) ),
+			'outbox_all'        => MessageLoggerService::count_outbound_sms_messages( array() ),
+			'outbox_queued'     => MessageLoggerService::count_outbound_sms_messages( array( 'status' => 'queued' ) ),
+			'outbox_failed'     => MessageLoggerService::count_outbound_sms_messages( array( 'status' => 'failed' ) ),
 		);
 
 		echo '<div class="wrap snippen-booking-admin-wrap">';
 
 		$this->render_header();
-		$this->render_status_tabs( $status_filter, $counts );
-		$this->render_filters( $status_filter, $connection, $date_filter, $search, $orderby, $order );
-		$this->render_list( $messages, $total, $page_num, $limit, $orderby, $order );
+		$this->render_status_tabs( $tab, $status_filter, $counts );
+		$this->render_filters( $tab, $status_filter, $connection, $date_filter, $search, $orderby, $order );
+		if ( 'outbox' === $tab ) {
+			$this->render_outbox_list( $messages, $total, $page_num, $limit, $orderby, $order );
+		} else {
+			$this->render_list( $messages, $total, $page_num, $limit, $orderby, $order );
+		}
 
 		if ( $view_id > 0 ) {
 			$this->render_detail_modal( $view_id );
@@ -128,6 +141,17 @@ class SmsInboxPage {
 					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $notice ) . '</p></div>';
 				} else {
 					echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'Ingen meldinger ble slettet.', 'snippen-booking' ) . '</p></div>';
+				}
+			}
+		} elseif ( 'requeue_outbound' === $action ) {
+			check_admin_referer( 'snippen_requeue_sms_message', 'snippen_inbox_nonce' );
+
+			$message_id = absint( $_POST['message_id'] ?? 0 );
+			if ( $message_id > 0 ) {
+				if ( MessageLoggerService::update_message_status( $message_id, 'queued', array( 'requeued_at' => gmdate( 'c' ) ) ) ) {
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'SMS-meldingen ble lagt tilbake i utgående kø.', 'snippen-booking' ) . '</p></div>';
+				} else {
+					echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Kunne ikke legge SMS-meldingen tilbake i kø.', 'snippen-booking' ) . '</p></div>';
 				}
 			}
 		} elseif ( 'send_reply' === $action ) {
@@ -201,10 +225,11 @@ class SmsInboxPage {
 	/**
 	 * Render quick filter status tabs
 	 *
+	 * @param string $current_tab    Current active tab ('inbox' or 'outbox').
 	 * @param string $current_status Current active status filter.
 	 * @param array  $counts         Associative array of counts.
 	 */
-	private function render_status_tabs( string $current_status, array $counts ) {
+	private function render_status_tabs( string $current_tab, string $current_status, array $counts ) {
 		$tabs = array(
 			''                  => array(
 				'label' => __( 'Alle meldinger', 'snippen-booking' ),
@@ -229,10 +254,7 @@ class SmsInboxPage {
 		);
 
 		echo '<ul class="subsubsub" style="margin-bottom:15px; float:none;">';
-		$i     = 0;
-		$total = count( $tabs );
 		foreach ( $tabs as $status_key => $tab ) {
-			++$i;
 			$url   = add_query_arg(
 				array(
 					'page'   => 'snippen-booking-sms-inbox',
@@ -241,22 +263,42 @@ class SmsInboxPage {
 				),
 				admin_url( 'admin.php' )
 			);
-			$class = ( $current_status === $status_key ) ? 'current' : '';
+			$class = ( 'inbox' === $current_tab && $current_status === $status_key ) ? 'current' : '';
 			echo '<li>';
 			echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $class ) . '">';
 			echo esc_html( $tab['label'] ) . ' <span class="count">(' . (int) $tab['count'] . ')</span>';
-			echo '</a>';
-			if ( $i < $total ) {
-				echo ' | ';
-			}
+			echo '</a> | ';
 			echo '</li>';
 		}
+
+		// Outbox tab
+		$outbox_url   = add_query_arg(
+			array(
+				'page'  => 'snippen-booking-sms-inbox',
+				'tab'   => 'outbox',
+				'paged' => 1,
+			),
+			admin_url( 'admin.php' )
+		);
+		$outbox_class = ( 'outbox' === $current_tab ) ? 'current' : '';
+		echo '<li>';
+		echo '<a href="' . esc_url( $outbox_url ) . '" class="' . esc_attr( $outbox_class ) . '">';
+		echo esc_html__( 'Utboks (Utgående)', 'snippen-booking' ) . ' <span class="count">(' . (int) $counts['outbox_all'] . ')</span>';
+		if ( ! empty( $counts['outbox_queued'] ) ) {
+			echo ' <span style="background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:9999px; font-size:10px; font-weight:700;">' . sprintf( esc_html__( '%d i kø', 'snippen-booking' ), (int) $counts['outbox_queued'] ) . '</span>';
+		}
+		if ( ! empty( $counts['outbox_failed'] ) ) {
+			echo ' <span style="background:#fee2e2; color:#991b1b; padding:1px 6px; border-radius:9999px; font-size:10px; font-weight:700;">' . sprintf( esc_html__( '%d feilet', 'snippen-booking' ), (int) $counts['outbox_failed'] ) . '</span>';
+		}
+		echo '</a>';
+		echo '</li>';
 		echo '</ul><div class="clear"></div>';
 	}
 
 	/**
 	 * Render filter and search bar
 	 *
+	 * @param string $tab         Current active tab ('inbox' or 'outbox').
 	 * @param string $status      Current status filter.
 	 * @param string $connection  Current connection filter.
 	 * @param string $date_filter Current date filter.
@@ -264,10 +306,13 @@ class SmsInboxPage {
 	 * @param string $orderby     Current orderby column.
 	 * @param string $order       Current order direction.
 	 */
-	private function render_filters( string $status, string $connection, string $date_filter, string $search, string $orderby, string $order ) {
+	private function render_filters( string $tab, string $status, string $connection, string $date_filter, string $search, string $orderby, string $order ) {
 		echo '<div class="snippen-card" style="background:#fff; padding:16px 20px; border:1px solid #ccd0d4; border-radius:6px; margin-bottom:20px;">';
 		echo '<form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">';
 		echo '<input type="hidden" name="page" value="snippen-booking-sms-inbox">';
+		if ( 'outbox' === $tab ) {
+			echo '<input type="hidden" name="tab" value="outbox">';
+		}
 		echo '<input type="hidden" name="orderby" value="' . esc_attr( $orderby ) . '">';
 		echo '<input type="hidden" name="order" value="' . esc_attr( $order ) . '">';
 
@@ -276,22 +321,30 @@ class SmsInboxPage {
 		echo '<label for="filter-status" style="font-weight:600; margin-right:6px; font-size:13px;">' . esc_html__( 'Status:', 'snippen-booking' ) . '</label>';
 		echo '<select name="status" id="filter-status" onchange="this.form.submit()">';
 		echo '<option value="">' . esc_html__( 'Alle statuser', 'snippen-booking' ) . '</option>';
-		echo '<option value="quarantine" ' . selected( $status, 'quarantine', false ) . '>' . esc_html__( 'Karantene / Ukjent avsender', 'snippen-booking' ) . '</option>';
-		echo '<option value="pending_selection" ' . selected( $status, 'pending_selection', false ) . '>' . esc_html__( 'Venter på flervalg', 'snippen-booking' ) . '</option>';
-		echo '<option value="general_inquiry" ' . selected( $status, 'general_inquiry', false ) . '>' . esc_html__( 'Brukerhenvendelse (uten aktiv booking)', 'snippen-booking' ) . '</option>';
-		echo '<option value="received" ' . selected( $status, 'received', false ) . '>' . esc_html__( 'Koblet til reservasjon', 'snippen-booking' ) . '</option>';
+		if ( 'outbox' === $tab ) {
+			echo '<option value="queued" ' . selected( $status, 'queued', false ) . '>' . esc_html__( 'I kø (queued)', 'snippen-booking' ) . '</option>';
+			echo '<option value="sent" ' . selected( $status, 'sent', false ) . '>' . esc_html__( 'Sendt (sent)', 'snippen-booking' ) . '</option>';
+			echo '<option value="failed" ' . selected( $status, 'failed', false ) . '>' . esc_html__( 'Feilet (failed)', 'snippen-booking' ) . '</option>';
+		} else {
+			echo '<option value="quarantine" ' . selected( $status, 'quarantine', false ) . '>' . esc_html__( 'Karantene / Ukjent avsender', 'snippen-booking' ) . '</option>';
+			echo '<option value="pending_selection" ' . selected( $status, 'pending_selection', false ) . '>' . esc_html__( 'Venter på flervalg', 'snippen-booking' ) . '</option>';
+			echo '<option value="general_inquiry" ' . selected( $status, 'general_inquiry', false ) . '>' . esc_html__( 'Brukerhenvendelse (uten aktiv booking)', 'snippen-booking' ) . '</option>';
+			echo '<option value="received" ' . selected( $status, 'received', false ) . '>' . esc_html__( 'Koblet til reservasjon', 'snippen-booking' ) . '</option>';
+		}
 		echo '</select>';
 		echo '</div>';
 
-		// Connection filter
-		echo '<div class="snippen-filter-group">';
-		echo '<label for="filter-connection" style="font-weight:600; margin-right:6px; font-size:13px;">' . esc_html__( 'Kobling:', 'snippen-booking' ) . '</label>';
-		echo '<select name="connection" id="filter-connection" onchange="this.form.submit()">';
-		echo '<option value="">' . esc_html__( 'Alle koblinger', 'snippen-booking' ) . '</option>';
-		echo '<option value="linked" ' . selected( $connection, 'linked', false ) . '>' . esc_html__( 'Kun koblet til booking', 'snippen-booking' ) . '</option>';
-		echo '<option value="unlinked" ' . selected( $connection, 'unlinked', false ) . '>' . esc_html__( 'Kun ukoblede meldinger', 'snippen-booking' ) . '</option>';
-		echo '</select>';
-		echo '</div>';
+		if ( 'inbox' === $tab ) {
+			// Connection filter
+			echo '<div class="snippen-filter-group">';
+			echo '<label for="filter-connection" style="font-weight:600; margin-right:6px; font-size:13px;">' . esc_html__( 'Kobling:', 'snippen-booking' ) . '</label>';
+			echo '<select name="connection" id="filter-connection" onchange="this.form.submit()">';
+			echo '<option value="">' . esc_html__( 'Alle koblinger', 'snippen-booking' ) . '</option>';
+			echo '<option value="linked" ' . selected( $connection, 'linked', false ) . '>' . esc_html__( 'Kun koblet til booking', 'snippen-booking' ) . '</option>';
+			echo '<option value="unlinked" ' . selected( $connection, 'unlinked', false ) . '>' . esc_html__( 'Kun ukoblede meldinger', 'snippen-booking' ) . '</option>';
+			echo '</select>';
+			echo '</div>';
+		}
 
 		// Date filter
 		echo '<div class="snippen-filter-group">';
@@ -309,7 +362,10 @@ class SmsInboxPage {
 		echo '<input type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Søk telefon, tekst, navn, booking #...', 'snippen-booking' ) . '" class="regular-text" style="width:100%;">';
 		echo '<button type="submit" class="button button-primary">' . esc_html__( 'Søk', 'snippen-booking' ) . '</button>';
 		if ( ! empty( $status ) || ! empty( $connection ) || ! empty( $date_filter ) || ! empty( $search ) ) {
-			echo '<a href="' . esc_url( admin_url( 'admin.php?page=snippen-booking-sms-inbox' ) ) . '" class="button button-link" style="align-self:center; text-decoration:none;">' . esc_html__( 'Nullstill', 'snippen-booking' ) . '</a>';
+			$reset_url = ( 'outbox' === $tab )
+				? admin_url( 'admin.php?page=snippen-booking-sms-inbox&tab=outbox' )
+				: admin_url( 'admin.php?page=snippen-booking-sms-inbox' );
+			echo '<a href="' . esc_url( $reset_url ) . '" class="button button-link" style="align-self:center; text-decoration:none;">' . esc_html__( 'Nullstill', 'snippen-booking' ) . '</a>';
 		}
 		echo '</div>';
 
@@ -453,6 +509,156 @@ class SmsInboxPage {
 		echo '</form>';
 
 		// Pagination bar
+		$total_pages = ceil( $total / $limit );
+		if ( $total_pages > 1 ) {
+			echo '<div class="tablenav" style="padding:10px 0;"><div class="tablenav-pages">';
+			echo '<span class="displaying-num">' . sprintf( esc_html__( '%d meldinger', 'snippen-booking' ), $total ) . '</span>';
+			for ( $i = 1; $i <= $total_pages; ++$i ) {
+				$page_url = add_query_arg( 'paged', $i );
+				$class    = ( $i === $page ) ? 'current-page button disabled' : 'button';
+				echo '<a href="' . esc_url( $page_url ) . '" class="' . esc_attr( $class ) . '" style="margin:0 2px;">' . (int) $i . '</a>';
+			}
+			echo '</div></div>';
+		}
+	}
+
+	/**
+	 * Render outbound SMS queue (outbox) list (Issue #412).
+	 *
+	 * @param array  $messages Outbound SMS records.
+	 * @param int    $total    Total records matching filter.
+	 * @param int    $page     Current page number.
+	 * @param int    $limit    Items per page.
+	 * @param string $orderby  Current orderby.
+	 * @param string $order    Current order.
+	 */
+	private function render_outbox_list( array $messages, int $total, int $page, int $limit, string $orderby, string $order ) {
+		echo '<form method="post" id="snippen-sms-inbox-form" action="">';
+		wp_nonce_field( 'snippen_bulk_sms_action', 'snippen_inbox_nonce' );
+		echo '<input type="hidden" name="snippen_inbox_action" value="bulk_action">';
+
+		echo '<div class="tablenav top" style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">';
+		echo '<div class="alignleft actions bulkactions" style="display:flex; gap:6px; align-items:center;">';
+		echo '<select name="bulk_operation" id="bulk-action-selector-top">';
+		echo '<option value="">' . esc_html__( 'Massehandlinger', 'snippen-booking' ) . '</option>';
+		echo '<option value="delete">' . esc_html__( 'Slett valgte', 'snippen-booking' ) . '</option>';
+		echo '</select>';
+		echo '<button type="submit" id="doaction" class="button action" onclick="return confirmBulkAction();">' . esc_html__( 'Bruk', 'snippen-booking' ) . '</button>';
+		echo '</div>';
+
+		echo '<div class="tablenav-pages">';
+		echo '<span class="displaying-num">' . sprintf( esc_html__( '%d utgående meldinger totalt', 'snippen-booking' ), $total ) . '</span>';
+		echo '</div>';
+		echo '</div>';
+
+		echo '<div class="snippen-card" style="background:#fff; border:1px solid #ccd0d4; border-radius:6px; overflow:hidden; padding:0; margin-bottom:20px;">';
+		echo '<table class="wp-list-table widefat fixed striped" style="border:none;">';
+		echo '<thead>';
+		echo '<tr>';
+		echo '<td id="cb" class="manage-column column-cb check-column" style="width:36px; padding:10px 0 10px 10px;"><input type="checkbox" id="snippen-select-all"></td>';
+		echo $this->render_sortable_header( 'created_at', __( 'Tidspunkt', 'snippen-booking' ), $orderby, $order, '145px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->render_sortable_header( 'recipient', __( 'Mottaker', 'snippen-booking' ), $orderby, $order, '145px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo '<th scope="col">' . esc_html__( 'Melding & Metadata', 'snippen-booking' ) . '</th>';
+		echo $this->render_sortable_header( 'status', __( 'Status', 'snippen-booking' ), $orderby, $order, '130px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->render_sortable_header( 'booking_id', __( 'Tilknyttet Reservasjon', 'snippen-booking' ), $orderby, $order, '150px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo '<th scope="col" style="width:170px; text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
+		echo '</tr>';
+		echo '</thead>';
+		echo '<tbody>';
+
+		if ( empty( $messages ) ) {
+			echo '<tr><td colspan="7" style="text-align:center; padding:36px; color:#64748b; font-size:14px;">' . esc_html__( 'Ingen utgående SMS-meldinger funnet for dette utvalget.', 'snippen-booking' ) . '</td></tr>';
+		} else {
+			foreach ( $messages as $msg ) {
+				$meta          = ! empty( $msg->metadata ) ? json_decode( $msg->metadata, true ) : array();
+				$meta          = is_array( $meta ) ? $meta : array();
+				$status_html   = $this->format_status_badge( (string) $msg->status, $meta['matched_rule'] ?? '' );
+				$time_str      = mysql_to_rfc3339( $msg->created_at );
+				$readable_time = get_date_from_gmt( $msg->created_at, 'd.m.Y H:i' );
+				$modified_time = ! empty( $msg->modified_at ) ? get_date_from_gmt( $msg->modified_at, 'd.m.Y H:i' ) : '';
+				$detail_url    = add_query_arg( 'view_message', $msg->id );
+
+				echo '<tr>';
+				echo '<th scope="row" class="check-column" style="padding:10px 0 10px 10px;"><input type="checkbox" name="message_ids[]" value="' . esc_attr( $msg->id ) . '" class="snippen-message-item"></th>';
+				echo '<td><time datetime="' . esc_attr( $time_str ) . '">' . esc_html( $readable_time ) . '</time>';
+				if ( '' !== $modified_time && $modified_time !== $readable_time ) {
+					echo '<br><small style="color:#64748b;">' . sprintf( esc_html__( 'Oppdatert: %s', 'snippen-booking' ), esc_html( $modified_time ) ) . '</small>';
+				}
+				echo '</td>';
+
+				echo '<td>';
+				echo '<strong>' . esc_html( $msg->recipient ) . '</strong>';
+				if ( ! empty( $msg->user_id ) ) {
+					$user = get_userdata( (int) $msg->user_id );
+					if ( $user ) {
+						$user_link = admin_url( 'user-edit.php?user_id=' . (int) $user->ID );
+						echo '<br><a href="' . esc_url( $user_link ) . '" style="font-size:11px; color:#2563eb; text-decoration:none;">' . esc_html( $user->display_name ) . '</a>';
+					}
+				}
+				echo '</td>';
+
+				$raw_text = (string) $msg->message;
+				$snippet  = mb_strlen( $raw_text ) > 110 ? mb_substr( $raw_text, 0, 107 ) . '...' : $raw_text;
+				echo '<td style="font-size:13px; line-height:1.45;">';
+				echo '<span style="display:inline-block; background:#f1f5f9; color:#334155; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; margin-bottom:4px;">' . esc_html( (string) $msg->event_type ) . '</span><br>';
+				echo '<span>' . nl2br( esc_html( $snippet ) ) . '</span>';
+
+				$meta_parts = array();
+				if ( ! empty( $meta['gateway_id'] ) ) {
+					$meta_parts[] = 'gateway_id: ' . $meta['gateway_id'];
+				}
+				if ( ! empty( $meta['modem_message_id'] ) ) {
+					$meta_parts[] = 'modem_id: ' . $meta['modem_message_id'];
+				}
+				$err = $meta['error'] ?? ( $meta['error_message'] ?? '' );
+				if ( ! empty( $err ) ) {
+					$meta_parts[] = __( 'Feil:', 'snippen-booking' ) . ' ' . $err;
+				}
+				if ( ! empty( $meta_parts ) ) {
+					echo '<br><small style="color:#64748b;">' . esc_html( implode( ' · ', $meta_parts ) ) . '</small>';
+				}
+				echo '</td>';
+
+				echo '<td>' . $status_html . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+
+				echo '<td>';
+				if ( ! empty( $msg->booking_id ) ) {
+					$booking_url = admin_url( 'admin.php?page=snippen-booking&s=' . (int) $msg->booking_id );
+					echo '<a href="' . esc_url( $booking_url ) . '" class="button button-small" style="display:inline-flex; align-items:center; gap:4px;"><span class="dashicons dashicons-calendar-alt" style="font-size:14px; width:14px; height:14px; line-height:14px;"></span> ' . sprintf( esc_html__( 'Booking #%d', 'snippen-booking' ), (int) $msg->booking_id ) . '</a>';
+				} else {
+					echo '<span style="color:#94a3b8; font-size:12px;">—</span>';
+				}
+				echo '</td>';
+
+				echo '<td style="text-align:right; white-space:nowrap;">';
+				echo '<a href="' . esc_url( $detail_url ) . '" class="button button-small button-primary" style="margin-right:4px;">' . esc_html__( 'Detaljer', 'snippen-booking' ) . '</a>';
+				if ( 'failed' === $msg->status ) {
+					echo '<button type="button" class="button button-small snippen-requeue-btn" data-message-id="' . esc_attr( $msg->id ) . '" style="margin-right:4px;" title="' . esc_attr__( 'Legg tilbake i utgående kø', 'snippen-booking' ) . '">' . esc_html__( 'Re-kø', 'snippen-booking' ) . '</button>';
+				}
+				echo '<button type="button" class="button button-small snippen-delete-single-btn" data-message-id="' . esc_attr( $msg->id ) . '" style="color:#b91c1c;" title="' . esc_attr__( 'Slett melding', 'snippen-booking' ) . '"><span class="dashicons dashicons-trash" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:text-bottom;"></span></button>';
+				echo '</td>';
+
+				echo '</tr>';
+			}
+		}
+
+		echo '</tbody>';
+		echo '</table>';
+		echo '</div>';
+		echo '</form>';
+
+		echo '<form method="post" id="snippen-single-action-form" style="display:none;" action="">';
+		wp_nonce_field( 'snippen_delete_sms_message', 'snippen_inbox_nonce' );
+		echo '<input type="hidden" name="snippen_inbox_action" id="snippen-single-action-type" value="delete_single">';
+		echo '<input type="hidden" name="message_id" id="snippen-single-action-id" value="0">';
+		echo '</form>';
+
+		echo '<form method="post" id="snippen-requeue-action-form" style="display:none;" action="">';
+		wp_nonce_field( 'snippen_requeue_sms_message', 'snippen_inbox_nonce' );
+		echo '<input type="hidden" name="snippen_inbox_action" value="requeue_outbound">';
+		echo '<input type="hidden" name="message_id" id="snippen-requeue-action-id" value="0">';
+		echo '</form>';
+
 		$total_pages = ceil( $total / $limit );
 		if ( $total_pages > 1 ) {
 			echo '<div class="tablenav" style="padding:10px 0;"><div class="tablenav-pages">';
@@ -696,6 +902,18 @@ class SmsInboxPage {
 			$badge_text = esc_html__( 'Koblet til booking', 'snippen-booking' );
 			$bg_color   = '#dcfce7';
 			$text_color = '#166534';
+		} elseif ( 'queued' === $status ) {
+			$badge_text = esc_html__( 'I kø (queued)', 'snippen-booking' );
+			$bg_color   = '#fef3c7';
+			$text_color = '#92400e';
+		} elseif ( 'sent' === $status ) {
+			$badge_text = esc_html__( 'Sendt (sent)', 'snippen-booking' );
+			$bg_color   = '#dcfce7';
+			$text_color = '#166534';
+		} elseif ( 'failed' === $status ) {
+			$badge_text = esc_html__( 'Feilet (failed)', 'snippen-booking' );
+			$bg_color   = '#fee2e2';
+			$text_color = '#991b1b';
 		}
 
 		$rule_labels = array(
@@ -783,6 +1001,20 @@ class SmsInboxPage {
 					document.getElementById('snippen-single-action-id').value = id;
 					document.getElementById('snippen-single-action-booking-id').value = select.value;
 					form.submit();
+				});
+			});
+
+			// Requeue outbound SMS buttons
+			var requeueBtns = document.querySelectorAll('.snippen-requeue-btn');
+			requeueBtns.forEach(function(btn) {
+				btn.addEventListener('click', function(e) {
+					e.preventDefault();
+					var id = this.getAttribute('data-message-id');
+					var form = document.getElementById('snippen-requeue-action-form');
+					if (form) {
+						document.getElementById('snippen-requeue-action-id').value = id;
+						form.submit();
+					}
 				});
 			});
 

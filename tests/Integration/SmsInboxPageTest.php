@@ -282,4 +282,61 @@ class SmsInboxPageTest extends TestCase {
 		$this->assertSame( 'Her er direkte svar fra administrator!', $thread[1]->message );
 		$this->assertSame( 'admin_sms_reply', $thread[1]->event_type );
 	}
+
+	/**
+	 * Test outbox tab rendering, status filtering, and re-queueing failed SMS (Issue #412).
+	 */
+	public function test_outbox_tab_renders_and_requeues_failed_sms() {
+		$queued_id = MessageLoggerService::log_message(
+			101,
+			null,
+			'sms',
+			'+4791112233',
+			null,
+			'Melding i kø',
+			'booking_confirmed',
+			'queued'
+		);
+		$failed_id = MessageLoggerService::log_message(
+			102,
+			null,
+			'sms',
+			'+4794445566',
+			null,
+			'Feilet melding',
+			'door_code_updated',
+			'failed',
+			array( 'error' => 'NO CARRIER' )
+		);
+
+		$_GET['tab'] = 'outbox';
+		$_REQUEST    = $_GET;
+
+		$page = new SmsInboxPage();
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'Utboks (Utgående)', $output );
+		$this->assertStringContainsString( 'Melding i kø', $output );
+		$this->assertStringContainsString( 'Feilet melding', $output );
+		$this->assertStringContainsString( 'NO CARRIER', $output );
+		$this->assertStringContainsString( 'I kø (queued)', $output );
+		$this->assertStringContainsString( 'Feilet (failed)', $output );
+
+		// Requeue the failed message
+		$_POST['snippen_inbox_action'] = 'requeue_outbound';
+		$_POST['message_id']           = $failed_id;
+		$_POST['snippen_inbox_nonce']  = wp_create_nonce( 'snippen_requeue_sms_message' );
+		$_REQUEST                      = array_merge( $_GET, $_POST );
+
+		ob_start();
+		$page->render();
+		$requeue_output = ob_get_clean();
+
+		$this->assertStringContainsString( 'SMS-meldingen ble lagt tilbake i utgående kø.', $requeue_output );
+		$updated = MessageLoggerService::get_message( (int) $failed_id );
+		$this->assertSame( 'queued', $updated->status );
+		$this->assertNotNull( MessageLoggerService::get_message( (int) $queued_id ) );
+	}
 }
