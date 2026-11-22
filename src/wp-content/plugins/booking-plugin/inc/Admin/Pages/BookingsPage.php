@@ -645,7 +645,8 @@ class BookingsPage {
 				echo '<div class="' . esc_attr( $item_class ) . '" data-event-type="' . esc_attr( $event_type ) . '">';
 				echo '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
 				echo '<div><span class="dashicons ' . esc_attr( $icon_class ) . '" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span> <strong>' . esc_html( $channel_label ) . ' &bull; ' . esc_html( $msg->recipient ) . '</strong> ' . $status_badge . ' <span style="font-size:10px; color:#64748b; margin-left:4px;">(' . esc_html( $label_text ) . ')</span></div>';
-				echo '<span style="font-size:11px; color:#64748b;">' . esc_html( $msg->created_at ) . '</span>';
+				$msg_time = ! empty( $msg->created_at ) ? get_date_from_gmt( $msg->created_at, 'd.m.Y H:i' ) : '';
+				echo '<span style="font-size:11px; color:#64748b;">' . esc_html( $msg_time ) . '</span>';
 				echo '</div>';
 				if ( ! empty( $msg->subject ) ) {
 					echo '<div style="font-weight:600; color:#334155; margin-bottom:2px;">' . esc_html__( 'Emne:', 'snippen-booking' ) . ' ' . esc_html( $msg->subject ) . '</div>';

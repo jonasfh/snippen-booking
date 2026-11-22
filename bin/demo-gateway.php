@@ -27,6 +27,9 @@ if ( class_exists( '\SnippenBooking\Database\MigrationManager' ) ) {
 	\SnippenBooking\Database\MigrationManager::run();
 }
 
+// 0. Ensure WordPress site timezone is set to Europe/Oslo for consistent local time display
+update_option( 'timezone_string', 'Europe/Oslo' );
+
 // 1. Configure SMS Gateway & Provider settings
 $api_token   = getenv( 'SNIPPEN_SMS_API_TOKEN' ) ?: 'test-integration-token';
 $sender_name = getenv( 'SNIPPEN_SMS_SENDER' ) ?: ( getenv( 'SMS_SENDER' ) ?: 'Snippen' );

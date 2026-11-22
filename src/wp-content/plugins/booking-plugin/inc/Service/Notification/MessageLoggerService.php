@@ -16,6 +16,29 @@ use SnippenBooking\Helper\PhoneHelper;
 class MessageLoggerService {
 
 	/**
+	 * Normalize an optional timestamp string (ISO-8601 or MySQL) into a UTC MySQL datetime string.
+	 * Falls back to current UTC time (`current_time( 'mysql', true )`) when null or unparseable.
+	 *
+	 * @param string|null $timestamp Optional timestamp string.
+	 * @return string UTC MySQL datetime ('Y-m-d H:i:s').
+	 */
+	public static function normalize_utc_mysql( ?string $timestamp = null ): string {
+		if ( null !== $timestamp && '' !== trim( $timestamp ) ) {
+			try {
+				$dt = new \DateTimeImmutable( trim( $timestamp ), new \DateTimeZone( 'UTC' ) );
+				return $dt->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
+			} catch ( \Exception $e ) {
+				$parsed = strtotime( $timestamp );
+				if ( false !== $parsed ) {
+					return gmdate( 'Y-m-d H:i:s', $parsed );
+				}
+			}
+		}
+
+		return current_time( 'mysql', true );
+	}
+
+	/**
 	 * Log a communication message in the database.
 	 *
 	 * @param int|null    $booking_id Booking ID, if associated with a booking.
@@ -27,6 +50,7 @@ class MessageLoggerService {
 	 * @param string      $event_type Type of event (e.g. 'booking_confirmation', 'user_activation', 'admin_booking', 'manual_dispatch').
 	 * @param string      $status     Status of the dispatch ('sent' or 'failed').
 	 * @param array       $metadata   Optional metadata/context array.
+	 * @param string|null $created_at Optional UTC/ISO-8601 timestamp override (defaults to current UTC time).
 	 * @return int|false  Inserted record ID or false on error.
 	 */
 	public static function log_message(
@@ -38,11 +62,13 @@ class MessageLoggerService {
 		string $message,
 		string $event_type,
 		string $status = 'sent',
-		array $metadata = array()
+		array $metadata = array(),
+		?string $created_at = null
 	) {
 		global $wpdb;
 
-		$table = $wpdb->prefix . 'snippen_messages';
+		$table   = $wpdb->prefix . 'snippen_messages';
+		$now_utc = current_time( 'mysql', true );
 
 		$data = array(
 			'booking_id'  => $booking_id,
@@ -54,8 +80,8 @@ class MessageLoggerService {
 			'event_type'  => sanitize_text_field( $event_type ),
 			'status'      => sanitize_text_field( $status ),
 			'metadata'    => ! empty( $metadata ) ? wp_json_encode( $metadata ) : null,
-			'created_at'  => current_time( 'mysql' ),
-			'modified_at' => current_time( 'mysql' ),
+			'created_at'  => self::normalize_utc_mysql( $created_at ),
+			'modified_at' => $now_utc,
 		);
 
 		$format = array(
@@ -206,7 +232,7 @@ class MessageLoggerService {
 			array(
 				'status'      => sanitize_text_field( $status ),
 				'metadata'    => ! empty( $merged_metadata ) ? wp_json_encode( $merged_metadata ) : null,
-				'modified_at' => current_time( 'mysql' ),
+				'modified_at' => current_time( 'mysql', true ),
 			),
 			array( 'id' => $message_id ),
 			array( '%s', '%s', '%s' ),
@@ -243,7 +269,7 @@ class MessageLoggerService {
 		$data    = array(
 			'booking_id'  => $booking_id,
 			'status'      => 'received',
-			'modified_at' => current_time( 'mysql' ),
+			'modified_at' => current_time( 'mysql', true ),
 		);
 		$formats = array( '%d', '%s', '%s' );
 

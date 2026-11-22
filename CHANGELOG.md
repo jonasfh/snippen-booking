@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.55.1] - 2026-11-22
+- (#411) [Fix] Etablert konsekvent UTC-lagring for `wp_snippen_messages` og lokal visning i WordPress-tidssone (`Europe/Oslo`):
+  - **`MessageLoggerService.php`**: Lagt til `normalize_utc_mysql()` og valgfri `$created_at`-parameter på `log_message()`, samt endret `created_at` og `modified_at` fra `current_time( 'mysql' )` (lokal tid) til `current_time( 'mysql', true )` (UTC).
+  - **`SmsInboxResolverService.php`**: Viderefører `received_at` som normalisert UTC-tid til `MessageLoggerService::log_message()`, og sammenligner samtale-TTL eksplisitt i UTC.
+  - **`BookingsPage.php`**: Formaterer meldingshistorikkens `created_at` via `get_date_from_gmt()` til lokal WordPress-tidssone.
+  - **`bin/demo-gateway.php`**: Setter `timezone_string` til `Europe/Oslo` i testoppsettet.
+  - **Tester**: Lagt til integrasjonstest i `SmsInboxResolverServiceTest.php`.
+
 ## [2.55.0] - 2026-11-15
 - (#401) [Feat] Støtte for «Ikke rabattberettiget» (`exclude_from_discounts`) på prisregler med del-beregning av varighetsrabatt:
   - **Database (`Install.php`, `Migration_2_55_0.php`, `MigrationManager.php`)**: Lagt til kolonnen `exclude_from_discounts TINYINT(1) DEFAULT 0` på `wp_snippen_pricing_rules`.

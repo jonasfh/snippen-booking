@@ -368,6 +368,7 @@ class SmsInboxResolverService {
 		if ( ! empty( $received_at ) ) {
 			$metadata['received_at'] = sanitize_text_field( $received_at );
 		}
+		$resolved_created_at = ! empty( $received_at ) ? MessageLoggerService::normalize_utc_mysql( $received_at ) : null;
 
 		$table_messages = $wpdb->prefix . 'snippen_messages';
 		$ttl_minutes    = (int) get_option( 'snippen_sms_conversation_ttl_minutes', 120 );
@@ -386,7 +387,8 @@ class SmsInboxResolverService {
 				$body,
 				self::EVENT_INBOUND_SMS,
 				self::STATUS_RECEIVED,
-				$metadata
+				$metadata,
+				$resolved_created_at
 			);
 
 			return array(
@@ -423,7 +425,7 @@ class SmsInboxResolverService {
 		$last_session_msg    = $wpdb->get_row( $recent_query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		if ( $last_session_msg ) {
-			$msg_ts = strtotime( $last_session_msg->created_at );
+			$msg_ts = strtotime( $last_session_msg->created_at . ' UTC' );
 			if ( ( $current_ts - $msg_ts ) <= $ttl_seconds ) {
 				$session_booking_id = (int) $last_session_msg->booking_id;
 
@@ -441,12 +443,15 @@ class SmsInboxResolverService {
 				// If session booking is active and user has other active bookings,
 				// check if any other booking has been created or modified AFTER the session message
 				if ( $is_session_active && $booking_count > 1 ) {
+					$wp_tz = wp_timezone();
 					foreach ( $active_bookings as $ab ) {
 						if ( (int) $ab->id === $session_booking_id ) {
 							continue;
 						}
-						$b_created  = ! empty( $ab->created_at ) ? strtotime( $ab->created_at ) : 0;
-						$b_modified = ! empty( $ab->modified_at ) ? strtotime( $ab->modified_at ) : 0;
+						$b_created_dt  = ! empty( $ab->created_at ) ? date_create_immutable( $ab->created_at, $wp_tz ) : false;
+						$b_modified_dt = ! empty( $ab->modified_at ) ? date_create_immutable( $ab->modified_at, $wp_tz ) : false;
+						$b_created     = $b_created_dt ? $b_created_dt->getTimestamp() : 0;
+						$b_modified    = $b_modified_dt ? $b_modified_dt->getTimestamp() : 0;
 
 						if ( $b_created > $msg_ts || $b_modified > $msg_ts ) {
 							$session_invalidated = true;
@@ -469,7 +474,8 @@ class SmsInboxResolverService {
 						$body,
 						self::EVENT_INBOUND_SMS,
 						self::STATUS_RECEIVED,
-						$metadata
+						$metadata,
+						$resolved_created_at
 					);
 
 					self::relay_to_admin( (int) $logged_id, $sender_phone, $body, $booking_id, $user_id, 'active_session' );
@@ -504,7 +510,7 @@ class SmsInboxResolverService {
 		$last_prompt  = $wpdb->get_row( $prompt_query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		if ( $last_prompt ) {
-			$prompt_ts = strtotime( $last_prompt->created_at );
+			$prompt_ts = strtotime( $last_prompt->created_at . ' UTC' );
 			if ( ( $current_ts - $prompt_ts ) <= $ttl_seconds && ! empty( $last_prompt->metadata ) ) {
 				$prompt_meta = json_decode( $last_prompt->metadata, true );
 				$candidates  = $prompt_meta['candidate_booking_ids'] ?? array();
@@ -525,7 +531,8 @@ class SmsInboxResolverService {
 							$body,
 							self::EVENT_INBOUND_SMS,
 							self::STATUS_RECEIVED,
-							$metadata
+							$metadata,
+							$resolved_created_at
 						);
 
 						// Also resolve the original message that was pending selection
@@ -606,7 +613,8 @@ class SmsInboxResolverService {
 				$body,
 				self::EVENT_INBOUND_SMS,
 				self::STATUS_RECEIVED,
-				$metadata
+				$metadata,
+				$resolved_created_at
 			);
 
 			self::relay_to_admin( (int) $logged_id, $sender_phone, $body, $booking_id, $user_id, 'single_active_booking' );
@@ -638,7 +646,8 @@ class SmsInboxResolverService {
 				$body,
 				self::EVENT_INBOUND_SMS,
 				self::STATUS_PENDING_SELECTION,
-				$metadata
+				$metadata,
+				$resolved_created_at
 			);
 
 			$auto_prompt = ( 'no' !== get_option( 'snippen_sms_auto_disambiguate', 'yes' ) );
@@ -697,7 +706,8 @@ class SmsInboxResolverService {
 				$body,
 				self::EVENT_INBOUND_SMS,
 				self::STATUS_GENERAL_INQUIRY,
-				$metadata
+				$metadata,
+				$resolved_created_at
 			);
 
 			self::relay_to_admin( (int) $logged_id, $sender_phone, $body, null, $found_user_id, 'registered_user_no_booking' );
@@ -726,7 +736,8 @@ class SmsInboxResolverService {
 			$body,
 			self::EVENT_INBOUND_SMS,
 			self::STATUS_QUARANTINE,
-			$metadata
+			$metadata,
+			$resolved_created_at
 		);
 
 		self::relay_to_admin( (int) $logged_id, $sender_phone, $body, null, null, 'unknown_sender' );
