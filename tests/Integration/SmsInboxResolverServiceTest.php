@@ -503,4 +503,48 @@ class SmsInboxResolverServiceTest extends TestCase {
 		$this->assertCount( 1, $active );
 		$this->assertSame( (int) $paid_past_id, (int) $active[0]->id );
 	}
+
+	/**
+	 * Test that MessageLoggerService stores UTC timestamps and SmsInboxResolverService
+	 * preserves UTC received_at for consistent Europe/Oslo display via get_date_from_gmt (Issue #411).
+	 */
+	public function test_utc_storage_and_oslo_display_consistency() {
+		$prev_tz = get_option( 'timezone_string' );
+		update_option( 'timezone_string', 'Europe/Oslo' );
+
+		try {
+			// Simulate inbound SMS received at 18:22:15 UTC (= 19:22:15 Europe/Oslo in winter / CET)
+			$res = SmsInboxResolverService::resolve_message(
+				'+4799112233',
+				'Hei fra testen',
+				1,
+				'MODEM-1',
+				'2026-11-22T18:22:15+00:00'
+			);
+
+			$this->assertNotFalse( $res['logged_id'] );
+			$msg = MessageLoggerService::get_message( (int) $res['logged_id'] );
+			$this->assertNotNull( $msg );
+			$this->assertSame( '2026-11-22 18:22:15', $msg->created_at );
+			$this->assertSame( '22.11.2026 19:22', get_date_from_gmt( $msg->created_at, 'd.m.Y H:i' ) );
+
+			// Also verify log_message() without explicit timestamp stores UTC (within 5s of time())
+			$out_id  = MessageLoggerService::log_message(
+				null,
+				null,
+				'sms',
+				'+4799112233',
+				null,
+				'Utgående test',
+				'manual_dispatch',
+				'queued'
+			);
+			$out_msg = MessageLoggerService::get_message( (int) $out_id );
+			$this->assertNotNull( $out_msg );
+			$diff = abs( time() - strtotime( $out_msg->created_at . ' UTC' ) );
+			$this->assertLessThanOrEqual( 5, $diff );
+		} finally {
+			update_option( 'timezone_string', $prev_tz );
+		}
+	}
 }
