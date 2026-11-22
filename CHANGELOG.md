@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.55.2] - 2026-11-22
+- (#393) [Fix] Aggregerer nå `door_code_updated`-varslingsstatus på tvers av alle booking-ID-er i en kjede i `DoorCodesPage::get_notification_status_for_chain()`, slik at rader i **Dørkoder & Adgangskontroll** ikke vises som «Ikke varslet» når varselet ble logget på en sekundær booking i kjeden. Lagt til integrasjonstest i `DoorCodesPageTest.php`.
+
 ## [2.55.1] - 2026-11-22
 - (#411) [Fix] Etablert konsekvent UTC-lagring for `wp_snippen_messages` og lokal visning i WordPress-tidssone (`Europe/Oslo`):
   - **`MessageLoggerService.php`**: Lagt til `normalize_utc_mysql()` og valgfri `$created_at`-parameter på `log_message()`, samt endret `created_at` og `modified_at` fra `current_time( 'mysql' )` (lokal tid) til `current_time( 'mysql', true )` (UTC).

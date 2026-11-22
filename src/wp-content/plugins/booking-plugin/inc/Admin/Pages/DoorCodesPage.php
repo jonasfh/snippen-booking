@@ -236,7 +236,7 @@ class DoorCodesPage {
 						$user_phone      = $primary_booking ? $primary_booking->customer_phone : '';
 						$user_email      = $primary_booking ? $primary_booking->customer_email : '';
 
-						$notif_status = self::get_notification_status_for_booking( $primary_id, $chain['door_code'] ?? '', $window );
+						$notif_status = self::get_notification_status_for_chain( $chain['booking_ids'], $chain['door_code'] ?? '', $window );
 
 						$door_badges = self::get_doorman_badges_for_chain( $chain['booking_ids'], $chain['door_code'], $doorman_status );
 						?>
@@ -1142,14 +1142,41 @@ class DoorCodesPage {
 	 * @return array{state: string, message: object|null, reason: string, tooltip: string}
 	 */
 	public static function get_notification_status_for_booking( int $booking_id, ?string $current_code, array $window ): array {
-		$messages  = MessageLoggerService::get_messages_for_booking( $booking_id );
-		$sent_info = null;
+		return self::get_notification_status_for_chain( array( $booking_id ), $current_code, $window );
+	}
 
-		if ( is_array( $messages ) ) {
+	/**
+	 * Determine door code notification status across all bookings in a chain,
+	 * selecting the newest door_code_updated message across the chain (Issue #393).
+	 *
+	 * @param int[]       $booking_ids  Booking IDs in the chain.
+	 * @param string|null $current_code Current door code on the chain.
+	 * @param array       $window       Current access window from DoorCodeService::get_access_window().
+	 * @return array{state: string, message: object|null, reason: string, tooltip: string}
+	 */
+	public static function get_notification_status_for_chain( array $booking_ids, ?string $current_code, array $window ): array {
+		$sent_info = null;
+		$best_ts   = -1;
+		$best_id   = -1;
+
+		foreach ( array_unique( array_map( 'intval', $booking_ids ) ) as $bid ) {
+			if ( $bid <= 0 ) {
+				continue;
+			}
+			$messages = MessageLoggerService::get_messages_for_booking( $bid );
+			if ( ! is_array( $messages ) ) {
+				continue;
+			}
 			foreach ( $messages as $msg ) {
-				if ( isset( $msg->event_type ) && 'door_code_updated' === $msg->event_type ) {
+				if ( ! isset( $msg->event_type ) || 'door_code_updated' !== $msg->event_type ) {
+					continue;
+				}
+				$msg_ts = ! empty( $msg->created_at ) ? (int) strtotime( (string) $msg->created_at ) : 0;
+				$msg_id = isset( $msg->id ) ? (int) $msg->id : 0;
+				if ( null === $sent_info || $msg_ts > $best_ts || ( $msg_ts === $best_ts && $msg_id > $best_id ) ) {
 					$sent_info = $msg;
-					break;
+					$best_ts   = $msg_ts;
+					$best_id   = $msg_id;
 				}
 			}
 		}
