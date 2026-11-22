@@ -384,20 +384,73 @@ class MessageLoggerService {
 	 * @return array List of message records.
 	 */
 	public static function get_inbound_messages( array $args = array() ): array {
+		return self::query_sms_messages( $args, 'inbound' );
+	}
+
+	/**
+	 * Count inbound SMS messages matching filter arguments.
+	 *
+	 * @param array $args Filter arguments.
+	 * @return int Number of matching messages.
+	 */
+	public static function count_inbound_sms_messages( array $args = array() ): int {
+		return self::count_sms_messages( $args, 'inbound' );
+	}
+
+	/**
+	 * Count inbound SMS messages matching filter arguments.
+	 *
+	 * @param array $args Filter arguments.
+	 * @return int Number of matching messages.
+	 */
+	public static function count_inbound_messages( array $args = array() ): int {
+		return self::count_sms_messages( $args, 'inbound' );
+	}
+
+	/**
+	 * Query outbound SMS messages (channel = 'sms' and event_type != 'inbound_sms').
+	 *
+	 * @param array $args Filter and sorting arguments.
+	 * @return array List of message records.
+	 */
+	public static function get_outbound_sms_messages( array $args = array() ): array {
+		return self::query_sms_messages( $args, 'outbound' );
+	}
+
+	/**
+	 * Count outbound SMS messages matching filter arguments.
+	 *
+	 * @param array $args Filter arguments.
+	 * @return int Number of matching messages.
+	 */
+	public static function count_outbound_sms_messages( array $args = array() ): int {
+		return self::count_sms_messages( $args, 'outbound' );
+	}
+
+	/**
+	 * Query SMS messages by direction with optional filters, sorting and pagination.
+	 *
+	 * @param array  $args      Filter and sorting arguments.
+	 * @param string $direction 'inbound' or 'outbound'.
+	 * @return array List of message records.
+	 */
+	private static function query_sms_messages( array $args, string $direction ): array {
 		global $wpdb;
 
 		$table                      = $wpdb->prefix . 'snippen_messages';
-		list( $where_sql, $params ) = self::build_inbound_where( $args );
+		list( $where_sql, $params ) = self::build_sms_where( $args, $direction );
 
 		$limit  = isset( $args['limit'] ) ? max( 1, (int) $args['limit'] ) : 50;
 		$offset = isset( $args['offset'] ) ? max( 0, (int) $args['offset'] ) : 0;
 
 		$allowed_orderby = array(
-			'created_at' => 'created_at',
-			'recipient'  => 'recipient',
-			'status'     => 'status',
-			'booking_id' => 'booking_id',
-			'id'         => 'id',
+			'created_at'  => 'created_at',
+			'modified_at' => 'modified_at',
+			'recipient'   => 'recipient',
+			'status'      => 'status',
+			'event_type'  => 'event_type',
+			'booking_id'  => 'booking_id',
+			'id'          => 'id',
 		);
 		$orderby         = $allowed_orderby[ $args['orderby'] ?? '' ] ?? 'created_at';
 		$order           = ( isset( $args['order'] ) && 'asc' === strtolower( (string) $args['order'] ) ) ? 'ASC' : 'DESC';
@@ -413,16 +466,17 @@ class MessageLoggerService {
 	}
 
 	/**
-	 * Count inbound SMS messages matching filter arguments.
+	 * Count SMS messages by direction matching filter arguments.
 	 *
-	 * @param array $args Filter arguments.
+	 * @param array  $args      Filter arguments.
+	 * @param string $direction 'inbound' or 'outbound'.
 	 * @return int Number of matching messages.
 	 */
-	public static function count_inbound_messages( array $args = array() ): int {
+	private static function count_sms_messages( array $args, string $direction ): int {
 		global $wpdb;
 
 		$table                      = $wpdb->prefix . 'snippen_messages';
-		list( $where_sql, $params ) = self::build_inbound_where( $args );
+		list( $where_sql, $params ) = self::build_sms_where( $args, $direction );
 
 		$query = "SELECT COUNT(*) FROM {$table} WHERE {$where_sql}";
 		if ( ! empty( $params ) ) {
@@ -434,16 +488,18 @@ class MessageLoggerService {
 	}
 
 	/**
-	 * Build WHERE clause and parameters for inbound queries.
+	 * Build WHERE clause and parameters for inbound or outbound SMS queries.
 	 *
-	 * @param array $args Filter arguments.
+	 * @param array  $args      Filter arguments.
+	 * @param string $direction 'inbound' or 'outbound'.
 	 * @return array Array containing [where_sql, params].
 	 */
-	private static function build_inbound_where( array $args ): array {
+	private static function build_sms_where( array $args, string $direction = 'inbound' ): array {
 		global $wpdb;
 
-		$where  = array( "channel = 'sms'", "event_type = 'inbound_sms'" );
-		$params = array();
+		$event_clause = ( 'outbound' === $direction ) ? "event_type != 'inbound_sms'" : "event_type = 'inbound_sms'";
+		$where        = array( "channel = 'sms'", $event_clause );
+		$params       = array();
 
 		if ( ! empty( $args['status'] ) && 'all' !== $args['status'] ) {
 			$where[]  = 'status = %s';
