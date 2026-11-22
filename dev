@@ -43,6 +43,7 @@ Tooling (runs in ephemeral booking-tools container):
   composer <args>    Run arbitrary composer command
   npm <args>         Run arbitrary npm command
   wp <args>          Run WP-CLI command
+  package            Build build/snippen-booking-dev.zip for dev/test upload
   shell              Open interactive bash shell in booking-tools
 
 Fullstack integration (delegates to snippen-testing):
@@ -69,6 +70,7 @@ case "$cmd" in
   composer)         run_tool composer "$@" ;;
   npm)              run_tool npm "$@" ;;
   wp)               run_tool wp "$@" ;;
+  package)          exec "$SCRIPT_DIR/scripts/package-dev-plugin.sh" ;;
   shell)            run_interactive bash ;;
   up|down|logs|ps|restart)
     exec "$TESTING_DIR/dev" "$cmd" "$@"
