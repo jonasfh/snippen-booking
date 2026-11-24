@@ -41,7 +41,7 @@ class DemoTemplatesScriptTest extends TestCase {
 		$this->repository->seed_defaults();
 
 		$all_templates = $this->repository->get_all();
-		$this->assertCount( 24, $all_templates );
+		$this->assertCount( 25, $all_templates );
 
 		$connected_values = array();
 		foreach ( $all_templates as $tpl ) {
@@ -72,5 +72,6 @@ class DemoTemplatesScriptTest extends TestCase {
 		$this->assertContains( 'rental-feedback:email', $connected_values );
 		$this->assertContains( 'inbound-sms-received:sms', $connected_values );
 		$this->assertContains( 'inbound-sms-received:email', $connected_values );
+		$this->assertContains( 'sms-gateway-alert:email', $connected_values );
 	}
 }

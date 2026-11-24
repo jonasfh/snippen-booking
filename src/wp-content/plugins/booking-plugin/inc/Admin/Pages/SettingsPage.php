@@ -193,6 +193,7 @@ class SettingsPage {
 		update_option( 'snippen_email_door_code_updated_enabled', isset( $_POST['snippen_email_door_code_updated_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_inbound_sms_enabled', isset( $_POST['snippen_email_inbound_sms_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_rental_feedback_enabled', isset( $_POST['snippen_email_rental_feedback_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_email_sms_gateway_alert_enabled', isset( $_POST['snippen_email_sms_gateway_alert_enabled'] ) ? 'yes' : 'no' );
 
 		update_option( 'snippen_sms_booking_confirmation_enabled', isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_admin_booking_enabled', isset( $_POST['snippen_sms_admin_booking_enabled'] ) ? 'yes' : 'no' );
@@ -305,6 +306,7 @@ class SettingsPage {
 		$email_door_code_updated = get_option( 'snippen_email_door_code_updated_enabled', 'yes' );
 		$email_inbound_sms       = get_option( 'snippen_email_inbound_sms_enabled', 'yes' );
 		$email_rental_feedback   = get_option( 'snippen_email_rental_feedback_enabled', 'yes' );
+		$email_sms_gateway_alert = get_option( 'snippen_email_sms_gateway_alert_enabled', 'yes' );
 
 		$sms_booking           = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
 		$sms_admin             = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
@@ -389,9 +391,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_email_inbound_sms_enabled" value="yes" ' . checked( $email_inbound_sms, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send varsel om innkommende SMS til administratorer på e-post', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_rental_feedback_enabled" value="yes" ' . checked( $email_rental_feedback, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send spørreskjema etter leieforhold til kunde på e-post', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_email_sms_gateway_alert_enabled" value="yes" ' . checked( $email_sms_gateway_alert, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om problem med SMS-tjenesten til administratorer på e-post', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
@@ -480,7 +486,12 @@ class SettingsPage {
 
 		echo '<div class="snippen-form-group" style="margin-bottom:20px; padding:12px 16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px;">';
 		echo '<p style="margin:0 0 6px 0; font-size:13px;"><strong>' . esc_html__( 'REST API Sync Endepunkt:', 'snippen-booking' ) . '</strong> <code style="background:#fff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px;">' . esc_url( rest_url( 'snippen/v1/sms' ) ) . '</code></p>';
-		echo '<p class="description" style="margin:0;">' . esc_html__( 'Konfigurer SMS Gateway med SNIPPEN_SMS_API_URL satt til denne adressen og SNIPPEN_SMS_API_TOKEN satt til tokenet under.', 'snippen-booking' ) . '</p>';
+		echo '<p class="description" style="margin:0 0 6px 0;">' . esc_html__( 'Konfigurer SMS Gateway med SNIPPEN_SMS_API_URL satt til denne adressen og SNIPPEN_SMS_API_TOKEN satt til tokenet under.', 'snippen-booking' ) . '</p>';
+		$last_poll_at   = \SnippenBooking\Service\Sms\SmsGatewayHealthService::get_last_poll_at();
+		$last_poll_text = $last_poll_at
+			? wp_date( 'Y-m-d H:i:s', $last_poll_at )
+			: __( 'Aldri registrert', 'snippen-booking' );
+		echo '<p style="margin:0; font-size:13px;"><strong>' . esc_html__( 'Siste registrerte polling:', 'snippen-booking' ) . '</strong> ' . esc_html( $last_poll_text ) . '</p>';
 		echo '</div>';
 
 		if ( $snippen_sms_provider ) {
@@ -1064,7 +1075,11 @@ class SettingsPage {
 		$type     = $field['type'];
 		$required = $field['required'] ?? false;
 		$desc     = $field['description'] ?? '';
-		$value    = get_option( $key, '' );
+		$default  = $field['default'] ?? '';
+		$value    = get_option( $key, $default );
+		if ( '' === $value && '' !== $default ) {
+			$value = $default;
+		}
 		$req_mark = $required ? ' <span style="color:#dc2626;">*</span>' : '';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';

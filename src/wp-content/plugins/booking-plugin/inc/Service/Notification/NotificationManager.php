@@ -76,6 +76,11 @@ class NotificationManager {
 	const TYPE_RENTAL_FEEDBACK = 'rental_feedback';
 
 	/**
+	 * Notification type: SMS gateway polling health alert
+	 */
+	const TYPE_SMS_GATEWAY_ALERT = 'sms_gateway_alert';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -1598,6 +1603,86 @@ class NotificationManager {
 		}
 
 		return $email_sent || $sms_sent;
+	}
+
+	/**
+	 * Send email alert to booking administrators when snippen-sms-service stops polling.
+	 *
+	 * @param int      $seconds_since_poll Seconds elapsed since last poll (or monitoring baseline).
+	 * @param int      $tolerance_seconds  Configured poll tolerance in seconds.
+	 * @param int|null $last_poll_at       Unix timestamp of last poll, or null if never polled.
+	 * @return bool True if at least one administrator email was sent.
+	 */
+	public function send_sms_gateway_alert( int $seconds_since_poll, int $tolerance_seconds, ?int $last_poll_at = null ): bool {
+		if ( 'yes' !== get_option( 'snippen_email_sms_gateway_alert_enabled', 'yes' ) ) {
+			return false;
+		}
+
+		$email_provider = $this->get_provider( 'email' );
+		if ( ! ( $email_provider instanceof EmailProviderInterface ) ) {
+			return false;
+		}
+
+		$admin_users = get_users(
+			array(
+				'capability' => Capabilities::MANAGE_BOOKINGS,
+			)
+		);
+		if ( empty( $admin_users ) ) {
+			return false;
+		}
+
+		$last_poll_time = $last_poll_at
+			? wp_date( 'Y-m-d H:i:s', $last_poll_at )
+			: __( 'Aldri registrert', 'snippen-booking' );
+
+		$context = array(
+			'last_poll_time'     => $last_poll_time,
+			'seconds_since_poll' => (string) $seconds_since_poll,
+			'minutes_since_poll' => (string) max( 1, (int) round( $seconds_since_poll / 60 ) ),
+			'tolerance_seconds'  => (string) $tolerance_seconds,
+			'settings_url'       => admin_url( 'admin.php?page=snippen-booking-settings' ),
+		);
+
+		$template_service = new NotificationTemplateService();
+		$rendered_email   = $template_service->render_template( self::TYPE_SMS_GATEWAY_ALERT, 'email', $context );
+
+		$subject = ! empty( $rendered_email['subject'] )
+			? $rendered_email['subject']
+			: __( 'Advarsel: Snippen SMS-tjeneste svarer ikke', 'snippen-booking' );
+		$message = $rendered_email['body'];
+
+		$email_sent = false;
+		foreach ( $admin_users as $admin ) {
+			if ( empty( $admin->user_email ) ) {
+				continue;
+			}
+			try {
+				$sent = $email_provider->send_email( $admin->user_email, $subject, $message );
+				MessageLoggerService::log_message(
+					null,
+					null,
+					'email',
+					$admin->user_email,
+					$subject,
+					$message,
+					self::TYPE_SMS_GATEWAY_ALERT,
+					$sent ? 'sent' : 'failed',
+					array(
+						'seconds_since_poll' => $seconds_since_poll,
+						'tolerance_seconds'  => $tolerance_seconds,
+						'last_poll_at'       => $last_poll_at,
+					)
+				);
+				if ( $sent ) {
+					$email_sent = true;
+				}
+			} catch ( \Throwable $t ) {
+				error_log( 'NotificationManager Exception during SMS gateway alert email send: ' . $t->getMessage() );
+			}
+		}
+
+		return $email_sent;
 	}
 
 	/**

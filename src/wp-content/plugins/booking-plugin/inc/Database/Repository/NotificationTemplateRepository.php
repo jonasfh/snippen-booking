@@ -408,6 +408,13 @@ class NotificationTemplateRepository {
 				'message'      => __( "Hei {{user_name}},\n\nTakk for at du leide {{booking_objects}} den {{booking_date}} ({{booking_time}}).\n\nVi håper dere hadde et fint opphold! For at vi skal kunne forbedre tilbudet vårt, setter vi stor pris på om du tar deg tid til å svare på et kort spørreskjema om leieforholdet:\nhttps://example.com\n\nDu kan også se detaljer om din booking her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
 				'connected_to' => 'rental-feedback',
 			),
+			array(
+				'name'         => __( 'Varsel om problem med SMS-tjenesten (E-post)', 'snippen-booking' ),
+				'type'         => 'email',
+				'title'        => __( 'Advarsel: Snippen SMS-tjeneste svarer ikke', 'snippen-booking' ),
+				'message'      => __( "Hei Admin,\n\nSnippen SMS-tjeneste (snippen-sms-service) har ikke pollet booking-endepunktet innenfor konfigurert toleranse.\n\nSiste registrerte polling: {{last_poll_time}}\nTid siden siste polling: {{minutes_since_poll}} minutter ({{seconds_since_poll}} sekunder)\nKonfigurert toleranse: {{tolerance_seconds}} sekunder\n\nVennligst kontroller at SMS-tjenesten (snippen-sms-service) kjører og har nettverkstilgang.\n\nInnstillinger for SMS-tjenesten:\n{{settings_url}}", 'snippen-booking' ),
+				'connected_to' => 'sms-gateway-alert',
+			),
 		);
 
 		$this->cleanup_duplicates();

@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback', 'sms_gateway_alert' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -225,6 +225,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Tilbakemelding på ditt leieforhold - {{booking_objects}}', 'snippen-booking' ),
 					'body'    => __( "Hei {{user_name}},\n\nTakk for at du leide {{booking_objects}} den {{booking_date}} ({{booking_time}}).\n\nVi håper dere hadde et fint opphold! For at vi skal kunne forbedre tilbudet vårt, setter vi stor pris på om du tar deg tid til å svare på et kort spørreskjema om leieforholdet:\nhttps://example.com\n\nDu kan også se detaljer om din booking her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				),
+			),
+			'sms-gateway-alert'        => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => '',
+				),
+				'email' => array(
+					'subject' => __( 'Advarsel: Snippen SMS-tjeneste svarer ikke', 'snippen-booking' ),
+					'body'    => __( "Hei Admin,\n\nSnippen SMS-tjeneste (snippen-sms-service) har ikke pollet booking-endepunktet innenfor konfigurert toleranse.\n\nSiste registrerte polling: {{last_poll_time}}\nTid siden siste polling: {{minutes_since_poll}} minutter ({{seconds_since_poll}} sekunder)\nKonfigurert toleranse: {{tolerance_seconds}} sekunder\n\nVennligst kontroller at SMS-tjenesten (snippen-sms-service) kjører og har nettverkstilgang.\n\nInnstillinger for SMS-tjenesten:\n{{settings_url}}", 'snippen-booking' ),
 				),
 			),
 		);

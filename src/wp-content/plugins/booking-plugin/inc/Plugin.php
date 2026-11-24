@@ -104,10 +104,17 @@ class Plugin {
 		}
 
 		// Automated Vipps unpaid bookings cleanup cron hook (Issue #307)
+		// phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval -- 5-minute interval needed for timely SMS gateway downtime alerts.
 		add_filter( 'cron_schedules', array( __CLASS__, 'register_cron_schedules' ) );
 		add_action( 'snippen_cleanup_unpaid_vipps_bookings', array( __CLASS__, 'handle_cleanup_unpaid_vipps_bookings' ) );
 		if ( ! wp_next_scheduled( 'snippen_cleanup_unpaid_vipps_bookings' ) ) {
 			wp_schedule_event( time(), 'every_fifteen_minutes', 'snippen_cleanup_unpaid_vipps_bookings' );
+		}
+
+		// Automated SMS gateway polling health check cron hook (Issue #419)
+		add_action( 'snippen_check_sms_gateway_health', array( __CLASS__, 'handle_check_sms_gateway_health' ) );
+		if ( ! wp_next_scheduled( 'snippen_check_sms_gateway_health' ) ) {
+			wp_schedule_event( time(), 'every_five_minutes', 'snippen_check_sms_gateway_health' );
 		}
 	}
 
@@ -118,6 +125,12 @@ class Plugin {
 	 * @return array
 	 */
 	public static function register_cron_schedules( $schedules ) {
+		if ( ! isset( $schedules['every_five_minutes'] ) ) {
+			$schedules['every_five_minutes'] = array(
+				'interval' => 5 * MINUTE_IN_SECONDS,
+				'display'  => __( 'Hvert 5. minutt', 'snippen-booking' ),
+			);
+		}
 		if ( ! isset( $schedules['every_fifteen_minutes'] ) ) {
 			$schedules['every_fifteen_minutes'] = array(
 				'interval' => 15 * MINUTE_IN_SECONDS,
@@ -125,6 +138,15 @@ class Plugin {
 			);
 		}
 		return $schedules;
+	}
+
+	/**
+	 * Handle SMS gateway polling health check cron trigger
+	 *
+	 * @return array Health check result.
+	 */
+	public static function handle_check_sms_gateway_health() {
+		return \SnippenBooking\Service\Sms\SmsGatewayHealthService::check_health();
 	}
 
 	/**
