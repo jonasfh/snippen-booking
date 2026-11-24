@@ -9,12 +9,20 @@ namespace SnippenBooking\Admin\Pages;
 
 use SnippenBooking\Service\Notification\MessageLoggerService;
 use SnippenBooking\Service\Notification\NotificationManager;
+use SnippenBooking\Service\Sms\SmsInboxResolverService;
 use SnippenBooking\Helper\PhoneHelper;
 
 /**
  * Class SmsInboxPage
  */
 class SmsInboxPage {
+
+	/**
+	 * Cached list of all candidate booking options for fallback expansion.
+	 *
+	 * @var array
+	 */
+	private $all_candidate_options = array();
 
 	/**
 	 * Render the page
@@ -386,16 +394,89 @@ class SmsInboxPage {
 	private function render_list( array $messages, int $total, int $page, int $limit, string $orderby, string $order ) {
 		global $wpdb;
 
-		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$table_bookings        = $wpdb->prefix . 'snippen_bookings';
+		$table_slots           = $wpdb->prefix . 'snippen_time_slots';
+		$table_booking_blocks  = $wpdb->prefix . 'snippen_booking_booking_blocks';
+		$table_blocks          = $wpdb->prefix . 'snippen_booking_blocks';
+		$table_booking_objects = $wpdb->prefix . 'snippen_bookings_booking_objects';
+		$table_objects         = $wpdb->prefix . 'snippen_booking_objects';
 
-		// Pre-fetch recent active bookings for assignment dropdown
-		$active_candidates = $wpdb->get_results(
-			"SELECT id, customer_name, customer_phone, booking_date 
-			 FROM {$table_bookings} 
-			 WHERE deleted_at IS NULL AND status != 'cancelled' 
-			 ORDER BY booking_date DESC, id DESC 
+		// Pre-fetch recent active bookings for assignment fallback
+		$recent_candidates = $wpdb->get_results(
+			"SELECT b.id, b.customer_name, b.customer_phone, b.booking_date, b.status,
+					COALESCE(MIN(bb.start_time), s.start_time) as start_time,
+					COALESCE(MAX(bb.end_time), s.end_time) as end_time,
+					GROUP_CONCAT(DISTINCT bo.name ORDER BY bo.name SEPARATOR ', ') as object_names
+			 FROM {$table_bookings} b
+			 LEFT JOIN {$table_slots} s ON b.slot_id = s.id
+			 LEFT JOIN {$table_booking_blocks} bbb ON b.id = bbb.booking_id
+			 LEFT JOIN {$table_blocks} bb ON bbb.booking_block_id = bb.id
+			 LEFT JOIN {$table_booking_objects} bbo ON b.id = bbo.booking_id
+			 LEFT JOIN {$table_objects} bo ON bbo.booking_object_id = bo.id
+			 WHERE b.deleted_at IS NULL AND b.status != 'cancelled'
+			 GROUP BY b.id
+			 ORDER BY b.booking_date DESC, b.id DESC
 			 LIMIT 40"
 		);
+
+		// Also fetch all active bookings matching sender phone numbers on this page
+		$phone_variants = array();
+		foreach ( $messages as $msg ) {
+			if ( empty( $msg->booking_id ) && ! empty( $msg->recipient ) ) {
+				foreach ( SmsInboxResolverService::get_search_phones( (string) $msg->recipient ) as $variant ) {
+					$phone_variants[ $variant ] = true;
+				}
+			}
+		}
+
+		$candidates_by_id = array();
+		if ( ! empty( $phone_variants ) ) {
+			$variant_list  = array_keys( $phone_variants );
+			$placeholders  = implode( ',', array_fill( 0, count( $variant_list ), '%s' ) );
+			$matched_query = $wpdb->prepare(
+				"SELECT b.id, b.customer_name, b.customer_phone, b.booking_date, b.status,
+						COALESCE(MIN(bb.start_time), s.start_time) as start_time,
+						COALESCE(MAX(bb.end_time), s.end_time) as end_time,
+						GROUP_CONCAT(DISTINCT bo.name ORDER BY bo.name SEPARATOR ', ') as object_names
+				 FROM {$table_bookings} b
+				 LEFT JOIN {$table_slots} s ON b.slot_id = s.id
+				 LEFT JOIN {$table_booking_blocks} bbb ON b.id = bbb.booking_id
+				 LEFT JOIN {$table_blocks} bb ON bbb.booking_block_id = bb.id
+				 LEFT JOIN {$table_booking_objects} bbo ON b.id = bbo.booking_id
+				 LEFT JOIN {$table_objects} bo ON bbo.booking_object_id = bo.id
+				 WHERE b.deleted_at IS NULL AND b.status != 'cancelled' AND b.customer_phone IN ($placeholders)
+				 GROUP BY b.id
+				 ORDER BY b.booking_date DESC, b.id DESC",
+				...$variant_list
+			);
+			foreach ( $wpdb->get_results( $matched_query ) as $cand ) {
+				$candidates_by_id[ (int) $cand->id ] = $cand;
+			}
+		}
+
+		foreach ( $recent_candidates as $cand ) {
+			if ( ! isset( $candidates_by_id[ (int) $cand->id ] ) ) {
+				$candidates_by_id[ (int) $cand->id ] = $cand;
+			}
+		}
+
+		$candidates_by_phone   = array();
+		$all_candidate_options = array();
+		foreach ( $candidates_by_id as $cand ) {
+			$label                   = self::format_booking_candidate_label( $cand );
+			$all_candidate_options[] = array(
+				'id'    => (int) $cand->id,
+				'label' => $label,
+			);
+			$norm_phone              = self::normalize_phone_for_match( (string) $cand->customer_phone );
+			if ( '' !== $norm_phone ) {
+				$candidates_by_phone[ $norm_phone ][] = array(
+					'id'    => (int) $cand->id,
+					'label' => $label,
+				);
+			}
+		}
+		$this->all_candidate_options = $all_candidate_options;
 
 		echo '<form method="post" id="snippen-sms-inbox-form" action="">';
 		wp_nonce_field( 'snippen_bulk_sms_action', 'snippen_inbox_nonce' );
@@ -425,7 +506,7 @@ class SmsInboxPage {
 		echo $this->render_sortable_header( 'recipient', __( 'Avsender', 'snippen-booking' ), $orderby, $order, '140px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<th scope="col">' . esc_html__( 'Melding', 'snippen-booking' ) . '</th>';
 		echo $this->render_sortable_header( 'status', __( 'Status / Regel', 'snippen-booking' ), $orderby, $order, '160px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo $this->render_sortable_header( 'booking_id', __( 'Tilknyttet Reservasjon', 'snippen-booking' ), $orderby, $order, '220px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->render_sortable_header( 'booking_id', __( 'Tilknyttet Reservasjon', 'snippen-booking' ), $orderby, $order, '300px' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<th scope="col" style="width:130px; text-align:right;">' . esc_html__( 'Handlinger', 'snippen-booking' ) . '</th>';
 		echo '</tr>';
 		echo '</thead>';
@@ -472,12 +553,30 @@ class SmsInboxPage {
 					$booking_url = admin_url( 'admin.php?page=snippen-booking&s=' . (int) $msg->booking_id );
 					echo '<a href="' . esc_url( $booking_url ) . '" class="button button-small" style="display:inline-flex; align-items:center; gap:4px;"><span class="dashicons dashicons-calendar-alt" style="font-size:14px; width:14px; height:14px; line-height:14px;"></span> ' . sprintf( esc_html__( 'Booking #%d', 'snippen-booking' ), (int) $msg->booking_id ) . '</a>';
 				} else {
-					echo '<div style="display:flex; gap:4px; align-items:center;">';
-					echo '<select class="snippen-quick-assign-select" data-message-id="' . esc_attr( $msg->id ) . '" style="font-size:11px; max-width:130px;">';
-					echo '<option value="">' . esc_html__( 'Koble til...', 'snippen-booking' ) . '</option>';
-					foreach ( $active_candidates as $cand ) {
-						$opt_label = sprintf( '#%d: %s (%s)', $cand->id, $cand->customer_name ?: $cand->customer_phone, $cand->booking_date );
-						echo '<option value="' . esc_attr( $cand->id ) . '">' . esc_html( $opt_label ) . '</option>';
+					$msg_norm_phone     = self::normalize_phone_for_match( (string) $msg->recipient );
+					$matched_candidates = ( '' !== $msg_norm_phone && isset( $candidates_by_phone[ $msg_norm_phone ] ) )
+						? $candidates_by_phone[ $msg_norm_phone ]
+						: array();
+
+					echo '<div style="display:flex; gap:6px; align-items:center;">';
+					echo '<select class="snippen-quick-assign-select" data-message-id="' . esc_attr( $msg->id ) . '" style="font-size:12px; width:100%; min-width:190px; max-width:250px; flex:1;">';
+					if ( ! empty( $matched_candidates ) ) {
+						$match_count = count( $matched_candidates );
+						echo '<option value="">' . esc_html(
+							sprintf(
+								/* translators: %d: number of matching bookings */
+								_n( 'Koble til (%d treff)...', 'Koble til (%d treff)...', $match_count, 'snippen-booking' ),
+								$match_count
+							)
+						) . '</option>';
+						foreach ( $matched_candidates as $cand_opt ) {
+							echo '<option value="' . esc_attr( $cand_opt['id'] ) . '">' . esc_html( $cand_opt['label'] ) . '</option>';
+						}
+					} else {
+						echo '<option value="">' . esc_html__( 'Ingen reservasjoner for dette nummeret', 'snippen-booking' ) . '</option>';
+					}
+					if ( count( $all_candidate_options ) > count( $matched_candidates ) ) {
+						echo '<option value="__show_all__">&#9472;&#9472; ' . esc_html__( 'Vis alle reservasjoner...', 'snippen-booking' ) . ' &#9472;&#9472;</option>';
 					}
 					echo '</select>';
 					echo '<button type="button" class="button button-small snippen-quick-assign-btn" data-message-id="' . esc_attr( $msg->id ) . '">' . esc_html__( 'Koble', 'snippen-booking' ) . '</button>';
@@ -936,6 +1035,76 @@ class SmsInboxPage {
 	}
 
 	/**
+	 * Normalize a phone number for matching against booking customer phones.
+	 *
+	 * @param string $phone Raw phone number.
+	 * @return string Normalized phone string (empty if no digits).
+	 */
+	public static function normalize_phone_for_match( string $phone ): string {
+		$normalized = PhoneHelper::normalize_phone( $phone );
+		if ( is_string( $normalized ) && '' !== $normalized ) {
+			return $normalized;
+		}
+
+		$digits = preg_replace( '/[^0-9]/', '', $phone );
+		if ( ! is_string( $digits ) || '' === $digits ) {
+			return '';
+		}
+		if ( 0 === strpos( $digits, '00' ) ) {
+			$digits = substr( $digits, 2 );
+		}
+
+		return $digits;
+	}
+
+	/**
+	 * Format a readable label for a booking candidate in the quick-assign dropdown.
+	 *
+	 * @param object $cand Booking candidate row.
+	 * @return string Formatted label.
+	 */
+	public static function format_booking_candidate_label( object $cand ): string {
+		$name = ! empty( $cand->customer_name ) ? (string) $cand->customer_name : (string) ( $cand->customer_phone ?? '' );
+
+		$date_str = '';
+		if ( ! empty( $cand->booking_date ) ) {
+			$ts       = strtotime( (string) $cand->booking_date );
+			$date_str = $ts ? gmdate( 'd.m.Y', $ts ) : (string) $cand->booking_date;
+		}
+
+		$time_str = '';
+		if ( ! empty( $cand->start_time ) && ! empty( $cand->end_time ) ) {
+			$time_str = substr( (string) $cand->start_time, 0, 5 ) . '–' . substr( (string) $cand->end_time, 0, 5 );
+		}
+
+		$date_time = trim( $date_str . ( '' !== $time_str ? ' ' . $time_str : '' ) );
+
+		$status_labels = array(
+			'pending'         => __( 'Venter', 'snippen-booking' ),
+			'pending_payment' => __( 'Venter på betaling', 'snippen-booking' ),
+			'confirmed'       => __( 'Bekreftet', 'snippen-booking' ),
+			'cancelled'       => __( 'Avbrutt', 'snippen-booking' ),
+		);
+		$raw_status    = (string) ( $cand->status ?? '' );
+		$status_label  = $status_labels[ $raw_status ] ?? $raw_status;
+
+		$parts = array(
+			sprintf( '#%d: %s', (int) $cand->id, $name ),
+		);
+		if ( '' !== $date_time ) {
+			$parts[] = $date_time;
+		}
+		if ( ! empty( $cand->object_names ) ) {
+			$parts[] = (string) $cand->object_names;
+		}
+		if ( '' !== $status_label ) {
+			$parts[] = $status_label;
+		}
+
+		return implode( ' · ', $parts );
+	}
+
+	/**
 	 * Output inline Javascript for select-all, character counting, and delete confirmations.
 	 */
 	private function render_inline_scripts() {
@@ -985,6 +1154,29 @@ class SmsInboxPage {
 				});
 			});
 
+			// Quick assign select: expand to all bookings if "__show_all__" is chosen
+			var allCandidateOptions = <?php echo wp_json_encode( $this->all_candidate_options ); ?>;
+			var assignSelects = document.querySelectorAll('.snippen-quick-assign-select');
+			assignSelects.forEach(function(select) {
+				select.addEventListener('change', function() {
+					if (this.value === '__show_all__' && Array.isArray(allCandidateOptions)) {
+						this.innerHTML = '';
+						var defaultOpt = document.createElement('option');
+						defaultOpt.value = '';
+						defaultOpt.textContent = '<?php echo esc_js( __( 'Koble til (alle)...', 'snippen-booking' ) ); ?>';
+						this.appendChild(defaultOpt);
+
+						allCandidateOptions.forEach(function(item) {
+							var opt = document.createElement('option');
+							opt.value = String(item.id);
+							opt.textContent = item.label;
+							select.appendChild(opt);
+						});
+						this.value = '';
+					}
+				});
+			});
+
 			// Quick assign buttons
 			var assignBtns = document.querySelectorAll('.snippen-quick-assign-btn');
 			assignBtns.forEach(function(btn) {
@@ -992,7 +1184,7 @@ class SmsInboxPage {
 					e.preventDefault();
 					var id = this.getAttribute('data-message-id');
 					var select = document.querySelector('.snippen-quick-assign-select[data-message-id="' + id + '"]');
-					if (!select || !select.value) {
+					if (!select || !select.value || select.value === '__show_all__') {
 						alert('<?php echo esc_js( __( 'Vennligst velg en reservasjon først.', 'snippen-booking' ) ); ?>');
 						return;
 					}
