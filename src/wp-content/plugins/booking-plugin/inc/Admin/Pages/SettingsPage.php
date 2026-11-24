@@ -135,6 +135,11 @@ class SettingsPage {
 			update_option( 'snippen_doorman_booking_statuses', sanitize_text_field( wp_unslash( $_POST['snippen_doorman_booking_statuses'] ) ) );
 		}
 
+		if ( isset( $_POST['snippen_doorman_offline_tolerance_minutes'] ) ) {
+			$doorman_offline_tolerance = max( 0, intval( $_POST['snippen_doorman_offline_tolerance_minutes'] ) );
+			update_option( \SnippenBooking\Service\Door\DoormanHealthService::OPTION_TOLERANCE_MINUTES, $doorman_offline_tolerance );
+		}
+
 		// Run sync/clear door codes immediately when settings are saved
 		\SnippenBooking\Service\DoorCodeService::update_approaching_bookings_door_codes();
 
@@ -194,6 +199,7 @@ class SettingsPage {
 		update_option( 'snippen_email_inbound_sms_enabled', isset( $_POST['snippen_email_inbound_sms_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_rental_feedback_enabled', isset( $_POST['snippen_email_rental_feedback_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_sms_gateway_alert_enabled', isset( $_POST['snippen_email_sms_gateway_alert_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_email_doorman_alert_enabled', isset( $_POST['snippen_email_doorman_alert_enabled'] ) ? 'yes' : 'no' );
 
 		update_option( 'snippen_sms_booking_confirmation_enabled', isset( $_POST['snippen_sms_booking_confirmation_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_admin_booking_enabled', isset( $_POST['snippen_sms_admin_booking_enabled'] ) ? 'yes' : 'no' );
@@ -261,6 +267,7 @@ class SettingsPage {
 		}
 
 		\SnippenBooking\Service\Sms\SmsGatewayHealthService::sync_cron_schedule();
+		\SnippenBooking\Service\Door\DoormanHealthService::sync_cron_schedule();
 
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Innstillinger lagret.', 'snippen-booking' ) . '</p></div>';
 	}
@@ -269,21 +276,22 @@ class SettingsPage {
 	 * Render the form
 	 */
 	private function render_form() {
-		$enable_door_code       = get_option( 'snippen_enable_door_code', 'no' );
-		$door_code_hours_before = get_option( 'snippen_door_code_hours_before', 24 );
-		$door_code_hours_after  = get_option( 'snippen_door_code_hours_after', 2 );
-		$enable_doorman_api     = get_option( 'snippen_enable_doorman_api', 'no' );
-		$doorman_api_token      = get_option( 'snippen_doorman_api_token', '' );
-		$doorman_api_keys       = DoormanApiKeyApi::get_keys();
-		$doorman_expose_hours   = get_option( 'snippen_doorman_expose_hours_before', 168 );
-		$doorman_buffer_minutes = get_option( 'snippen_doorman_buffer_minutes_before', 30 );
-		$doorman_grace_minutes  = get_option( 'snippen_doorman_grace_minutes_after', 120 );
-		$doorman_statuses       = get_option( 'snippen_doorman_booking_statuses', 'confirmed' );
-		$dispatch_method        = get_option( 'snippen_notification_dispatch_method', 'async' );
-		$terms_url              = get_option( 'snippen_terms_url', '' );
-		$preserve_data          = get_option( 'snippen_preserve_data_on_uninstall', 'no' );
-		$horizon_weeks          = get_option( 'snippen_booking_horizon_weeks', 52 );
-		$disable_all_emails     = get_option( 'snippen_disable_all_emails', 'no' );
+		$enable_door_code          = get_option( 'snippen_enable_door_code', 'no' );
+		$door_code_hours_before    = get_option( 'snippen_door_code_hours_before', 24 );
+		$door_code_hours_after     = get_option( 'snippen_door_code_hours_after', 2 );
+		$enable_doorman_api        = get_option( 'snippen_enable_doorman_api', 'no' );
+		$doorman_api_token         = get_option( 'snippen_doorman_api_token', '' );
+		$doorman_api_keys          = DoormanApiKeyApi::get_keys();
+		$doorman_expose_hours      = get_option( 'snippen_doorman_expose_hours_before', 168 );
+		$doorman_buffer_minutes    = get_option( 'snippen_doorman_buffer_minutes_before', 30 );
+		$doorman_grace_minutes     = get_option( 'snippen_doorman_grace_minutes_after', 120 );
+		$doorman_statuses          = get_option( 'snippen_doorman_booking_statuses', 'confirmed' );
+		$doorman_offline_tolerance = \SnippenBooking\Service\Door\DoormanHealthService::get_tolerance_minutes();
+		$dispatch_method           = get_option( 'snippen_notification_dispatch_method', 'async' );
+		$terms_url                 = get_option( 'snippen_terms_url', '' );
+		$preserve_data             = get_option( 'snippen_preserve_data_on_uninstall', 'no' );
+		$horizon_weeks             = get_option( 'snippen_booking_horizon_weeks', 52 );
+		$disable_all_emails        = get_option( 'snippen_disable_all_emails', 'no' );
 
 		$payment_bank_account   = get_option( 'snippen_payment_bank_account', '' );
 		$payment_vipps_number   = get_option( 'snippen_payment_vipps_number', '' );
@@ -309,6 +317,7 @@ class SettingsPage {
 		$email_inbound_sms       = get_option( 'snippen_email_inbound_sms_enabled', 'yes' );
 		$email_rental_feedback   = get_option( 'snippen_email_rental_feedback_enabled', 'yes' );
 		$email_sms_gateway_alert = get_option( 'snippen_email_sms_gateway_alert_enabled', 'yes' );
+		$email_doorman_alert     = get_option( 'snippen_email_doorman_alert_enabled', 'yes' );
 
 		$sms_booking           = get_option( 'snippen_sms_booking_confirmation_enabled', 'no' );
 		$sms_admin             = get_option( 'snippen_sms_admin_booking_enabled', 'no' );
@@ -397,9 +406,13 @@ class SettingsPage {
 		echo '<input type="checkbox" name="snippen_email_rental_feedback_enabled" value="yes" ' . checked( $email_rental_feedback, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send spørreskjema etter leieforhold til kunde på e-post', 'snippen-booking' );
 		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
 		echo '<input type="checkbox" name="snippen_email_sms_gateway_alert_enabled" value="yes" ' . checked( $email_sms_gateway_alert, 'yes', false ) . ' style="margin:0;">';
 		echo esc_html__( 'Send varsel om problem med SMS-tjenesten til administratorer på e-post', 'snippen-booking' );
+		echo '</label>';
+		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
+		echo '<input type="checkbox" name="snippen_email_doorman_alert_enabled" value="yes" ' . checked( $email_doorman_alert, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Send varsel om offline Doorman-tjeneste til administratorer på e-post', 'snippen-booking' );
 		echo '</label>';
 		echo '</div>';
 
@@ -799,6 +812,12 @@ class SettingsPage {
 		echo '<label for="snippen_doorman_booking_statuses" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Kvalifiserende bookingstatuser', 'snippen-booking' ) . '</label>';
 		echo '<input type="text" name="snippen_doorman_booking_statuses" id="snippen_doorman_booking_statuses" value="' . esc_attr( $doorman_statuses ) . '" class="regular-text">';
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Kommaseparert liste over bookingstatuser som skal kvalifisere for dørkode (f.eks. confirmed).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
+		echo '<label for="snippen_doorman_offline_tolerance_minutes" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Varslingsterskel ved nedetid (minutter)', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_doorman_offline_tolerance_minutes" id="snippen_doorman_offline_tolerance_minutes" value="' . esc_attr( $doorman_offline_tolerance ) . '" class="small-text" min="0">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Hvor mange minutter uten statusrapport fra en Doorman-tjeneste før den regnes som offline og e-postvarsel sendes til booking-administratorer (én gang per nedetidsperiode). Standard er 60 minutter. Sett til 0 for å deaktivere e-postvarsling.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '</div>'; // #snippen-doorman-api-settings

@@ -81,6 +81,11 @@ class NotificationManager {
 	const TYPE_SMS_GATEWAY_ALERT = 'sms_gateway_alert';
 
 	/**
+	 * Notification type: Doorman service offline health alert
+	 */
+	const TYPE_DOORMAN_ALERT = 'doorman_alert';
+
+	/**
 	 * Get all registered notification providers.
 	 *
 	 * @return NotificationProviderInterface[]
@@ -1679,6 +1684,96 @@ class NotificationManager {
 				}
 			} catch ( \Throwable $t ) {
 				error_log( 'NotificationManager Exception during SMS gateway alert email send: ' . $t->getMessage() );
+			}
+		}
+
+		return $email_sent;
+	}
+
+	/**
+	 * Send email alert to booking administrators when a snippen-doorman-service node stops reporting.
+	 *
+	 * @param string   $service_id         Service ID (or 'global').
+	 * @param string   $service_name       Human-readable service name.
+	 * @param int      $seconds_since_seen Seconds elapsed since last status report (or monitoring baseline).
+	 * @param int      $tolerance_minutes  Configured offline tolerance in minutes.
+	 * @param int|null $last_seen_at       Unix timestamp of last status report, or null if never seen.
+	 * @return bool True if at least one administrator email was sent.
+	 */
+	public function send_doorman_alert( string $service_id, string $service_name, int $seconds_since_seen, int $tolerance_minutes, ?int $last_seen_at = null ): bool {
+		if ( 'yes' !== get_option( 'snippen_email_doorman_alert_enabled', 'yes' ) ) {
+			return false;
+		}
+
+		$email_provider = $this->get_provider( 'email' );
+		if ( ! ( $email_provider instanceof EmailProviderInterface ) ) {
+			return false;
+		}
+
+		$admin_users = get_users(
+			array(
+				'capability' => Capabilities::MANAGE_BOOKINGS,
+			)
+		);
+		if ( empty( $admin_users ) ) {
+			return false;
+		}
+
+		$last_seen_time = $last_seen_at
+			? wp_date( 'Y-m-d H:i:s', $last_seen_at )
+			: __( 'Aldri registrert', 'snippen-booking' );
+
+		$context = array(
+			'service_id'         => $service_id,
+			'service_name'       => $service_name,
+			'last_seen_time'     => $last_seen_time,
+			'minutes_since_seen' => (string) max( 1, (int) round( $seconds_since_seen / 60 ) ),
+			'tolerance_minutes'  => (string) $tolerance_minutes,
+			'status_url'         => admin_url( 'admin.php?page=snippen-booking-door-codes&tab=status' ),
+			'settings_url'       => admin_url( 'admin.php?page=snippen-booking-settings' ),
+		);
+
+		$template_service = new NotificationTemplateService();
+		$rendered_email   = $template_service->render_template( self::TYPE_DOORMAN_ALERT, 'email', $context );
+
+		$subject = ! empty( $rendered_email['subject'] )
+			? $rendered_email['subject']
+			: sprintf(
+				/* translators: %s: Doorman service name */
+				__( 'Advarsel: Doorman-tjeneste (%s) er offline', 'snippen-booking' ),
+				$service_name
+			);
+		$message = $rendered_email['body'];
+
+		$email_sent = false;
+		foreach ( $admin_users as $admin ) {
+			if ( empty( $admin->user_email ) ) {
+				continue;
+			}
+			try {
+				$sent = $email_provider->send_email( $admin->user_email, $subject, $message );
+				MessageLoggerService::log_message(
+					null,
+					null,
+					'email',
+					$admin->user_email,
+					$subject,
+					$message,
+					self::TYPE_DOORMAN_ALERT,
+					$sent ? 'sent' : 'failed',
+					array(
+						'service_id'         => $service_id,
+						'service_name'       => $service_name,
+						'seconds_since_seen' => $seconds_since_seen,
+						'tolerance_minutes'  => $tolerance_minutes,
+						'last_seen_at'       => $last_seen_at,
+					)
+				);
+				if ( $sent ) {
+					$email_sent = true;
+				}
+			} catch ( \Throwable $t ) {
+				error_log( 'NotificationManager Exception during Doorman alert email send: ' . $t->getMessage() );
 			}
 		}
 

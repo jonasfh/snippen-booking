@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.59.0] - 2026-11-24
+- (#421) [Feat] Lagt til e-postvarsling og konfigurerbar nedetidsterskel for `snippen-doorman-service`:
+  - **`DoormanHealthService.php` & `Plugin.php`**: Periodisk helsesjekk via WP-Cron (`snippen_check_doorman_health`, hvert 15. minutt) når Doorman API er aktivert. Varsler booking-administratorer én gang per nedetidsperiode per node når statusrapport uteblir utover terskelen, og nullstilles automatisk når noden rapporterer via `POST /wp-json/snippen/v1/door/status` (`DoorLockApi::receive_status()`).
+  - **`SettingsPage.php`**: Lagt til innstilling for varslingsterskel ved nedetid i minutter (`snippen_doorman_offline_tolerance_minutes`, standard `60` minutter; `0` deaktiverer varsling) under *Doorman*-fanen og e-postbryter (`snippen_email_doorman_alert_enabled`, standard `yes`) under *E-post*-fanen.
+  - **Varslingsmal (`doorman_alert` / `doorman-alert`)**: Lagt til redigerbar standard e-postmal i `NotificationTemplateService.php`, `NotificationTemplateInstall.php` og `NotificationTemplatesPage.php`, plassholdere (`service_name`, `service_id`, `last_seen_time`, `minutes_since_seen`, `tolerance_minutes`, `status_url`, `settings_url`) i `PlaceholderRegistry.php`, samt `NotificationManager::send_doorman_alert()`.
+  - **`DoorCodesPage.php` & `DoorLockApi.php`**: Bruker konfigurert terskel for offline-status og viser på statussiden (*Dørkoder & Adgangskontroll -> Status*) om e-postvarsel er sendt (med tidspunkt) for offline noder.
+  - **Tester**: Lagt til integrasjons- og enhetstester i `DoormanHealthServiceTest.php`, `NotificationTemplateServiceTest.php` og `NotificationContextContractTest.php`.
+
 ## [2.58.0] - 2026-11-24
 - (#416) [Feat] Filtrer koblingsmenyen i **SMS Innboks** (`SmsInboxPage.php`) på avsenderens normaliserte telefonnummer og forbedre visningen:
   - Viser som standard kun aktive reservasjoner som matcher avsenderens telefonnummer (normalisert via `PhoneHelper::normalize_phone()` / `SmsInboxResolverService::get_search_phones()`), med tydelig melding («Ingen reservasjoner for dette nummeret») når ingen matcher, samt valg for å vise alle reservasjoner ved behov.
