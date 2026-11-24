@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.60.0] - 2026-11-24
+- (#423) [Feat] Påminnelse før bookingstart (`booking_reminder`), konfigurerbart sendetidsvindu for SMS og ny **Varslinger**-fane i innstillinger:
+  - **`BookingReminderService.php` & `Plugin.php`**: Daglig WP-Cron (`snippen_booking_daily_booking_reminders`) som sender påminnelse på SMS og e-post `X` dager (standard `14`, `0` deaktiverer) før bookingstart for `confirmed`-reservasjoner, med idempotens via `MessageLoggerService`.
+  - **`SmsTimeWindowService.php`, `MessageLoggerService.php` & `NotificationManager.php`**: Konfigurerbart sendetidsvindu for utgående SMS (standard `08:00` – `22:00` lokal tid) med unntak for tidskritiske meldinger (`user_activation`, `password_reset`, `booking_confirmation`, `booking_confirmed`, `admin_sms_reply`, `sms_disambiguation_prompt`, `sms_disambiguation_confirmation`). Ikke-unntatte meldinger utenfor vinduet holdes i `queued`-status til vinduet åpner (både for `snippen_sms_service` outbox-polling og direkte-providere som `keysms` via `snippen_booking_flush_queued_sms`).
+  - **`PlaceholderRegistry.php`, `NotificationTemplateService.php`, `NotificationTemplateInstall.php`, `NotificationTemplatesPage.php` & `BookingsPage.php`**: Lagt til plassholder `{{days_until_booking}}`, standardmaler for `booking_reminder` / `booking-reminder`, samt støtte i malredigering og meldingslogg.
+  - **`SettingsPage.php`**: Ny fane **Varslinger** med matrise (`E-post | SMS | Beskrivelse`), innstilling for påminnelsesdager, sendetidsvindu og unntak for SMS, samt sammenslått **SMS**-fane (*Snippen SMS Service* + *KeySMS*).
+  - **Tester**: Lagt til enhetstester i `SmsTimeWindowServiceTest.php` og `BookingReminderServiceTest.php` og oppdatert `PlaceholderRegistryTest.php` og `SettingsPageTest.php`.
+
 ## [2.59.0] - 2026-11-24
 - (#421) [Feat] Lagt til e-postvarsling og konfigurerbar nedetidsterskel for `snippen-doorman-service`:
   - **`DoormanHealthService.php` & `Plugin.php`**: Periodisk helsesjekk via WP-Cron (`snippen_check_doorman_health`, hvert 15. minutt) når Doorman API er aktivert. Varsler booking-administratorer én gang per nedetidsperiode per node når statusrapport uteblir utover terskelen, og nullstilles automatisk når noden rapporterer via `POST /wp-json/snippen/v1/door/status` (`DoorLockApi::receive_status()`).

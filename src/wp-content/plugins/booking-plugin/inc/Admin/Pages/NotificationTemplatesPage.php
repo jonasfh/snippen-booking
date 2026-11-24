@@ -255,6 +255,7 @@ class NotificationTemplatesPage {
 					'door-code-updated': 'door_code_updated',
 					'inbound-sms-received': 'inbound_sms_received',
 					'rental-feedback': 'rental_feedback',
+					'booking-reminder': 'booking_reminder',
 					'sms-gateway-alert': 'sms_gateway_alert',
 					'doorman-alert': 'doorman_alert'
 				};
@@ -398,6 +399,7 @@ class NotificationTemplatesPage {
 			'door-code-updated'        => __( 'door-code-updated (Dørkode tildelt/endret)', 'snippen-booking' ),
 			'inbound-sms-received'     => __( 'inbound-sms-received (Innkommende SMS-varsel)', 'snippen-booking' ),
 			'rental-feedback'          => __( 'rental-feedback (Spørreskjema etter leieforhold)', 'snippen-booking' ),
+			'booking-reminder'         => __( 'booking-reminder (Påminnelse før bookingstart)', 'snippen-booking' ),
 			'sms-gateway-alert'        => __( 'sms-gateway-alert (Varsel om problem med SMS-tjenesten)', 'snippen-booking' ),
 			'doorman-alert'            => __( 'doorman-alert (Varsel om offline Doorman-tjeneste)', 'snippen-booking' ),
 		);

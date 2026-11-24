@@ -9,6 +9,7 @@ namespace SnippenBooking\Service\Notification;
 
 use SnippenBooking\Helper\Capabilities;
 use SnippenBooking\Helper\PhoneHelper;
+use SnippenBooking\Service\Sms\SmsTimeWindowService;
 
 /**
  * Class NotificationManager
@@ -74,6 +75,11 @@ class NotificationManager {
 	 * Notification type: Post-rental feedback questionnaire
 	 */
 	const TYPE_RENTAL_FEEDBACK = 'rental_feedback';
+
+	/**
+	 * Notification type: Upcoming booking reminder (X days before start)
+	 */
+	const TYPE_BOOKING_REMINDER = 'booking_reminder';
 
 	/**
 	 * Notification type: SMS gateway polling health alert
@@ -145,6 +151,117 @@ class NotificationManager {
 			return 'queued';
 		}
 		return 'sent';
+	}
+
+	/**
+	 * Dispatch or queue an outbound SMS while respecting the SMS send-time window.
+	 *
+	 * @param int|null $booking_id Booking ID, if any.
+	 * @param int|null $user_id    User ID, if any.
+	 * @param string   $phone      Recipient phone number.
+	 * @param string   $message    SMS body.
+	 * @param string   $event_type Notification event type.
+	 * @param array    $metadata   Optional extra metadata for MessageLoggerService.
+	 * @return bool True if dispatched or queued for later dispatch, false on failure/unconfigured.
+	 */
+	public function dispatch_sms(
+		?int $booking_id,
+		?int $user_id,
+		string $phone,
+		string $message,
+		string $event_type,
+		array $metadata = array()
+	): bool {
+		if ( empty( $phone ) || empty( $message ) ) {
+			return false;
+		}
+
+		$provider = $this->get_active_sms_provider();
+		if ( ! $provider || ! $provider->is_configured() ) {
+			return false;
+		}
+
+		$provider_id = $provider->get_id();
+
+		// Direct providers (e.g. KeySMS) defer sending via 'queued' when outside the send-time window.
+		if ( 'snippen_sms_service' !== $provider_id && ! SmsTimeWindowService::can_send_now( $event_type ) ) {
+			MessageLoggerService::log_message(
+				$booking_id,
+				$user_id,
+				'sms',
+				$phone,
+				null,
+				$message,
+				$event_type,
+				'queued',
+				array_merge(
+					$metadata,
+					array(
+						'provider'                => $provider_id,
+						'deferred_outside_window' => true,
+					)
+				)
+			);
+			return true;
+		}
+
+		$sms_sent = $provider->send_sms( $phone, $message );
+		MessageLoggerService::log_message(
+			$booking_id,
+			$user_id,
+			'sms',
+			$phone,
+			null,
+			$message,
+			$event_type,
+			$this->get_sms_initial_status( $sms_sent, $provider_id ),
+			array_merge( $metadata, array( 'provider' => $provider_id ) )
+		);
+
+		if ( ! $sms_sent ) {
+			error_log( sprintf( 'NotificationManager: Failed to dispatch %s SMS via %s.', $event_type, $provider_id ) );
+		}
+
+		return $sms_sent;
+	}
+
+	/**
+	 * Flush queued outbound SMS messages for direct providers (e.g. KeySMS) when inside the send-time window.
+	 *
+	 * @param int $limit Maximum messages to process per run.
+	 * @return int Number of messages successfully sent.
+	 */
+	public function flush_queued_direct_sms( int $limit = 50 ): int {
+		$provider = $this->get_active_sms_provider();
+		if ( ! $provider || ! $provider->is_configured() || 'snippen_sms_service' === $provider->get_id() ) {
+			return 0;
+		}
+
+		$messages = MessageLoggerService::get_pending_outbox( $limit );
+		$sent     = 0;
+
+		foreach ( $messages as $msg ) {
+			$event_type = (string) ( $msg->event_type ?? '' );
+			if ( ! SmsTimeWindowService::can_send_now( $event_type ) ) {
+				continue;
+			}
+
+			$ok = $provider->send_sms( (string) $msg->recipient, (string) $msg->message );
+			MessageLoggerService::update_message_status(
+				(int) $msg->id,
+				$ok ? 'sent' : 'failed',
+				array(
+					'provider'       => $provider->get_id(),
+					'flushed_at_utc' => gmdate( 'c' ),
+				)
+			);
+
+			if ( $ok ) {
+				++$sent;
+			}
+		}
+
+		return $sent;
 	}
 
 	/**
@@ -553,26 +670,14 @@ class NotificationManager {
 
 		// 1. Send SMS reminder
 		if ( $sms_enabled && ! empty( $booking->customer_phone ) ) {
-			$provider_id  = get_option( 'snippen_active_notification_provider', 'keysms' );
-			$sms_provider = $this->get_provider( $provider_id );
-
-			if ( $sms_provider instanceof SmsProviderInterface && $sms_provider->is_configured() ) {
-				$sms_sent = $sms_provider->send_sms( $booking->customer_phone, $rendered_sms['body'] );
-				MessageLoggerService::log_message(
-					$booking_id,
-					$booking->user_id ? (int) $booking->user_id : null,
-					'sms',
-					$booking->customer_phone,
-					null,
-					$rendered_sms['body'],
-					self::TYPE_PAYMENT_REMINDER,
-					$this->get_sms_initial_status( $sms_sent, $provider_id ),
-					array(
-						'provider'    => $provider_id,
-						'days_before' => $days_before,
-					)
-				);
-			}
+			$sms_sent = $this->dispatch_sms(
+				$booking_id,
+				$booking->user_id ? (int) $booking->user_id : null,
+				$booking->customer_phone,
+				$rendered_sms['body'],
+				self::TYPE_PAYMENT_REMINDER,
+				array( 'days_before' => $days_before )
+			);
 		}
 
 		// 2. Send Email reminder
@@ -1260,24 +1365,14 @@ class NotificationManager {
 		}
 
 		if ( $sms_enabled && ! empty( $phone ) && ! empty( $rendered_sms['body'] ) ) {
-			$provider_id = get_option( 'snippen_active_notification_provider', 'keysms' );
-			$provider    = $this->get_provider( $provider_id );
-
-			if ( $provider instanceof SmsProviderInterface && $provider->is_configured() ) {
-				$sms_sent       = $provider->send_sms( $phone, $rendered_sms['body'] );
-				$initial_status = $sms_sent ? ( 'snippen_sms_service' === $provider_id ? 'queued' : 'sent' ) : 'failed';
-				MessageLoggerService::log_message(
-					$booking_id,
-					$booking->user_id ? (int) $booking->user_id : null,
-					'sms',
-					$phone,
-					null,
-					$rendered_sms['body'],
-					self::TYPE_DOOR_CODE_UPDATED,
-					$initial_status,
-					array_merge( array( 'provider' => $provider_id ), $log_metadata )
-				);
-			}
+			$sms_sent = $this->dispatch_sms(
+				$booking_id,
+				$booking->user_id ? (int) $booking->user_id : null,
+				$phone,
+				$rendered_sms['body'],
+				self::TYPE_DOOR_CODE_UPDATED,
+				$log_metadata
+			);
 		}
 
 		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
@@ -1357,23 +1452,13 @@ class NotificationManager {
 		}
 
 		if ( $sms_enabled && ! empty( $phone ) && ! empty( $rendered_sms['body'] ) ) {
-			$provider = $this->get_active_sms_provider();
-			if ( $provider && $provider->is_configured() ) {
-				$sms_sent           = $provider->send_sms( $phone, $rendered_sms['body'] );
-				$result['sms_sent'] = $sms_sent;
-				$provider_id        = $provider->get_id();
-				MessageLoggerService::log_message(
-					$booking_id,
-					$booking->user_id ? (int) $booking->user_id : null,
-					'sms',
-					$phone,
-					null,
-					$rendered_sms['body'],
-					self::TYPE_RENTAL_FEEDBACK,
-					$this->get_sms_initial_status( $sms_sent, $provider_id ),
-					array( 'provider' => $provider_id )
-				);
-			}
+			$result['sms_sent'] = $this->dispatch_sms(
+				$booking_id,
+				$booking->user_id ? (int) $booking->user_id : null,
+				$phone,
+				$rendered_sms['body'],
+				self::TYPE_RENTAL_FEEDBACK
+			);
 		}
 
 		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
@@ -1407,6 +1492,91 @@ class NotificationManager {
 		$result['sent'] = $result['sms_sent'] || $result['email_sent'];
 
 		return $result;
+	}
+
+	/**
+	 * Send upcoming booking reminder to customer X days before booking start.
+	 *
+	 * @param int $booking_id         Booking ID.
+	 * @param int $days_until_booking Number of days until booking starts.
+	 * @return bool True if at least one channel succeeded/queued.
+	 */
+	public function send_booking_reminder( int $booking_id, int $days_until_booking ): bool {
+		global $wpdb;
+
+		$table_bookings = $wpdb->prefix . 'snippen_bookings';
+		$booking        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_bookings} WHERE id = %d AND deleted_at IS NULL", $booking_id ) );
+		if ( ! $booking ) {
+			return false;
+		}
+
+		$sms_enabled   = 'yes' === get_option( 'snippen_sms_booking_reminder_enabled', 'yes' );
+		$email_enabled = 'yes' === get_option( 'snippen_email_booking_reminder_enabled', 'yes' );
+
+		if ( ! $sms_enabled && ! $email_enabled ) {
+			return false;
+		}
+
+		$object_names                  = $this->get_booking_object_names( $booking_id, $booking );
+		$booking_time                  = $this->get_booking_time( $booking );
+		$booking_url                   = add_query_arg( 'booking_uuid', $booking->uuid, home_url( '/' ) );
+		$context                       = $this->build_booking_context( $booking, $object_names, $booking_time, $booking_url );
+		$context['days_until_booking'] = (string) $days_until_booking;
+
+		$template_service = new NotificationTemplateService();
+		$rendered_sms     = $template_service->render_template( self::TYPE_BOOKING_REMINDER, 'sms', $context );
+		$rendered_email   = $template_service->render_template( self::TYPE_BOOKING_REMINDER, 'email', $context );
+
+		$sms_sent   = false;
+		$email_sent = false;
+
+		$phone = ! empty( $booking->customer_phone ) ? $booking->customer_phone : '';
+		if ( empty( $phone ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$phone = get_user_meta( $user->ID, 'snippen_phone', true ) ?: ( get_user_meta( $user->ID, 'phone', true ) ?: ( get_user_meta( $user->ID, 'billing_phone', true ) ?: '' ) );
+			}
+		}
+
+		if ( $sms_enabled && ! empty( $phone ) && ! empty( $rendered_sms['body'] ) ) {
+			$sms_sent = $this->dispatch_sms(
+				$booking_id,
+				$booking->user_id ? (int) $booking->user_id : null,
+				$phone,
+				$rendered_sms['body'],
+				self::TYPE_BOOKING_REMINDER,
+				array( 'days_before' => $days_until_booking )
+			);
+		}
+
+		$recipient = ! empty( $booking->customer_email ) ? $booking->customer_email : '';
+		if ( empty( $recipient ) && ! empty( $booking->user_id ) ) {
+			$user = get_userdata( $booking->user_id );
+			if ( $user ) {
+				$recipient = $user->user_email;
+			}
+		}
+
+		if ( $email_enabled && ! empty( $recipient ) && ! empty( $rendered_email['body'] ) ) {
+			$email_provider = $this->get_provider( 'email' );
+			if ( $email_provider instanceof EmailProviderInterface ) {
+				$subject    = ! empty( $rendered_email['subject'] ) ? $rendered_email['subject'] : sprintf( __( 'Påminnelse: Din reservasjon av %1$s starter om %2$d dager', 'snippen-booking' ), $object_names, $days_until_booking );
+				$email_sent = $email_provider->send_email( $recipient, $subject, $rendered_email['body'] );
+				MessageLoggerService::log_message(
+					$booking_id,
+					$booking->user_id ? (int) $booking->user_id : null,
+					'email',
+					$recipient,
+					$subject,
+					$rendered_email['body'],
+					self::TYPE_BOOKING_REMINDER,
+					$email_sent ? 'sent' : 'failed',
+					array( 'days_before' => $days_until_booking )
+				);
+			}
+		}
+
+		return $sms_sent || $email_sent;
 	}
 
 	/**
