@@ -7,6 +7,7 @@
 
 namespace SnippenBooking\Tests\Integration;
 
+use SnippenBooking\Admin\Pages\SmsGatewayMonitorPage;
 use SnippenBooking\Api\SmsGatewayApi;
 use SnippenBooking\Helper\Capabilities;
 use SnippenBooking\Service\Notification\NotificationManager;
@@ -57,6 +58,7 @@ class SmsGatewayHealthServiceTest extends TestCase {
 		delete_option( SmsGatewayHealthService::OPTION_ALERT_SENT_AT );
 		delete_option( SmsGatewayHealthService::OPTION_TOLERANCE_SECONDS );
 		delete_option( 'snippen_email_sms_gateway_alert_enabled' );
+		wp_clear_scheduled_hook( SmsGatewayHealthService::CRON_HOOK );
 	}
 
 	/**
@@ -222,5 +224,57 @@ class SmsGatewayHealthServiceTest extends TestCase {
 		$this->assertSame( 'email', $row->channel );
 		$this->assertSame( 'sent', $row->status );
 		$this->assertSame( 'gw_admin_log@example.com', $row->recipient );
+	}
+
+	/**
+	 * Test cron schedule is only active when snippen-sms-service is active and configured
+	 */
+	public function test_cron_schedule_only_active_when_snippen_sms_enabled() {
+		$this->assertFalse( SmsGatewayHealthService::sync_cron_schedule() );
+		$this->assertFalse( wp_next_scheduled( SmsGatewayHealthService::CRON_HOOK ) );
+
+		update_option( 'snippen_active_notification_provider', 'snippen_sms_service' );
+		update_option( 'snippen_sms_service_api_token', 'secret-token' );
+
+		$this->assertTrue( SmsGatewayHealthService::sync_cron_schedule() );
+		$this->assertNotFalse( wp_next_scheduled( SmsGatewayHealthService::CRON_HOOK ) );
+
+		// Switching back to keysms unschedules the cron.
+		update_option( 'snippen_active_notification_provider', 'keysms' );
+		$this->assertFalse( SmsGatewayHealthService::sync_cron_schedule() );
+		$this->assertFalse( wp_next_scheduled( SmsGatewayHealthService::CRON_HOOK ) );
+	}
+
+	/**
+	 * Test status summary and monitoring admin page render
+	 */
+	public function test_status_summary_and_monitor_page_render() {
+		$admin_id = $this->create_booking_admin( 'monitor' );
+		wp_set_current_user( $admin_id );
+
+		$inactive = SmsGatewayHealthService::get_status_summary( 10000 );
+		$this->assertSame( 'inactive', $inactive['state'] );
+		$this->assertFalse( $inactive['monitoring_active'] );
+
+		update_option( 'snippen_active_notification_provider', 'snippen_sms_service' );
+		update_option( 'snippen_sms_service_api_token', 'secret-token' );
+		SmsGatewayHealthService::record_poll( 9900 );
+		SmsGatewayHealthService::sync_cron_schedule();
+
+		$ok = SmsGatewayHealthService::get_status_summary( 10000 );
+		$this->assertSame( 'ok', $ok['state'] );
+		$this->assertTrue( $ok['monitoring_active'] );
+		$this->assertSame( 100, $ok['seconds_elapsed'] );
+		$this->assertNotNull( $ok['next_cron_at'] );
+
+		SmsGatewayHealthService::record_poll( time() );
+
+		ob_start();
+		( new SmsGatewayMonitorPage() )->render();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'SMS Overvåking', $html );
+		$this->assertStringContainsString( 'Aktiv &amp; Frisk', $html );
+		$this->assertStringContainsString( 'Kjør helsesjekk nå', $html );
 	}
 }

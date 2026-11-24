@@ -359,6 +359,13 @@ class NotificationContextContractTest extends TestCase {
 				'inbox_url'        => 'https://vestreholmensameie.no/wp-admin/admin.php?page=snippen-sms-inbox',
 				'booking_id'       => (string) $this->booking_id,
 			),
+			'sms_gateway_alert'    => array(
+				'last_poll_time'     => '2026-11-24 08:00:00',
+				'seconds_since_poll' => '950',
+				'minutes_since_poll' => '16',
+				'tolerance_seconds'  => '900',
+				'settings_url'       => 'https://vestreholmensameie.no/wp-admin/admin.php?page=snippen-booking-settings',
+			),
 		);
 
 		foreach ( $non_booking_contexts as $context_name => $context_data ) {

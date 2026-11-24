@@ -154,6 +154,15 @@ class AdminLoader {
 
 		add_submenu_page(
 			'snippen-booking',
+			__( 'SMS Overvåking', 'snippen-booking' ),
+			__( 'SMS Overvåking', 'snippen-booking' ),
+			Capabilities::MANAGE_BOOKINGS,
+			'snippen-booking-sms-monitor',
+			array( self::class, 'render_sms_monitor_page' )
+		);
+
+		add_submenu_page(
+			'snippen-booking',
 			__( 'Dørkoder', 'snippen-booking' ),
 			__( 'Dørkoder', 'snippen-booking' ),
 			Capabilities::MANAGE_BOOKINGS,
@@ -438,6 +447,18 @@ class AdminLoader {
 			$page->render();
 		} else {
 			echo '<div class="wrap"><h1>' . esc_html__( 'SMS Innboks', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Render SMS Gateway Monitor Page
+	 */
+	public static function render_sms_monitor_page() {
+		if ( class_exists( 'SnippenBooking\Admin\Pages\SmsGatewayMonitorPage' ) ) {
+			$page = new \SnippenBooking\Admin\Pages\SmsGatewayMonitorPage();
+			$page->render();
+		} else {
+			echo '<div class="wrap"><h1>' . esc_html__( 'SMS Overvåking', 'snippen-booking' ) . '</h1><p>' . esc_html__( 'Under utvikling...', 'snippen-booking' ) . '</p></div>';
 		}
 	}
 

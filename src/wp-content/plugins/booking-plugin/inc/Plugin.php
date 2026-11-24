@@ -112,10 +112,8 @@ class Plugin {
 		}
 
 		// Automated SMS gateway polling health check cron hook (Issue #419)
-		add_action( 'snippen_check_sms_gateway_health', array( __CLASS__, 'handle_check_sms_gateway_health' ) );
-		if ( ! wp_next_scheduled( 'snippen_check_sms_gateway_health' ) ) {
-			wp_schedule_event( time(), 'every_five_minutes', 'snippen_check_sms_gateway_health' );
-		}
+		add_action( \SnippenBooking\Service\Sms\SmsGatewayHealthService::CRON_HOOK, array( __CLASS__, 'handle_check_sms_gateway_health' ) );
+		\SnippenBooking\Service\Sms\SmsGatewayHealthService::sync_cron_schedule();
 	}
 
 	/**
