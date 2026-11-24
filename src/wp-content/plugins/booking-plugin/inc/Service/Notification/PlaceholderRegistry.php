@@ -385,6 +385,66 @@ class PlaceholderRegistry {
 				},
 			)
 		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'last_poll_time',
+				'label'        => __( 'Last SMS gateway poll time', 'snippen-booking' ),
+				'description'  => __( 'Formatted timestamp of the last recorded poll from snippen-sms-service.', 'snippen-booking' ),
+				'connected_to' => array( 'sms_gateway_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'last_poll_time', 'gateway.last_poll_time' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'seconds_since_poll',
+				'label'        => __( 'Seconds since last poll', 'snippen-booking' ),
+				'description'  => __( 'Number of seconds elapsed since the last SMS gateway poll.', 'snippen-booking' ),
+				'connected_to' => array( 'sms_gateway_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'seconds_since_poll', 'gateway.seconds_since_poll' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'minutes_since_poll',
+				'label'        => __( 'Minutes since last poll', 'snippen-booking' ),
+				'description'  => __( 'Rounded number of minutes elapsed since the last SMS gateway poll.', 'snippen-booking' ),
+				'connected_to' => array( 'sms_gateway_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'minutes_since_poll', 'gateway.minutes_since_poll' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'tolerance_seconds',
+				'label'        => __( 'Configured poll tolerance (seconds)', 'snippen-booking' ),
+				'description'  => __( 'Configured tolerance in seconds before sending an alert.', 'snippen-booking' ),
+				'connected_to' => array( 'sms_gateway_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'tolerance_seconds', 'gateway.tolerance_seconds' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'settings_url',
+				'label'        => __( 'Settings URL', 'snippen-booking' ),
+				'description'  => __( 'Direct admin URL to Snippen Booking settings.', 'snippen-booking' ),
+				'connected_to' => array( 'sms_gateway_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'settings_url', 'gateway.settings_url' ) );
+				},
+			)
+		);
 	}
 
 	/**
@@ -488,6 +548,9 @@ class PlaceholderRegistry {
 
 			'rental_feedback'          => 'rental-feedback',
 			'rental-feedback'          => 'rental-feedback',
+
+			'sms_gateway_alert'        => 'sms-gateway-alert',
+			'sms-gateway-alert'        => 'sms-gateway-alert',
 		);
 
 		return $map[ $context ] ?? $context;

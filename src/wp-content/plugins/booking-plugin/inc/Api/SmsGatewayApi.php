@@ -8,6 +8,7 @@
 namespace SnippenBooking\Api;
 
 use SnippenBooking\Service\Notification\MessageLoggerService;
+use SnippenBooking\Service\Sms\SmsGatewayHealthService;
 use SnippenBooking\Service\Sms\SmsInboxResolverService;
 use SnippenBooking\Helper\PhoneHelper;
 
@@ -182,6 +183,7 @@ class SmsGatewayApi {
 	 * @return \WP_REST_Response Response object.
 	 */
 	public static function get_outbox( \WP_REST_Request $request ) {
+		SmsGatewayHealthService::record_poll();
 		$limit    = $request->get_param( 'limit' ) ?: 50;
 		$messages = MessageLoggerService::get_pending_outbox( (int) $limit );
 		$sender   = get_option( 'snippen_sms_service_sender', 'Snippen' ) ?: 'Snippen';
@@ -210,6 +212,7 @@ class SmsGatewayApi {
 	 * @return \WP_REST_Response Response object.
 	 */
 	public static function update_outbox_status( \WP_REST_Request $request ) {
+		SmsGatewayHealthService::record_poll();
 		$body     = $request->get_json_params();
 		$statuses = array();
 
@@ -262,6 +265,7 @@ class SmsGatewayApi {
 	 * @return \WP_REST_Response Response object.
 	 */
 	public static function report_inbox( \WP_REST_Request $request ) {
+		SmsGatewayHealthService::record_poll();
 		$body     = $request->get_json_params();
 		$messages = array();
 

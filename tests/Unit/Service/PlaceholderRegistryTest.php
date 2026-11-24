@@ -44,7 +44,7 @@ class PlaceholderRegistryTest extends TestCase {
 	public function test_all_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 26, $placeholders );
+		$this->assertCount( 31, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -73,6 +73,11 @@ class PlaceholderRegistryTest extends TestCase {
 			'sender_phone',
 			'inbox_url',
 			'booking_id',
+			'last_poll_time',
+			'seconds_since_poll',
+			'minutes_since_poll',
+			'tolerance_seconds',
+			'settings_url',
 		);
 
 		foreach ( $expected_keys as $key ) {

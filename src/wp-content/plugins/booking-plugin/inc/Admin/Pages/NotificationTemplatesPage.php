@@ -254,7 +254,8 @@ class NotificationTemplatesPage {
 					'payment-received': 'payment_received',
 					'door-code-updated': 'door_code_updated',
 					'inbound-sms-received': 'inbound_sms_received',
-					'rental-feedback': 'rental_feedback'
+					'rental-feedback': 'rental_feedback',
+					'sms-gateway-alert': 'sms_gateway_alert'
 				};
 				var normVal = normMap[val] || val;
 
@@ -396,6 +397,7 @@ class NotificationTemplatesPage {
 			'door-code-updated'        => __( 'door-code-updated (Dørkode tildelt/endret)', 'snippen-booking' ),
 			'inbound-sms-received'     => __( 'inbound-sms-received (Innkommende SMS-varsel)', 'snippen-booking' ),
 			'rental-feedback'          => __( 'rental-feedback (Spørreskjema etter leieforhold)', 'snippen-booking' ),
+			'sms-gateway-alert'        => __( 'sms-gateway-alert (Varsel om problem med SMS-tjenesten)', 'snippen-booking' ),
 		);
 		?>
 		<div class="snippen-card" style="margin-top: 20px; background: white; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">

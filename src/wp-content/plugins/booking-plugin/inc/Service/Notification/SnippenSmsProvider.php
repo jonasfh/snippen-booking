@@ -83,6 +83,14 @@ class SnippenSmsProvider implements SmsProviderInterface {
 				'default'     => 'yes',
 				'description' => __( 'Send automatisk en SMS med nummerert liste når leietaker med flere aktive bookinger sender melding.', 'snippen-booking' ),
 			),
+			array(
+				'key'         => 'snippen_sms_gateway_poll_tolerance_seconds',
+				'label'       => __( 'Varslingstoleranse for manglende polling (sekunder)', 'snippen-booking' ),
+				'type'        => 'number',
+				'required'    => false,
+				'default'     => 900,
+				'description' => __( 'Hvor mange sekunder det kan gå uten polling fra snippen-sms-service før det sendes e-postvarsel til booking-administratorene (standard: 900 sekunder / 15 minutter). Sett til 0 for å deaktivere.', 'snippen-booking' ),
+			),
 		);
 	}
 

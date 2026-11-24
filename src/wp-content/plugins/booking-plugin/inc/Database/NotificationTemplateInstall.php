@@ -23,7 +23,7 @@ class NotificationTemplateInstall {
 	public static function initialize_defaults() {
 		$template_service = new \SnippenBooking\Service\Notification\NotificationTemplateService();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback', 'sms_gateway_alert' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -32,7 +32,9 @@ class NotificationTemplateInstall {
 				$option_key = "snippen_template_{$event_type}_{$channel}";
 				if ( false === get_option( $option_key ) ) {
 					$default = $template_service->get_default_template( $event_type, $channel );
-					update_option( $option_key, $default );
+					if ( ! empty( $default['body'] ) ) {
+						update_option( $option_key, $default );
+					}
 				}
 			}
 		}

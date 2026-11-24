@@ -38,7 +38,7 @@ class SnippenSmsProviderTest extends TestCase {
 		$schema   = $provider->get_settings_schema();
 
 		$this->assertIsArray( $schema );
-		$this->assertCount( 6, $schema );
+		$this->assertCount( 7, $schema );
 		$keys = array_column( $schema, 'key' );
 		$this->assertContains( 'snippen_sms_service_api_token', $keys );
 		$this->assertContains( 'snippen_sms_service_sender', $keys );
@@ -46,6 +46,7 @@ class SnippenSmsProviderTest extends TestCase {
 		$this->assertContains( 'snippen_sms_unpaid_booking_past_days', $keys );
 		$this->assertContains( 'snippen_sms_conversation_ttl_minutes', $keys );
 		$this->assertContains( 'snippen_sms_auto_disambiguate', $keys );
+		$this->assertContains( 'snippen_sms_gateway_poll_tolerance_seconds', $keys );
 	}
 
 	/**

@@ -891,6 +891,12 @@ The system supports three booking types (`booking_type` in `wp_snippen_bookings`
   - E-post: `snippen_email_inbound_sms_enabled` (default: **yes**)
   - SMS: `snippen_sms_inbound_sms_enabled` (default: **no**)
 
+### SMS Gateway Polling Health Monitoring (#419)
+- **Purpose**: Monitors `snippen-sms-service` polling activity and notifies booking administrators (`manage_bookings` capability) by email if the gateway stops polling beyond the configured tolerance.
+- **Polling Tracking (`SmsGatewayApi.php` & `SmsGatewayHealthService.php`)**: Valid authenticated calls to `GET /outbox`, `POST /outbox/status`, and `POST /inbox` record the Unix timestamp in `snippen_sms_gateway_last_poll_at` and clear any active outage alert state (`snippen_sms_gateway_alert_sent_at`).
+- **Cron Check (`Plugin.php`)**: `snippen_check_sms_gateway_health` runs on the `every_five_minutes` schedule. Monitoring is active only when `SnippenSmsProvider` is the active SMS provider, is configured, and `snippen_sms_gateway_poll_tolerance_seconds > 0` (default: `900` seconds / 15 minutes). One alert email is sent per outage until polling resumes.
+- **Template & Toggle**: Uses the `sms_gateway_alert` (`sms-gateway-alert`) email template with placeholders `{{last_poll_time}}`, `{{seconds_since_poll}}`, `{{minutes_since_poll}}`, `{{tolerance_seconds}}`, and `{{settings_url}}`, controlled by `snippen_email_sms_gateway_alert_enabled` (default: **yes**).
+
 ## Yale Doorman Access Control REST API
 
 The plugin integrates with the `snippen-doorman-service` daemon via lightweight REST API endpoints under `/wp-json/snippen/v1/door`.
