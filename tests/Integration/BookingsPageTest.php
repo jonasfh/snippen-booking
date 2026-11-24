@@ -340,6 +340,20 @@ class BookingsPageTest extends TestCase {
         );
         $this->assertTrue( BookingsPage::is_filtered_message( $receipt_admin_msg ) );
 
+        $inbound_alert_msg = (object) array(
+            'event_type' => 'inbound_sms_received',
+            'status'     => 'sent',
+            'message'    => 'Ny innkommende SMS mottatt',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $inbound_alert_msg ) );
+
+        $unknown_internal_msg = (object) array(
+            'event_type' => 'some_future_internal_alert',
+            'status'     => 'sent',
+            'message'    => 'Internt varsel',
+        );
+        $this->assertTrue( BookingsPage::is_filtered_message( $unknown_internal_msg ) );
+
         // Customer notifications should NOT be filtered
         $customer_msg = (object) array(
             'event_type' => 'booking_confirmation',
@@ -354,6 +368,13 @@ class BookingsPageTest extends TestCase {
             'message'    => 'Hei på deg',
         );
         $this->assertFalse( BookingsPage::is_filtered_message( $manual_customer_msg ) );
+
+        $admin_sms_reply_msg = (object) array(
+            'event_type' => 'admin_sms_reply',
+            'status'     => 'sent',
+            'message'    => 'Svar fra utleier',
+        );
+        $this->assertFalse( BookingsPage::is_filtered_message( $admin_sms_reply_msg ) );
 
         // Disambiguation reply with matched_rule in metadata should be filtered
         $disambiguation_meta_msg = (object) array(

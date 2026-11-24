@@ -739,20 +739,36 @@ class BookingsPage {
 	}
 
 	/**
-	 * Determine if a communication message is an admin notification or numeric selection reply.
+	 * Determine if a communication message is non-customer communication or a numeric selection reply.
+	 *
+	 * Uses an explicit allowlist of customer-service communication event types so that
+	 * admin alerts (e.g. admin_booking, inbound_sms_received) and internal notifications
+	 * are hidden by default unless "Vis all kommunikasjon" is checked.
 	 *
 	 * @param object $msg Message object.
 	 * @return bool True if message should be filtered by default.
 	 */
 	public static function is_filtered_message( object $msg ): bool {
-		$admin_event_types = array(
-			'admin_booking',
-			'manual_dispatch_admin',
-			'payment_receipt_uploaded',
+		$customer_event_types = array(
+			'booking_confirmation',
+			'booking_confirmed',
+			'booking_rejected',
+			'payment_reminder',
+			'payment_received',
+			'door_code_updated',
+			'rental_feedback',
+			'manual_dispatch_customer',
+			'manual_dispatch',
+			'inbound_sms',
+			'admin_sms_reply',
+			'sms_disambiguation_prompt',
+			'sms_disambiguation_confirmation',
+			'user_activation',
+			'password_reset',
 		);
 
 		$event_type = $msg->event_type ?? '';
-		if ( in_array( $event_type, $admin_event_types, true ) || false !== strpos( $event_type, 'admin' ) ) {
+		if ( ! in_array( $event_type, $customer_event_types, true ) ) {
 			return true;
 		}
 

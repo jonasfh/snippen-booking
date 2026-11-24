@@ -422,14 +422,30 @@
             });
         }
 
-        // Determine if a message is an admin alert or numeric choice reply
+        // Determine if a message is non-customer communication or numeric choice reply
         function isSecondaryCommunication(msg) {
             if (!msg) {
                 return false;
             }
-            const adminEventTypes = ['admin_booking', 'manual_dispatch_admin', 'payment_receipt_uploaded'];
+            const customerEventTypes = [
+                'booking_confirmation',
+                'booking_confirmed',
+                'booking_rejected',
+                'payment_reminder',
+                'payment_received',
+                'door_code_updated',
+                'rental_feedback',
+                'manual_dispatch_customer',
+                'manual_dispatch',
+                'inbound_sms',
+                'admin_sms_reply',
+                'sms_disambiguation_prompt',
+                'sms_disambiguation_confirmation',
+                'user_activation',
+                'password_reset'
+            ];
             const eventType = msg.event_type || '';
-            if (adminEventTypes.indexOf(eventType) !== -1 || eventType.indexOf('admin') !== -1) {
+            if (customerEventTypes.indexOf(eventType) === -1) {
                 return true;
             }
 

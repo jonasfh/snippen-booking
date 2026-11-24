@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.58.0] - 2026-11-24
+- (#416) [Feat] Filtrer koblingsmenyen i **SMS Innboks** (`SmsInboxPage.php`) på avsenderens normaliserte telefonnummer og forbedre visningen:
+  - Viser som standard kun aktive reservasjoner som matcher avsenderens telefonnummer (normalisert via `PhoneHelper::normalize_phone()` / `SmsInboxResolverService::get_search_phones()`), med tydelig melding («Ingen reservasjoner for dette nummeret») når ingen matcher, samt valg for å vise alle reservasjoner ved behov.
+  - Utvidet kolonne- og velgerbredde og beriket nedfallsmenyens etiketter med `#ID`, navn, dato og klokkeslett (`DD.MM.YYYY HH:MM–HH:MM`), booking-objekt(er) og status.
+- (#417) [Fix] Skjuler nå all kommunikasjon som ikke er direkte mellom leietaker og tjenesten (inkludert `inbound_sms_received` og eventuelle fremtidige admin-/systemvarsler) som standard i kommunikasjonshistorikken på bookinger:
+  - **`BookingsPage.php` (`is_filtered_message()`) & `js/admin.js` (`isSecondaryCommunication()`)**: Erstattet denylist-sjekken med en eksplisitt allowlist for direkte leietaker-kommunikasjon, samtidig som flervalgssvar fortsatt filtreres ut med mindre **Vis all kommunikasjon** er huket av.
+  - **Tester**: Lagt til integrasjonstester i `SmsInboxPageTest.php` og `BookingsPageTest.php`.
+
 ## [2.57.0] - 2026-11-24
 - (#419) [Feat] Overvåking av polling på `snippen-sms-service`-endepunktet og e-postvarsel til booking-administratorer ved nedetid:
   - **`SmsGatewayHealthService.php` & `SmsGatewayApi.php`**: Registrerer tidspunkt for siste gyldige polling (`snippen_sms_gateway_last_poll_at`) ved kall til `GET /outbox`, `POST /outbox/status` og `POST /inbox`, og sjekker periodisk via WP-Cron (`snippen_check_sms_gateway_health`, hvert 5. minutt) kun når `snippen-sms-service` er aktivert og konfigurert (`sync_cron_schedule()`).
