@@ -339,4 +339,133 @@ class SmsInboxPageTest extends TestCase {
 		$this->assertSame( 'queued', $updated->status );
 		$this->assertNotNull( MessageLoggerService::get_message( (int) $queued_id ) );
 	}
+
+	/**
+	 * Test that quick-assign dropdown filters by normalized sender phone and formats rich labels.
+	 */
+	public function test_quick_assign_dropdown_filters_by_sender_phone_and_formats_label() {
+		global $wpdb;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_objects',
+			array(
+				'name'        => 'Storsalen',
+				'description' => 'Hovedsal',
+			)
+		);
+		$object_id = (int) $wpdb->insert_id;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_blocks',
+			array(
+				'name'       => 'Kveld',
+				'start_time' => '18:00:00',
+				'end_time'   => '22:00:00',
+			)
+		);
+		$block_id = (int) $wpdb->insert_id;
+
+		// Booking matching sender (stored without +47 prefix)
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'booking_date'   => '2026-12-01',
+				'customer_name'  => 'Ola Nordmann',
+				'customer_email' => 'ola@example.com',
+				'customer_phone' => '91234567',
+				'status'         => 'confirmed',
+				'price'          => 1500,
+			)
+		);
+		$matching_booking_id = (int) $wpdb->insert_id;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings_booking_objects',
+			array(
+				'booking_id'        => $matching_booking_id,
+				'booking_object_id' => $object_id,
+			)
+		);
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_booking_booking_blocks',
+			array(
+				'booking_id'       => $matching_booking_id,
+				'booking_block_id' => $block_id,
+			)
+		);
+
+		// Booking for another customer
+		$wpdb->insert(
+			$wpdb->prefix . 'snippen_bookings',
+			array(
+				'booking_date'   => '2026-12-02',
+				'customer_name'  => 'Kari Hansen',
+				'customer_email' => 'kari@example.com',
+				'customer_phone' => '+4799887766',
+				'status'         => 'pending',
+				'price'          => 1000,
+			)
+		);
+		$other_booking_id = (int) $wpdb->insert_id;
+
+		// Unlinked message from Ola (+4791234567) and unlinked message from unknown number (+4740000000)
+		$msg_ola_id = MessageLoggerService::log_message(
+			null,
+			null,
+			'sms',
+			'+4791234567',
+			null,
+			'Hei, når åpner døren?',
+			'inbound_sms',
+			'quarantine'
+		);
+		$msg_unknown_id = MessageLoggerService::log_message(
+			null,
+			null,
+			'sms',
+			'+4740000000',
+			null,
+			'Hei, feil nummer?',
+			'inbound_sms',
+			'quarantine'
+		);
+
+		$page = new SmsInboxPage();
+		ob_start();
+		$page->render();
+		$output = ob_get_clean();
+
+		// Extract Ola's <select> markup
+		$pattern_ola = '/<select[^>]*data-message-id="' . $msg_ola_id . '"[^>]*>(.*?)<\/select>/s';
+		$this->assertMatchesRegularExpression( $pattern_ola, $output );
+		preg_match( $pattern_ola, $output, $ola_matches );
+		$ola_select = $ola_matches[1];
+
+		$this->assertStringContainsString( 'Koble til (1 treff)...', $ola_select );
+		$this->assertStringContainsString( '#' . $matching_booking_id . ': Ola Nordmann', $ola_select );
+		$this->assertStringContainsString( '01.12.2026 18:00–22:00', $ola_select );
+		$this->assertStringContainsString( 'Storsalen', $ola_select );
+		$this->assertStringContainsString( 'Bekreftet', $ola_select );
+		$this->assertStringNotContainsString( 'Kari Hansen', $ola_select );
+		$this->assertStringContainsString( 'value="__show_all__"', $ola_select );
+
+		// Extract unknown sender's <select> markup
+		$pattern_unknown = '/<select[^>]*data-message-id="' . $msg_unknown_id . '"[^>]*>(.*?)<\/select>/s';
+		$this->assertMatchesRegularExpression( $pattern_unknown, $output );
+		preg_match( $pattern_unknown, $output, $unknown_matches );
+		$unknown_select = $unknown_matches[1];
+
+		$this->assertStringContainsString( 'Ingen reservasjoner for dette nummeret', $unknown_select );
+		$this->assertStringNotContainsString( 'Ola Nordmann', $unknown_select );
+		$this->assertStringNotContainsString( 'Kari Hansen', $unknown_select );
+		$this->assertStringContainsString( 'value="__show_all__"', $unknown_select );
+
+		// Cleanup inserted booking test rows
+		$wpdb->delete( $wpdb->prefix . 'snippen_booking_booking_blocks', array( 'booking_id' => $matching_booking_id ) );
+		$wpdb->delete( $wpdb->prefix . 'snippen_bookings_booking_objects', array( 'booking_id' => $matching_booking_id ) );
+		$wpdb->delete( $wpdb->prefix . 'snippen_bookings', array( 'id' => $matching_booking_id ) );
+		$wpdb->delete( $wpdb->prefix . 'snippen_bookings', array( 'id' => $other_booking_id ) );
+		$wpdb->delete( $wpdb->prefix . 'snippen_booking_blocks', array( 'id' => $block_id ) );
+		$wpdb->delete( $wpdb->prefix . 'snippen_booking_objects', array( 'id' => $object_id ) );
+	}
 }
