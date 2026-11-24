@@ -547,8 +547,24 @@ class DoorCodesPage {
 					<?php
 					$offline_strings = array();
 					foreach ( $offline_nodes as $on ) {
-						$ls_fmt            = $this->format_status_datetime( $on['last_seen'] ?? null, 'd.m.Y H:i:s', __( 'aldri', 'snippen-booking' ) );
-						$offline_strings[] = sprintf( '<strong>%s</strong> (sist sett: %s)', esc_html( $on['name'] ?? $on['service_id'] ), esc_html( $ls_fmt ) );
+						$ls_fmt        = $this->format_status_datetime( $on['last_seen'] ?? null, 'd.m.Y H:i:s', __( 'aldri', 'snippen-booking' ) );
+						$alert_sent_ts = ! empty( $on['alert_sent_at'] ) ? (int) $on['alert_sent_at'] : null;
+						if ( $alert_sent_ts ) {
+							$alert_fmt  = wp_date( 'd.m.Y H:i:s', $alert_sent_ts );
+							$alert_note = sprintf(
+								/* translators: %s: formatted date/time */
+								esc_html__( 'e-postvarsel sendt %s', 'snippen-booking' ),
+								esc_html( $alert_fmt )
+							);
+							$offline_strings[] = sprintf( '<strong>%s</strong> (sist sett: %s — %s)', esc_html( $on['name'] ?? $on['service_id'] ), esc_html( $ls_fmt ), $alert_note );
+						} else {
+							$offline_strings[] = sprintf(
+								'<strong>%s</strong> (sist sett: %s — %s)',
+								esc_html( $on['name'] ?? $on['service_id'] ),
+								esc_html( $ls_fmt ),
+								esc_html__( 'e-postvarsel ikke sendt ennå', 'snippen-booking' )
+							);
+						}
 					}
 					printf(
 						/* translators: %s: list of offline node names and timestamps */
@@ -650,6 +666,28 @@ class DoorCodesPage {
 							<strong><?php esc_html_e( 'Sist sett:', 'snippen-booking' ); ?></strong>
 							<span style="color:#0f172a;"><?php echo esc_html( $last_seen_fmt ); ?></span>
 						</div>
+						<?php
+						$node_alert_sent_ts = ! empty( $snode['alert_sent_at'] ) ? (int) $snode['alert_sent_at'] : null;
+						if ( $node_alert_sent_ts ) :
+							?>
+							<div>
+								<strong><?php esc_html_e( 'Varsling:', 'snippen-booking' ); ?></strong>
+								<span style="color:#b91c1c; font-weight:600;">
+									<?php
+									printf(
+										/* translators: %s: formatted date/time */
+										esc_html__( 'E-postvarsel sendt %s', 'snippen-booking' ),
+										esc_html( wp_date( 'd.m.Y H:i:s', $node_alert_sent_ts ) )
+									);
+									?>
+								</span>
+							</div>
+						<?php elseif ( $is_node_offline ) : ?>
+							<div>
+								<strong><?php esc_html_e( 'Varsling:', 'snippen-booking' ); ?></strong>
+								<span style="color:#64748b;"><?php esc_html_e( 'E-postvarsel ikke sendt ennå', 'snippen-booking' ); ?></span>
+							</div>
+						<?php endif; ?>
 						<?php if ( ! empty( $snode['hostname'] ) ) : ?>
 							<div>
 								<strong><?php esc_html_e( 'Hostname:', 'snippen-booking' ); ?></strong>

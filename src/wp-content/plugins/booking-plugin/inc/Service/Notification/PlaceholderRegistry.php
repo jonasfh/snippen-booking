@@ -439,9 +439,81 @@ class PlaceholderRegistry {
 				'name'         => 'settings_url',
 				'label'        => __( 'Settings URL', 'snippen-booking' ),
 				'description'  => __( 'Direct admin URL to Snippen Booking settings.', 'snippen-booking' ),
-				'connected_to' => array( 'sms_gateway_alert' ),
+				'connected_to' => array( 'sms_gateway_alert', 'doorman_alert' ),
 				'resolver'     => function ( array $context ) {
-					return $this->resolve_path( $context, array( 'settings_url', 'gateway.settings_url' ) );
+					return $this->resolve_path( $context, array( 'settings_url', 'gateway.settings_url', 'doorman.settings_url' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'service_name',
+				'label'        => __( 'Doorman service name', 'snippen-booking' ),
+				'description'  => __( 'Human-readable name of the offline snippen-doorman-service node.', 'snippen-booking' ),
+				'connected_to' => array( 'doorman_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'service_name', 'doorman.service_name' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'service_id',
+				'label'        => __( 'Doorman service ID', 'snippen-booking' ),
+				'description'  => __( 'Identifier of the offline snippen-doorman-service node.', 'snippen-booking' ),
+				'connected_to' => array( 'doorman_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'service_id', 'doorman.service_id' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'last_seen_time',
+				'label'        => __( 'Last Doorman status time', 'snippen-booking' ),
+				'description'  => __( 'Formatted timestamp of the last recorded status report from snippen-doorman-service.', 'snippen-booking' ),
+				'connected_to' => array( 'doorman_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'last_seen_time', 'doorman.last_seen_time' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'minutes_since_seen',
+				'label'        => __( 'Minutes since last Doorman report', 'snippen-booking' ),
+				'description'  => __( 'Rounded number of minutes elapsed since the last Doorman status report.', 'snippen-booking' ),
+				'connected_to' => array( 'doorman_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'minutes_since_seen', 'doorman.minutes_since_seen' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'tolerance_minutes',
+				'label'        => __( 'Configured Doorman tolerance (minutes)', 'snippen-booking' ),
+				'description'  => __( 'Configured offline tolerance in minutes before sending an alert.', 'snippen-booking' ),
+				'connected_to' => array( 'doorman_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'tolerance_minutes', 'doorman.tolerance_minutes' ) );
+				},
+			)
+		);
+
+		$this->register_placeholder(
+			array(
+				'name'         => 'status_url',
+				'label'        => __( 'Doorman status URL', 'snippen-booking' ),
+				'description'  => __( 'Direct admin URL to the Doorman status page.', 'snippen-booking' ),
+				'connected_to' => array( 'doorman_alert' ),
+				'resolver'     => function ( array $context ) {
+					return $this->resolve_path( $context, array( 'status_url', 'doorman.status_url' ) );
 				},
 			)
 		);
@@ -551,6 +623,9 @@ class PlaceholderRegistry {
 
 			'sms_gateway_alert'        => 'sms-gateway-alert',
 			'sms-gateway-alert'        => 'sms-gateway-alert',
+
+			'doorman_alert'            => 'doorman-alert',
+			'doorman-alert'            => 'doorman-alert',
 		);
 
 		return $map[ $context ] ?? $context;

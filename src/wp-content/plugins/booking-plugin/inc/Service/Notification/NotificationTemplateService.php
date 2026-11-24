@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback', 'sms_gateway_alert' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback', 'sms_gateway_alert', 'doorman_alert' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -235,6 +235,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Advarsel: Snippen SMS-tjeneste svarer ikke', 'snippen-booking' ),
 					'body'    => __( "Hei Admin,\n\nSnippen SMS-tjeneste (snippen-sms-service) har ikke pollet booking-endepunktet innenfor konfigurert toleranse.\n\nSiste registrerte polling: {{last_poll_time}}\nTid siden siste polling: {{minutes_since_poll}} minutter ({{seconds_since_poll}} sekunder)\nKonfigurert toleranse: {{tolerance_seconds}} sekunder\n\nVennligst kontroller at SMS-tjenesten (snippen-sms-service) kjører og har nettverkstilgang.\n\nInnstillinger for SMS-tjenesten:\n{{settings_url}}", 'snippen-booking' ),
+				),
+			),
+			'doorman-alert'            => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => '',
+				),
+				'email' => array(
+					'subject' => __( 'Advarsel: Doorman-tjeneste ({{service_name}}) er offline', 'snippen-booking' ),
+					'body'    => __( "Hei Admin,\n\nDoorman-tjenesten «{{service_name}}» (ID: {{service_id}}) har ikke rapportert status innenfor konfigurert toleranse.\n\nSist sett: {{last_seen_time}}\nTid siden siste rapport: {{minutes_since_seen}} minutter\nKonfigurert terskel: {{tolerance_minutes}} minutter\n\nVennligst kontroller at snippen-doorman-service kjører og har nettverkstilgang.\n\nStatusside for Doorman:\n{{status_url}}\n\nInnstillinger:\n{{settings_url}}", 'snippen-booking' ),
 				),
 			),
 		);

@@ -114,6 +114,10 @@ class Plugin {
 		// Automated SMS gateway polling health check cron hook (Issue #419)
 		add_action( \SnippenBooking\Service\Sms\SmsGatewayHealthService::CRON_HOOK, array( __CLASS__, 'handle_check_sms_gateway_health' ) );
 		\SnippenBooking\Service\Sms\SmsGatewayHealthService::sync_cron_schedule();
+
+		// Automated Doorman service health check cron hook (Issue #421)
+		add_action( \SnippenBooking\Service\Door\DoormanHealthService::CRON_HOOK, array( __CLASS__, 'handle_check_doorman_health' ) );
+		\SnippenBooking\Service\Door\DoormanHealthService::sync_cron_schedule();
 	}
 
 	/**
@@ -145,6 +149,15 @@ class Plugin {
 	 */
 	public static function handle_check_sms_gateway_health() {
 		return \SnippenBooking\Service\Sms\SmsGatewayHealthService::check_health();
+	}
+
+	/**
+	 * Handle Doorman service health check cron trigger
+	 *
+	 * @return array Health check result.
+	 */
+	public static function handle_check_doorman_health() {
+		return \SnippenBooking\Service\Door\DoormanHealthService::check_health();
 	}
 
 	/**

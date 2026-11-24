@@ -945,6 +945,9 @@ class DoorLockApi {
 		update_option( 'snippen_doorman_last_status', $params );
 		update_option( 'snippen_doorman_last_received_at', $now_iso );
 
+		// 4. Clear any active outage alert state for this Doorman node
+		\SnippenBooking\Service\Door\DoormanHealthService::record_status( $service_id );
+
 		return rest_ensure_response(
 			array(
 				'success'     => true,
@@ -1074,11 +1077,12 @@ class DoorLockApi {
 				}
 			}
 
-			// Calculate online/offline status (15 min = 900s)
-			$last_seen_ts            = ! empty( $node_meta['last_seen'] ) ? strtotime( $node_meta['last_seen'] ) : 0;
-			$is_offline              = ( 0 === $last_seen_ts ) || ( ( $current_time - $last_seen_ts ) > 900 );
-			$node_meta['is_offline'] = $is_offline;
-			$node_meta['status']     = $is_offline ? 'offline' : 'online';
+			// Calculate online/offline status (15 min = 900s) and attach alert timestamp
+			$last_seen_ts               = ! empty( $node_meta['last_seen'] ) ? strtotime( $node_meta['last_seen'] ) : 0;
+			$is_offline                 = ( 0 === $last_seen_ts ) || ( ( $current_time - $last_seen_ts ) > 900 );
+			$node_meta['is_offline']    = $is_offline;
+			$node_meta['status']        = $is_offline ? 'offline' : 'online';
+			$node_meta['alert_sent_at'] = \SnippenBooking\Service\Door\DoormanHealthService::get_alert_sent_at( (string) $sid );
 
 			$services_list[ $sid ] = $node_meta;
 
