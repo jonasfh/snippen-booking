@@ -7,8 +7,10 @@
 
 namespace SnippenBooking\Admin\Pages;
 
+use SnippenBooking\Service\Notification\BookingReminderService;
 use SnippenBooking\Service\Notification\NotificationManager;
 use SnippenBooking\Service\Notification\SmsProviderInterface;
+use SnippenBooking\Service\Sms\SmsTimeWindowService;
 use SnippenBooking\Service\Vipps\VippsClient;
 use SnippenBooking\Api\DoormanApiKeyApi;
 
@@ -198,6 +200,7 @@ class SettingsPage {
 		update_option( 'snippen_email_door_code_updated_enabled', isset( $_POST['snippen_email_door_code_updated_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_inbound_sms_enabled', isset( $_POST['snippen_email_inbound_sms_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_rental_feedback_enabled', isset( $_POST['snippen_email_rental_feedback_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_email_booking_reminder_enabled', isset( $_POST['snippen_email_booking_reminder_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_sms_gateway_alert_enabled', isset( $_POST['snippen_email_sms_gateway_alert_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_email_doorman_alert_enabled', isset( $_POST['snippen_email_doorman_alert_enabled'] ) ? 'yes' : 'no' );
 
@@ -213,9 +216,33 @@ class SettingsPage {
 		update_option( 'snippen_sms_door_code_updated_enabled', isset( $_POST['snippen_sms_door_code_updated_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_inbound_sms_enabled', isset( $_POST['snippen_sms_inbound_sms_enabled'] ) ? 'yes' : 'no' );
 		update_option( 'snippen_sms_rental_feedback_enabled', isset( $_POST['snippen_sms_rental_feedback_enabled'] ) ? 'yes' : 'no' );
+		update_option( 'snippen_sms_booking_reminder_enabled', isset( $_POST['snippen_sms_booking_reminder_enabled'] ) ? 'yes' : 'no' );
 
 		$reminder_days = isset( $_POST['snippen_payment_reminder_days'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_payment_reminder_days'] ) ) : '30, 21';
 		update_option( 'snippen_payment_reminder_days', $reminder_days );
+
+		if ( isset( $_POST['snippen_booking_reminder_days'] ) ) {
+			update_option( 'snippen_booking_reminder_days', max( 0, intval( $_POST['snippen_booking_reminder_days'] ) ) );
+		}
+
+		// Save SMS send-time window settings (only overwrite if section was submitted, or always for checkbox when form submitted).
+		if ( isset( $_POST['snippen_sms_time_window_submitted'] ) ) {
+			update_option( 'snippen_sms_time_window_enabled', isset( $_POST['snippen_sms_time_window_enabled'] ) ? 'yes' : 'no' );
+			$win_start = isset( $_POST['snippen_sms_time_window_start'] )
+				? SmsTimeWindowService::sanitize_time( sanitize_text_field( wp_unslash( $_POST['snippen_sms_time_window_start'] ) ), SmsTimeWindowService::DEFAULT_START )
+				: SmsTimeWindowService::DEFAULT_START;
+			$win_end   = isset( $_POST['snippen_sms_time_window_end'] )
+				? SmsTimeWindowService::sanitize_time( sanitize_text_field( wp_unslash( $_POST['snippen_sms_time_window_end'] ) ), SmsTimeWindowService::DEFAULT_END )
+				: SmsTimeWindowService::DEFAULT_END;
+			update_option( 'snippen_sms_time_window_start', $win_start );
+			update_option( 'snippen_sms_time_window_end', $win_end );
+
+			$raw_exempt   = isset( $_POST['snippen_sms_time_window_exempt_events'] ) && is_array( $_POST['snippen_sms_time_window_exempt_events'] )
+				? wp_unslash( $_POST['snippen_sms_time_window_exempt_events'] )
+				: array();
+			$clean_exempt = array_values( array_unique( array_filter( array_map( 'sanitize_key', $raw_exempt ) ) ) );
+			update_option( 'snippen_sms_time_window_exempt_events', $clean_exempt );
+		}
 
 		// Save Vipps ePayment Settings
 		update_option( 'snippen_vipps_enabled', isset( $_POST['snippen_vipps_enabled'] ) ? 'yes' : 'no' );
@@ -316,6 +343,7 @@ class SettingsPage {
 		$email_door_code_updated = get_option( 'snippen_email_door_code_updated_enabled', 'yes' );
 		$email_inbound_sms       = get_option( 'snippen_email_inbound_sms_enabled', 'yes' );
 		$email_rental_feedback   = get_option( 'snippen_email_rental_feedback_enabled', 'yes' );
+		$email_booking_reminder  = get_option( 'snippen_email_booking_reminder_enabled', 'yes' );
 		$email_sms_gateway_alert = get_option( 'snippen_email_sms_gateway_alert_enabled', 'yes' );
 		$email_doorman_alert     = get_option( 'snippen_email_doorman_alert_enabled', 'yes' );
 
@@ -331,8 +359,13 @@ class SettingsPage {
 		$sms_door_code_updated = get_option( 'snippen_sms_door_code_updated_enabled', 'yes' );
 		$sms_inbound_sms       = get_option( 'snippen_sms_inbound_sms_enabled', 'no' );
 		$sms_rental_feedback   = get_option( 'snippen_sms_rental_feedback_enabled', 'yes' );
+		$sms_booking_reminder  = get_option( 'snippen_sms_booking_reminder_enabled', 'yes' );
 
 		$payment_reminder_days = get_option( 'snippen_payment_reminder_days', '30, 21' );
+		$booking_reminder_days = (int) get_option( 'snippen_booking_reminder_days', BookingReminderService::DEFAULT_DAYS_BEFORE );
+		$sms_window_enabled    = SmsTimeWindowService::is_enabled();
+		$sms_window            = SmsTimeWindowService::get_window();
+		$sms_exempt_events     = SmsTimeWindowService::get_exempt_event_types();
 		$active_provider       = get_option( 'snippen_active_notification_provider', 'keysms' );
 
 		$manager              = new NotificationManager();
@@ -345,160 +378,272 @@ class SettingsPage {
 
 		// Tabs navigation
 		echo '<h2 class="nav-tab-wrapper" style="margin-bottom:20px; border-bottom:1px solid #ccd0d4; padding-left:0;">';
-		echo '<a href="#" class="nav-tab nav-tab-active" data-tab="email">' . esc_html__( 'E-post', 'snippen-booking' ) . '</a>';
-		echo '<a href="#" class="nav-tab" data-tab="keysms">' . esc_html__( 'KeySMS (SMS)', 'snippen-booking' ) . '</a>';
-		echo '<a href="#" class="nav-tab" data-tab="snippen_sms">' . esc_html__( 'Snippen SMS (Gateway)', 'snippen-booking' ) . '</a>';
+		echo '<a href="#" class="nav-tab nav-tab-active" data-tab="notifications">' . esc_html__( 'Varslinger', 'snippen-booking' ) . '</a>';
+		echo '<a href="#" class="nav-tab" data-tab="email">' . esc_html__( 'E-post', 'snippen-booking' ) . '</a>';
+		echo '<a href="#" class="nav-tab" data-tab="sms">' . esc_html__( 'SMS', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="payment">' . esc_html__( 'Betaling', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="doorman">' . esc_html__( 'Yale Doorman', 'snippen-booking' ) . '</a>';
 		echo '<a href="#" class="nav-tab" data-tab="general">' . esc_html__( 'Generelt', 'snippen-booking' ) . '</a>';
 		echo '</h2>';
 
-		// 1. E-post tab content
-		echo '<div class="tab-content" id="tab-email" style="display:block; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
-		echo '<h3 style="margin-top:0;">' . esc_html__( 'E-post-varsler', 'snippen-booking' ) . '</h3>';
-		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-bottom:24px;">';
-		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Aktiver varslingstyper for E-post:', 'snippen-booking' ) . '</h4>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_booking_confirmation_enabled" value="yes" ' . checked( $email_booking, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bookingbekreftelse til kunde på e-post (manuell/gratis bookingforespørsel)', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_admin_booking_enabled" value="yes" ' . checked( $email_admin, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om ny booking til administratorer på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_user_activation_enabled" value="yes" ' . checked( $email_activation, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send kontoregistreringskode på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_password_reset_enabled" value="yes" ' . checked( $email_password, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send tilbakestilling av passord på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_payment_reminder_enabled" value="yes" ' . checked( $email_reminder, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send automatisk betalingspurring til kunde på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_payment_receipt_uploaded_enabled" value="yes" ' . checked( $email_receipt_uploaded, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om opplastet betalingskvittering til administratorer på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_booking_confirmed_enabled" value="yes" ' . checked( $email_booking_confirmed, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bekreftelse på godkjent/betalt booking til kunde på e-post (Vipps eller godkjent av admin)', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_payment_received_enabled" value="yes" ' . checked( $email_payment_received, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bekreftelse på mottatt betaling til kunde på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_booking_rejected_enabled" value="yes" ' . checked( $email_booking_rejected, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om avslått reservasjon til kunde på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_door_code_updated_enabled" value="yes" ' . checked( $email_door_code_updated, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om tildelt/endret dørkode til kunde på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_inbound_sms_enabled" value="yes" ' . checked( $email_inbound_sms, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om innkommende SMS til administratorer på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_rental_feedback_enabled" value="yes" ' . checked( $email_rental_feedback, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send spørreskjema etter leieforhold til kunde på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_email_sms_gateway_alert_enabled" value="yes" ' . checked( $email_sms_gateway_alert, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om problem med SMS-tjenesten til administratorer på e-post', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
-		echo '<input type="checkbox" name="snippen_email_doorman_alert_enabled" value="yes" ' . checked( $email_doorman_alert, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om offline Doorman-tjeneste til administratorer på e-post', 'snippen-booking' );
-		echo '</label>';
+		// 1. Varslinger tab content (Matrix + Schedules + SMS Time Window)
+		$notification_rows = array(
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_booking_confirmation_enabled',
+				'email_val'  => $email_booking,
+				'sms_name'   => 'snippen_sms_booking_confirmation_enabled',
+				'sms_val'    => $sms_booking,
+				'label'      => __( 'Ny reservasjon (manuell/gratis bookingforespørsel)', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_booking_confirmed_enabled',
+				'email_val'  => $email_booking_confirmed,
+				'sms_name'   => 'snippen_sms_booking_confirmed_enabled',
+				'sms_val'    => $sms_booking_confirmed,
+				'label'      => __( 'Godkjent reservasjon (Vipps direktebetaling eller godkjent av admin)', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_booking_rejected_enabled',
+				'email_val'  => $email_booking_rejected,
+				'sms_name'   => 'snippen_sms_booking_rejected_enabled',
+				'sms_val'    => $sms_booking_rejected,
+				'label'      => __( 'Avslått reservasjon', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_booking_reminder_enabled',
+				'email_val'  => $email_booking_reminder,
+				'sms_name'   => 'snippen_sms_booking_reminder_enabled',
+				'sms_val'    => $sms_booking_reminder,
+				'label'      => __( 'Påminnelse før bookingstart', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_payment_reminder_enabled',
+				'email_val'  => $email_reminder,
+				'sms_name'   => 'snippen_sms_payment_reminder_enabled',
+				'sms_val'    => $sms_reminder,
+				'label'      => __( 'Automatisk betalingspurring', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_payment_received_enabled',
+				'email_val'  => $email_payment_received,
+				'sms_name'   => 'snippen_sms_payment_received_enabled',
+				'sms_val'    => $sms_payment_received,
+				'label'      => __( 'Bekreftelse på mottatt betaling', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_door_code_updated_enabled',
+				'email_val'  => $email_door_code_updated,
+				'sms_name'   => 'snippen_sms_door_code_updated_enabled',
+				'sms_val'    => $sms_door_code_updated,
+				'label'      => __( 'Varsling om dørkode (tildelt/endret)', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Kundevarsler', 'snippen-booking' ),
+				'email_name' => 'snippen_email_rental_feedback_enabled',
+				'email_val'  => $email_rental_feedback,
+				'sms_name'   => 'snippen_sms_rental_feedback_enabled',
+				'sms_val'    => $sms_rental_feedback,
+				'label'      => __( 'Spørreskjema etter leieforhold', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Konto & Tilgang', 'snippen-booking' ),
+				'email_name' => 'snippen_email_user_activation_enabled',
+				'email_val'  => $email_activation,
+				'sms_name'   => 'snippen_sms_user_activation_enabled',
+				'sms_val'    => $sms_activation,
+				'label'      => __( 'Aktivere konto (bekreftelseskode)', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Konto & Tilgang', 'snippen-booking' ),
+				'email_name' => 'snippen_email_password_reset_enabled',
+				'email_val'  => $email_password,
+				'sms_name'   => 'snippen_sms_password_reset_enabled',
+				'sms_val'    => $sms_password,
+				'label'      => __( 'Tilbakestilling av passord', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Administrator & Drift', 'snippen-booking' ),
+				'email_name' => 'snippen_email_admin_booking_enabled',
+				'email_val'  => $email_admin,
+				'sms_name'   => 'snippen_sms_admin_booking_enabled',
+				'sms_val'    => $sms_admin,
+				'label'      => __( 'Varsel om ny booking til administratorer', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Administrator & Drift', 'snippen-booking' ),
+				'email_name' => 'snippen_email_payment_receipt_uploaded_enabled',
+				'email_val'  => $email_receipt_uploaded,
+				'sms_name'   => 'snippen_sms_payment_receipt_uploaded_enabled',
+				'sms_val'    => $sms_receipt_uploaded,
+				'label'      => __( 'Varsel om opplastet betalingskvittering', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Administrator & Drift', 'snippen-booking' ),
+				'email_name' => 'snippen_email_inbound_sms_enabled',
+				'email_val'  => $email_inbound_sms,
+				'sms_name'   => 'snippen_sms_inbound_sms_enabled',
+				'sms_val'    => $sms_inbound_sms,
+				'label'      => __( 'Varsel om innkommende SMS til administratorer', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Administrator & Drift', 'snippen-booking' ),
+				'email_name' => 'snippen_email_sms_gateway_alert_enabled',
+				'email_val'  => $email_sms_gateway_alert,
+				'sms_name'   => null,
+				'sms_val'    => 'no',
+				'label'      => __( 'Varsel om problem med SMS-tjenesten', 'snippen-booking' ),
+			),
+			array(
+				'group'      => __( 'Administrator & Drift', 'snippen-booking' ),
+				'email_name' => 'snippen_email_doorman_alert_enabled',
+				'email_val'  => $email_doorman_alert,
+				'sms_name'   => null,
+				'sms_val'    => 'no',
+				'label'      => __( 'Varsel om offline Doorman-tjeneste', 'snippen-booking' ),
+			),
+		);
+
+		echo '<div class="tab-content" id="tab-notifications" style="display:block; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'Varslinger', 'snippen-booking' ) . '</h3>';
+		echo '<p class="description" style="margin-bottom:16px;">' . esc_html__( 'Velg hvilke kanaler (E-post og/eller SMS) som skal brukes for hver varslingstype.', 'snippen-booking' ) . '</p>';
+
+		echo '<table class="widefat striped" style="max-width:850px; margin-bottom:24px; border:1px solid #e2e8f0;">';
+		echo '<thead><tr>';
+		echo '<th style="width:80px; text-align:center; font-weight:700;">' . esc_html__( 'E-post', 'snippen-booking' ) . '</th>';
+		echo '<th style="width:80px; text-align:center; font-weight:700;">' . esc_html__( 'SMS', 'snippen-booking' ) . '</th>';
+		echo '<th style="font-weight:700;">' . esc_html__( 'Beskrivelse', 'snippen-booking' ) . '</th>';
+		echo '</tr></thead><tbody>';
+
+		$current_group = '';
+		foreach ( $notification_rows as $row ) {
+			if ( $row['group'] !== $current_group ) {
+				$current_group = $row['group'];
+				echo '<tr style="background:#f1f5f9;"><td colspan="3" style="font-weight:700; color:#334155; font-size:12px; text-transform:uppercase; letter-spacing:0.03em;">' . esc_html( $current_group ) . '</td></tr>';
+			}
+			echo '<tr>';
+			echo '<td style="text-align:center; vertical-align:middle;">';
+			echo '<input type="checkbox" name="' . esc_attr( $row['email_name'] ) . '" value="yes" ' . checked( $row['email_val'], 'yes', false ) . ' aria-label="' . esc_attr( $row['label'] . ' (E-post)' ) . '">';
+			echo '</td>';
+			echo '<td style="text-align:center; vertical-align:middle;">';
+			if ( $row['sms_name'] ) {
+				echo '<input type="checkbox" name="' . esc_attr( $row['sms_name'] ) . '" value="yes" ' . checked( $row['sms_val'], 'yes', false ) . ' aria-label="' . esc_attr( $row['label'] . ' (SMS)' ) . '">';
+			} else {
+				echo '<span style="color:#94a3b8;">&mdash;</span>';
+			}
+			echo '</td>';
+			echo '<td style="vertical-align:middle; font-weight:500;">' . esc_html( $row['label'] ) . '</td>';
+			echo '</tr>';
+		}
+		echo '</tbody></table>';
+
+		// Automated reminder timings
+		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-bottom:24px; max-width:850px;">';
+		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Tidspunkter for automatiske påminnelser', 'snippen-booking' ) . '</h4>';
+		echo '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">';
+		echo '<div>';
+		echo '<label for="snippen_booking_reminder_days" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Påminnelse før bookingstart (dager)', 'snippen-booking' ) . '</label>';
+		echo '<input type="number" name="snippen_booking_reminder_days" id="snippen_booking_reminder_days" value="' . esc_attr( $booking_reminder_days ) . '" class="small-text" min="0">';
+		echo '<p class="description">' . esc_html__( 'Antall dager før bookingstart som påminnelsen sendes (standard: 14). Sett til 0 for å deaktivere.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
+		echo '<div>';
+		echo '<label for="snippen_payment_reminder_days" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Betalingspurring (dager før bookingstart)', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_payment_reminder_days" id="snippen_payment_reminder_days" value="' . esc_attr( $payment_reminder_days ) . '" class="regular-text" placeholder="30, 21">';
+		echo '<p class="description">' . esc_html__( 'Kommaseparert liste over antall dager før bookingdato hvor automatisk betalingspurring sendes (f.eks. "30, 21").', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+		echo '</div>';
+		echo '</div>';
+
+		// SMS Send-Time Window (Quiet Hours)
+		$exempt_options = array(
+			'user_activation'                 => __( 'Aktivere konto', 'snippen-booking' ),
+			'password_reset'                  => __( 'Nytt passord / tilbakestilling', 'snippen-booking' ),
+			'booking_confirmation'            => __( 'Ny reservasjon', 'snippen-booking' ),
+			'booking_confirmed'               => __( 'Godkjent reservasjon', 'snippen-booking' ),
+			'admin_sms_reply'                 => __( 'Manuelt svar fra SMS-innboks', 'snippen-booking' ),
+			'sms_disambiguation_prompt'       => __( 'Valgforespørsel ved innkommende SMS', 'snippen-booking' ),
+			'sms_disambiguation_confirmation' => __( 'Valgbekreftelse ved innkommende SMS', 'snippen-booking' ),
+			'door_code_updated'               => __( 'Varsling om dørkode', 'snippen-booking' ),
+			'booking_reminder'                => __( 'Påminnelse før bookingstart', 'snippen-booking' ),
+			'payment_reminder'                => __( 'Automatisk betalingspurring', 'snippen-booking' ),
+			'rental_feedback'                 => __( 'Spørreskjema etter leieforhold', 'snippen-booking' ),
+		);
+
+		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-bottom:24px; max-width:850px;">';
+		echo '<input type="hidden" name="snippen_sms_time_window_submitted" value="1">';
+		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Sendetidsvindu for SMS (stilletid)', 'snippen-booking' ) . '</h4>';
+		echo '<label style="font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:12px;">';
+		echo '<input type="checkbox" name="snippen_sms_time_window_enabled" value="yes" ' . checked( $sms_window_enabled, true, false ) . ' style="margin:0;">';
+		echo esc_html__( 'Begrens utsendelse av SMS til dag-/kveldstid (meldinger utenom vinduet settes i kø til vinduet åpner)', 'snippen-booking' );
+		echo '</label>';
+		echo '<div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:14px;">';
+		echo '<label style="font-weight:600;">' . esc_html__( 'Fra:', 'snippen-booking' ) . ' <input type="time" name="snippen_sms_time_window_start" value="' . esc_attr( $sms_window['start'] ) . '"></label>';
+		echo '<label style="font-weight:600;">' . esc_html__( 'Til:', 'snippen-booking' ) . ' <input type="time" name="snippen_sms_time_window_end" value="' . esc_attr( $sms_window['end'] ) . '"></label>';
+		echo '<span class="description">' . esc_html__( 'Standard: 08:00 – 22:00 (lokal tid).', 'snippen-booking' ) . '</span>';
+		echo '</div>';
+		echo '<p style="font-weight:600; margin:0 0 8px 0;">' . esc_html__( 'Unntak (sendes umiddelbart uansett tidspunkt):', 'snippen-booking' ) . '</p>';
+		echo '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:6px 16px;">';
+		foreach ( $exempt_options as $ev_key => $ev_label ) {
+			$checked = in_array( $ev_key, $sms_exempt_events, true ) ? ' checked="checked"' : '';
+			echo '<label style="display:flex; align-items:center; gap:6px;">';
+			echo '<input type="checkbox" name="snippen_sms_time_window_exempt_events[]" value="' . esc_attr( $ev_key ) . '"' . $checked . ' style="margin:0;">';
+			echo esc_html( $ev_label );
+			echo '</label>';
+		}
+		echo '</div>';
+		echo '</div>';
+
+		// Dispatch method
+		echo '<div class="snippen-form-group" style="margin-bottom: 10px;">';
+		echo '<label for="snippen_notification_dispatch_method" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Utsendelsesmetode ved booking', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_notification_dispatch_method" id="snippen_notification_dispatch_method" style="min-width:300px;">';
+		echo '<option value="async" ' . selected( $dispatch_method, 'async', false ) . '>' . esc_html__( 'Asynkron (via WP-Cron - anbefalt)', 'snippen-booking' ) . '</option>';
+		echo '<option value="sync" ' . selected( $dispatch_method, 'sync', false ) . '>' . esc_html__( 'Synkron (Send direkte ved booking)', 'snippen-booking' ) . '</option>';
+		echo '</select>';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Velg Synkron hvis WP-Cron er sperret eller ustabil på webhotellet.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+		echo '</div>';
+
+		// 2. E-post tab content
+		echo '<div class="tab-content" id="tab-email" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'E-postinnstillinger (SMTP)', 'snippen-booking' ) . '</h3>';
 
 		if ( $email_provider ) {
 			foreach ( $email_provider->get_settings_schema() as $field ) {
 				$this->render_field( $field );
 			}
 		}
+
+		echo '<hr style="margin:24px 0; border:0; border-top:1px solid #e2e8f0;">';
+		echo '<div class="snippen-form-group" style="margin-bottom: 10px;">';
+		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_disable_all_emails" id="snippen_disable_all_emails" value="yes" ' . checked( $disable_all_emails, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Deaktiver all e-postutsendelse fullstendig', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Kryss av her hvis serveren mangler e-postoppsett for å unngå at systemet henger ved passordtilbakestilling og andre e-poster (løser #166).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
 		echo '</div>';
 
-		// 2. KeySMS tab content
-		echo '<div class="tab-content" id="tab-keysms" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
-		echo '<h3 style="margin-top:0;">' . esc_html__( 'KeySMS (SMS) Varsler', 'snippen-booking' ) . '</h3>';
+		// 3. SMS tab content (Combined Gateway + KeySMS)
+		echo '<div class="tab-content" id="tab-sms" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		echo '<h3 style="margin-top:0;">' . esc_html__( 'SMS-innstillinger', 'snippen-booking' ) . '</h3>';
 
-		echo '<div class="snippen-form-group" style="margin-bottom:20px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">';
-		echo '<label for="snippen_active_notification_provider_keysms" style="display:block; font-weight:700; margin-bottom:6px;">' . esc_html__( 'Aktiv SMS-tilbyder i systemet:', 'snippen-booking' ) . '</label>';
-		echo '<select name="snippen_active_notification_provider" id="snippen_active_notification_provider_keysms" style="min-width:300px;">';
+		echo '<div class="snippen-form-group" style="margin-bottom:24px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">';
+		echo '<label for="snippen_active_notification_provider" style="display:block; font-weight:700; margin-bottom:6px;">' . esc_html__( 'Aktiv SMS-tilbyder i systemet:', 'snippen-booking' ) . '</label>';
+		echo '<select name="snippen_active_notification_provider" id="snippen_active_notification_provider" style="min-width:300px;">';
 		echo '<option value="keysms" ' . selected( $active_provider, 'keysms', false ) . '>' . esc_html__( 'KeySMS (Direkte API)', 'snippen-booking' ) . '</option>';
 		echo '<option value="snippen_sms_service" ' . selected( $active_provider, 'snippen_sms_service', false ) . '>' . esc_html__( 'Snippen SMS Service (Gateway)', 'snippen-booking' ) . '</option>';
 		echo '</select>';
 		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Velg hvilken SMS-tjeneste som skal benyttes ved utsendelse av SMS fra systemet.', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
-		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-bottom:24px;">';
-		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Aktiver varslingstyper for SMS:', 'snippen-booking' ) . '</h4>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_booking_confirmation_enabled" value="yes" ' . checked( $sms_booking, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bookingbekreftelse til kunde på SMS (manuell/gratis bookingforespørsel)', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_admin_booking_enabled" value="yes" ' . checked( $sms_admin, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om ny booking til administratorer på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_user_activation_enabled" value="yes" ' . checked( $sms_activation, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send kontoregistreringskode på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_password_reset_enabled" value="yes" ' . checked( $sms_password, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send tilbakestilling av passord på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_payment_reminder_enabled" value="yes" ' . checked( $sms_reminder, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send automatisk betalingspurring til kunde på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_payment_receipt_uploaded_enabled" value="yes" ' . checked( $sms_receipt_uploaded, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om opplastet betalingskvittering til administratorer på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_booking_confirmed_enabled" value="yes" ' . checked( $sms_booking_confirmed, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bekreftelse på godkjent/betalt booking til kunde på SMS (Vipps eller godkjent av admin)', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_payment_received_enabled" value="yes" ' . checked( $sms_payment_received, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send bekreftelse på mottatt betaling til kunde på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_booking_rejected_enabled" value="yes" ' . checked( $sms_booking_rejected, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om avslått reservasjon til kunde på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_door_code_updated_enabled" value="yes" ' . checked( $sms_door_code_updated, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om tildelt/endret dørkode til kunde på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:8px;">';
-		echo '<input type="checkbox" name="snippen_sms_inbound_sms_enabled" value="yes" ' . checked( $sms_inbound_sms, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send varsel om innkommende SMS til administratorer på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '<label style="font-weight:600; display: flex; align-items: center; gap:8px; margin-bottom:0;">';
-		echo '<input type="checkbox" name="snippen_sms_rental_feedback_enabled" value="yes" ' . checked( $sms_rental_feedback, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Send spørreskjema etter leieforhold til kunde på SMS', 'snippen-booking' );
-		echo '</label>';
-		echo '</div>';
-
-		if ( $keysms_provider ) {
-			foreach ( $keysms_provider->get_settings_schema() as $field ) {
-				$this->render_field( $field );
-			}
-		}
-		echo '</div>';
-
-		// 3. Snippen SMS Gateway tab content
-		echo '<div class="tab-content" id="tab-snippen_sms" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
-		echo '<h3 style="margin-top:0;">' . esc_html__( 'Snippen SMS Service (Gateway)', 'snippen-booking' ) . '</h3>';
-
+		echo '<h4>' . esc_html__( 'Snippen SMS Service (Gateway)', 'snippen-booking' ) . '</h4>';
 		echo '<div class="snippen-form-group" style="margin-bottom:20px; padding:12px 16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px;">';
 		echo '<p style="margin:0 0 6px 0; font-size:13px;"><strong>' . esc_html__( 'REST API Sync Endepunkt:', 'snippen-booking' ) . '</strong> <code style="background:#fff; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px;">' . esc_url( rest_url( 'snippen/v1/sms' ) ) . '</code></p>';
 		echo '<p class="description" style="margin:0 0 6px 0;">' . esc_html__( 'Konfigurer SMS Gateway med SNIPPEN_SMS_API_URL satt til denne adressen og SNIPPEN_SMS_API_TOKEN satt til tokenet under.', 'snippen-booking' ) . '</p>';
@@ -511,6 +656,14 @@ class SettingsPage {
 
 		if ( $snippen_sms_provider ) {
 			foreach ( $snippen_sms_provider->get_settings_schema() as $field ) {
+				$this->render_field( $field );
+			}
+		}
+
+		echo '<hr style="margin:28px 0; border:0; border-top:1px solid #e2e8f0;">';
+		echo '<h4>' . esc_html__( 'KeySMS (Direkte API)', 'snippen-booking' ) . '</h4>';
+		if ( $keysms_provider ) {
+			foreach ( $keysms_provider->get_settings_schema() as $field ) {
 				$this->render_field( $field );
 			}
 		}
@@ -539,15 +692,6 @@ class SettingsPage {
 		echo '<label for="snippen_payment_instructions" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Betalingsinstruksjoner / Betalingsfrist', 'snippen-booking' ) . '</label>';
 		echo '<textarea name="snippen_payment_instructions" id="snippen_payment_instructions" class="large-text" rows="4" placeholder="' . esc_attr( $payment_instructions_default ) . '">' . esc_textarea( $payment_instructions ) . '</textarea>';
 		echo '<p class="description">' . esc_html__( 'Instruksjonstekst og betalingsfrist. Denne teksten vises ved bookingvisning for leietaker og er også tilgjengelig som plassholder ({{payment_instructions}}) i Bookingbekreftelse varslingsmalen.', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:8px; margin-top:24px;">';
-		echo '<h4 style="margin:0 0 12px 0;">' . esc_html__( 'Konfigurasjon for automatiske betalingspurringer:', 'snippen-booking' ) . '</h4>';
-		echo '<div style="margin-bottom:12px;">';
-		echo '<label for="snippen_payment_reminder_days" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Purreintervaller (dager før booking start)', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_payment_reminder_days" id="snippen_payment_reminder_days" value="' . esc_attr( $payment_reminder_days ) . '" class="regular-text" placeholder="30, 21">';
-		echo '<p class="description">' . esc_html__( 'Kommaseparert liste over antall dager før bookingdato hvor automatisk betalingspurring skal sendes (f.eks. "30, 21").', 'snippen-booking' ) . '</p>';
-		echo '</div>';
 		echo '</div>';
 
 		// Vipps ePayment API Section
@@ -827,23 +971,6 @@ class SettingsPage {
 		// 6. Generelt tab content
 		echo '<div class="tab-content" id="tab-general" style="display:none; background:#fff; padding:24px; border:1px solid #ccd0d4; border-radius:4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 		echo '<h3 style="margin-top:0;">' . esc_html__( 'Generelle innstillinger', 'snippen-booking' ) . '</h3>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label for="snippen_notification_dispatch_method" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Utsendelsesmetode', 'snippen-booking' ) . '</label>';
-		echo '<select name="snippen_notification_dispatch_method" id="snippen_notification_dispatch_method" style="min-width:300px;">';
-		echo '<option value="async" ' . selected( $dispatch_method, 'async', false ) . '>' . esc_html__( 'Asynkron (via WP-Cron - anbefalt)', 'snippen-booking' ) . '</option>';
-		echo '<option value="sync" ' . selected( $dispatch_method, 'sync', false ) . '>' . esc_html__( 'Synkron (Send direkte ved booking)', 'snippen-booking' ) . '</option>';
-		echo '</select>';
-		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Velg Synkron hvis WP-Cron er sperret eller ustabil på webhotellet.', 'snippen-booking' ) . '</p>';
-		echo '</div>';
-
-		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
-		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
-		echo '<input type="checkbox" name="snippen_disable_all_emails" id="snippen_disable_all_emails" value="yes" ' . checked( $disable_all_emails, 'yes', false ) . ' style="margin:0;">';
-		echo esc_html__( 'Deaktiver all e-postutsendelse fullstendig', 'snippen-booking' );
-		echo '</label>';
-		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Kryss av her hvis serveren mangler e-postoppsett for å unngå at systemet henger ved passordtilbakestilling og andre e-poster (løser #166).', 'snippen-booking' ) . '</p>';
-		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 20px;">';
 		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';

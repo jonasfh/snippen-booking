@@ -44,7 +44,7 @@ class PlaceholderRegistryTest extends TestCase {
 	public function test_all_standard_placeholders_registered() {
 		$placeholders = $this->registry->get_registered_placeholders();
 
-		$this->assertCount( 37, $placeholders );
+		$this->assertCount( 38, $placeholders );
 
 		$expected_keys = array(
 			'user_name',
@@ -57,6 +57,7 @@ class PlaceholderRegistryTest extends TestCase {
 			'booking_description',
 			'booking_url',
 			'booking_price',
+			'days_until_booking',
 			'bank_account',
 			'vipps_number',
 			'payment_instructions',

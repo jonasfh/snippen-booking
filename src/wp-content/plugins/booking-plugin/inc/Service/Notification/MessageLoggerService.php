@@ -8,6 +8,7 @@
 namespace SnippenBooking\Service\Notification;
 
 use SnippenBooking\Helper\PhoneHelper;
+use SnippenBooking\Service\Sms\SmsTimeWindowService;
 
 /**
  * Class MessageLoggerService
@@ -162,19 +163,40 @@ class MessageLoggerService {
 	/**
 	 * Get pending outbound messages waiting to be dispatched.
 	 *
-	 * @param int $limit Max number of messages to fetch.
+	 * Outside the configured SMS send-time window, only exempt event types are returned.
+	 *
+	 * @param int       $limit         Max number of messages to fetch.
+	 * @param bool|null $within_window Optional override for time-window check (for testing).
 	 * @return array Array of message objects.
 	 */
-	public static function get_pending_outbox( int $limit = 50 ): array {
+	public static function get_pending_outbox( int $limit = 50, ?bool $within_window = null ): array {
 		global $wpdb;
 
-		$table   = $wpdb->prefix . 'snippen_messages';
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE channel = 'sms' AND status = 'queued' ORDER BY id ASC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				$limit
-			)
-		);
+		$table     = $wpdb->prefix . 'snippen_messages';
+		$in_window = null !== $within_window ? $within_window : SmsTimeWindowService::is_within_window();
+
+		if ( $in_window ) {
+			$results = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT * FROM {$table} WHERE channel = 'sms' AND status = 'queued' ORDER BY id ASC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$limit
+				)
+			);
+
+			return is_array( $results ) ? $results : array();
+		}
+
+		$exempt = SmsTimeWindowService::get_exempt_event_types();
+		if ( empty( $exempt ) ) {
+			return array();
+		}
+
+		$placeholders = implode( ', ', array_fill( 0, count( $exempt ), '%s' ) );
+		$params       = array_merge( $exempt, array( $limit ) );
+		$sql          = "SELECT * FROM {$table} WHERE channel = 'sms' AND status = 'queued' AND event_type IN ({$placeholders}) ORDER BY id ASC LIMIT %d";
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$results = $wpdb->get_results( $wpdb->prepare( $sql, $params ) );
 
 		return is_array( $results ) ? $results : array();
 	}

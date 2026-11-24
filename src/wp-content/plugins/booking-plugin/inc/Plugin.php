@@ -103,6 +103,18 @@ class Plugin {
 			wp_schedule_event( time(), 'daily', 'snippen_booking_daily_payment_reminders' );
 		}
 
+		// Automated upcoming booking reminder cron hook
+		add_action( 'snippen_booking_daily_booking_reminders', array( __CLASS__, 'handle_daily_booking_reminders' ) );
+		if ( ! wp_next_scheduled( 'snippen_booking_daily_booking_reminders' ) ) {
+			wp_schedule_event( time(), 'daily', 'snippen_booking_daily_booking_reminders' );
+		}
+
+		// Flush deferred SMS messages for direct providers when send-time window opens
+		add_action( 'snippen_booking_flush_queued_sms', array( __CLASS__, 'handle_flush_queued_sms' ) );
+		if ( ! wp_next_scheduled( 'snippen_booking_flush_queued_sms' ) ) {
+			wp_schedule_event( time(), 'every_fifteen_minutes', 'snippen_booking_flush_queued_sms' );
+		}
+
 		// Automated Vipps unpaid bookings cleanup cron hook (Issue #307)
 		// phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval -- 5-minute interval needed for timely SMS gateway downtime alerts.
 		add_filter( 'cron_schedules', array( __CLASS__, 'register_cron_schedules' ) );
@@ -176,6 +188,24 @@ class Plugin {
 	public static function handle_daily_payment_reminders() {
 		$service = new \SnippenBooking\Service\Notification\PaymentReminderService();
 		$service->run_cron();
+	}
+
+	/**
+	 * Handle daily upcoming booking reminders cron trigger
+	 */
+	public static function handle_daily_booking_reminders() {
+		$service = new \SnippenBooking\Service\Notification\BookingReminderService();
+		$service->run_cron();
+	}
+
+	/**
+	 * Flush queued direct-provider SMS messages when within send-time window
+	 *
+	 * @return int Number of flushed messages.
+	 */
+	public static function handle_flush_queued_sms() {
+		$manager = new \SnippenBooking\Service\Notification\NotificationManager();
+		return $manager->flush_queued_direct_sms();
 	}
 
 	/**

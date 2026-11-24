@@ -58,9 +58,10 @@ class SettingsPageTest extends TestCase {
 		$page->render();
 		$output = ob_get_clean();
 
-		$this->assertStringContainsString( 'E-post-varsler', $output );
+		$this->assertStringContainsString( 'Varslinger', $output );
+		$this->assertStringContainsString( 'id="tab-notifications"', $output );
 		$this->assertStringContainsString( 'id="tab-email"', $output );
-		$this->assertStringContainsString( 'id="tab-keysms"', $output );
+		$this->assertStringContainsString( 'id="tab-sms"', $output );
 		$this->assertStringContainsString( 'id="tab-payment"', $output );
 		$this->assertStringContainsString( 'id="tab-general"', $output );
 		$this->assertStringContainsString( 'name="snippen_payment_bank_account"', $output );
@@ -433,7 +434,7 @@ class SettingsPageTest extends TestCase {
 
 		$xpath = new \DOMXPath( $dom );
 
-		$expected_ids = array( 'tab-email', 'tab-keysms', 'tab-snippen_sms', 'tab-payment', 'tab-doorman', 'tab-general' );
+		$expected_ids = array( 'tab-notifications', 'tab-email', 'tab-sms', 'tab-payment', 'tab-doorman', 'tab-general' );
 		foreach ( $expected_ids as $tab_id ) {
 			$nodes = $xpath->query( '//form/div[@id="' . $tab_id . '"]' );
 			$this->assertSame( 1, $nodes->length, "Expected #$tab_id to be a direct child of <form>" );

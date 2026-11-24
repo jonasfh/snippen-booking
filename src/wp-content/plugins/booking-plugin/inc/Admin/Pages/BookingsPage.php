@@ -578,6 +578,7 @@ class BookingsPage {
 			'sms_disambiguation_prompt'       => __( 'Valgforespørsel (SMS)', 'snippen-booking' ),
 			'sms_disambiguation_confirmation' => __( 'Valgbekreftelse (SMS)', 'snippen-booking' ),
 			'rental_feedback'                 => __( 'Spørreskjema etter leieforhold', 'snippen-booking' ),
+			'booking_reminder'                => __( 'Påminnelse før bookingstart', 'snippen-booking' ),
 		);
 
 		$total_count    = count( $messages );

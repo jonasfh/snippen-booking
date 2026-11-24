@@ -58,7 +58,7 @@ class NotificationTemplateService {
 	public function get_all_templates(): array {
 		$templates = array();
 
-		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback', 'sms_gateway_alert', 'doorman_alert' );
+		$event_types = array( 'user_activation', 'booking_confirmation', 'admin_booking', 'password_reset', 'payment_reminder', 'payment_receipt_uploaded', 'booking_confirmed', 'payment_received', 'booking_rejected', 'door_code_updated', 'inbound_sms_received', 'rental_feedback', 'booking_reminder', 'sms_gateway_alert', 'doorman_alert' );
 		$channels    = array( 'sms', 'email' );
 
 		foreach ( $event_types as $event_type ) {
@@ -225,6 +225,16 @@ class NotificationTemplateService {
 				'email' => array(
 					'subject' => __( 'Tilbakemelding på ditt leieforhold - {{booking_objects}}', 'snippen-booking' ),
 					'body'    => __( "Hei {{user_name}},\n\nTakk for at du leide {{booking_objects}} den {{booking_date}} ({{booking_time}}).\n\nVi håper dere hadde et fint opphold! For at vi skal kunne forbedre tilbudet vårt, setter vi stor pris på om du tar deg tid til å svare på et kort spørreskjema om leieforholdet:\nhttps://example.com\n\nDu kan også se detaljer om din booking her:\n{{booking_url}}\n\nVennlig hilsen,\nSnippen", 'snippen-booking' ),
+				),
+			),
+			'booking-reminder'         => array(
+				'sms'   => array(
+					'subject' => '',
+					'body'    => __( "Din reservasjon av {{booking_objects}} starter om {{days_until_booking}} dager. Hvis du lurer på noe i den forbindelse, kan du svare på denne meldingen.\nMvh Snippen", 'snippen-booking' ),
+				),
+				'email' => array(
+					'subject' => __( 'Påminnelse: Din reservasjon av {{booking_objects}} starter om {{days_until_booking}} dager', 'snippen-booking' ),
+					'body'    => __( "Hei {{user_name}},\n\nDin reservasjon av {{booking_objects}} den {{booking_date}} ({{booking_time}}) starter om {{days_until_booking}} dager.\n\nDu kan se detaljer om din reservasjon her:\n{{booking_url}}\n\nHvis du lurer på noe i den forbindelse, kan du svare på denne meldingen.\n\nMvh Snippen", 'snippen-booking' ),
 				),
 			),
 			'sms-gateway-alert'        => array(
