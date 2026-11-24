@@ -191,6 +191,25 @@ class NotificationTemplateServiceTest extends TestCase {
 	}
 
 	/**
+	 * Test default template and placeholders for sms-gateway-alert
+	 */
+	public function test_sms_gateway_alert_default_template_and_placeholders() {
+		$email_tpl = $this->service->get_template( 'sms_gateway_alert', 'email' );
+		$this->assertTrue( $email_tpl['is_default'] );
+		$this->assertNotEmpty( $email_tpl['subject'] );
+		$this->assertStringContainsString( '{{last_poll_time}}', $email_tpl['body'] );
+		$this->assertStringContainsString( '{{tolerance_seconds}}', $email_tpl['body'] );
+		$this->assertStringContainsString( '{{settings_url}}', $email_tpl['body'] );
+
+		$placeholders = $this->service->get_available_placeholders( 'sms-gateway-alert' );
+		$this->assertArrayHasKey( 'last_poll_time', $placeholders );
+		$this->assertArrayHasKey( 'seconds_since_poll', $placeholders );
+		$this->assertArrayHasKey( 'minutes_since_poll', $placeholders );
+		$this->assertArrayHasKey( 'tolerance_seconds', $placeholders );
+		$this->assertArrayHasKey( 'settings_url', $placeholders );
+	}
+
+	/**
 	 * Test email templates have subject lines
 	 */
 	public function test_email_templates_have_subjects() {

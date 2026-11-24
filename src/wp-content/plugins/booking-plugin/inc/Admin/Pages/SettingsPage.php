@@ -260,6 +260,8 @@ class SettingsPage {
 			}
 		}
 
+		\SnippenBooking\Service\Sms\SmsGatewayHealthService::sync_cron_schedule();
+
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Innstillinger lagret.', 'snippen-booking' ) . '</p></div>';
 	}
 
