@@ -689,10 +689,24 @@ class BookingsPage {
 						<input type="text" class="snippen-modal-subject" style="width:100%;">
 					</div>
 					<div class="snippen-form-group" style="margin-top: 12px;">
-						<label style="display:flex; justify-content:space-between; align-items:center;">
+						<label style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
 							<span><?php esc_html_e( 'Melding:', 'snippen-booking' ); ?></span>
-							<span class="snippen-placeholder-copied-hint" style="font-size:11px; color:#15803d; font-weight:600; display:none;"><?php esc_html_e( 'Kopiert til utklippstavle og satt inn!', 'snippen-booking' ); ?></span>
+							<span style="display:inline-flex; align-items:center; gap:8px;">
+								<?php if ( \SnippenBooking\Service\Ai\AiReplyService::is_enabled() ) : ?>
+									<button type="button" class="button button-small snippen-dispatch-ai-btn" style="display:none; align-items:center; gap:4px;">
+										<span class="dashicons dashicons-superhero-alt" style="font-size:14px; width:14px; height:14px; line-height:14px; vertical-align:middle;"></span>
+										<?php esc_html_e( 'Foreslå med AI', 'snippen-booking' ); ?>
+									</button>
+								<?php endif; ?>
+								<span class="snippen-placeholder-copied-hint" style="font-size:11px; color:#15803d; font-weight:600; display:none;"><?php esc_html_e( 'Kopiert til utklippstavle og satt inn!', 'snippen-booking' ); ?></span>
+							</span>
 						</label>
+						<?php if ( \SnippenBooking\Service\Ai\AiReplyService::is_enabled() ) : ?>
+							<div class="snippen-dispatch-ai-hint-wrap" style="display:none; margin:6px 0; gap:6px; align-items:center;">
+								<input type="text" class="snippen-dispatch-ai-hint" placeholder="<?php esc_attr_e( 'Valgfritt stikkord til AI (f.eks. bekreft betaling og utvask)...', 'snippen-booking' ); ?>" style="flex:1; font-size:12px; padding:3px 8px;">
+								<span class="snippen-dispatch-ai-status" style="font-size:11px; color:#64748b;"></span>
+							</div>
+						<?php endif; ?>
 						<div class="snippen-modal-placeholders-wrap" style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:4px; max-height:100px; overflow-y:auto; padding:6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px;">
 						</div>
 						<textarea class="snippen-modal-message" rows="8" style="width:100%; font-family:inherit; font-size:13px; padding:10px; border-radius:6px; border:1px solid #cbd5e1;"></textarea>

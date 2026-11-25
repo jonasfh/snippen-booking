@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.61.0] - 2026-11-25
+- [Feat] AI-assistert SMS-utkast («Foreslå svar med AI») via Google Gemini Free Tier:
+  - **`AiContextBuilder.php` & `AiReplyService.php`**: Bygger anonymisert kontekst (vilkårsside, valgte WordPress-sider, ekstra FAQ, utleieregler, anonymisert bookingstatus og SMS-samtaletråd) uten PII/dørkoder, og genererer korte norske SMS-utkast via Gemini REST API (`generateContent`).
+  - **`AiSmsReplyApi.php` & `Plugin.php`**: Nytt AJAX-endepunkt `wp_ajax_snippen_ai_suggest_sms_reply`.
+  - **`SettingsPage.php`**: Innstillinger for aktivering, Gemini API-nøkkel, modellnavn, valg av WordPress-sider og ekstra FAQ under **SMS**-fanen.
+  - **`SmsInboxPage.php`, `BookingsPage.php` & `js/admin.js`**: Knapp for AI-forslag og valgfritt stikkordfelt i både SMS Innboks-detaljmodalen og «Send SMS til kunde»-modalen.
+  - **Tester**: Lagt til enhetstester i `AiReplyServiceTest.php`.
+
 ## [2.60.0] - 2026-11-24
 - (#423) [Feat] Påminnelse før bookingstart (`booking_reminder`), konfigurerbart sendetidsvindu for SMS og ny **Varslinger**-fane i innstillinger:
   - **`BookingReminderService.php` & `Plugin.php`**: Daglig WP-Cron (`snippen_booking_daily_booking_reminders`) som sender påminnelse på SMS og e-post `X` dager (standard `14`, `0` deaktiverer) før bookingstart for `confirmed`-reservasjoner, med idempotens via `MessageLoggerService`.
