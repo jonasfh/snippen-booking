@@ -23,12 +23,12 @@ jobs:
       - name: Check if src/ changed
         id: src_changes
         run: |
-          if [ -n "$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- src/)" ]; then
+          if [ -n "$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- src/ package.json package-lock.json)" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "### PR Versjonskontroll 🔍" >> "$GITHUB_STEP_SUMMARY"
-            echo "- ℹ️ Ingen endringer i \`src/\` — hopper over krav om versjonsbump og CHANGELOG." >> "$GITHUB_STEP_SUMMARY"
+            echo "- ℹ️ Ingen endringer i \`src/\`, \`package.json\` eller \`package-lock.json\` — hopper over krav om versjonsbump og CHANGELOG." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Extract plugin version
