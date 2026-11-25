@@ -10,7 +10,7 @@ class AiReplyService {
 	/**
 	 * Default Gemini model.
 	 */
-	const DEFAULT_MODEL = 'gemini-2.5-flash';
+	const DEFAULT_MODEL = 'gemini-3.8-flash';
 
 	/**
 	 * Gemini API base endpoint.
@@ -93,7 +93,7 @@ class AiReplyService {
 			),
 			'generationConfig'   => array(
 				'temperature'     => 0.3,
-				'maxOutputTokens' => 300,
+				'maxOutputTokens' => 1024,
 			),
 		);
 

@@ -302,8 +302,8 @@ class SettingsPage {
 				update_option( 'snippen_ai_gemini_api_key', $raw_api_key );
 			}
 
-			$ai_model = isset( $_POST['snippen_ai_gemini_model'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_ai_gemini_model'] ) ) : 'gemini-2.5-flash';
-			update_option( 'snippen_ai_gemini_model', '' !== trim( $ai_model ) ? trim( $ai_model ) : 'gemini-2.5-flash' );
+			$ai_model = isset( $_POST['snippen_ai_gemini_model'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_ai_gemini_model'] ) ) : 'gemini-3.8-flash';
+			update_option( 'snippen_ai_gemini_model', '' !== trim( $ai_model ) ? trim( $ai_model ) : 'gemini-3.8-flash' );
 
 			$raw_page_ids   = isset( $_POST['snippen_ai_context_page_ids'] ) && is_array( $_POST['snippen_ai_context_page_ids'] )
 				? wp_unslash( $_POST['snippen_ai_context_page_ids'] )
@@ -1292,7 +1292,7 @@ class SettingsPage {
 	private function render_ai_sms_settings_section() {
 		$ai_enabled     = get_option( 'snippen_ai_enabled', 'no' );
 		$has_api_key    = '' !== trim( (string) get_option( 'snippen_ai_gemini_api_key', '' ) );
-		$ai_model       = get_option( 'snippen_ai_gemini_model', 'gemini-2.5-flash' );
+		$ai_model       = get_option( 'snippen_ai_gemini_model', 'gemini-3.8-flash' );
 		$selected_pages = get_option( 'snippen_ai_context_page_ids', array() );
 		if ( ! is_array( $selected_pages ) ) {
 			$selected_pages = array();
@@ -1323,8 +1323,8 @@ class SettingsPage {
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
 		echo '<label for="snippen_ai_gemini_model" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Gemini-modell', 'snippen-booking' ) . '</label>';
-		echo '<input type="text" name="snippen_ai_gemini_model" id="snippen_ai_gemini_model" value="' . esc_attr( $ai_model ) . '" class="regular-text" placeholder="gemini-2.5-flash">';
-		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Standard: gemini-2.5-flash (anbefalt for gratisnivået).', 'snippen-booking' ) . '</p>';
+		echo '<input type="text" name="snippen_ai_gemini_model" id="snippen_ai_gemini_model" value="' . esc_attr( $ai_model ) . '" class="regular-text" placeholder="gemini-3.8-flash">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Standard: gemini-3.8-flash (anbefalt for gratisnivået).', 'snippen-booking' ) . '</p>';
 		echo '</div>';
 
 		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
