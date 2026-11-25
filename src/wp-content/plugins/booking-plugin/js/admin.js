@@ -189,6 +189,7 @@
                     if (channel === 'email_customer' || channel === 'email_admin') {
                         $modal.find('.snippen-modal-subject-wrap').show();
                         $modal.find('.snippen-modal-subject').val(data.subject || '');
+                        $modal.find('.snippen-dispatch-ai-btn, .snippen-dispatch-ai-hint-wrap').hide();
                         if (channel === 'email_customer') {
                             $modal.find('.snippen-modal-title').text('Send e-post til kunde');
                             $modal.find('.snippen-modal-submit').text('Send e-post');
@@ -201,6 +202,10 @@
                         $modal.find('.snippen-modal-subject').val('');
                         $modal.find('.snippen-modal-title').text('Send SMS til kunde');
                         $modal.find('.snippen-modal-submit').text('Send SMS');
+                        $modal.find('.snippen-dispatch-ai-btn').css('display', 'inline-flex');
+                        $modal.find('.snippen-dispatch-ai-hint-wrap').css('display', 'flex');
+                        $modal.find('.snippen-dispatch-ai-hint').val('');
+                        $modal.find('.snippen-dispatch-ai-status').text('');
                     }
                     $modal.fadeIn(200);
                     $('body').addClass('snippen-modal-open');
@@ -277,6 +282,42 @@
                 const $hint = $('#snippen-dispatch-modal').find('.snippen-placeholder-copied-hint');
                 $hint.stop(true, true).fadeIn(150).delay(2000).fadeOut(200);
             }
+        });
+
+        // Handle AI SMS suggestion button in Dispatch Modal
+        $('#snippen-dispatch-modal').on('click', '.snippen-dispatch-ai-btn', function(e) {
+            e.preventDefault();
+            if (!activeDispatchData || !activeDispatchData.id) {
+                return;
+            }
+
+            const $btn = $(this);
+            const $modal = $('#snippen-dispatch-modal');
+            const $status = $modal.find('.snippen-dispatch-ai-status');
+            const hint = $modal.find('.snippen-dispatch-ai-hint').val() || '';
+
+            $btn.prop('disabled', true);
+            $status.css('color', '#64748b').text('Genererer forslag...');
+
+            $.post(snippenAdmin.ajaxUrl, {
+                action: 'snippen_ai_suggest_sms_reply',
+                nonce: snippenAdmin.nonce,
+                booking_id: activeDispatchData.id,
+                hint: hint
+            }).done(function(response) {
+                if (response.success && response.data && response.data.draft) {
+                    $modal.find('.snippen-modal-message').val(response.data.draft).focus();
+                    isMessageEdited = true;
+                    $status.css('color', '#15803d').text('Utkast klart.');
+                } else {
+                    const msg = (response.data && response.data.message) ? response.data.message : 'Kunne ikke generere AI-forslag.';
+                    $status.css('color', '#b91c1c').text(msg);
+                }
+            }).fail(function() {
+                $status.css('color', '#b91c1c').text('Nettverksfeil ved kontakt med AI.');
+            }).always(function() {
+                $btn.prop('disabled', false);
+            });
         });
 
         // Modal Close/Cancel handlers

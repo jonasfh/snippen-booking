@@ -943,6 +943,17 @@ class SmsInboxPage {
 		echo '<input type="hidden" name="booking_id" value="' . esc_attr( $message->booking_id ?? '' ) . '">';
 		echo '<input type="hidden" name="user_id" value="' . esc_attr( $message->user_id ?? '' ) . '">';
 
+		if ( \SnippenBooking\Service\Ai\AiReplyService::is_enabled() ) {
+			echo '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">';
+			echo '<input type="text" id="snippen-ai-hint" placeholder="' . esc_attr__( 'Valgfritt stikkord til AI (f.eks. godkjent utvask til kl 12)...', 'snippen-booking' ) . '" style="flex:1; min-width:200px; font-size:12px; padding:4px 8px;">';
+			echo '<button type="button" id="snippen-ai-suggest-btn" class="button button-secondary" data-message-id="' . esc_attr( $message->id ) . '" data-booking-id="' . esc_attr( $message->booking_id ?? '' ) . '" style="display:inline-flex; align-items:center; gap:4px;">';
+			echo '<span class="dashicons dashicons-superhero-alt" style="font-size:15px; width:15px; height:15px; line-height:15px;"></span> ';
+			echo esc_html__( 'Foreslå svar med AI', 'snippen-booking' );
+			echo '</button>';
+			echo '<span id="snippen-ai-status" style="font-size:12px; color:#64748b; display:none;"></span>';
+			echo '</div>';
+		}
+
 		echo '<div style="margin-bottom:8px;">';
 		echo '<textarea name="reply_message" id="snippen-reply-text" rows="3" required placeholder="' . esc_attr__( 'Skriv et SMS-svar til gjesten her...', 'snippen-booking' ) . '" style="width:100%; border-radius:6px; border:1px solid #cbd5e1; padding:10px; font-size:13px; font-family:inherit;"></textarea>';
 		echo '</div>';
@@ -1223,6 +1234,65 @@ class SmsInboxPage {
 						parts = Math.ceil(len / 153);
 					}
 					partCounter.textContent = parts;
+				});
+			}
+
+			// AI SMS reply suggestion in inbox modal
+			var aiSuggestBtn = document.getElementById('snippen-ai-suggest-btn');
+			if (aiSuggestBtn && replyText) {
+				aiSuggestBtn.addEventListener('click', function() {
+					var hintInput = document.getElementById('snippen-ai-hint');
+					var statusEl = document.getElementById('snippen-ai-status');
+					var msgId = this.getAttribute('data-message-id') || '';
+					var bookingId = this.getAttribute('data-booking-id') || '';
+					var hint = hintInput ? hintInput.value : '';
+
+					aiSuggestBtn.disabled = true;
+					if (statusEl) {
+						statusEl.style.display = 'inline';
+						statusEl.style.color = '#64748b';
+						statusEl.textContent = '<?php echo esc_js( __( 'Genererer forslag...', 'snippen-booking' ) ); ?>';
+					}
+
+					var formData = new FormData();
+					formData.append('action', 'snippen_ai_suggest_sms_reply');
+					formData.append('nonce', typeof snippenAdmin !== 'undefined' ? snippenAdmin.nonce : '<?php echo esc_js( wp_create_nonce( 'snippen_admin_nonce' ) ); ?>');
+					formData.append('message_id', msgId);
+					formData.append('booking_id', bookingId);
+					formData.append('hint', hint);
+
+					var ajaxEndpoint = typeof snippenAdmin !== 'undefined' ? snippenAdmin.ajaxUrl : '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
+					fetch(ajaxEndpoint, {
+						method: 'POST',
+						body: formData
+					})
+					.then(function(res) { return res.json(); })
+					.then(function(data) {
+						if (data && data.success && data.data && data.data.draft) {
+							replyText.value = data.data.draft;
+							replyText.dispatchEvent(new Event('input'));
+							replyText.focus();
+							if (statusEl) {
+								statusEl.style.color = '#15803d';
+								statusEl.textContent = '<?php echo esc_js( __( 'Utkast klart – kontroller før sending.', 'snippen-booking' ) ); ?>';
+							}
+						} else {
+							var errMsg = (data && data.data && data.data.message) ? data.data.message : '<?php echo esc_js( __( 'Kunne ikke generere AI-forslag.', 'snippen-booking' ) ); ?>';
+							if (statusEl) {
+								statusEl.style.color = '#b91c1c';
+								statusEl.textContent = errMsg;
+							}
+						}
+					})
+					.catch(function() {
+						if (statusEl) {
+							statusEl.style.color = '#b91c1c';
+							statusEl.textContent = '<?php echo esc_js( __( 'Nettverksfeil ved kontakt med AI.', 'snippen-booking' ) ); ?>';
+						}
+					})
+					.finally(function() {
+						aiSuggestBtn.disabled = false;
+					});
 				});
 			}
 

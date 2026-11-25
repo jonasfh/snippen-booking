@@ -293,6 +293,28 @@ class SettingsPage {
 			}
 		}
 
+		// Save AI SMS assistant settings.
+		if ( isset( $_POST['snippen_ai_settings_submitted'] ) ) {
+			update_option( 'snippen_ai_enabled', isset( $_POST['snippen_ai_enabled'] ) ? 'yes' : 'no' );
+
+			$raw_api_key = isset( $_POST['snippen_ai_gemini_api_key'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['snippen_ai_gemini_api_key'] ) ) ) : '';
+			if ( '' !== $raw_api_key ) {
+				update_option( 'snippen_ai_gemini_api_key', $raw_api_key );
+			}
+
+			$ai_model = isset( $_POST['snippen_ai_gemini_model'] ) ? sanitize_text_field( wp_unslash( $_POST['snippen_ai_gemini_model'] ) ) : 'gemini-2.5-flash';
+			update_option( 'snippen_ai_gemini_model', '' !== trim( $ai_model ) ? trim( $ai_model ) : 'gemini-2.5-flash' );
+
+			$raw_page_ids   = isset( $_POST['snippen_ai_context_page_ids'] ) && is_array( $_POST['snippen_ai_context_page_ids'] )
+				? wp_unslash( $_POST['snippen_ai_context_page_ids'] )
+				: array();
+			$clean_page_ids = array_values( array_unique( array_filter( array_map( 'absint', $raw_page_ids ) ) ) );
+			update_option( 'snippen_ai_context_page_ids', $clean_page_ids );
+
+			$extra_context = isset( $_POST['snippen_ai_extra_context'] ) ? sanitize_textarea_field( wp_unslash( $_POST['snippen_ai_extra_context'] ) ) : '';
+			update_option( 'snippen_ai_extra_context', $extra_context );
+		}
+
 		\SnippenBooking\Service\Sms\SmsGatewayHealthService::sync_cron_schedule();
 		\SnippenBooking\Service\Door\DoormanHealthService::sync_cron_schedule();
 
@@ -667,6 +689,8 @@ class SettingsPage {
 				$this->render_field( $field );
 			}
 		}
+
+		$this->render_ai_sms_settings_section();
 		echo '</div>';
 
 		// 4. Betaling tab content
@@ -1259,6 +1283,77 @@ class SettingsPage {
 		if ( ! empty( $desc ) ) {
 			echo '<p class="description" style="margin-top:4px;">' . esc_html( $desc ) . '</p>';
 		}
+		echo '</div>';
+	}
+
+	/**
+	 * Render AI SMS assistant settings section inside the SMS tab.
+	 */
+	private function render_ai_sms_settings_section() {
+		$ai_enabled     = get_option( 'snippen_ai_enabled', 'no' );
+		$has_api_key    = '' !== trim( (string) get_option( 'snippen_ai_gemini_api_key', '' ) );
+		$ai_model       = get_option( 'snippen_ai_gemini_model', 'gemini-2.5-flash' );
+		$selected_pages = get_option( 'snippen_ai_context_page_ids', array() );
+		if ( ! is_array( $selected_pages ) ) {
+			$selected_pages = array();
+		}
+		$selected_pages = array_map( 'absint', $selected_pages );
+		$extra_context  = get_option( 'snippen_ai_extra_context', '' );
+		$pages          = get_pages( array( 'post_status' => 'publish' ) );
+		$terms_url      = trim( (string) get_option( 'snippen_terms_url', '' ) );
+		$terms_page_id  = ( '' !== $terms_url && function_exists( 'url_to_postid' ) ) ? (int) url_to_postid( $terms_url ) : 0;
+
+		echo '<hr style="margin:28px 0; border:0; border-top:1px solid #e2e8f0;">';
+		echo '<h4>' . esc_html__( 'AI-assistent for SMS-utkast (Google Gemini Free Tier)', 'snippen-booking' ) . '</h4>';
+		echo '<input type="hidden" name="snippen_ai_settings_submitted" value="1">';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
+		echo '<label style="font-weight:700; display:flex; align-items:center; gap:8px;">';
+		echo '<input type="checkbox" name="snippen_ai_enabled" id="snippen_ai_enabled" value="yes" ' . checked( $ai_enabled, 'yes', false ) . ' style="margin:0;">';
+		echo esc_html__( 'Aktiver «Foreslå svar med AI» i manuelle SMS-dialoger', 'snippen-booking' );
+		echo '</label>';
+		echo '<p class="description" style="margin:4px 0 0 24px;">' . esc_html__( 'Lager kun utkast i tekstfeltet. Meldinger sendes aldri automatisk.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
+		echo '<label for="snippen_ai_gemini_api_key" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Google Gemini API-nøkkel', 'snippen-booking' ) . '</label>';
+		echo '<input type="password" name="snippen_ai_gemini_api_key" id="snippen_ai_gemini_api_key" value="" class="regular-text" autocomplete="new-password" placeholder="' . esc_attr( $has_api_key ? __( '•••••••• (lagret – la stå tom for å beholde)', 'snippen-booking' ) : 'AIza...' ) . '">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Gratis API-nøkkel hentes fra Google AI Studio (aistudio.google.com). Personopplysninger (navn, telefon, e-post, dørkoder) sendes ikke til API-et.', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
+		echo '<label for="snippen_ai_gemini_model" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Gemini-modell', 'snippen-booking' ) . '</label>';
+		echo '<input type="text" name="snippen_ai_gemini_model" id="snippen_ai_gemini_model" value="' . esc_attr( $ai_model ) . '" class="regular-text" placeholder="gemini-2.5-flash">';
+		echo '<p class="description" style="margin-top:4px;">' . esc_html__( 'Standard: gemini-2.5-flash (anbefalt for gratisnivået).', 'snippen-booking' ) . '</p>';
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
+		echo '<label style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'WordPress-sider som kunnskapsbase', 'snippen-booking' ) . '</label>';
+		if ( $terms_page_id > 0 ) {
+			echo '<p class="description" style="margin:0 0 6px 0; color:#15803d;">' . esc_html__( 'Vilkårssiden fra «Lenke til vilkår/regler for leie» inkluderes automatisk.', 'snippen-booking' ) . '</p>';
+		}
+		if ( ! empty( $pages ) ) {
+			echo '<div style="max-height:160px; overflow-y:auto; border:1px solid #cbd5e1; border-radius:4px; padding:8px 12px; background:#f8fafc; max-width:460px;">';
+			foreach ( $pages as $page ) {
+				$pid     = (int) $page->ID;
+				$checked = in_array( $pid, $selected_pages, true ) ? ' checked' : '';
+				echo '<label style="display:flex; align-items:center; gap:6px; margin-bottom:4px; font-weight:normal;">';
+				echo '<input type="checkbox" name="snippen_ai_context_page_ids[]" value="' . esc_attr( $pid ) . '"' . $checked . ' style="margin:0;">';
+				echo esc_html( $page->post_title );
+				if ( $pid === $terms_page_id ) {
+					echo ' <span style="font-size:11px; color:#15803d;">(' . esc_html__( 'Vilkår', 'snippen-booking' ) . ')</span>';
+				}
+				echo '</label>';
+			}
+			echo '</div>';
+		} else {
+			echo '<p class="description">' . esc_html__( 'Ingen publiserte WordPress-sider funnet.', 'snippen-booking' ) . '</p>';
+		}
+		echo '</div>';
+
+		echo '<div class="snippen-form-group" style="margin-bottom: 16px;">';
+		echo '<label for="snippen_ai_extra_context" style="display:block; font-weight:600; margin-bottom:5px;">' . esc_html__( 'Ekstra praktisk info / FAQ for AI', 'snippen-booking' ) . '</label>';
+		echo '<textarea name="snippen_ai_extra_context" id="snippen_ai_extra_context" rows="4" class="large-text" style="max-width:600px;" placeholder="' . esc_attr__( 'F.eks. parkering, søppelhåndtering, wifi, kontaktperson i styret...', 'snippen-booking' ) . '">' . esc_textarea( $extra_context ) . '</textarea>';
 		echo '</div>';
 	}
 }
