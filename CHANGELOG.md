@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.61.1] - 2026-11-26
+- [Security] Oppdatert `brace-expansion` (`5.1.0`) og `minimatch` (`11.0.9`) i `package.json` / `package-lock.json` for å lukke Dependabot-varsler (#19, #20, #23).
+
 ## [2.61.0] - 2026-11-25
 - [Feat] AI-assistert SMS-utkast («Foreslå svar med AI») via Google Gemini Free Tier:
   - **`AiContextBuilder.php` & `AiReplyService.php`**: Bygger anonymisert kontekst (vilkårsside, valgte WordPress-sider, ekstra FAQ, utleieregler, anonymisert bookingstatus og SMS-samtaletråd) uten PII/dørkoder, og genererer korte norske SMS-utkast via Gemini REST API (`generateContent`).
