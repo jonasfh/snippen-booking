@@ -59,7 +59,7 @@ class AiReplyServiceTest extends TestCase {
 	public function test_suggest_sms_reply_returns_gemini_draft() {
 		update_option( 'snippen_ai_enabled', 'yes' );
 		update_option( 'snippen_ai_gemini_api_key', 'AIzaTestKey123' );
-		update_option( 'snippen_ai_gemini_model', 'gemini-2.5-flash' );
+		update_option( 'snippen_ai_gemini_model', 'gemini-3.8-flash' );
 		update_option( 'snippen_ai_extra_context', 'Parkering finnes rett utenfor hovedinngangen.' );
 
 		$captured_request = null;
@@ -99,7 +99,7 @@ class AiReplyServiceTest extends TestCase {
 		$this->assertTrue( $result['success'] );
 		$this->assertSame( 'Hei! Parkering finnes rett utenfor hovedinngangen. Velkommen!', $result['draft'] );
 		$this->assertNotNull( $captured_request );
-		$this->assertStringContainsString( 'gemini-2.5-flash:generateContent', $captured_request['url'] );
+		$this->assertStringContainsString( 'gemini-3.8-flash:generateContent', $captured_request['url'] );
 		$this->assertSame( 'AIzaTestKey123', $captured_request['args']['headers']['x-goog-api-key'] );
 		$this->assertStringContainsString( 'Parkering finnes rett utenfor hovedinngangen.', $captured_request['args']['body'] );
 		$this->assertStringContainsString( 'Svar om parkering', $captured_request['args']['body'] );
