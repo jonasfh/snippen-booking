@@ -34,6 +34,7 @@ class SmsGatewayApiTest extends TestCase {
 		update_option( 'snippen_sms_service_sender', 'Snippen' );
 		update_option( 'snippen_email_inbound_sms_enabled', 'no' );
 		update_option( 'snippen_sms_inbound_sms_enabled', 'no' );
+		update_option( 'snippen_sms_time_window_enabled', 'no' );
 		SmsGatewayApi::register();
 		do_action( 'rest_api_init' );
 	}
